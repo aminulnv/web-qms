@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS | NEXT Ventures</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            /* Primary Colors */
+            --primary-green: #1A733E;
+            --primary-green-dark: #124F2A;
+            --primary-green-light: #E0FFB3;
+            
+            /* Background Colors */
+            --bg-main: #F8F7F2;
+            --bg-dark: #1A733E;
+            --bg-white: #ffffff;
+            
+            /* Text Colors */
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --text-light: #E0FFB3;
+            --text-muted: #A0A0A0;
+            
+            /* Border Colors */
+            --border-light: #D1D1D1;
+            --border-focus: #1A733E;
+            
+            /* Interactive Colors */
+            --button-primary: #124F2A;
+            --button-primary-hover: #1A733E;
+            --link-color: #1A733E;
+            --link-hover: #124F2A;
+            
+            /* Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-xxl: 4rem;
+            
+            /* Font Sizes */
+            --font-xs: 0.7rem;
+            --font-sm: 0.8rem;
+            --font-base: 0.9rem;
+            --font-md: 1rem;
+            --font-lg: 1.1rem;
+            --font-xl: 1.2rem;
+            --font-2xl: 1.3rem;
+            --font-3xl: 1.4rem;
+            --font-4xl: 1.5rem;
+            --font-5xl: 1.6rem;
+            --font-6xl: 2rem;
+            --font-7xl: 2.5rem;
+            --font-8xl: 3rem;
+            --font-9xl: 3.5rem;
+            --font-10xl: 4rem;
+            --font-11xl: 4.5rem;
+            --font-12xl: 5rem;
+            --font-13xl: 5.5rem;
+            
+            /* Border Radius */
+            --radius-sm: 0.25rem;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container { display: flex; height: 100vh; }
+        
+        /* Left Panel */
+        .left-panel {
+            background-color: var(--bg-dark);
+            flex: 0 0 70%;
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 3.75rem 0rem 3.125rem;
+            position: relative;
+        }
+        
+        .main-content { 
+            margin-bottom: 3.75rem; 
+            text-align: left;
+        }
+        
+        .main-heading {
+            color: var(--text-light);
+            font-size: var(--font-12xl);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.1875rem;
+            text-align: left;
+        }
+        
+        .sub-heading {
+            color: var(--text-light);
+            font-size: var(--font-md);
+            font-weight: 400;
+            text-align: left;
+        }
+        
+        .branding {
+            position: absolute;
+            bottom: 5rem;
+            left: 3.125rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+        
+        .logo {
+            width: 6.25rem;
+            height: auto;
+            object-fit: contain;
+            margin-left: 0;
+        }
+        
+        .quality-control {
+            color: var(--text-light);
+            font-size: var(--font-4xl);
+            font-weight: 700;
+            text-align: left;
+            margin-left: 0.5625rem;
+        }
+        
+        /* Right Panel */
+        .right-panel {
+            background-color: var(--bg-main);
+            flex: 0 0 30%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3.75rem 3.125rem;
+        }
+        
+        .login-form { width: 100%; max-width: 20rem; }
+        
+        .login-heading {
+            color: var(--text-primary);
+            font-size: var(--font-5xl);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5625rem;
+        }
+        
+        .form-group { margin-bottom: 0.9375rem; }
+        
+        .form-label {
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+            display: block;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            background-color: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: var(--font-base);
+            transition: border-color var(--transition-normal);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+        
+        .form-input::placeholder { color: var(--text-muted); }
+        
+        .login-button {
+            width: 100%;
+            padding: 0.625rem;
+            background-color: var(--button-primary);
+            color: var(--bg-white);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-base);
+            font-weight: 600;
+            letter-spacing: 0.0625rem;
+            cursor: pointer;
+            transition: background-color var(--transition-normal);
+            margin-bottom: 0.9375rem;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .login-button:hover { background-color: var(--button-primary-hover); }
+        
+        .forgot-password {
+            color: var(--link-color);
+            text-decoration: none;
+            font-size: var(--font-xs);
+            text-align: center;
+            display: block;
+            transition: color var(--transition-normal);
+        }
+        
+        .forgot-password:hover { color: var(--link-hover); }
+        
+        /* Google Sign-In Button Styles */
+        .google-signin-container {
+            margin-bottom: 1.25rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        
+        .google-signin-button {
+            width: 100%;
+            padding: 0.625rem;
+            background-color: var(--bg-white);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-base);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .google-signin-button:hover {
+            background-color: #f8f9fa;
+            border-color: var(--border-focus);
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
+        }
+        
+        .google-signin-button:active {
+            transform: translateY(0.0625rem);
+        }
+        
+        .google-icon {
+            width: 1.125rem;
+            height: 1.125rem;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPHBhdGggZD0iTTE3LjY0IDkuMjA0NTVjMC0uNjM5NTQtLjA1NzMtMS4yNTI3My0uMTY0MS0xLjg0MDkxSDl2My40ODE4aDQuODQ1NWMtLjIwNjQgMS4xMjU0NS0uODQ1NSAyLjA3OTktMS44NDA5IDIuNzE0NXYyLjI1ODhoMi45NTQ1YzIuNzE0NS0yLjQ5MDkgNC4yNzI3LTYuMTU0NSA0LjI3MjctMTAuNjEzNnoiIGZpbGw9IiM0Mjg1RjQiLz4KICAgIDxwYXRoIGQ9Ik05IDE4YzIuNDkwOSAwIDQuNTc3My0uODIwNSA2LjEwNDUtMi4yMjI3bC0yLjk1NDUtMi4yNThjLS44MjA1LjU0NzMtMS44OTU1Ljg3MjctMy4xNS44NzI3LTIuNDA5MSAwLTQuNDU0NS0xLjc0NTUtNS4yNzI3LTQuMDkwOS01LjI3MjctLjY4MTgtMC0xLjMxODEuMTM2NC0xLjkwOTEuMzYzNnYtMi44NDU1aC0yLjk1NDVjMS44MjczIDEuNjM2NCAyLjk1NDUgNC4wOTA5IDIuOTU0NSA2LjgxODJzLTEuMTI3MyA1LjE4MTgtMi45NTQ1IDYuODE4MmgzLjA0NTV6IiBmaWxsPSIjMzRBODUzIi8+CiAgICA8cGF0aCBkPSJNMS4zNjM2NCA1LjM2MzY0Yy0uNDU0NTUuNjgxODItLjY4MTgyIDEuNDU0NTUtLjY4MTgyIDIuMjcyNzMgMCAuODE4MTguMjI3MjcgMS41OTA5LjY4MTgyIDIuMjcyNzNsLTIuMDQ1NDUgMS41NDU0NXYuMDA0NTVjLTEuMzYzNjQtMi4wNDU0NS0yLjA0NTQ1LTQuNDA5MDktMi4wNDU0NS02LjgxODIgMC0yLjQwOTEuNjgxODItNC43NzI3MyAyLjA0NTQ1LTYuODE4MmwzLjA0NTQ1IDIuMjcyNzN6IiBmaWxsPSIjRkJCQzA1Ii8+CiAgICA8cGF0aCBkPSJNOSAxLjYzNjM2YzEuMzE4MTggMCAyLjQ5MDkxLjQ1NDU1IDMuNDA5MDkgMS4yNzI3M2wtMi41NDU0NSAyLjU0NTQ1Yy0uNzI3MjctLjQzNjM2LTEuNjM2MzYtLjY4MTgyLTIuODYzNjQtLjY4MTgyLTIuNDA5MSAwLTQuNDU0NTUgMS43NDU0NS01LjI3MjczIDQuMDkwOTFsLTMuMDQ1NDUtMi4yNzI3M2MxLjUyNzI3LTMuMDQ1NDUgNC41NDU0NS01LjA5MDkxIDguMzYzNjQtNS4wOTA5MXoiIGZpbGw9IiNFQjQzMzUiLz4KICA8L2c+Cjwvc3ZnPgo=');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.25rem 0;
+            color: var(--text-muted);
+            font-size: var(--font-sm);
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 0.0625rem;
+            background-color: var(--border-light);
+        }
+        
+        .divider span {
+            padding: 0 0.9375rem;
+            background-color: var(--bg-main);
+        }
+        
+        /* Forgot Password Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: var(--bg-white);
+            margin: auto;
+            padding: 1.875rem;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 25rem;
+            box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+            /* Center the modal both horizontally and vertically */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        
+        .modal-title {
+            color: var(--text-primary);
+            font-size: var(--font-xl);
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            width: 1.875rem;
+            height: 1.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all var(--transition-normal);
+        }
+        
+        .close-btn:hover {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            margin-bottom: 1.25rem;
+        }
+        
+        .modal-text {
+            color: var(--text-secondary);
+            font-size: var(--font-base);
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+        
+        .modal-form {
+            width: 100%;
+        }
+        
+        .modal-form .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .modal-form .form-label {
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .modal-form .form-input {
+            width: 100%;
+            padding: 0.75rem 0.875rem;
+            background-color: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: var(--font-base);
+            transition: border-color var(--transition-normal);
+        }
+        
+        .modal-form .form-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+        
+        .modal-form .form-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 0.625rem;
+            justify-content: flex-end;
+        }
+        
+        .btn-secondary {
+            padding: 0.625rem 1.25rem;
+            background-color: var(--bg-white);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            font-size: var(--font-base);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--bg-main);
+            border-color: var(--border-focus);
+        }
+        
+        .btn-primary-modal {
+            padding: 0.625rem 1.25rem;
+            background-color: var(--button-primary);
+            color: var(--bg-white);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-base);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color var(--transition-normal);
+        }
+        
+        .btn-primary-modal:hover {
+            background-color: var(--button-primary-hover);
+        }
+        
+        .btn-primary-modal:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid #c3e6cb;
+            margin-bottom: 1.25rem;
+            font-size: var(--font-sm);
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid #f5c6cb;
+            margin-bottom: 1.25rem;
+            font-size: var(--font-sm);
+        }
+        
+        /* Mobile responsiveness for modal */
+        @media (max-width: 36rem) {
+            .modal-content {
+                padding: 1.25rem;
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
+            }
+            
+            .btn-secondary,
+            .btn-primary-modal {
+                width: 100%;
+            }
+        }
+        
+        /* Ensure modal stays centered even with bookmarks bar */
+        @media (max-height: 37.5rem) {
+            .modal-content {
+                max-height: 85vh;
+                padding: 1.25rem;
+            }
+        }
+        
+        /* Responsive Design */
+        
+        /* Large screens (75rem and up) */
+        @media (min-width: 75rem) {
+            .left-panel { padding: 3.125rem 5rem 0rem 3.75rem; }
+            .right-panel { padding: 5rem 3.75rem; }
+            .main-heading { font-size: var(--font-13xl); }
+            .login-form { max-width: 23.75rem; }
+        }
+        
+        /* Medium-large screens (62rem to 74.9375rem) */
+        @media (max-width: 74.9375rem) and (min-width: 62.0625rem) {
+            .left-panel { padding: 2.1875rem 3.125rem 0rem 2.5rem; }
+            .right-panel { padding: 3.125rem 2.5rem; }
+            .main-heading { font-size: var(--font-11xl); }
+            .login-form { max-width: 21.875rem; }
+        }
+        
+        /* Tablets (48rem to 62rem) */
+        @media (max-width: 62rem) and (min-width: 48.0625rem) {
+            .container { flex-direction: column; }
+            .left-panel { 
+                flex: 0 0 50%; 
+                padding: 1.5625rem 2.5rem 0rem 2.5rem; 
+                text-align: left;
+            }
+            .right-panel { 
+                flex: 0 0 50%; 
+                padding: 2.5rem 3.125rem; 
+            }
+            .main-heading { font-size: var(--font-9xl); }
+            .sub-heading { font-size: var(--font-lg); }
+            .branding { 
+                position: static; 
+                margin-top: 2.5rem; 
+                align-items: flex-start; 
+            }
+            .login-form { max-width: 25rem; }
+        }
+        
+        /* Mobile landscape and small tablets (36rem to 48rem) */
+        @media (max-width: 48rem) and (min-width: 36.0625rem) {
+            .container { flex-direction: column; }
+            .left-panel { 
+                flex: 0 0 45%; 
+                padding: 1.25rem 1.875rem 0rem 1.875rem; 
+                text-align: left;
+            }
+            .right-panel { 
+                flex: 0 0 55%; 
+                padding: 1.875rem 2.5rem; 
+            }
+            .main-heading { font-size: var(--font-8xl); }
+            .sub-heading { font-size: var(--font-md); }
+            .branding { 
+                position: static; 
+                margin-top: 1.875rem; 
+                align-items: flex-start; 
+            }
+            .quality-control { font-size: var(--font-2xl); }
+            .login-form { max-width: 21.875rem; }
+        }
+        
+        /* Mobile portrait (up to 36rem) */
+        @media (max-width: 36rem) {
+            .container { flex-direction: column; }
+            .left-panel { 
+                flex: 0 0 40%; 
+                padding: 0.9375rem 1.25rem 0rem 1.25rem; 
+                text-align: left;
+            }
+            .right-panel { 
+                flex: 0 0 60%; 
+                padding: 1.5625rem 1.25rem; 
+            }
+            .main-heading { 
+                font-size: var(--font-7xl); 
+                letter-spacing: -0.0625rem;
+            }
+            .sub-heading { font-size: var(--font-base); }
+            .branding { 
+                position: static; 
+                margin-top: 1.5625rem; 
+                align-items: flex-start; 
+            }
+            .logo { width: 5rem; }
+            .quality-control { font-size: var(--font-lg); }
+            .login-form { max-width: 100%; }
+            .login-heading { font-size: var(--font-3xl); }
+            .form-input { 
+                padding: 0.75rem 0.875rem; 
+                font-size: 1rem; /* Prevents zoom on iOS */
+            }
+            .login-button { 
+                padding: 0.75rem; 
+                font-size: var(--font-base); 
+            }
+        }
+        
+        /* Extra small screens (up to 25rem) */
+        @media (max-width: 25rem) {
+            .left-panel { 
+                padding: 1.5625rem 0.9375rem; 
+                text-align: left;
+            }
+            .right-panel { padding: 1.25rem 0.9375rem; }
+            .main-heading { font-size: var(--font-6xl); }
+            .sub-heading { font-size: var(--font-sm); }
+            .branding { align-items: flex-start; }
+            .logo { width: 4.375rem; }
+            .quality-control { font-size: var(--font-md); }
+            .login-heading { font-size: var(--font-2xl); }
+            .form-label { font-size: var(--font-sm); }
+            .form-input { 
+                padding: 0.625rem 0.75rem; 
+                font-size: 0.9375rem; 
+            }
+            .login-button { 
+                padding: 0.625rem; 
+                font-size: var(--font-base); 
+            }
+            .forgot-password { font-size: var(--font-xs); }
+        }
+        
+        /* Very small screens (up to 20rem) */
+        @media (max-width: 20rem) {
+            .left-panel { 
+                padding: 1.25rem 0.625rem; 
+                text-align: left;
+            }
+            .right-panel { padding: 0.9375rem 0.625rem; }
+            .main-heading { font-size: var(--font-5xl); }
+            .sub-heading { font-size: var(--font-sm); }
+            .branding { align-items: flex-start; }
+            .logo { width: 3.75rem; }
+            .quality-control { font-size: var(--font-base); }
+            .login-heading { font-size: var(--font-xl); }
+            .form-group { margin-bottom: 0.75rem; }
+            .form-label { font-size: var(--font-xs); }
+            .form-input { 
+                padding: 0.5rem 0.625rem; 
+                font-size: 0.875rem; 
+            }
+            .login-button { 
+                padding: 0.5rem; 
+                font-size: var(--font-sm); 
+            }
+            .forgot-password { font-size: var(--font-xs); }
+        }
+        
+        /* Landscape orientation adjustments */
+        @media (max-height: 31.25rem) and (orientation: landscape) {
+            .container { flex-direction: row; }
+            .left-panel { 
+                flex: 0 0 60%; 
+                padding: 1.25rem 1.875rem; 
+                text-align: left;
+            }
+            .right-panel { 
+                flex: 0 0 40%; 
+                padding: 1.25rem 1.875rem; 
+            }
+            .main-heading { font-size: var(--font-7xl); }
+            .sub-heading { font-size: var(--font-base); }
+            .branding { 
+                position: static; 
+                margin-top: 1.25rem; 
+                flex-direction: row; 
+                align-items: flex-start; 
+                gap: 0.9375rem;
+            }
+            .quality-control { font-size: var(--font-md); }
+        }
+        
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .logo { image-rendering: -webkit-optimize-contrast; }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            .container { flex-direction: column; }
+            .left-panel, .right-panel { 
+                flex: none; 
+                padding: 20px; 
+            }
+            .main-heading { color: var(--text-primary); }
+            .sub-heading { color: var(--text-secondary); }
+            .quality-control { color: var(--text-primary); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="main-content">
+                <h1 class="main-heading">Every Detail<br>Matters.</h1>
+                <p class="sub-heading">The Art of Perfection Begins Here</p>
+            </div>
+            <div class="branding">
+                <img src="https://careers.recruiteecdn.com/image/upload/production/images/BpRN/wCefCTnrj5fG.png" alt="NEXT VENTURES Logo" class="logo">
+                <div class="quality-control">Quality Management System</div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <form class="login-form" id="loginForm">
+                <h2 class="login-heading">Login to continue</h2>
+                
+                <!-- Google Sign-In (Primary Method) -->
+                <div class="google-signin-container">
+                    <div id="g_id_onload"
+                         data-client_id="301636443575-ksrlhnk2bo0d7ikum000tb8b9g081rpp.apps.googleusercontent.com"
+                         data-callback="handleGoogleSignIn"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-size="large"
+                         data-theme="outline"
+                         data-text="sign_in_with"
+                         data-shape="rectangular"
+                         data-logo_alignment="left">
+                    </div>
+                </div>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <!-- Email/Password Login (Secondary Method) -->
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="username@nextventures.io" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-button">LOGIN</button>
+                <a href="#" class="forgot-password">Forgot your password?</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Reset Password</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-text">Enter your email address and we'll send you a link to reset your password.</p>
+                
+                <div id="messageContainer"></div>
+                
+                <form class="modal-form" id="forgotPasswordForm">
+                    <div class="form-group">
+                        <label for="resetEmail" class="form-label">Email Address</label>
+                        <input type="email" id="resetEmail" class="form-input" placeholder="Enter your email address" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" id="cancelReset">Cancel</button>
+                        <button type="submit" class="btn-primary-modal" id="submitReset">Send Reset Link</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const inputs = document.querySelectorAll('.form-input');
+        
+        // Form validation and submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            if (!email.endsWith('@nextventures.io')) {
+                alert('Please use a valid @nextventures.io email address');
+                return;
+            }
+            
+            if (password !== 'admin') {
+                alert('Invalid password. Please try again.');
+                return;
+            }
+            
+            console.log('Login successful:', { email, password });
+            
+            // Store user information in localStorage for use in home.html
+            const userInfo = {
+                name: email.split('@')[0], // Extract username from email
+                email: email,
+                picture: null, // No picture for regular login
+                sub: 'admin-user' // Identifier for admin user
+            };
+            
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            console.log('User info stored:', userInfo);
+            
+            window.location.href = 'home.html';
+        });
+        
+        // Auto-append domain to email
+        emailInput.addEventListener('blur', function() {
+            if (this.value && !this.value.includes('@')) {
+                this.value += '@nextventures.io';
+            }
+        });
+        
+        // Input focus effects
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => input.style.borderColor = '#1A733E');
+            input.addEventListener('blur', () => {
+                if (!input.value) input.style.borderColor = '#D1D1D1';
+            });
+        });
+        
+        // Forgot password functionality
+        const forgotPasswordLink = document.querySelector('.forgot-password');
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelResetBtn = document.getElementById('cancelReset');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const resetEmailInput = document.getElementById('resetEmail');
+        const submitResetBtn = document.getElementById('submitReset');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Open forgot password modal
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.style.display = 'block';
+            resetEmailInput.focus();
+            clearMessages();
+        });
+
+        // Close modal functions
+        function closeModal() {
+            forgotPasswordModal.style.display = 'none';
+            forgotPasswordForm.reset();
+            clearMessages();
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelResetBtn.addEventListener('click', closeModal);
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === forgotPasswordModal) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && forgotPasswordModal.style.display === 'block') {
+                closeModal();
+            }
+        });
+
+        // Clear messages function
+        function clearMessages() {
+            messageContainer.innerHTML = '';
+        }
+
+        // Show message function
+        function showMessage(message, type) {
+            clearMessages();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            messageContainer.appendChild(messageDiv);
+        }
+
+        // Forgot password form submission
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = resetEmailInput.value.trim();
+            
+            if (!email) {
+                showMessage('Please enter your email address.', 'error');
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+
+            // Validate @nextventures.io domain
+            if (!email.endsWith('@nextventures.io')) {
+                showMessage('Please use a valid @nextventures.io email address.', 'error');
+                return;
+            }
+
+            // Disable submit button and show loading state
+            submitResetBtn.disabled = true;
+            submitResetBtn.textContent = 'Sending...';
+
+            try {
+                // Simulate API call (replace with actual implementation)
+                await simulatePasswordReset(email);
+                
+                showMessage('Password reset link has been sent to your email address. Please check your inbox.', 'success');
+                
+                // Reset form and close modal after 3 seconds
+                setTimeout(() => {
+                    closeModal();
+                }, 3000);
+                
+            } catch (error) {
+                showMessage('Failed to send reset link. Please try again later.', 'error');
+            } finally {
+                // Re-enable submit button
+                submitResetBtn.disabled = false;
+                submitResetBtn.textContent = 'Send Reset Link';
+            }
+        });
+
+        // Simulate password reset API call
+        function simulatePasswordReset(email) {
+            return new Promise((resolve, reject) => {
+                // Simulate network delay
+                setTimeout(() => {
+                    // Simulate success (in real implementation, this would be an actual API call)
+                    console.log(`Password reset requested for: ${email}`);
+                    
+                    // For demo purposes, always resolve successfully
+                    // In real implementation, handle actual API response
+                    resolve({
+                        success: true,
+                        message: 'Reset link sent successfully'
+                    });
+                }, 1500);
+            });
+        }
+        
+        // Google Sign-In callback function
+        function handleGoogleSignIn(response) {
+            console.log('Google Sign-In response:', response);
+            
+            // Decode the JWT token to get user information
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            console.log('User info:', payload);
+            
+            // Extract user information
+            const userInfo = {
+                email: payload.email,
+                name: payload.name,
+                picture: payload.picture,
+                sub: payload.sub
+            };
+            
+            // Validate email domain (optional - remove if you want to allow any Google account)
+            if (userInfo.email && userInfo.email.endsWith('@nextventures.io')) {
+                console.log('Google Sign-In successful:', userInfo);
+                
+                // Store user information in localStorage for use in home.html
+                localStorage.setItem('userInfo', JSON.stringify({
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture,
+                    sub: userInfo.sub
+                }));
+                
+                alert(`Welcome ${userInfo.name}! Redirecting to dashboard...`);
+                // Redirect to home page
+                window.location.href = 'home.html';
+            } else {
+                alert('Please use a valid @nextventures.io Google account to sign in.');
+                // Sign out the user
+                google.accounts.id.disableAutoSelect();
+            }
+        }
+        
+        // Initialize Google Sign-In when the page loads
+        window.onload = function() {
+            google.accounts.id.initialize({
+                client_id: '301636443575-ksrlhnk2bo0d7ikum000tb8b9g081rpp.apps.googleusercontent.com',
+                callback: handleGoogleSignIn
+            });
+        };
+    </script>
+</body>
+</html>

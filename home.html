@@ -1,0 +1,960 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Home | NEXT QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root {
+--primary-color: #1A733E;
+--primary-dark: #0d5e3a;
+--background-color: #F8F7F2;
+--text-color: #000;
+--white: #fff;
+--transition: all 0.3s ease;
+--sidebar-width: 192px;
+--sidebar-collapsed: 48px;
+--sidebar-mobile: 60px;
+--font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: var(--font-family);
+}
+
+html {
+font-family: var(--font-family);
+}
+
+body {
+font-family: var(--font-family);
+display: flex;
+min-height: 100vh;
+background-color: var(--background-color);
+color: var(--text-color);
+font-weight: 400;
+line-height: 1.5;
+}
+
+/* Sidebar Styles */
+.sidebar {
+width: var(--sidebar-width);
+background-color: var(--primary-color);
+color: var(--white);
+display: flex;
+flex-direction: column;
+position: fixed;
+height: 100vh;
+left: 0;
+top: 0;
+transition: width 0.3s ease;
+z-index: 1000;
+}
+
+.sidebar.collapsed {
+width: var(--sidebar-collapsed);
+}
+
+/* Menu Toggle */
+.menu-toggle {
+padding: 16px;
+background: transparent;
+border: none;
+color: var(--white);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: flex-start;
+transition: var(--transition);
+}
+
+.sidebar.collapsed .menu-toggle {
+justify-content: center;
+}
+
+.hamburger {
+display: flex;
+flex-direction: column;
+gap: 4px;
+width: 20px;
+position: relative;
+}
+
+.hamburger span {
+display: block;
+width: 20px;
+height: 2px;
+background-color: var(--white);
+transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+position: absolute;
+left: 0;
+}
+
+.hamburger span:nth-child(1) { top: 0; }
+.hamburger span:nth-child(2) { top: 6px; }
+.hamburger span:nth-child(3) { top: 12px; }
+
+.sidebar:not(.collapsed) .hamburger span:nth-child(1) {
+transform: rotate(45deg);
+top: 6px;
+}
+.sidebar:not(.collapsed) .hamburger span:nth-child(2) {
+opacity: 0;
+}
+.sidebar:not(.collapsed) .hamburger span:nth-child(3) {
+transform: rotate(-45deg);
+top: 6px;
+}
+
+/* Menu Items */
+.menu-items {
+flex: 1;
+padding-top: 16px;
+overflow: hidden;
+}
+
+.menu-item {
+display: flex;
+align-items: center;
+justify-content: flex-start;
+padding: 14px 16px;
+cursor: pointer;
+transition: background-color 0.3s ease, padding 0.3s ease;
+color: var(--white);
+text-decoration: none;
+white-space: nowrap;
+font-size: 12px;
+font-weight: 500;
+font-family: var(--font-family);
+border: none;
+background: none;
+width: 100%;
+-webkit-tap-highlight-color: transparent;
+touch-action: manipulation;
+}
+
+.sidebar.collapsed .menu-item {
+justify-content: center;
+padding: 14px 8px;
+}
+
+.menu-item:hover,
+.menu-item:focus {
+background-color: rgba(255, 255, 255, 0.1);
+outline: none;
+}
+
+.menu-item.active {
+background-color: var(--primary-dark);
+font-weight: 600;
+}
+
+.menu-item svg {
+width: 20px;
+height: 20px;
+margin-right: 12px;
+flex-shrink: 0;
+transition: margin 0.3s ease;
+}
+
+.sidebar.collapsed .menu-item svg {
+margin-right: 0;
+margin-left: 0;
+}
+
+.menu-item span {
+opacity: 1;
+transition: opacity 0.3s ease, width 0.3s ease;
+white-space: nowrap;
+overflow: hidden;
+}
+
+.sidebar.collapsed .menu-item span {
+opacity: 0;
+width: 0;
+}
+
+/* User Profile */
+.user-profile {
+padding: 16px;
+border-top: 1px solid rgba(255, 255, 255, 0.1);
+display: flex;
+align-items: flex-start;
+gap: 10px;
+cursor: pointer;
+transition: background-color 0.3s ease, padding 0.3s ease;
+}
+
+.sidebar.collapsed .user-profile {
+justify-content: center;
+align-items: center;
+gap: 0;
+padding: 16px 8px;
+}
+
+.user-profile:hover {
+background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+width: 32px;
+height: 32px;
+background-color: rgba(255, 255, 255, 0.2);
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+margin-top: 2px;
+}
+
+.user-avatar svg {
+width: 19px;
+height: 19px;
+fill: var(--white);
+}
+
+.user-profile-img {
+width: 100%;
+height: 100%;
+border-radius: 50%;
+object-fit: cover;
+object-position: center;
+}
+
+.user-info {
+flex: 1;
+overflow: hidden;
+transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+.sidebar.collapsed .user-info {
+opacity: 0;
+width: 0;
+}
+
+.user-name {
+font-weight: 600;
+font-size: 11px;
+color: var(--white);
+font-family: var(--font-family);
+}
+
+.user-email {
+font-size: 8px;
+opacity: 0.9;
+color: #4ade80;
+font-family: var(--font-family);
+font-weight: 500;
+}
+
+.logout-btn {
+background: none;
+border: none;
+color: rgba(255, 255, 255, 0.8);
+font-size: 12px;
+font-weight: 500;
+font-family: var(--font-family);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+padding: 12px 16px;
+width: 100%;
+border-top: 1px solid rgba(255, 255, 255, 0.1);
+transition: all 0.2s ease;
+-webkit-tap-highlight-color: transparent;
+touch-action: manipulation;
+margin-top: auto;
+}
+
+.logout-btn:hover {
+color: var(--white);
+background-color: #dc143c;
+}
+
+.logout-btn:active {
+background-color: #b91c2c;
+}
+
+.logout-btn svg {
+width: 16px;
+height: 16px;
+flex-shrink: 0;
+margin-left: 5px;
+}
+
+.logout-btn span {
+white-space: nowrap;
+}
+
+.sidebar.collapsed .logout-btn span {
+opacity: 0;
+width: 0;
+overflow: hidden;
+}
+
+.sidebar.collapsed .logout-btn {
+justify-content: center;
+padding: 12px 8px;
+}
+
+.sidebar.collapsed .logout-btn svg {
+width: 24px;
+height: 24px;
+}
+
+/* Main Content */
+.main-content {
+margin-left: var(--sidebar-collapsed);
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 32px;
+transition: margin-left 0.3s ease;
+}
+
+.sidebar:not(.collapsed) ~ .main-content {
+margin-left: var(--sidebar-width);
+}
+
+.welcome-section {
+text-align: center;
+}
+
+h1 {
+font-size: 38px;
+font-weight: 700;
+margin-bottom: 32px;
+color: var(--text-color);
+font-family: var(--font-family);
+letter-spacing: -0.5px;
+}
+
+.button-group {
+display: flex;
+flex-direction: column;
+gap: 12px;
+align-items: center;
+}
+
+.btn {
+padding: 12px 32px;
+font-size: 13px;
+font-weight: 600;
+border: none;
+border-radius: 6px;
+cursor: pointer;
+font-family: var(--font-family);
+transition: transform 0.2s, box-shadow 0.2s;
+min-width: 184px;
+-webkit-tap-highlight-color: transparent;
+touch-action: manipulation;
+user-select: none;
+}
+
+
+.btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+transform: translateY(0);
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn:focus {
+outline: 2px solid var(--primary-color);
+outline-offset: 2px;
+}
+
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+.btn:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+}
+
+.btn-primary {
+background-color: var(--primary-dark);
+color: var(--white);
+}
+
+.btn-success {
+background-color: var(--primary-color);
+color: var(--white);
+}
+
+/* Responsive Design */
+
+/* Large Tablets and Small Desktops */
+@media (max-width: 1024px) {
+.main-content {
+    padding: 24px;
+}
+
+h1 {
+    font-size: 36px;
+}
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+.sidebar {
+    width: var(--sidebar-mobile);
+}
+
+.sidebar .menu-item span {
+    display: none;
+}
+
+.user-info {
+    display: none;
+}
+
+.main-content {
+    margin-left: var(--sidebar-mobile);
+    padding: 20px;
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 24px;
+}
+
+
+.button-group {
+    gap: 10px;
+}
+
+.btn {
+    min-width: 160px;
+    padding: 10px 24px;
+    font-size: 12px;
+}
+}
+
+/* Large Mobile Devices */
+@media (max-width: 640px) {
+.main-content {
+    padding: 16px;
+}
+
+h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+
+.btn {
+    min-width: 140px;
+    padding: 10px 20px;
+    font-size: 11px;
+}
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+.sidebar {
+    width: 50px;
+}
+
+.main-content {
+    margin-left: 50px;
+    padding: 12px;
+}
+
+h1 {
+    font-size: 24px;
+    letter-spacing: -0.3px;
+    margin-bottom: 16px;
+}
+
+
+.button-group {
+    gap: 8px;
+}
+
+.btn {
+    min-width: 120px;
+    padding: 8px 16px;
+    font-size: 10px;
+}
+
+.menu-item {
+    padding: 12px 8px;
+    min-height: 44px; /* Touch-friendly minimum height */
+}
+
+.sidebar.collapsed .menu-item {
+    padding: 12px 4px;
+}
+
+.user-profile {
+    padding: 12px 8px;
+    min-height: 44px; /* Touch-friendly minimum height */
+}
+
+.sidebar.collapsed .user-profile {
+    padding: 12px 4px;
+}
+
+.menu-toggle {
+    min-height: 44px; /* Touch-friendly minimum height */
+}
+}
+
+/* Extra Small Mobile Devices */
+@media (max-width: 360px) {
+.main-content {
+    padding: 8px;
+}
+
+h1 {
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+
+.btn {
+    min-width: 100px;
+    padding: 6px 12px;
+    font-size: 9px;
+}
+
+.button-group {
+    gap: 6px;
+}
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+.main-content {
+    padding: 16px;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+
+.button-group {
+    flex-direction: row;
+    gap: 12px;
+}
+
+.btn {
+    min-width: 120px;
+}
+}
+
+/* Global font improvements */
+input, textarea, select {
+font-family: var(--font-family);
+}
+
+/* Ensure all text elements inherit the theme font */
+p, span, div, a, button, input, textarea, select, label {
+font-family: var(--font-family);
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+overflow-x: hidden;
+}
+
+/* Improve text rendering on mobile */
+* {
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+.menu-item:hover {
+    background-color: transparent;
+}
+
+.user-profile:hover {
+    background-color: transparent;
+}
+
+.menu-item:active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-profile:active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+.menu-item svg,
+.user-avatar svg {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+}
+</style>
+</head>
+<body>
+<nav class="sidebar collapsed" role="navigation" aria-label="Main navigation">
+<button class="menu-toggle" aria-label="Toggle sidebar menu" aria-expanded="false">
+<div class="hamburger" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+</button>
+
+<ul class="menu-items" role="menubar">
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Create New Audit">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor" aria-hidden="true">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+        </svg>
+        <span>Create Audit</span>
+    </button>
+</li>
+
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Auditor's Dashboard">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+        </svg>
+        <span>Auditor's Dashboard</span>
+    </button>
+</li>
+
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Audit Distribution">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <span>Audit Distribution</span>
+    </button>
+</li>
+
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Audit Reports">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+        </svg>
+        <span>Audit Reports</span>
+    </button>
+</li>
+
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Performance">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+        </svg>
+        <span>Performance</span>
+    </button>
+</li>
+
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Reversal">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+        </svg>
+        <span>Reversal</span>
+    </button>
+</li>
+
+<li role="none">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+        </svg>
+        <span>Settings</span>
+    </button>
+</li>
+</ul>
+
+<div class="user-profile" role="button" tabindex="0" aria-label="User profile menu">
+<div class="user-avatar" aria-hidden="true">
+    <!-- Default SVG icon (shown when no profile picture) -->
+    <svg class="default-avatar" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor">
+        <g><rect fill="none" height="24" width="24"/></g>
+        <g><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/></g>
+    </svg>
+    <!-- User's Google profile picture (shown when available) -->
+    <img class="user-profile-img" style="display: none;" alt="User profile picture">
+</div>
+<div class="user-info">
+    <div class="user-name">User Name</div>
+    <div class="user-email">user@nextventures.io</div>
+</div>
+</div>
+
+<button class="logout-btn" aria-label="Logout">
+<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor" aria-hidden="true">
+    <path d="M0 0h24v24H0z" fill="none"/>
+    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+</svg>
+<span>Logout</span>
+</button>
+</nav>
+
+<main class="main-content" role="main">
+<section class="welcome-section">
+<h1>Good Morning, User!</h1>
+<div class="button-group">
+    <button class="btn btn-primary" aria-label="Navigate to Dashboard">Go to Dashboard</button>
+    <button class="btn btn-success" aria-label="Start Auditing Process">Start Auditing</button>
+</div>
+</section>
+</main>
+
+<script>
+// DOM elements cache
+const elements = {
+sidebar: document.querySelector('.sidebar'),
+menuToggle: document.querySelector('.menu-toggle'),
+menuItems: document.querySelectorAll('.menu-item'),
+userProfile: document.querySelector('.user-profile'),
+logoutBtn: document.querySelector('.logout-btn'),
+createAuditBtn: document.querySelector('.create-audit-action'),
+dashboardBtn: document.querySelector('.btn-primary'),
+auditBtn: document.querySelector('.btn-success')
+};
+
+// Sidebar functionality
+function toggleSidebar() {
+const isCollapsed = elements.sidebar.classList.contains('collapsed');
+elements.sidebar.classList.toggle('collapsed');
+elements.menuToggle.setAttribute('aria-expanded', !isCollapsed);
+}
+
+// Navigation functions
+function goToDashboard() {
+// TODO: Implement actual navigation
+console.log('Navigating to Dashboard...');
+// window.location.href = 'dashboard.html';
+}
+
+function startAuditing() {
+// TODO: Implement actual audit process
+console.log('Starting Audit Process...');
+// window.location.href = 'audit.html';
+}
+
+function createAudit() {
+// TODO: Implement create audit functionality
+console.log('Creating New Audit...');
+// window.location.href = 'create-audit.html';
+}
+
+// Menu item management
+function setActiveMenuItem(activeItem) {
+elements.menuItems.forEach(item => item.classList.remove('active'));
+activeItem.classList.add('active');
+}
+
+// Event handlers
+function handleMenuClick(event) {
+event.preventDefault();
+
+// Special handling for Create Audit button
+if (event.currentTarget.getAttribute('aria-label') === 'Create New Audit') {
+    createAudit();
+    setActiveMenuItem(event.currentTarget);
+    return;
+}
+
+setActiveMenuItem(event.currentTarget);
+}
+
+function handleUserProfileClick() {
+console.log('User profile menu would open here');
+// TODO: Implement user profile dropdown
+}
+
+function handleLogoutClick(event) {
+event.preventDefault();
+event.stopPropagation();
+
+if (confirm('Are you sure you want to logout?')) {
+    // Clear stored user information
+    localStorage.removeItem('userInfo');
+    
+    // Sign out from Google if available
+    if (typeof google !== 'undefined' && google.accounts) {
+        google.accounts.id.disableAutoSelect();
+    }
+    
+    // Redirect to index page to handle authentication check
+    window.location.href = 'index.html';
+}
+}
+
+// Keyboard navigation support
+function handleKeyDown(event) {
+if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    event.target.click();
+}
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+// Menu toggle
+elements.menuToggle.addEventListener('click', toggleSidebar);
+elements.menuToggle.addEventListener('keydown', handleKeyDown);
+
+// Menu items
+elements.menuItems.forEach(item => {
+    item.addEventListener('click', handleMenuClick);
+    item.addEventListener('keydown', handleKeyDown);
+});
+
+// User profile
+elements.userProfile.addEventListener('click', handleUserProfileClick);
+elements.userProfile.addEventListener('keydown', handleKeyDown);
+
+// Logout button
+elements.logoutBtn.addEventListener('click', handleLogoutClick);
+elements.logoutBtn.addEventListener('keydown', handleKeyDown);
+
+// Main content buttons
+elements.dashboardBtn.addEventListener('click', goToDashboard);
+elements.auditBtn.addEventListener('click', startAuditing);
+}
+
+// Load user information from localStorage
+function loadUserInfo() {
+console.log('Loading user information...');
+const userInfo = localStorage.getItem('userInfo');
+console.log('Stored userInfo:', userInfo);
+
+if (userInfo) {
+    try {
+        const user = JSON.parse(userInfo);
+        console.log('Parsed user:', user);
+        
+        // Update user name in sidebar
+        const userNameElement = document.querySelector('.user-name');
+        console.log('User name element found:', userNameElement);
+        if (userNameElement && user.name) {
+            userNameElement.textContent = user.name;
+            console.log('Updated user name to:', user.name);
+        }
+        
+        // Update user email in sidebar
+        const userEmailElement = document.querySelector('.user-email');
+        console.log('User email element found:', userEmailElement);
+        if (userEmailElement && user.email) {
+            userEmailElement.textContent = user.email;
+            console.log('Updated user email to:', user.email);
+        }
+        
+        // Update welcome message
+        const welcomeElement = document.querySelector('.welcome-section h1');
+        console.log('Welcome element found:', welcomeElement);
+        if (welcomeElement && user.name) {
+            // Extract first name from full name
+            const firstName = user.name.split(' ')[0];
+            welcomeElement.textContent = `Good Morning, ${firstName}!`;
+            console.log('Updated welcome message to:', `Good Morning, ${firstName}!`);
+        }
+        
+        // Update user profile picture if available
+        const userProfileImg = document.querySelector('.user-profile-img');
+        const defaultAvatar = document.querySelector('.default-avatar');
+        
+        if (userProfileImg && user.picture) {
+            // Show user's Google profile picture
+            userProfileImg.src = user.picture;
+            userProfileImg.alt = `${user.name}'s profile picture`;
+            userProfileImg.style.display = 'block';
+            if (defaultAvatar) {
+                defaultAvatar.style.display = 'none';
+            }
+            console.log('Updated user profile picture to:', user.picture);
+        } else {
+            // Show default avatar icon
+            if (userProfileImg) {
+                userProfileImg.style.display = 'none';
+            }
+            if (defaultAvatar) {
+                defaultAvatar.style.display = 'block';
+            }
+            console.log('Using default avatar icon');
+        }
+        
+        console.log('User information loaded successfully:', user);
+    } catch (error) {
+        console.error('Error parsing user information:', error);
+    }
+} else {
+    // If no user info found, redirect to login
+    console.log('No user information found, redirecting to login...');
+    window.location.href = 'login.html';
+}
+}
+
+// Initialize the application
+function init() {
+console.log('Initializing application...');
+
+// Load user information first
+loadUserInfo();
+
+// Also try to load user info after a short delay in case of timing issues
+setTimeout(() => {
+    console.log('Retrying user info load...');
+    loadUserInfo();
+}, 100);
+
+initializeEventListeners();
+
+// Set initial state
+elements.menuToggle.setAttribute('aria-expanded', 'false');
+
+// Add keyboard navigation support for sidebar
+elements.sidebar.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        elements.sidebar.classList.add('collapsed');
+        elements.menuToggle.focus();
+    }
+});
+}
+
+// Manual trigger for testing (can be called from browser console)
+window.testUserInfo = function() {
+console.log('Manual test of user info loading...');
+loadUserInfo();
+};
+
+// Start the application when DOM is loaded
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', init);
+} else {
+init();
+}
+</script>
+</body>
+</html>
