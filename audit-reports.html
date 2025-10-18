@@ -666,7 +666,7 @@ overflow-x: hidden;
 
 <ul class="menu-items" role="menubar">
 <li role="none">
-    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Home">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Home">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
@@ -703,7 +703,7 @@ overflow-x: hidden;
 </li>
 
 <li role="none">
-    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Audit Reports">
+    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Audit Reports">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
         </svg>
@@ -765,13 +765,6 @@ overflow-x: hidden;
 </nav>
 
 <main class="main-content" role="main">
-<section class="welcome-section">
-<h1>Good Morning, User!</h1>
-<div class="button-group">
-    <button class="btn btn-primary" aria-label="Navigate to Dashboard">Go to Dashboard</button>
-    <button class="btn btn-success" aria-label="Start Auditing Process">Start Auditing</button>
-</div>
-</section>
 </main>
 
 <script>
@@ -998,27 +991,27 @@ initializeEventListeners();
 // Set initial state
 elements.menuToggle.setAttribute('aria-expanded', 'false');
 
-// Set Home menu item as active since we're on the home page
-function setHomeActive() {
-    const homeMenuItem = document.querySelector('.menu-item[aria-label="Home"]');
-    console.log('Looking for Home menu item:', homeMenuItem);
-    if (homeMenuItem) {
-        console.log('Setting Home as active');
-        setActiveMenuItem(homeMenuItem);
+// Set Audit Reports menu item as active since we're on the audit-reports page
+function setAuditReportsActive() {
+    const auditReportsMenuItem = document.querySelector('.menu-item[aria-label="Audit Reports"]');
+    console.log('Looking for Audit Reports menu item:', auditReportsMenuItem);
+    if (auditReportsMenuItem) {
+        console.log('Setting Audit Reports as active');
+        setActiveMenuItem(auditReportsMenuItem);
         return true;
     } else {
-        console.log('Home menu item not found, retrying...');
+        console.log('Audit Reports menu item not found, retrying...');
         return false;
     }
 }
 
 // Try to set active immediately
-if (!setHomeActive()) {
+if (!setAuditReportsActive()) {
     // If not found, try again after a short delay
     setTimeout(() => {
-        if (!setHomeActive()) {
+        if (!setAuditReportsActive()) {
             // Try one more time after a longer delay
-            setTimeout(setHomeActive, 500);
+            setTimeout(setAuditReportsActive, 500);
         }
     }, 100);
 }

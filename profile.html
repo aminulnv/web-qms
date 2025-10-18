@@ -666,16 +666,7 @@ overflow-x: hidden;
 
 <ul class="menu-items" role="menubar">
 <li role="none">
-    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Home">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </svg>
-        <span>Home</span>
-    </button>
-</li>
-
-<li role="none">
-    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Create New Audit">
+    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Create New Audit">
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor" aria-hidden="true">
             <path d="M0 0h24v24H0z" fill="none"/>
             <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -765,13 +756,6 @@ overflow-x: hidden;
 </nav>
 
 <main class="main-content" role="main">
-<section class="welcome-section">
-<h1>Good Morning, User!</h1>
-<div class="button-group">
-    <button class="btn btn-primary" aria-label="Navigate to Dashboard">Go to Dashboard</button>
-    <button class="btn btn-success" aria-label="Start Auditing Process">Start Auditing</button>
-</div>
-</section>
 </main>
 
 <script>
@@ -819,37 +803,18 @@ elements.menuItems.forEach(item => item.classList.remove('active'));
 activeItem.classList.add('active');
 }
 
-// Navigation mapping
-const navigationMap = {
-    'Home': 'home.html',
-    'Create New Audit': 'create-audit.html',
-    'Auditor\'s Dashboard': 'auditor-dashboard.html',
-    'Audit Distribution': 'audit-distribution.html',
-    'Audit Reports': 'audit-reports.html',
-    'Performance': 'agent-performance.html',
-    'Reversal': 'reversal.html',
-    'Settings': 'settings.html'
-};
-
-// Navigation function
-function navigateToPage(pageName) {
-    const pageUrl = navigationMap[pageName];
-    if (pageUrl) {
-        window.location.href = pageUrl;
-    } else {
-        console.error('Page not found:', pageName);
-    }
-}
-
 // Event handlers
 function handleMenuClick(event) {
 event.preventDefault();
 
-const ariaLabel = event.currentTarget.getAttribute('aria-label');
-console.log('Menu clicked:', ariaLabel);
+// Special handling for Create Audit button
+if (event.currentTarget.getAttribute('aria-label') === 'Create New Audit') {
+    createAudit();
+    setActiveMenuItem(event.currentTarget);
+    return;
+}
 
-// Navigate to the appropriate page
-navigateToPage(ariaLabel);
+setActiveMenuItem(event.currentTarget);
 }
 
 function handleUserProfileClick() {
@@ -998,27 +963,27 @@ initializeEventListeners();
 // Set initial state
 elements.menuToggle.setAttribute('aria-expanded', 'false');
 
-// Set Home menu item as active since we're on the home page
-function setHomeActive() {
-    const homeMenuItem = document.querySelector('.menu-item[aria-label="Home"]');
-    console.log('Looking for Home menu item:', homeMenuItem);
-    if (homeMenuItem) {
-        console.log('Setting Home as active');
-        setActiveMenuItem(homeMenuItem);
+// Set Create Audit menu item as active since we're on the create-audit page
+function setCreateAuditActive() {
+    const createAuditMenuItem = document.querySelector('.menu-item[aria-label="Create New Audit"]');
+    console.log('Looking for Create Audit menu item:', createAuditMenuItem);
+    if (createAuditMenuItem) {
+        console.log('Setting Create Audit as active');
+        setActiveMenuItem(createAuditMenuItem);
         return true;
     } else {
-        console.log('Home menu item not found, retrying...');
+        console.log('Create Audit menu item not found, retrying...');
         return false;
     }
 }
 
 // Try to set active immediately
-if (!setHomeActive()) {
+if (!setCreateAuditActive()) {
     // If not found, try again after a short delay
     setTimeout(() => {
-        if (!setHomeActive()) {
+        if (!setCreateAuditActive()) {
             // Try one more time after a longer delay
-            setTimeout(setHomeActive, 500);
+            setTimeout(setCreateAuditActive, 500);
         }
     }, 100);
 }

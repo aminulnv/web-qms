@@ -666,7 +666,7 @@ overflow-x: hidden;
 
 <ul class="menu-items" role="menubar">
 <li role="none">
-    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Home">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Home">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
@@ -685,7 +685,7 @@ overflow-x: hidden;
 </li>
 
 <li role="none">
-    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Auditor's Dashboard">
+    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Auditor's Dashboard">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
         </svg>
@@ -765,13 +765,6 @@ overflow-x: hidden;
 </nav>
 
 <main class="main-content" role="main">
-<section class="welcome-section">
-<h1>Good Morning, User!</h1>
-<div class="button-group">
-    <button class="btn btn-primary" aria-label="Navigate to Dashboard">Go to Dashboard</button>
-    <button class="btn btn-success" aria-label="Start Auditing Process">Start Auditing</button>
-</div>
-</section>
 </main>
 
 <script>
@@ -998,27 +991,27 @@ initializeEventListeners();
 // Set initial state
 elements.menuToggle.setAttribute('aria-expanded', 'false');
 
-// Set Home menu item as active since we're on the home page
-function setHomeActive() {
-    const homeMenuItem = document.querySelector('.menu-item[aria-label="Home"]');
-    console.log('Looking for Home menu item:', homeMenuItem);
-    if (homeMenuItem) {
-        console.log('Setting Home as active');
-        setActiveMenuItem(homeMenuItem);
+// Set Auditor's Dashboard menu item as active since we're on the auditor-dashboard page
+function setAuditorDashboardActive() {
+    const auditorDashboardMenuItem = document.querySelector('.menu-item[aria-label="Auditor\'s Dashboard"]');
+    console.log('Looking for Auditor\'s Dashboard menu item:', auditorDashboardMenuItem);
+    if (auditorDashboardMenuItem) {
+        console.log('Setting Auditor\'s Dashboard as active');
+        setActiveMenuItem(auditorDashboardMenuItem);
         return true;
     } else {
-        console.log('Home menu item not found, retrying...');
+        console.log('Auditor\'s Dashboard menu item not found, retrying...');
         return false;
     }
 }
 
 // Try to set active immediately
-if (!setHomeActive()) {
+if (!setAuditorDashboardActive()) {
     // If not found, try again after a short delay
     setTimeout(() => {
-        if (!setHomeActive()) {
+        if (!setAuditorDashboardActive()) {
             // Try one more time after a longer delay
-            setTimeout(setHomeActive, 500);
+            setTimeout(setAuditorDashboardActive, 500);
         }
     }, 100);
 }

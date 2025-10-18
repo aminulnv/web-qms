@@ -666,7 +666,7 @@ overflow-x: hidden;
 
 <ul class="menu-items" role="menubar">
 <li role="none">
-    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Home">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Home">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
@@ -712,7 +712,7 @@ overflow-x: hidden;
 </li>
 
 <li role="none">
-    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Performance">
+    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Performance">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
         </svg>
@@ -765,13 +765,6 @@ overflow-x: hidden;
 </nav>
 
 <main class="main-content" role="main">
-<section class="welcome-section">
-<h1>Good Morning, User!</h1>
-<div class="button-group">
-    <button class="btn btn-primary" aria-label="Navigate to Dashboard">Go to Dashboard</button>
-    <button class="btn btn-success" aria-label="Start Auditing Process">Start Auditing</button>
-</div>
-</section>
 </main>
 
 <script>
@@ -998,27 +991,27 @@ initializeEventListeners();
 // Set initial state
 elements.menuToggle.setAttribute('aria-expanded', 'false');
 
-// Set Home menu item as active since we're on the home page
-function setHomeActive() {
-    const homeMenuItem = document.querySelector('.menu-item[aria-label="Home"]');
-    console.log('Looking for Home menu item:', homeMenuItem);
-    if (homeMenuItem) {
-        console.log('Setting Home as active');
-        setActiveMenuItem(homeMenuItem);
+// Set Performance menu item as active since we're on the agent-performance page
+function setPerformanceActive() {
+    const performanceMenuItem = document.querySelector('.menu-item[aria-label="Performance"]');
+    console.log('Looking for Performance menu item:', performanceMenuItem);
+    if (performanceMenuItem) {
+        console.log('Setting Performance as active');
+        setActiveMenuItem(performanceMenuItem);
         return true;
     } else {
-        console.log('Home menu item not found, retrying...');
+        console.log('Performance menu item not found, retrying...');
         return false;
     }
 }
 
 // Try to set active immediately
-if (!setHomeActive()) {
+if (!setPerformanceActive()) {
     // If not found, try again after a short delay
     setTimeout(() => {
-        if (!setHomeActive()) {
+        if (!setPerformanceActive()) {
             // Try one more time after a longer delay
-            setTimeout(setHomeActive, 500);
+            setTimeout(setPerformanceActive, 500);
         }
     }, 100);
 }

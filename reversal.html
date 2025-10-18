@@ -666,7 +666,7 @@ overflow-x: hidden;
 
 <ul class="menu-items" role="menubar">
 <li role="none">
-    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Home">
+    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Home">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
@@ -721,7 +721,7 @@ overflow-x: hidden;
 </li>
 
 <li role="none">
-    <button class="menu-item" role="menuitem" tabindex="0" aria-label="Reversal">
+    <button class="menu-item active" role="menuitem" tabindex="0" aria-label="Reversal">
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
         </svg>
@@ -765,13 +765,6 @@ overflow-x: hidden;
 </nav>
 
 <main class="main-content" role="main">
-<section class="welcome-section">
-<h1>Good Morning, User!</h1>
-<div class="button-group">
-    <button class="btn btn-primary" aria-label="Navigate to Dashboard">Go to Dashboard</button>
-    <button class="btn btn-success" aria-label="Start Auditing Process">Start Auditing</button>
-</div>
-</section>
 </main>
 
 <script>
@@ -998,27 +991,27 @@ initializeEventListeners();
 // Set initial state
 elements.menuToggle.setAttribute('aria-expanded', 'false');
 
-// Set Home menu item as active since we're on the home page
-function setHomeActive() {
-    const homeMenuItem = document.querySelector('.menu-item[aria-label="Home"]');
-    console.log('Looking for Home menu item:', homeMenuItem);
-    if (homeMenuItem) {
-        console.log('Setting Home as active');
-        setActiveMenuItem(homeMenuItem);
+// Set Reversal menu item as active since we're on the reversal page
+function setReversalActive() {
+    const reversalMenuItem = document.querySelector('.menu-item[aria-label="Reversal"]');
+    console.log('Looking for Reversal menu item:', reversalMenuItem);
+    if (reversalMenuItem) {
+        console.log('Setting Reversal as active');
+        setActiveMenuItem(reversalMenuItem);
         return true;
     } else {
-        console.log('Home menu item not found, retrying...');
+        console.log('Reversal menu item not found, retrying...');
         return false;
     }
 }
 
 // Try to set active immediately
-if (!setHomeActive()) {
+if (!setReversalActive()) {
     // If not found, try again after a short delay
     setTimeout(() => {
-        if (!setHomeActive()) {
+        if (!setReversalActive()) {
             // Try one more time after a longer delay
-            setTimeout(setHomeActive, 500);
+            setTimeout(setReversalActive, 500);
         }
     }, 100);
 }
