@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Supabase Authentication</h1>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="user@nextventures.io" value="fahim@nextventures.io">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter password" value="fahim@nextventures.io">
+        </div>
+        
+        <button id="testBtn" onclick="testAuth()">Test Authentication</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://xijmkmvsumeoqarpmpvi.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhpam1rbXZzdW1lb3FhcnBtcHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NDk1NzgsImV4cCI6MjA3NjIyNTU3OH0.SapS798fqZrQeoeVfuHMu9DP-GvbsLX21yrRrUSTABc'
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        function showResult(message, type = 'info') {
+            const resultElement = document.getElementById('result')
+            resultElement.innerHTML = `<div class="result ${type}">${message}</div>`
+        }
+        
+        async function testAuth() {
+            const email = document.getElementById('email').value.trim()
+            const password = document.getElementById('password').value
+            const testBtn = document.getElementById('testBtn')
+            
+            if (!email || !password) {
+                showResult('Please enter both email and password', 'error')
+                return
+            }
+            
+            testBtn.disabled = true
+            testBtn.textContent = 'Testing...'
+            
+            try {
+                showResult('Testing authentication...', 'info')
+                
+                // Wait a moment for Supabase to be fully initialized
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                // Test Supabase authentication
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                })
+                
+                if (error) {
+                    throw error
+                }
+                
+                // Authentication successful
+                showResult(`
+                    <strong>Authentication Successful!</strong><br>
+                    User ID: ${data.user.id}<br>
+                    Email: ${data.user.email}<br>
+                    Email Confirmed: ${data.user.email_confirmed_at ? 'Yes' : 'No'}<br>
+                    Created At: ${new Date(data.user.created_at).toLocaleString()}
+                `, 'success')
+                
+                // Test getting user data from our users table
+                try {
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('email', email)
+                        .single()
+                    
+                    if (userError) {
+                        showResult(`
+                            <strong>Authentication Successful!</strong><br>
+                            User ID: ${data.user.id}<br>
+                            Email: ${data.user.email}<br>
+                            <br>
+                            <strong>Warning:</strong> User not found in users table: ${userError.message}
+                        `, 'error')
+                    } else {
+                        showResult(`
+                            <strong>Authentication Successful!</strong><br>
+                            User ID: ${data.user.id}<br>
+                            Email: ${data.user.email}<br>
+                            <br>
+                            <strong>User Data from Database:</strong><br>
+                            Name: ${userData.name}<br>
+                            Role: ${userData.role}<br>
+                            Department: ${userData.department}<br>
+                            Employee ID: ${userData.employee_id}
+                        `, 'success')
+                    }
+                } catch (userError) {
+                    showResult(`
+                        <strong>Authentication Successful!</strong><br>
+                        User ID: ${data.user.id}<br>
+                        Email: ${data.user.email}<br>
+                        <br>
+                        <strong>Warning:</strong> Error fetching user data: ${userError.message}
+                    `, 'error')
+                }
+                
+            } catch (error) {
+                console.error('Authentication error:', error)
+                
+                let errorMessage = 'Authentication failed: ' + error.message
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please check your credentials.'
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Email not confirmed. Please check your email and confirm your account.'
+                } else if (error.message.includes('Too many requests')) {
+                    errorMessage = 'Too many login attempts. Please try again later.'
+                }
+                
+                showResult(errorMessage, 'error')
+            } finally {
+                testBtn.disabled = false
+                testBtn.textContent = 'Test Authentication'
+            }
+        }
+        
+        // Initialize
+        showResult('Ready to test authentication. Enter credentials and click "Test Authentication".', 'info')
+    </script>
+</body>
+</html>

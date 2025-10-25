@@ -11,8 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js"></script>
@@ -35,16 +33,10 @@
     <div class="profile-header-card">
         <div class="profile-header-content">
             <div class="profile-avatar-container">
-                <div class="profile-avatar" id="profileAvatar" onclick="openAvatarUpdateModal()">
+                <div class="profile-avatar" id="profileAvatar">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
                     </svg>
-                    <div class="avatar-edit-overlay">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </div>
                 </div>
                 <div class="status-indicator"></div>
             </div>
@@ -268,34 +260,6 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.profile-avatar:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.avatar-edit-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    color: white;
-}
-
-.profile-avatar:hover .avatar-edit-overlay {
-    opacity: 1;
 }
 
 .profile-avatar svg {
@@ -343,7 +307,6 @@
     gap: 0.5rem;
     flex-wrap: wrap;
 }
-
 
 .badge {
     padding: 0.25rem 0.75rem;
@@ -660,48 +623,6 @@ function updateProfileDetails(user) {
     }
 }
 
-function updateProfileAvatar(avatarUrl) {
-    const profileAvatar = document.getElementById('profileAvatar');
-    if (!profileAvatar) return;
-    
-    if (avatarUrl) {
-        // Create image element
-        const img = document.createElement('img');
-        img.src = avatarUrl;
-        img.alt = 'Profile Picture';
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%;';
-        
-        // Replace content with image
-        profileAvatar.innerHTML = '';
-        profileAvatar.appendChild(img);
-        
-        // Add error handling
-        img.onerror = function() {
-            // If image fails to load, show initials
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-            const name = userInfo.name || 'User';
-            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-            
-            profileAvatar.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 2rem; font-weight: 600; color: white;">
-                    ${initials}
-                </div>
-            `;
-        };
-    } else {
-        // No avatar URL, show initials
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const name = userInfo.name || 'User';
-        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-        
-        profileAvatar.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 2rem; font-weight: 600; color: white;">
-                ${initials}
-            </div>
-        `;
-    }
-}
-
 function editProfile() {
     alert('Edit profile functionality will be implemented soon.');
 }
@@ -719,131 +640,6 @@ function logout() {
         window.location.href = 'login.html';
     }
 }
-
-// Avatar Update Functions
-function openAvatarUpdateModal() {
-    // Debug Supabase availability
-    console.log('Supabase check:', {
-        'window.SupabaseUsers': !!window.SupabaseUsers,
-        'window.SupabaseUsers.updateUser': !!(window.SupabaseUsers && window.SupabaseUsers.updateUser),
-        'window.SupabaseDB': !!window.SupabaseDB,
-        'window.SupabaseAuth': !!window.SupabaseAuth
-    });
-    
-    // Check if Supabase is available
-    if (!window.SupabaseUsers || !window.SupabaseUsers.updateUser) {
-        alert('Supabase not initialized. Please refresh the page and try again.\n\nCheck browser console for details.');
-        return;
-    }
-    
-    document.getElementById('avatarUpdateModal').style.display = 'flex';
-}
-
-function closeAvatarUpdateModal() {
-    document.getElementById('avatarUpdateModal').style.display = 'none';
-    document.getElementById('avatarUrlInput').value = '';
-    document.getElementById('avatarPreview').innerHTML = '';
-}
-
-async function updateAvatar() {
-    const avatarUrl = document.getElementById('avatarUrlInput').value.trim();
-    
-    if (!avatarUrl) {
-        alert('Please enter an image URL');
-        return;
-    }
-    
-    // Enhanced URL validation
-    let validUrl = avatarUrl;
-    
-    // Add protocol if missing
-    if (!avatarUrl.startsWith('http://') && !avatarUrl.startsWith('https://')) {
-        validUrl = 'https://' + avatarUrl;
-    }
-    
-    try {
-        new URL(validUrl);
-    } catch {
-        alert('Please enter a valid URL (e.g., https://example.com/image.jpg)');
-        return;
-    }
-    
-    // Use the corrected URL
-    const correctedAvatarUrl = validUrl;
-    
-    try {
-        // Check if Supabase is available
-        if (!window.SupabaseUsers || !window.SupabaseUsers.updateUser) {
-            throw new Error('Supabase not initialized. Please refresh the page and try again.');
-        }
-        
-        // Get current user info
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        if (!userInfo.email) {
-            throw new Error('User not found. Please sign in again.');
-        }
-        
-        // Update avatar in Supabase
-        const result = await window.SupabaseUsers.updateUser(userInfo.email, {
-            avatar_url: correctedAvatarUrl
-        });
-        
-        if (result.error) {
-            throw new Error(result.error.message);
-        }
-        
-        // Update local storage
-        userInfo.avatar = correctedAvatarUrl;
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
-        
-        // Update profile display
-        updateProfileAvatar(correctedAvatarUrl);
-        
-        // Close modal
-        closeAvatarUpdateModal();
-        
-        alert('Avatar updated successfully!');
-        
-    } catch (error) {
-        console.error('Error updating avatar:', error);
-        alert('Error updating avatar: ' + error.message);
-    }
-}
-
-function previewAvatar() {
-    const avatarUrl = document.getElementById('avatarUrlInput').value.trim();
-    const preview = document.getElementById('avatarPreview');
-    
-    if (!avatarUrl) {
-        preview.innerHTML = '';
-        return;
-    }
-    
-    // Enhanced URL validation and correction
-    let validUrl = avatarUrl;
-    
-    // Add protocol if missing
-    if (!avatarUrl.startsWith('http://') && !avatarUrl.startsWith('https://')) {
-        validUrl = 'https://' + avatarUrl;
-    }
-    
-    // Basic URL validation
-    try {
-        new URL(validUrl);
-        preview.innerHTML = `
-            <div style="text-align: center; margin-top: 1rem;">
-                <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">Preview:</p>
-                <img src="${validUrl}" 
-                     alt="Avatar Preview" 
-                     style="width: 4rem; height: 4rem; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <div style="display: none; width: 4rem; height: 4rem; border-radius: 50%; background: #f3f4f6; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #6b7280;">Invalid Image</div>
-            </div>
-        `;
-    } catch {
-        preview.innerHTML = '<p style="color: #ef4444; font-size: 0.75rem; margin-top: 0.5rem;">Invalid URL format</p>';
-    }
-}
 </script>
 
 
@@ -851,173 +647,5 @@ function previewAvatar() {
 
 
 </main>
-
-<!-- Avatar Update Modal -->
-<div id="avatarUpdateModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Update Profile Picture</h3>
-            <button class="modal-close" onclick="closeAvatarUpdateModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="avatarUrlInput">Image URL</label>
-                <input type="url" id="avatarUrlInput" placeholder="https://example.com/your-image.jpg" oninput="previewAvatar()">
-                <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                    Enter a direct link to an image (JPG, PNG, GIF, etc.)
-                </small>
-            </div>
-            <div id="avatarPreview"></div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-secondary" onclick="closeAvatarUpdateModal()">Cancel</button>
-            <button type="button" class="btn-primary" onclick="updateAvatar()">Update Avatar</button>
-        </div>
-    </div>
-</div>
-
-<style>
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 0.5rem;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 0.0625rem solid #e5e7eb;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #374151;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #6b7280;
-    padding: 0;
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-close:hover {
-    color: #374151;
-}
-
-.modal-body {
-    padding: 1rem;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    padding: 1rem;
-    border-top: 0.0625rem solid #e5e7eb;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #374151;
-    margin-bottom: 0.25rem;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 0.0625rem solid #d1d5db;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-family: 'Poppins', sans-serif;
-    transition: border-color 0.2s ease;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    border: none;
-    border-radius: 0.25rem;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    font-family: 'Poppins', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-0.0625rem);
-}
-
-.btn-secondary {
-    background-color: #f9fafb;
-    color: #374151;
-    border: 0.0625rem solid #d1d5db;
-    border-radius: 0.25rem;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    font-family: 'Poppins', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-secondary:hover {
-    background-color: #f3f4f6;
-    transform: translateY(-0.0625rem);
-}
-</style>
-
 </body>
 </html>

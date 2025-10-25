@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Supabase Auth Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Supabase Auth Users</h1>
+        
+        <div class="warning">
+            <strong>Important:</strong> You need your Supabase Service Role Key to create users. 
+            This key has admin privileges and should never be exposed to users.
+            <br><br>
+            <strong>How to get your Service Role Key:</strong>
+            <ol>
+                <li>Go to your Supabase Dashboard</li>
+                <li>Navigate to Settings → API</li>
+                <li>Copy the "service_role" key (not the "anon" key)</li>
+            </ol>
+        </div>
+        
+        <div class="form-group">
+            <label for="serviceKey">Supabase Service Role Key:</label>
+            <input type="password" id="serviceKey" placeholder="Enter your service role key here">
+        </div>
+        
+        <div id="status"></div>
+        
+        <div style="text-align: center;">
+            <button id="createBtn" onclick="createUsers()">Create Users in Supabase Auth</button>
+            <button id="checkBtn" onclick="checkUsers()">Check Existing Users</button>
+        </div>
+        
+        <div class="progress" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://xijmkmvsumeoqarpmpvi.supabase.co'
+        let adminSupabase = null
+        
+        function log(message) {
+            const logElement = document.getElementById('log')
+            const timestamp = new Date().toLocaleTimeString()
+            logElement.textContent += `[${timestamp}] ${message}\n`
+            logElement.scrollTop = logElement.scrollHeight
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status')
+            statusElement.innerHTML = `<div class="${type}">${message}</div>`
+        }
+        
+        function updateProgress(current, total) {
+            const progressContainer = document.getElementById('progressContainer')
+            const progressBar = document.getElementById('progressBar')
+            
+            if (total > 0) {
+                const percentage = (current / total) * 100
+                progressBar.style.width = `${percentage}%`
+                progressContainer.style.display = 'block'
+            } else {
+                progressContainer.style.display = 'none'
+            }
+        }
+        
+        function initializeAdminClient(serviceKey) {
+            if (!serviceKey) {
+                throw new Error('Service role key is required')
+            }
+            
+            adminSupabase = window.supabase.createClient(SUPABASE_URL, serviceKey, {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            })
+            
+            return adminSupabase
+        }
+        
+        async function checkUsers() {
+            const serviceKey = document.getElementById('serviceKey').value.trim()
+            
+            if (!serviceKey) {
+                showStatus('Please enter your service role key first', 'error')
+                return
+            }
+            
+            try {
+                log('Checking existing users...')
+                initializeAdminClient(serviceKey)
+                
+                // Get users from our users table
+                const { data: users, error: fetchError } = await adminSupabase
+                    .from('users')
+                    .select('email, name, password_hash')
+                    .not('password_hash', 'is', null)
+                
+                if (fetchError) {
+                    throw fetchError
+                }
+                
+                log(`Found ${users.length} users with passwords in the database`)
+                
+                // Check which ones exist in Supabase Auth
+                let authUsersCount = 0
+                for (const user of users) {
+                    try {
+                        const { data: authUser } = await adminSupabase.auth.admin.getUserByEmail(user.email)
+                        if (authUser.user) {
+                            log(`✓ ${user.email} - EXISTS in Supabase Auth`)
+                            authUsersCount++
+                        } else {
+                            log(`✗ ${user.email} - NOT in Supabase Auth`)
+                        }
+                    } catch (error) {
+                        log(`✗ ${user.email} - ERROR checking: ${error.message}`)
+                    }
+                }
+                
+                showStatus(`Found ${users.length} users in database, ${authUsersCount} exist in Supabase Auth`, 'info')
+                
+            } catch (error) {
+                log(`Error checking users: ${error.message}`)
+                showStatus('Error checking users: ' + error.message, 'error')
+            }
+        }
+        
+        async function createUsers() {
+            const serviceKey = document.getElementById('serviceKey').value.trim()
+            const createBtn = document.getElementById('createBtn')
+            const checkBtn = document.getElementById('checkBtn')
+            
+            if (!serviceKey) {
+                showStatus('Please enter your service role key first', 'error')
+                return
+            }
+            
+            createBtn.disabled = true
+            checkBtn.disabled = true
+            
+            try {
+                log('Starting user creation in Supabase Auth...')
+                showStatus('Creating users in Supabase Auth...', 'info')
+                
+                initializeAdminClient(serviceKey)
+                
+                // Get all users from the users table
+                const { data: users, error: fetchError } = await adminSupabase
+                    .from('users')
+                    .select('email, name, password_hash')
+                    .not('password_hash', 'is', null)
+                
+                if (fetchError) {
+                    throw fetchError
+                }
+                
+                log(`Found ${users.length} users to create`)
+                updateProgress(0, users.length)
+                
+                let successCount = 0
+                let errorCount = 0
+                
+                for (let i = 0; i < users.length; i++) {
+                    const user = users[i]
+                    
+                    try {
+                        log(`Processing user ${i + 1}/${users.length}: ${user.email}`)
+                        
+                        // Check if user already exists in Supabase Auth
+                        const { data: existingUser } = await adminSupabase.auth.admin.getUserByEmail(user.email)
+                        
+                        if (existingUser.user) {
+                            log(`User ${user.email} already exists in Supabase Auth`)
+                            successCount++
+                            updateProgress(i + 1, users.length)
+                            continue
+                        }
+                        
+                        // Create user in Supabase Auth
+                        const { data: authUser, error: createError } = await adminSupabase.auth.admin.createUser({
+                            email: user.email,
+                            password: user.password_hash, // Using the current password_hash as the password
+                            email_confirm: true, // Auto-confirm email
+                            user_metadata: {
+                                name: user.name,
+                                full_name: user.name
+                            }
+                        })
+                        
+                        if (createError) {
+                            log(`Error creating user ${user.email}: ${createError.message}`)
+                            errorCount++
+                            updateProgress(i + 1, users.length)
+                            continue
+                        }
+                        
+                        log(`Successfully created user: ${user.email}`)
+                        successCount++
+                        
+                        // Update the users table to mark that this user is now in Supabase Auth
+                        const { error: updateError } = await adminSupabase
+                            .from('users')
+                            .update({ 
+                                password_hash: null, // Clear the old password hash
+                                email_verified: 'true',
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('email', user.email)
+                        
+                        if (updateError) {
+                            log(`Error updating user ${user.email}: ${updateError.message}`)
+                        }
+                        
+                        updateProgress(i + 1, users.length)
+                        
+                    } catch (error) {
+                        log(`Error processing user ${user.email}: ${error.message}`)
+                        errorCount++
+                        updateProgress(i + 1, users.length)
+                    }
+                }
+                
+                log(`User creation completed! Success: ${successCount}, Errors: ${errorCount}`)
+                showStatus(`Creation completed! Successfully created ${successCount} users, ${errorCount} errors`, 
+                    errorCount > 0 ? 'error' : 'success')
+                
+            } catch (error) {
+                log(`Error in createUsers: ${error.message}`)
+                showStatus('Error creating users: ' + error.message, 'error')
+            } finally {
+                createBtn.disabled = false
+                checkBtn.disabled = false
+                updateProgress(0, 0)
+            }
+        }
+        
+        // Initialize
+        log('User Creation Tool initialized')
+        log('Enter your Supabase Service Role Key and click "Check Existing Users" to see what users need to be created')
+    </script>
+</body>
+</html>

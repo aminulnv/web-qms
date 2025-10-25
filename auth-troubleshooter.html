@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Troubleshooter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .step {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Authentication Troubleshooter</h1>
+        
+        <div class="step">
+            <h3>Step 1: Check Supabase Connection</h3>
+            <button onclick="checkSupabaseConnection()">Test Supabase Connection</button>
+            <div id="connectionResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Create Test User</h3>
+            <div class="form-group">
+                <label for="serviceKey">Service Role Key:</label>
+                <input type="password" id="serviceKey" placeholder="Enter your service role key">
+            </div>
+            <button onclick="createTestUser()">Create Test User</button>
+            <div id="createResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 3: Test Login</h3>
+            <div class="form-group">
+                <label for="testEmail">Email:</label>
+                <input type="email" id="testEmail" value="fahim@nextventures.io">
+            </div>
+            <div class="form-group">
+                <label for="testPassword">Password:</label>
+                <input type="password" id="testPassword" value="fahim@nextventures.io">
+            </div>
+            <button onclick="testLogin()">Test Login</button>
+            <div id="loginResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Debug Log</h3>
+            <div class="log" id="debugLog"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://xijmkmvsumeoqarpmpvi.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhpam1rbXZzdW1lb3FhcnBtcHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2NDk1NzgsImV4cCI6MjA3NjIyNTU3OH0.SapS798fqZrQeoeVfuHMu9DP-GvbsLX21yrRrUSTABc'
+        
+        function log(message) {
+            const logElement = document.getElementById('debugLog')
+            const timestamp = new Date().toLocaleTimeString()
+            logElement.textContent += `[${timestamp}] ${message}\n`
+            logElement.scrollTop = logElement.scrollHeight
+        }
+        
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<div class="result ${type}">${message}</div>`
+        }
+        
+        async function checkSupabaseConnection() {
+            try {
+                log('Testing Supabase connection...')
+                
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+                
+                // Test basic connection
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('email')
+                    .limit(1)
+                
+                if (error) {
+                    throw error
+                }
+                
+                log('✓ Supabase connection successful')
+                showResult('connectionResult', '✓ Supabase connection is working!', 'success')
+                
+            } catch (error) {
+                log(`✗ Supabase connection failed: ${error.message}`)
+                showResult('connectionResult', `✗ Connection failed: ${error.message}`, 'error')
+            }
+        }
+        
+        async function createTestUser() {
+            const serviceKey = document.getElementById('serviceKey').value.trim()
+            
+            if (!serviceKey) {
+                showResult('createResult', 'Please enter your service role key', 'error')
+                return
+            }
+            
+            try {
+                log('Creating test user...')
+                
+                const adminSupabase = window.supabase.createClient(SUPABASE_URL, serviceKey, {
+                    auth: {
+                        autoRefreshToken: false,
+                        persistSession: false
+                    }
+                })
+                
+                // Check if user already exists
+                const { data: existingUser } = await adminSupabase.auth.admin.getUserByEmail('fahim@nextventures.io')
+                
+                if (existingUser.user) {
+                    log('✓ User already exists in Supabase Auth')
+                    showResult('createResult', '✓ User already exists in Supabase Auth!', 'success')
+                    return
+                }
+                
+                // Create user
+                const { data, error } = await adminSupabase.auth.admin.createUser({
+                    email: 'fahim@nextventures.io',
+                    password: 'fahim@nextventures.io',
+                    email_confirm: true,
+                    user_metadata: {
+                        name: 'S.M. Fahim',
+                        full_name: 'S.M. Fahim'
+                    }
+                })
+                
+                if (error) {
+                    throw error
+                }
+                
+                log('✓ Test user created successfully')
+                showResult('createResult', '✓ Test user created successfully!', 'success')
+                
+            } catch (error) {
+                log(`✗ Error creating user: ${error.message}`)
+                showResult('createResult', `✗ Error: ${error.message}`, 'error')
+            }
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('testEmail').value.trim()
+            const password = document.getElementById('testPassword').value.trim()
+            
+            if (!email || !password) {
+                showResult('loginResult', 'Please enter both email and password', 'error')
+                return
+            }
+            
+            try {
+                log(`Testing login for ${email}...`)
+                
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                })
+                
+                if (error) {
+                    throw error
+                }
+                
+                log('✓ Login successful!')
+                showResult('loginResult', `
+                    <strong>✓ Login successful!</strong><br>
+                    User ID: ${data.user.id}<br>
+                    Email: ${data.user.email}<br>
+                    Email Confirmed: ${data.user.email_confirmed_at ? 'Yes' : 'No'}
+                `, 'success')
+                
+            } catch (error) {
+                log(`✗ Login failed: ${error.message}`)
+                showResult('loginResult', `✗ Login failed: ${error.message}`, 'error')
+            }
+        }
+        
+        // Initialize
+        log('Authentication Troubleshooter initialized')
+        log('Click "Test Supabase Connection" to start')
+    </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Test - Create One User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quick Test - Create One User</h1>
+        
+        <div class="form-group">
+            <label for="serviceKey">Supabase Service Role Key:</label>
+            <input type="password" id="serviceKey" placeholder="Enter your service role key here">
+        </div>
+        
+        <button id="createBtn" onclick="createTestUser()">Create Test User (fahim@nextventures.io)</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://xijmkmvsumeoqarpmpvi.supabase.co'
+        
+        function showResult(message, type = 'info') {
+            const resultElement = document.getElementById('result')
+            resultElement.innerHTML = `<div class="result ${type}">${message}</div>`
+        }
+        
+        async function createTestUser() {
+            const serviceKey = document.getElementById('serviceKey').value.trim()
+            const createBtn = document.getElementById('createBtn')
+            
+            if (!serviceKey) {
+                showResult('Please enter your service role key first', 'error')
+                return
+            }
+            
+            createBtn.disabled = true
+            createBtn.textContent = 'Creating user...'
+            
+            try {
+                showResult('Creating test user...', 'info')
+                
+                // Initialize admin client
+                const adminSupabase = window.supabase.createClient(SUPABASE_URL, serviceKey, {
+                    auth: {
+                        autoRefreshToken: false,
+                        persistSession: false
+                    }
+                })
+                
+                // Create the test user
+                const { data, error } = await adminSupabase.auth.admin.createUser({
+                    email: 'fahim@nextventures.io',
+                    password: 'fahim@nextventures.io', // Using email as password
+                    email_confirm: true, // Auto-confirm email
+                    user_metadata: {
+                        name: 'S.M. Fahim',
+                        full_name: 'S.M. Fahim'
+                    }
+                })
+                
+                if (error) {
+                    throw error
+                }
+                
+                showResult(`
+                    <strong>Test user created successfully!</strong><br>
+                    Email: fahim@nextventures.io<br>
+                    Password: fahim@nextventures.io<br>
+                    <br>
+                    <strong>Now you can test login:</strong><br>
+                    1. Go to login.html<br>
+                    2. Enter: fahim@nextventures.io<br>
+                    3. Password: fahim@nextventures.io<br>
+                    4. Click Login
+                `, 'success')
+                
+            } catch (error) {
+                console.error('Error creating user:', error)
+                showResult(`Error creating user: ${error.message}`, 'error')
+            } finally {
+                createBtn.disabled = false
+                createBtn.textContent = 'Create Test User (fahim@nextventures.io)'
+            }
+        }
+        
+        // Initialize
+        showResult('Enter your Supabase Service Role Key and click the button to create a test user.', 'info')
+    </script>
+</body>
+</html>

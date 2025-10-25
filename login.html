@@ -7,6 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
@@ -211,6 +212,9 @@
                          data-logo_alignment="left">
                     </div>
                     <div id="googleError" class="password-error"></div>
+                    <div id="googleSignInDisabled" style="display: none; text-align: center; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; color: #6c757d;">
+                        Google Sign-In is not available for this domain. Please use email/password login.
+                    </div>
                 </div>
                 
                 <div class="divider">
@@ -248,6 +252,7 @@
         </div>
     </div>
 
+    <script src="supabase-config.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script>
         const form = document.getElementById('loginForm');
@@ -268,10 +273,24 @@
             passwordInput.style.borderColor = 'var(--error-color)';
         }
         
+        // Wait for Supabase to be initialized
+        async function waitForSupabase() {
+            return new Promise((resolve) => {
+                const checkSupabase = () => {
+                    if (window.supabaseClient && window.SupabaseAuth) {
+                        resolve(true);
+                    } else {
+                        setTimeout(checkSupabase, 100);
+                    }
+                };
+                checkSupabase();
+            });
+        }
+
         // Form validation and submission
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = emailInput.value;
+            const email = emailInput.value.trim();
             const password = passwordInput.value;
             
             // Clear any previous errors
@@ -287,25 +306,80 @@
                 return;
             }
             
-            if (password !== 'admin') {
-                showPasswordError('Incorrect password');
-                return;
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing in...';
+            
+            try {
+                // Wait for Supabase to be initialized
+                await waitForSupabase();
+                
+                // Attempt Supabase authentication
+                const { data, error } = await window.SupabaseAuth.signInWithEmail(email, password);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // Authentication successful
+                console.log('Login successful:', data);
+                
+                // Get user data from our users table
+                const userData = await window.SupabaseUsers.getUserByEmail(email);
+                
+                if (userData) {
+                    // Update last login
+                    await window.SupabaseUsers.updateLastLogin(email);
+                    
+                    // Store user info in localStorage for compatibility
+                    const userInfo = {
+                        id: userData.email,
+                        email: userData.email,
+                        name: userData.name,
+                        avatar: userData.avatar_url,
+                        role: userData.role,
+                        department: userData.department,
+                        job_title: userData.job_title,
+                        employee_id: userData.employee_id,
+                        permissions: userData.permissions,
+                        provider: 'supabase',
+                        is_active: userData.is_active
+                    };
+                    
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    
+                    // Redirect to home page
+                    window.location.href = 'home.html';
+                } else {
+                    throw new Error('User not found in system');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Handle specific error messages
+                let errorMessage = 'Login failed. Please try again.';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please check your email and confirm your account';
+                } else if (error.message.includes('Too many requests')) {
+                    errorMessage = 'Too many login attempts. Please try again later.';
+                } else if (error.message.includes('User not found')) {
+                    errorMessage = 'User not found in system';
+                } else if (error.message.includes('Supabase client not initialized')) {
+                    errorMessage = 'Authentication service is loading. Please try again in a moment.';
+                }
+                
+                showPasswordError(errorMessage);
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
             }
-            
-            // Login successful
-            
-            // Store user information in localStorage for use in home.html
-            const userInfo = {
-                name: email.split('@')[0], // Extract username from email
-                email: email,
-                picture: null, // No picture for regular login
-                sub: 'admin-user' // Identifier for admin user
-            };
-            
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
-            // User info stored
-            
-            window.location.href = 'home.html';
         });
         
         // Auto-append domain to email
@@ -399,8 +473,11 @@
             submitResetBtn.textContent = 'Sending...';
 
             try {
-                // Simulate API call (replace with actual implementation)
-                await simulatePasswordReset(email);
+                // Wait for Supabase to be initialized
+                await waitForSupabase();
+                
+                // Use Supabase password reset
+                await window.SupabaseAuth.resetPassword(email);
                 
                 showMessage('Password reset link has been sent to your email address. Please check your inbox.', 'success');
                 
@@ -413,74 +490,120 @@
                 }, 3000);
                 
             } catch (error) {
-                showMessage('Failed to send reset link. Please try again later.', 'error');
+                console.error('Password reset error:', error);
+                
+                let errorMessage = 'Failed to send reset link. Please try again later.';
+                
+                if (error.message.includes('Too many requests')) {
+                    errorMessage = 'Too many reset attempts. Please try again later.';
+                } else if (error.message.includes('Invalid email')) {
+                    errorMessage = 'Please enter a valid email address.';
+                }
+                
+                showMessage(errorMessage, 'error');
             } finally {
                 // Re-enable submit button
                 submitResetBtn.disabled = false;
                 submitResetBtn.textContent = 'Send Reset Link';
             }
         });
-
-        // Simulate password reset API call
-        function simulatePasswordReset(email) {
-            return new Promise((resolve, reject) => {
-                // Simulate network delay
-                setTimeout(() => {
-                    // Simulate success (in real implementation, this would be an actual API call)
-                    // Password reset requested
-                    
-                    // For demo purposes, always resolve successfully
-                    // In real implementation, handle actual API response
-                    resolve({
-                        success: true,
-                        message: 'Reset link sent successfully'
-                    });
-                }, 1500);
-            });
-        }
         
         // Google Sign-In callback function
-        function handleGoogleSignIn(response) {
-            // Google Sign-In response received
-            
-            // Decode the JWT token to get user information
-            const payload = JSON.parse(atob(response.credential.split('.')[1]));
-            
-            // Extract user information
-            const userInfo = {
-                email: payload.email,
-                name: payload.name,
-                picture: payload.picture,
-                sub: payload.sub
-            };
-            
-            // Validate email domain (optional - remove if you want to allow any Google account)
-            if (userInfo.email && userInfo.email.endsWith('@nextventures.io')) {
-                // Google Sign-In successful
+        async function handleGoogleSignIn(response) {
+            try {
+                // Wait for Supabase to be initialized
+                await waitForSupabase();
                 
-                // Store user information in localStorage for use in home.html
-                localStorage.setItem('userInfo', JSON.stringify({
-                    name: userInfo.name,
-                    email: userInfo.email,
-                    picture: userInfo.picture,
-                    sub: userInfo.sub
-                }));
+                // Google Sign-In response received
                 
-                // Redirect to home page
-                window.location.href = 'home.html';
-            } else {
-                document.getElementById('googleError').textContent = 'Please use a valid @nextventures.io Google account';
-                // Sign out the user
-                google.accounts.id.disableAutoSelect();
+                // Decode the JWT token to get user information
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                
+                // Extract user information
+                const userInfo = {
+                    email: payload.email,
+                    name: payload.name,
+                    picture: payload.picture,
+                    sub: payload.sub
+                };
+                
+                // Validate email domain
+                if (userInfo.email && userInfo.email.endsWith('@nextventures.io')) {
+                    // Check if user exists in our users table
+                    const userData = await window.SupabaseUsers.getUserByEmail(userInfo.email);
+                    
+                    if (userData) {
+                        // Update last login
+                        await window.SupabaseUsers.updateLastLogin(userInfo.email);
+                        
+                        // Update avatar URL if not already set
+                        if (userInfo.picture && !userData.avatar_url) {
+                            try {
+                                await window.SupabaseUsers.updateUser(userData.email, {
+                                    avatar_url: userInfo.picture
+                                });
+                            } catch (error) {
+                                console.warn('Failed to update avatar URL:', error);
+                            }
+                        }
+                        
+                        // Store user information in localStorage for use in home.html
+                        const storedUserInfo = {
+                            id: userData.email,
+                            email: userData.email,
+                            name: userData.name,
+                            avatar: userData.avatar_url || userInfo.picture,
+                            role: userData.role,
+                            department: userData.department,
+                            job_title: userData.job_title,
+                            employee_id: userData.employee_id,
+                            permissions: userData.permissions,
+                            provider: 'google',
+                            is_active: userData.is_active
+                        };
+                        
+                        localStorage.setItem('userInfo', JSON.stringify(storedUserInfo));
+                        
+                        // Redirect to home page
+                        window.location.href = 'home.html';
+                    } else {
+                        document.getElementById('googleError').textContent = 'User not found in system. Please contact administrator.';
+                        if (typeof google !== 'undefined' && google.accounts) {
+                            google.accounts.id.disableAutoSelect();
+                        }
+                    }
+                } else {
+                    document.getElementById('googleError').textContent = 'Please use a valid @nextventures.io Google account';
+                    if (typeof google !== 'undefined' && google.accounts) {
+                        google.accounts.id.disableAutoSelect();
+                    }
+                }
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                document.getElementById('googleError').textContent = 'Google Sign-In failed. Please try again.';
+                if (typeof google !== 'undefined' && google.accounts) {
+                    google.accounts.id.disableAutoSelect();
+                }
             }
         }
         
         // Initialize Google Sign-In when the page loads
         window.onload = function() {
-            google.accounts.id.initialize({
-                client_id: '301636443575-ksrlhnk2bo0d7ikum000tb8b9g081rpp.apps.googleusercontent.com',
-                callback: handleGoogleSignIn
-            });
+            try {
+                google.accounts.id.initialize({
+                    client_id: '301636443575-ksrlhnk2bo0d7ikum000tb8b9g081rpp.apps.googleusercontent.com',
+                    callback: handleGoogleSignIn
+                });
+            } catch (error) {
+                console.warn('Google Sign-In initialization failed:', error);
+                // Hide Google Sign-In button and show message
+                const googleContainer = document.querySelector('.google-signin-container');
+                const googleButton = googleContainer.querySelector('.g_id_signin');
+                const googleDisabled = document.getElementById('googleSignInDisabled');
+                
+                if (googleButton) googleButton.style.display = 'none';
+                if (googleDisabled) googleDisabled.style.display = 'block';
+            }
         };
     </script>
 </body>

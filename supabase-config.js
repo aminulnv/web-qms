@@ -51,6 +51,71 @@ window.SupabaseConfig = {
 // Authentication helper functions
 window.SupabaseAuth = {
   /**
+   * Sign in with email and password
+   */
+  async signInWithEmail(email, password) {
+    if (!supabaseClient) {
+      throw new Error('Supabase client not initialized')
+    }
+    
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    })
+    
+    if (error) {
+      console.error('Email sign-in error:', error)
+      throw error
+    }
+    
+    return data
+  },
+
+  /**
+   * Sign up with email and password
+   */
+  async signUpWithEmail(email, password, userData = {}) {
+    if (!supabaseClient) {
+      throw new Error('Supabase client not initialized')
+    }
+    
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: userData
+      }
+    })
+    
+    if (error) {
+      console.error('Email sign-up error:', error)
+      throw error
+    }
+    
+    return data
+  },
+
+  /**
+   * Reset password
+   */
+  async resetPassword(email) {
+    if (!supabaseClient) {
+      throw new Error('Supabase client not initialized')
+    }
+    
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login.html`
+    })
+    
+    if (error) {
+      console.error('Password reset error:', error)
+      throw error
+    }
+    
+    return data
+  },
+
+  /**
    * Sign in with Google OAuth
    */
   async signInWithGoogle() {
@@ -61,12 +126,7 @@ window.SupabaseAuth = {
     const { data, error } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-          scope: 'openid email profile'
-        }
+        redirectTo: window.location.origin
       }
     })
     

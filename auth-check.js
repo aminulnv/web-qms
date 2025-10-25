@@ -43,30 +43,15 @@ class AuthChecker {
             await window.SupabaseUsers.updateLastLogin(userData.email)
             
             // Update avatar URL from Google if available and not already set
-            console.log('Auth user metadata:', authUser.user_metadata)
-            console.log('Auth user raw:', authUser)
-            
-            // Check multiple possible sources for avatar URL
-            const avatarUrl = authUser.user_metadata?.avatar_url || 
-                            authUser.user_metadata?.picture || 
-                            authUser.user_metadata?.avatar ||
-                            authUser.raw_user_meta_data?.avatar_url ||
-                            authUser.raw_user_meta_data?.picture ||
-                            authUser.raw_user_meta_data?.avatar
-            
-            if (avatarUrl && !userData.avatar_url) {
+            if (authUser.user_metadata?.avatar_url && !userData.avatar_url) {
               try {
-                console.log('Updating avatar URL:', avatarUrl)
                 await window.SupabaseUsers.updateUser(userData.email, {
-                  avatar_url: avatarUrl
+                  avatar_url: authUser.user_metadata.avatar_url
                 })
-                userData.avatar_url = avatarUrl
-                console.log('Avatar URL updated successfully')
+                userData.avatar_url = authUser.user_metadata.avatar_url
               } catch (error) {
                 console.warn('Failed to update avatar URL:', error)
               }
-            } else {
-              console.log('No avatar URL found or already exists. Avatar URL:', avatarUrl, 'Existing:', userData.avatar_url)
             }
             
             // Store user info in localStorage for compatibility
@@ -250,30 +235,15 @@ class AuthChecker {
             await window.SupabaseUsers.updateLastLogin(userData.email)
             
             // Update avatar URL from Google if available and not already set
-            console.log('Session user metadata:', session.user.user_metadata)
-            console.log('Session user raw:', session.user)
-            
-            // Check multiple possible sources for avatar URL
-            const avatarUrl = session.user.user_metadata?.avatar_url || 
-                            session.user.user_metadata?.picture || 
-                            session.user.user_metadata?.avatar ||
-                            session.user.raw_user_meta_data?.avatar_url ||
-                            session.user.raw_user_meta_data?.picture ||
-                            session.user.raw_user_meta_data?.avatar
-            
-            if (avatarUrl && !userData.avatar_url) {
+            if (session.user.user_metadata?.avatar_url && !userData.avatar_url) {
               try {
-                console.log('Updating avatar URL:', avatarUrl)
                 await window.SupabaseUsers.updateUser(userData.email, {
-                  avatar_url: avatarUrl
+                  avatar_url: session.user.user_metadata.avatar_url
                 })
-                userData.avatar_url = avatarUrl
-                console.log('Avatar URL updated successfully')
+                userData.avatar_url = session.user.user_metadata.avatar_url
               } catch (error) {
                 console.warn('Failed to update avatar URL:', error)
               }
-            } else {
-              console.log('No avatar URL found or already exists. Avatar URL:', avatarUrl, 'Existing:', userData.avatar_url)
             }
             
             // Store user info in localStorage
