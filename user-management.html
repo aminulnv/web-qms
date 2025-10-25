@@ -364,6 +364,14 @@
             font-size: 0.6rem;
             color: white;
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
 
         .role-badge {
@@ -626,6 +634,13 @@
                     </svg>
                     Refresh
                 </button>
+                <button class="btn-secondary" onclick="updateAvatarsFromGoogle()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Update Avatars
+                </button>
             </div>
         </div>
 
@@ -686,6 +701,13 @@
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUserAvatar">Avatar URL</label>
+                    <input type="url" id="editUserAvatar" placeholder="https://example.com/avatar.jpg">
+                    <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                        Enter a direct link to an image (JPG, PNG, GIF, etc.)
+                    </small>
                 </div>
             </form>
         </div>
@@ -875,11 +897,17 @@ function createUserRow(user) {
     const statusText = user.is_active ? 'Active' : 'Inactive';
     const lastLogin = user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never';
     
+    // Create avatar HTML - show image if available, otherwise show initials
+    const avatarHtml = user.avatar_url ? 
+        `<img src="${user.avatar_url}" alt="${user.name || 'User'}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div style="display: none;">${initials}</div>` :
+        initials;
+    
     return `
         <tr>
             <td>
                 <div style="display: flex; align-items: center; gap: 0.35rem;">
-                    <div class="user-avatar">${initials}</div>
+                    <div class="user-avatar">${avatarHtml}</div>
                     <span>${user.name || 'Unknown'}</span>
                 </div>
             </td>
@@ -952,6 +980,48 @@ function refreshUsers() {
     waitForSupabaseAndLoadUsers();
 }
 
+async function updateAvatarsFromGoogle() {
+    try {
+        // Get current authenticated user
+        const authUser = await window.SupabaseAuth.getCurrentUser()
+        if (!authUser) {
+            alert('Please sign in first to update avatars')
+            return
+        }
+
+        console.log('Current auth user:', authUser)
+        
+        // Check for avatar URL in multiple possible locations
+        const avatarUrl = authUser.user_metadata?.avatar_url || 
+                        authUser.user_metadata?.picture || 
+                        authUser.user_metadata?.avatar ||
+                        authUser.raw_user_meta_data?.avatar_url ||
+                        authUser.raw_user_meta_data?.picture ||
+                        authUser.raw_user_meta_data?.avatar
+
+        if (avatarUrl) {
+            // Update current user's avatar
+            const result = await window.SupabaseUsers.updateUser(authUser.email, {
+                avatar_url: avatarUrl
+            })
+            
+            if (result.error) {
+                throw new Error(result.error.message)
+            }
+            
+            alert('Avatar updated successfully!')
+            refreshUsers()
+        } else {
+            alert('No avatar URL found in Google profile. Please check your Google account settings.')
+            console.log('Available user metadata:', authUser.user_metadata)
+            console.log('Available raw user meta data:', authUser.raw_user_meta_data)
+        }
+    } catch (error) {
+        console.error('Error updating avatar:', error)
+        alert('Error updating avatar: ' + error.message)
+    }
+}
+
 // Edit User Functions
 function editUser(userEmail) {
     const user = allUsers.find(u => u.email === userEmail);
@@ -969,6 +1039,7 @@ function editUser(userEmail) {
     document.getElementById('editUserJobTitle').value = user.job_title || '';
     document.getElementById('editUserEmployeeId').value = user.employee_id || '';
     document.getElementById('editUserStatus').value = user.is_active ? 'true' : 'false';
+    document.getElementById('editUserAvatar').value = user.avatar_url || '';
 
     // Show the modal
     document.getElementById('editUserModal').style.display = 'flex';
@@ -989,7 +1060,8 @@ async function saveUserChanges() {
         department: document.getElementById('editUserDepartment').value,
         job_title: document.getElementById('editUserJobTitle').value,
         employee_id: document.getElementById('editUserEmployeeId').value,
-        is_active: document.getElementById('editUserStatus').value === 'true'
+        is_active: document.getElementById('editUserStatus').value === 'true',
+        avatar_url: document.getElementById('editUserAvatar').value.trim()
     };
 
     // Basic validation
