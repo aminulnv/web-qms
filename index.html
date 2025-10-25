@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | QMS</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: transparent;
+            overflow: hidden;
+        }
+        
+        /* Hide all visual elements */
+        .loading-container,
+        .logo,
+        .loading-title,
+        .loading-subtitle,
+        .spinner,
+        .loading-text,
+        .error-message,
+        .retry-button,
+        #errorContainer {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="logo">
+            <svg xmlns="http://www.w3.org/2000/svg" height="1.5rem" viewBox="0 -960 960 960" width="1.5rem" fill="currentColor">
+                <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm491-80h69v-69l-69 69Zm-457 0h73l120-120h85L392-200h64l120-120h85L541-200h65l120-120h34v-440H200v509l69-69h85L234-200Zm72-200-56-56 177-177 80 80 147-147 56 56-203 204-80-80-121 120ZM200-200v-560 560Z"/>
+            </svg>
+        </div>
+        <h1 class="loading-title">QMS</h1>
+        <p class="loading-subtitle">Quality Management System</p>
+        <div class="spinner"></div>
+        <p class="loading-text">Checking authentication...</p>
+        <div id="errorContainer" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            REDIRECT_DELAY: 0,    // No delay - immediate redirect
+            RETRY_DELAY: 1000,    // 1 second delay before retry
+            MAX_RETRIES: 3,       // Maximum number of retry attempts
+            STORAGE_KEY: 'userInfo' // localStorage key for user data
+        };
+
+        // State management
+        let retryCount = 0;
+        let isRedirecting = false;
+
+        // DOM elements
+        const errorContainer = document.getElementById('errorContainer');
+        const loadingText = document.querySelector('.loading-text');
+        const spinner = document.querySelector('.spinner');
+
+        /**
+         * Check if user is authenticated by looking for cached data
+         * @returns {Object|null} User data if found, null otherwise
+         */
+        function checkAuthentication() {
+            try {
+                const userInfo = localStorage.getItem(CONFIG.STORAGE_KEY);
+                
+                if (!userInfo) {
+                    return null;
+                }
+
+                const user = JSON.parse(userInfo);
+                
+                // Validate user data structure
+                if (!user || typeof user !== 'object') {
+                    return null;
+                }
+
+                // Check if user has required fields
+                if (!user.email || !user.name) {
+                    return null;
+                }
+
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(user.email)) {
+                    return null;
+                }
+
+                // Check if email is from allowed domain
+                if (!user.email.endsWith('@nextventures.io')) {
+                    return null;
+                }
+
+                return user;
+
+            } catch (error) {
+                // Error checking authentication
+                return null;
+            }
+        }
+
+        /**
+         * Clear invalid user data from cache
+         */
+        function clearInvalidCache() {
+            try {
+                localStorage.removeItem(CONFIG.STORAGE_KEY);
+            } catch (error) {
+                // Error clearing cache
+            }
+        }
+
+        /**
+         * Show error message to user (hidden in UI)
+         * @param {string} message - Error message to display
+         * @param {boolean} showRetry - Whether to show retry button
+         */
+        function showError(message, showRetry = false) {
+            // Authentication error occurred
+            // No visual feedback - just log to console
+        }
+
+        /**
+         * Hide error message (no-op since nothing is visible)
+         */
+        function hideError() {
+            // No visual feedback needed
+        }
+
+        /**
+         * Update loading text (no-op since nothing is visible)
+         * @param {string} text - New loading text
+         */
+        function updateLoadingText(text) {
+            // Status update
+            // No visual feedback - just log to console
+        }
+
+        /**
+         * Redirect to specified page
+         * @param {string} page - Page to redirect to
+         */
+        function redirectTo(page) {
+            if (isRedirecting) return;
+            
+            isRedirecting = true;
+            
+            // Immediate redirect - no delay
+            try {
+                window.location.href = page;
+            } catch (error) {
+                // Error redirecting - try fallback
+                window.location.replace(page);
+            }
+        }
+
+        /**
+         * Handle authentication check result
+         * @param {Object|null} user - User data or null
+         */
+        function handleAuthenticationResult(user) {
+            if (user) {
+                updateLoadingText('Welcome back! Redirecting to dashboard...');
+                redirectTo('home.html');
+            } else {
+                updateLoadingText('Redirecting to login page...');
+                redirectTo('login.html');
+            }
+        }
+
+        /**
+         * Perform authentication check
+         */
+        function performAuthenticationCheck() {
+            try {
+                hideError();
+                updateLoadingText('Checking authentication...');
+                
+                const user = checkAuthentication();
+                handleAuthenticationResult(user);
+                
+            } catch (error) {
+                // Error during authentication check
+                showError('An error occurred while checking authentication. Please try again.', true);
+            }
+        }
+
+        /**
+         * Retry authentication check
+         */
+        function retryAuthentication() {
+            if (retryCount >= CONFIG.MAX_RETRIES) {
+                // Maximum retry attempts reached
+                redirectTo('login.html');
+                return;
+            }
+
+            retryCount++;
+            
+            setTimeout(() => {
+                performAuthenticationCheck();
+            }, CONFIG.RETRY_DELAY);
+        }
+
+        /**
+         * Initialize the application
+         */
+        function init() {
+            // Initializing QMS authentication check
+            
+            // Clear any invalid cached data first
+            const user = checkAuthentication();
+            if (!user) {
+                clearInvalidCache();
+            }
+            
+            // Perform authentication check
+            performAuthenticationCheck();
+        }
+
+        // Make retryAuthentication globally available
+        window.retryAuthentication = retryAuthentication;
+
+        // Start the application when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Handle page visibility change (when user returns to tab)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !isRedirecting) {
+                // Page became visible, rechecking authentication
+                performAuthenticationCheck();
+            }
+        });
+
+        // Handle storage changes (when user data is updated in another tab)
+        window.addEventListener('storage', (e) => {
+            if (e.key === CONFIG.STORAGE_KEY && !isRedirecting) {
+                // User data changed in another tab, rechecking authentication
+                performAuthenticationCheck();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Create Audit | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Create Audit</p>
+    <div style="margin-bottom: 1.5rem; width: 100%;"></div>
+
+<!-- Audit Timer Chip -->
+<div id="auditTimer" style="position: fixed; top: 1rem; right: 2rem; background:var(--primary-color); padding: 0.2rem 0.5rem 0.2rem 0.2rem; border-radius: 3.125rem; font-size: 0.9375rem; font-weight: 600; color: #ffffff; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; letter-spacing: 0.01875rem; flex-shrink: 0; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 7.5rem; display: flex; align-items: center; gap: 0.5rem; cursor: grab; user-select: none; z-index: 1000;">
+    <button id="timerControlBtn" title="Play/Pause/Reset Timer" style="width: 1.75rem; height: 1.75rem; background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; flex-shrink: 0; margin: 0; padding: 0;">
+        <svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+        </svg>
+    </button>
+    <span style="flex: 1; text-align: center; font-size: 0.9375rem; font-weight: 600; font-variant-numeric: tabular-nums;">--</span>
+</div>
+<!-- End of Audit Timer Chip -->
+
+
+    <!-- Audit Form -->
+<form id="auditForm" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 0; flex: 1; overflow-y: auto; min-height: 0; width: 100%; margin: 0;">
+    <!-- Hidden audit information fields - populated behind the scenes -->
+    <input type="hidden" id="auditTimestamp" name="auditTimestamp" required>
+    <input type="hidden" id="auditDuration" name="auditDuration">
+    <input type="hidden" id="auditorEmail" name="auditorEmail">
+    <input type="hidden" id="auditorName" name="auditorName">
+
+    <!-- Employee Information -->
+    <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Employee Information</h3>
+        <div class="grid-4" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); width: 100%;">
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="employeeName" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Employee's Name</label>
+                <select id="employeeName" name="employeeName" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Employee</option>
+                    <option value="John Smith">John Smith</option>
+                    <option value="Sarah Johnson">Sarah Johnson</option>
+                    <option value="Michael Brown">Michael Brown</option>
+                    <option value="Emily Davis">Emily Davis</option>
+                    <option value="David Wilson">David Wilson</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="employeeEmail" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Employee's Email</label>
+                <input type="email" id="employeeEmail" name="employeeEmail" required readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="interactionDate" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Interaction Date</label>
+                <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="employeeType" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Employee Type</label>
+                <select id="employeeType" name="employeeType" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Type</option>
+                    <option value="Agent">Agent</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Manager">Manager</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Details -->
+    <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Audit Details</h3>
+        <div class="grid-3" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(3, 1fr); width: 100%;">
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="auditType" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Audit Type</label>
+                <select id="auditType" name="auditType" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Type</option>
+                    <option value="Routine Audit (Recorded)">Routine Audit (Recorded)</option>
+                    <option value="Focused Audit (Recorded)">Focused Audit (Recorded)</option>
+                    <option value="Focused Audit (Live)">Focused Audit (Live)</option>
+                    <option value="Evaluation and Feedback">Evaluation and Feedback</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="agentPreStatus" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Agent Pre Status</label>
+                <select id="agentPreStatus" name="agentPreStatus" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Status</option>
+                    <option value="No active quality concerns">No active quality concerns</option>
+                    <option value="Pre-Quality">Pre-Quality</option>
+                    <option value="Quality Concern">Quality Concern</option>
+                    <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
+                    <option value="Performance Improvement Plan (PIP) - Alert">Performance Improvement Plan (PIP) - Alert</option>
+                    <option value="Performance Improvement Plan (PIP) - Priority">Performance Improvement Plan (PIP) - Priority</option>
+                </select>
+            </div>
+            <!-- Hidden quarter field - auto-calculated -->
+            <input type="hidden" id="quarter" name="quarter">
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="countryOfEmployee" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Country of Employee</label>
+                <select id="countryOfEmployee" name="countryOfEmployee" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Country</option>
+                    <option value="Bangladesh">Bangladesh</option>
+                    <option value="Sri Lanka">Sri Lanka</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="interactionId" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Interaction ID</label>
+                <input type="text" id="interactionId" name="interactionId" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="clientEmail" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Client's Email</label>
+                <input type="email" id="clientEmail" name="clientEmail" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <!-- Hidden week field - auto-calculated -->
+            <input type="hidden" id="week" name="week">
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="channel" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Channel</label>
+                <select id="channel" name="channel" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Channel</option>
+                    <option value="FN Chat CFD">FN Chat CFD</option>
+                    <option value="FN Chat Futures">FN Chat Futures</option>
+                    <option value="FN Email">FN Email</option>
+                    <option value="Regular PSTF">Regular PSTF</option>
+                    <option value="Advance PSTF">Advance PSTF</option>
+                    <option value="PO + Ticket">PO + Ticket</option>
+                    <option value="CPM Email">CPM Email</option>
+                    <option value="B.Dev Email">B.Dev Email</option>
+                    <option value="MKT Social Media Comments">MKT Social Media Comments</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="agentPostStatus" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Agent Post Status</label>
+                <select id="agentPostStatus" name="agentPostStatus" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Status</option>
+                    <option value="No active quality concerns">No active quality concerns</option>
+                    <option value="Pre-Quality">Pre-Quality</option>
+                    <option value="Quality Concern">Quality Concern</option>
+                    <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
+                    <option value="Performance Improvement Plan (PIP) - Alert">Performance Improvement Plan (PIP) - Alert</option>
+                    <option value="Performance Improvement Plan (PIP) - Priority">Performance Improvement Plan (PIP) - Priority</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transcript -->
+    <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Transcript</h3>
+        <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+            <label for="transcript" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Transcript</label>
+            <textarea id="transcript" name="transcript" rows="8" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; width: 100%;"></textarea>
+        </div>
+    </div>
+
+        <!-- Error Feedback -->
+        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Error Details</h3>
+            <div class="grid-2" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; width: 100%;">
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="errorLossBusiness" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Loss of Business</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="errorLossBusiness" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="errorLossBusiness" name="errorLossBusiness" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="errorLossBusiness" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLossBusiness" name="feedbackLossBusiness" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="zeroTolerance" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Zero Tolerance</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="zeroTolerance" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="zeroTolerance" name="zeroTolerance" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="zeroTolerance" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackZeroTolerance" name="feedbackZeroTolerance" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="incorrectInfo" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Incorrect Information</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="incorrectInfo" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="incorrectInfo" name="incorrectInfo" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="incorrectInfo" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackIncorrectInfo" name="feedbackIncorrectInfo" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="lackProfessionalism" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Lack of Professionalism</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="lackProfessionalism" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="lackProfessionalism" name="lackProfessionalism" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="lackProfessionalism" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLackProfessionalism" name="feedbackLackProfessionalism" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="lackEscalation" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Lack of Escalation</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="lackEscalation" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="lackEscalation" name="lackEscalation" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="lackEscalation" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLackEscalation" name="feedbackLackEscalation" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="lackInvestigation" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Lack of Investigation</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="lackInvestigation" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="lackInvestigation" name="lackInvestigation" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="lackInvestigation" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLackInvestigation" name="feedbackLackInvestigation" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="lackEmpathy" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Lack of Empathy</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="lackEmpathy" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="lackEmpathy" name="lackEmpathy" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="lackEmpathy" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLackEmpathy" name="feedbackLackEmpathy" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="lackKnowledge" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Lack of Knowledge</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="lackKnowledge" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="lackKnowledge" name="lackKnowledge" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="lackKnowledge" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLackKnowledge" name="feedbackLackKnowledge" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="lackInternalComm" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Lack of Internal Comm</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="lackInternalComm" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="lackInternalComm" name="lackInternalComm" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="lackInternalComm" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackLackInternalComm" name="feedbackLackInternalComm" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="missingInfo" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Missing Information</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="missingInfo" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="missingInfo" name="missingInfo" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="missingInfo" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackMissingInfo" name="feedbackMissingInfo" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="outdatedMacro" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Outdated Macro</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="outdatedMacro" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="outdatedMacro" name="outdatedMacro" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="outdatedMacro" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackOutdatedMacro" name="feedbackOutdatedMacro" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="grammaticalErrors" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Grammatical Errors</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="grammaticalErrors" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="grammaticalErrors" name="grammaticalErrors" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="grammaticalErrors" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackGrammaticalErrors" name="feedbackGrammaticalErrors" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="infoOverload" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Information Overload</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="infoOverload" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="infoOverload" name="infoOverload" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="infoOverload" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackInfoOverload" name="feedbackInfoOverload" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="inadequateEngagement" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Inadequate Engagement</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="inadequateEngagement" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="inadequateEngagement" name="inadequateEngagement" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="inadequateEngagement" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackInadequateEngagement" name="feedbackInadequateEngagement" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: #f9fafb; padding: 0.375rem 0.5rem; border-radius: 0.25rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease;">
+                        <label for="missingMinimalInfo" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin: 0; font-family: 'Poppins', sans-serif; flex: 1;">Missing Minimal Info</label>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button" class="counter-btn" data-action="decrement" data-target="missingMinimalInfo" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                            <input type="number" id="missingMinimalInfo" name="missingMinimalInfo" min="0" value="0" readonly style="width: 2.25rem; padding: 0.1875rem 0.25rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 600; background-color: #ffffff; color: #374151; cursor: default; display: flex; align-items: center; justify-content: center;">
+                            <button type="button" class="counter-btn" data-action="increment" data-target="missingMinimalInfo" style="width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; border: 0.0625rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                        </div>
+                    </div>
+                    <textarea id="feedbackMissingMinimalInfo" name="feedbackMissingMinimalInfo" placeholder="Feedback details..." rows="1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2.5rem; display: none; transition: all 0.2s ease;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Hidden Error Description field - auto-populated from individual feedback fields -->
+            <input type="hidden" id="errorDescription" name="errorDescription">
+        </div>
+
+    <!-- Audit Results -->
+    <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Audit Results</h3>
+        <div class="grid-4" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); width: 100%;">
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="averageScore" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Average Score (%)</label>
+                <input type="number" id="averageScore" name="averageScore" min="0" max="100" step="0.01" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="criticalErrors" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Critical Errors (In any chats)</label>
+                <input type="number" id="criticalErrors" name="criticalErrors" min="0" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="passingStatus" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Passing/Not Passing</label>
+                <select id="passingStatus" name="passingStatus" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Status</option>
+                    <option value="Passing">✓ Passing</option>
+                    <option value="Not Passing">✗ Not Passing</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="totalErrorsCount" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Total Errors Count</label>
+                <input type="number" id="totalErrorsCount" name="totalErrorsCount" min="0" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="validationStatus" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Validation Status</label>
+                <select id="validationStatus" name="validationStatus" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                    <option value="">Select Status</option>
+                    <option value="Validated">Validated</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Notes & Feedback -->
+    <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Additional Notes & Feedback</h3>
+        <div class="grid-2" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(2, 1fr); width: 100%;">
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="criticalFailError" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Critical Fail Error</label>
+                <textarea id="criticalFailError" name="criticalFailError" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; min-height: 3.75rem; width: 100%;"></textarea>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="criticalError" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Critical Error</label>
+                <textarea id="criticalError" name="criticalError" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; min-height: 3.75rem; width: 100%;"></textarea>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                <label for="significantError" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Significant Error</label>
+                <textarea id="significantError" name="significantError" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; min-height: 3.75rem; width: 100%;"></textarea>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-bottom: 0; grid-column: span 2;">
+                <label for="recommendations" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Recommendations/Next Steps</label>
+                <textarea id="recommendations" name="recommendations" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; min-height: 3.75rem; width: 100%;"></textarea>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Form Actions -->
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem 0; border-top: 0.0625rem solid #e5e7eb; flex-shrink: 0; margin-top: 0.5rem;">
+        <button type="button" id="cancelBtn" class="btn btn-primary" style="background-color: #f9fafb; color: #374151; border-color: #d1d5db; flex: 1; min-width: 8rem;">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 8rem;">Submit Audit</button>
+    </div>
+    </form>
+
+
+
+
+
+
+
+
+
+</main>
+
+<script>
+// Audit Timer Functionality
+(function() {
+    let timerInterval = null;
+    let startTime = null;
+    let elapsedTime = 0;
+    let isRunning = false;
+    
+    const timerDisplay = document.querySelector('#auditTimer span');
+    const timerControlBtn = document.querySelector('#timerControlBtn');
+    const playIcon = '<path d="M8 5v14l11-7z"/>';
+    const pauseIcon = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>';
+    const resetIcon = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>';
+    
+    function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+    }
+    
+    
+    function startTimer() {
+        if (!isRunning) {
+            startTime = Date.now() - (elapsedTime * 1000);
+            isRunning = true;
+            timerInterval = setInterval(updateDisplay, 1000);
+            timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+            timerControlBtn.title = "Pause Timer";
+        }
+    }
+    
+    function pauseTimer() {
+        if (isRunning) {
+            isRunning = false;
+            clearInterval(timerInterval);
+            timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+            timerControlBtn.title = "Resume Timer";
+        }
+    }
+    
+    function resetTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        elapsedTime = 0;
+        startTime = null;
+        timerDisplay.textContent = '00:00';
+        timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+        timerControlBtn.title = "Start Timer";
+    }
+    
+    // Make resetTimer globally accessible
+    window.resetTimer = resetTimer;
+    
+    function toggleTimer() {
+        if (isRunning) {
+            pauseTimer();
+        } else {
+            startTimer();
+        }
+    }
+    
+    // Make timer draggable
+    const auditTimer = document.querySelector('#auditTimer');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    
+    auditTimer.addEventListener('mousedown', (e) => {
+        if (e.target === timerControlBtn) return; // Don't drag when clicking the button
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = auditTimer.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        auditTimer.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        auditTimer.style.left = (startLeft + deltaX) + 'px';
+        auditTimer.style.top = (startTop + deltaY) + 'px';
+        auditTimer.style.right = 'auto';
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            auditTimer.style.cursor = 'grab';
+        }
+    });
+    
+    // Event listeners
+    timerControlBtn.addEventListener('click', toggleTimer);
+    
+    // Double-click to reset
+    timerControlBtn.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        resetTimer();
+    });
+    
+    // Initialize timer - start immediately
+    function initializeTimer() {
+        startTime = Date.now();
+        isRunning = true;
+        timerInterval = setInterval(updateDisplay, 1000);
+        timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+        timerControlBtn.title = "Pause Timer";
+        updateDisplay();
+        
+        // Audit timestamp will be set on submission (hidden field)
+        
+        // Load user data from cache and populate auditor fields
+        loadUserData();
+        
+        // Update week and quarter based on current date
+        updateWeekAndQuarter();
+    }
+    
+    // Load user data from localStorage cache (behind the scenes)
+    function loadUserData() {
+        try {
+            const userInfo = localStorage.getItem('userInfo');
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                
+                // Populate hidden auditor fields from cached user data
+                const auditorEmail = document.getElementById('auditorEmail');
+                const auditorName = document.getElementById('auditorName');
+                
+                if (auditorEmail && user.email) {
+                    auditorEmail.value = user.email;
+                }
+                if (auditorName && user.name) {
+                    auditorName.value = user.name;
+                }
+            } else {
+                // Fallback to default values if no cached data
+                const auditorEmail = document.getElementById('auditorEmail');
+                const auditorName = document.getElementById('auditorName');
+                if (auditorEmail) {
+                    auditorEmail.value = 'auditor@company.com';
+                }
+                if (auditorName) {
+                    auditorName.value = 'John Auditor';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user data from cache:', error);
+            // Fallback to default values on error
+            const auditorEmail = document.getElementById('auditorEmail');
+            const auditorName = document.getElementById('auditorName');
+            if (auditorEmail) {
+                auditorEmail.value = 'auditor@company.com';
+            }
+            if (auditorName) {
+                auditorName.value = 'John Auditor';
+            }
+        }
+    }
+    
+    // Calculate week number (1-52) from date
+    function getWeekNumber(date) {
+        const start = new Date(date.getFullYear(), 0, 1);
+        const days = Math.floor((date - start) / (24 * 60 * 60 * 1000));
+        return Math.ceil((days + start.getDay() + 1) / 7);
+    }
+    
+    // Calculate quarter (Q1-Q4) from date
+    function getQuarter(date) {
+        const month = date.getMonth() + 1; // getMonth() returns 0-11
+        if (month >= 1 && month <= 3) return 'Q1';
+        if (month >= 4 && month <= 6) return 'Q2';
+        if (month >= 7 && month <= 9) return 'Q3';
+        if (month >= 10 && month <= 12) return 'Q4';
+        return 'Q1'; // fallback
+    }
+    
+    // Update week and quarter based on audit timestamp
+    function updateWeekAndQuarter() {
+        const auditTimestamp = document.getElementById('auditTimestamp');
+        const weekField = document.getElementById('week');
+        const quarterField = document.getElementById('quarter');
+        
+        if (auditTimestamp && auditTimestamp.value) {
+            const auditDate = new Date(auditTimestamp.value);
+            if (weekField) {
+                weekField.value = getWeekNumber(auditDate);
+            }
+            if (quarterField) {
+                quarterField.value = getQuarter(auditDate);
+            }
+        } else {
+            // Use current date if no timestamp set yet
+            const now = new Date();
+            if (weekField) {
+                weekField.value = getWeekNumber(now);
+            }
+            if (quarterField) {
+                quarterField.value = getQuarter(now);
+            }
+        }
+    }
+    
+    // Update hidden audit duration field when timer changes
+    function updateAuditDuration() {
+        const auditDuration = document.getElementById('auditDuration');
+        if (auditDuration) {
+            auditDuration.value = formatTime(elapsedTime);
+        }
+    }
+    
+    // Modified updateDisplay to also update audit duration
+    function updateDisplay() {
+        if (isRunning && startTime) {
+            elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        }
+        timerDisplay.textContent = formatTime(elapsedTime);
+        updateAuditDuration();
+    }
+    
+    // Start timer immediately when script loads
+    initializeTimer();
+})();
+
+// Function to auto-populate Error Description from individual feedback fields
+function populateErrorDescription() {
+    const feedbackFields = [
+        { id: 'feedbackLossBusiness', label: 'Loss of Business' },
+        { id: 'feedbackZeroTolerance', label: 'Zero Tolerance' },
+        { id: 'feedbackIncorrectInfo', label: 'Incorrect Information' },
+        { id: 'feedbackLackProfessionalism', label: 'Lack of Professionalism' },
+        { id: 'feedbackLackEscalation', label: 'Lack of Escalation' },
+        { id: 'feedbackLackInvestigation', label: 'Lack of Investigation' },
+        { id: 'feedbackLackEmpathy', label: 'Lack of Empathy' },
+        { id: 'feedbackLackKnowledge', label: 'Lack of Knowledge' },
+        { id: 'feedbackLackInternalComm', label: 'Lack of Internal Communication' },
+        { id: 'feedbackMissingInfo', label: 'Missing Information' },
+        { id: 'feedbackOutdatedMacro', label: 'Outdated Macro' },
+        { id: 'feedbackGrammaticalErrors', label: 'Grammatical Errors' },
+        { id: 'feedbackInfoOverload', label: 'Information Overload' },
+        { id: 'feedbackInadequateEngagement', label: 'Inadequate Engagement' },
+        { id: 'feedbackMissingMinimalInfo', label: 'Missing Minimal Information' }
+    ];
+    
+    const allFeedback = [];
+    
+    feedbackFields.forEach(field => {
+        const fieldElement = document.getElementById(field.id);
+        if (fieldElement && fieldElement.value.trim()) {
+            allFeedback.push(`${field.label}: ${fieldElement.value.trim()}`);
+        }
+    });
+    
+    const errorDescription = document.getElementById('errorDescription');
+    if (errorDescription) {
+        errorDescription.value = allFeedback.join('\n\n');
+    }
+}
+
+// Audit Form Submission Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const auditForm = document.getElementById('auditForm');
+    const cancelBtn = document.getElementById('cancelBtn');
+    
+    // Load user data when page loads
+    loadUserData();
+    
+    // Update week and quarter when page loads
+    updateWeekAndQuarter();
+    
+    // Refresh user data when window gains focus (in case user data was updated)
+    window.addEventListener('focus', function() {
+        loadUserData();
+        updateWeekAndQuarter();
+    });
+    
+    // Handle form submission
+    auditForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Set hidden audit timestamp to current time when submitting
+        const now = new Date();
+        const auditTimestamp = document.getElementById('auditTimestamp');
+        if (auditTimestamp) {
+            auditTimestamp.value = now.toISOString().slice(0, 16);
+        }
+        
+        // Update week and quarter based on the audit timestamp
+        updateWeekAndQuarter();
+        
+        // Auto-populate Error Description from individual feedback fields
+        populateErrorDescription();
+        
+        // Collect all form data
+        const formData = new FormData(auditForm);
+        const auditData = {};
+        
+        // Convert FormData to object
+        for (let [key, value] of formData.entries()) {
+            auditData[key] = value;
+        }
+        
+        // Add unique ID and submission timestamp
+        auditData.id = 'audit_' + Date.now();
+        auditData.submittedAt = new Date().toISOString();
+        
+        // Store in localStorage
+        let audits = JSON.parse(localStorage.getItem('audits') || '[]');
+        audits.unshift(auditData); // Add to beginning of array
+        localStorage.setItem('audits', JSON.stringify(audits));
+        
+        // Show success message
+        alert('Audit submitted successfully!');
+        
+        // Reset form
+        auditForm.reset();
+        
+        // Reset timer
+        if (window.resetTimer) {
+            window.resetTimer();
+        }
+        
+        // Redirect to audit reports
+        window.location.href = 'audit-reports.html';
+    });
+    
+    // Handle cancel button
+    cancelBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to cancel? All data will be lost.')) {
+            auditForm.reset();
+            if (window.resetTimer) {
+                window.resetTimer();
+            }
+        }
+    });
+});
+
+// Counter Button Functionality
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('counter-btn')) {
+        const action = e.target.getAttribute('data-action');
+        const targetId = e.target.getAttribute('data-target');
+        const targetInput = document.getElementById(targetId);
+        
+        if (targetInput) {
+            let currentValue = parseInt(targetInput.value) || 0;
+            
+            if (action === 'increment') {
+                currentValue++;
+            } else if (action === 'decrement') {
+                currentValue = Math.max(0, currentValue - 1);
+            }
+            
+            targetInput.value = currentValue;
+            
+            // Show/hide feedback textarea based on value
+            // Handle special case for error fields that start with "error"
+            let feedbackId;
+            if (targetId.startsWith('error')) {
+                // Remove "error" prefix and capitalize the next letter
+                feedbackId = 'feedback' + targetId.charAt(5).toUpperCase() + targetId.slice(6);
+            } else {
+                feedbackId = 'feedback' + targetId.charAt(0).toUpperCase() + targetId.slice(1);
+            }
+            const feedbackTextarea = document.getElementById(feedbackId);
+            
+            // Update input styling based on value
+            if (currentValue > 0) {
+                targetInput.style.backgroundColor = '#ef4444';
+                targetInput.style.color = '#ffffff';
+                targetInput.style.borderColor = '#dc2626';
+            } else {
+                targetInput.style.backgroundColor = '#ffffff';
+                targetInput.style.color = '#374151';
+                targetInput.style.borderColor = '#d1d5db';
+            }
+            
+            if (feedbackTextarea) {
+                if (currentValue > 0) {
+                    feedbackTextarea.style.display = 'block';
+                    feedbackTextarea.style.visibility = 'visible';
+                    feedbackTextarea.style.opacity = '1';
+                } else {
+                    feedbackTextarea.style.display = 'none';
+                    feedbackTextarea.style.visibility = 'hidden';
+                    feedbackTextarea.style.opacity = '0';
+                    feedbackTextarea.value = ''; // Clear feedback when count is 0
+                }
+            }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

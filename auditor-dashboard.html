@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Create Audit | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Auditor's Dashboard</p>
+    <div style="margin-bottom: 1.5rem;"></div>
+
+
+<!-- page content here -->
+
+        
+            <!-- Tab Navigation -->
+            <div style="position: relative; display: flex; background-color: var(--dark-forest); border-radius: 0.625rem; overflow: hidden; width: 100%; max-width: 25rem; margin: 1.25rem auto; padding: 0.3125rem;">
+                <div style="position: absolute; top: 0.3125rem; height: calc(100% - 0.625rem); background-color: var(--primary-color); border-radius: 0.3125rem; transition: all 0.3s ease; left: 0.3125rem; width: calc(33.333% - 0.3125rem);"></div>
+                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" class="active" onclick="switchTab(this, 0)">Your Stats</button>
+                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" onclick="switchTab(this, 1)">Team Stats</button>
+                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" onclick="switchTab(this, 2)">Standup View</button>
+            </div>
+
+            <!-- stat Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1.5rem; margin-bottom: 2rem; width: 100%;">
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Assigned</div>
+                    <div style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">15</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Completed</div>
+                    <div style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">12</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">87% Target Achieved</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Remaining</div>
+                    <div style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">3</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Required Audit Per Day</div>
+                    <div style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">15.5</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">3 working days remaining</div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div style="margin-bottom: 2rem;">
+                <button style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: 0.0625rem solid var(--primary-color); border-radius: 0.375rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05);">
+                    <svg style="width: 1rem; height: 1rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.5rem" viewBox="0 -960 960 960" width="1.5rem" fill="currentColor">
+                        <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
+                    </svg>
+                    Filters
+                </button>
+            </div>
+
+            <!-- Data Table -->
+            <div style="background-color: var(--white); border-radius: 0.75rem; box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+                <div style="background-color: #f8f9fa; padding: 0.75rem 1rem; border-bottom: 0.0625rem solid #e5e7eb;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-color);">Performance Overview</h3>
+                </div>
+                <div style="padding: 1rem;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr; gap: 1rem; align-items: center; padding: 0.5rem 0 0.75rem 0; font-weight: 700; font-size: 0.875rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em;">
+                        <div>Name</div>
+                        <div>Assigned</div>
+                        <div>Completed</div>
+                        <div>Remaining</div>
+                        <div>Progress Meter</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr; gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;">
+                        <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600;" data-label="Name">Rahat Bin Yousuf</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Assigned">15</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Completed">12</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Remaining">3</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Progress">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color); min-width: 2.5rem;">80%</span>
+                                <div style="flex: 1; height: 0.75rem; background-color: var(--dark-forest); border-radius: 0.375rem; overflow: hidden; position: relative;">
+                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.375rem; transition: width 0.3s ease; width: 80%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+<script>
+    // Tab functionality with sliding indicator
+    function switchTab(tabElement, index) {
+        const tabs = document.querySelectorAll('button[onclick*="switchTab"]');
+        const slider = document.querySelector('div[style*="position: absolute"]');
+        const tabBar = document.querySelector('div[style*="position: relative"]');
+        
+        // Remove active class from all tabs
+        tabs.forEach(tab => tab.classList.remove('active'));
+        // Add active class to clicked tab
+        tabElement.classList.add('active');
+        
+        // Calculate position based on tab index and container width
+        const containerPadding = 5; // 0.3125rem = 5px
+        const tabWidth = (tabBar.offsetWidth - (containerPadding * 2)) / 3; // 3 tabs
+        const sliderLeft = containerPadding + (index * tabWidth);
+        
+        slider.style.left = `${sliderLeft}px`;
+        slider.style.width = `${tabWidth}px`;
+        
+        // Add logic here to show corresponding content based on index
+    }
+    
+    // Initialize slider position immediately
+    document.addEventListener('DOMContentLoaded', function() {
+        const slider = document.querySelector('div[style*="position: absolute"]');
+        const tabBar = document.querySelector('div[style*="position: relative"]');
+        
+        if (slider && tabBar) {
+            // Disable transition for initial positioning
+            slider.style.transition = 'none';
+            
+            // Calculate position for first tab (index 0)
+            const containerPadding = 5; // 0.3125rem = 5px
+            const tabWidth = (tabBar.offsetWidth - (containerPadding * 2)) / 3; // 3 tabs
+            const sliderLeft = containerPadding + (0 * tabWidth); // First tab
+            
+            slider.style.left = `${sliderLeft}px`;
+            slider.style.width = `${tabWidth}px`;
+            
+            // Re-enable transition after positioning
+            requestAnimationFrame(() => {
+                slider.style.transition = 'all 0.3s ease';
+            });
+        }
+    });
+</script>
+
+
+</body>
+</html>

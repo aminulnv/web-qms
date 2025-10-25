@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Audit Reports | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Audit Reports</p>
+    <div style="margin-bottom: 1.5rem;"></div>
+
+    <!-- Filters and Search -->
+    <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; margin-bottom: 1rem; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.01875rem;">Search & Filter</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="clearFilters" style="padding: 0.375rem 0.75rem; background-color: #f9fafb; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Clear All</button>
+                <button id="exportFilters" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Export</button>
+            </div>
+        </div>
+        
+        <!-- Compact Filter Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; align-items: end;">
+            <!-- General Search -->
+            <div>
+                <label for="searchInput" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Search</label>
+                <input type="text" id="searchInput" placeholder="Search audits..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Auditor Name -->
+            <div>
+                <label for="auditorNameFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Auditor</label>
+                <input type="text" id="auditorNameFilter" placeholder="Auditor name..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Employee Name -->
+            <div>
+                <label for="employeeNameFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Employee</label>
+                <input type="text" id="employeeNameFilter" placeholder="Employee name..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Audit Type -->
+            <div>
+                <label for="auditTypeFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Type</label>
+                <select id="auditTypeFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Types</option>
+                    <option value="Routine Audit (Recorded)">Routine (Recorded)</option>
+                    <option value="Focused Audit (Recorded)">Focused (Recorded)</option>
+                    <option value="Focused Audit (Live)">Focused (Live)</option>
+                    <option value="Evaluation and Feedback">Evaluation</option>
+                </select>
+            </div>
+            
+            <!-- Status -->
+            <div>
+                <label for="statusFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Status</label>
+                <select id="statusFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Statuses</option>
+                    <option value="Passing">Passing</option>
+                    <option value="Not Passing">Not Passing</option>
+                </select>
+            </div>
+            
+            <!-- Quarter -->
+            <div>
+                <label for="quarterFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Quarter</label>
+                <select id="quarterFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Quarters</option>
+                    <option value="Q1">Q1</option>
+                    <option value="Q2">Q2</option>
+                    <option value="Q3">Q3</option>
+                    <option value="Q4">Q4</option>
+                </select>
+            </div>
+            
+            <!-- Channel -->
+            <div>
+                <label for="channelFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Channel</label>
+                <select id="channelFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Channels</option>
+                    <option value="FN Chat CFD">FN Chat CFD</option>
+                    <option value="FN Chat Futures">FN Chat Futures</option>
+                    <option value="FN Email">FN Email</option>
+                    <option value="Regular PSTF">Regular PSTF</option>
+                    <option value="Advance PSTF">Advance PSTF</option>
+                    <option value="PO + Ticket">PO + Ticket</option>
+                    <option value="CPM Email">CPM Email</option>
+                    <option value="B.Dev Email">B.Dev Email</option>
+                    <option value="MKT Social Media Comments">MKT Social Media</option>
+                </select>
+            </div>
+            
+            <!-- Employee Type -->
+            <div>
+                <label for="employeeTypeFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Emp Type</label>
+                <select id="employeeTypeFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Types</option>
+                    <option value="Agent">Agent</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Manager">Manager</option>
+                </select>
+            </div>
+            
+            <!-- Country -->
+            <div>
+                <label for="countryFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Country</label>
+                <select id="countryFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Countries</option>
+                    <option value="Bangladesh">Bangladesh</option>
+                    <option value="Sri Lanka">Sri Lanka</option>
+                </select>
+            </div>
+            
+            <!-- Interaction ID -->
+            <div>
+                <label for="interactionIdFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Interaction ID</label>
+                <input type="text" id="interactionIdFilter" placeholder="Interaction ID..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Week -->
+            <div>
+                <label for="weekFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Week</label>
+                <input type="number" id="weekFilter" min="1" max="52" placeholder="Week (1-52)..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Min Score -->
+            <div>
+                <label for="minScoreFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Min Score</label>
+                <input type="number" id="minScoreFilter" min="0" max="100" placeholder="Min %..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Max Score -->
+            <div>
+                <label for="maxScoreFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Max Score</label>
+                <input type="number" id="maxScoreFilter" min="0" max="100" placeholder="Max %..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Min Errors -->
+            <div>
+                <label for="minErrorsFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Min Errors</label>
+                <input type="number" id="minErrorsFilter" min="0" placeholder="Min errors..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Max Errors -->
+            <div>
+                <label for="maxErrorsFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Max Errors</label>
+                <input type="number" id="maxErrorsFilter" min="0" placeholder="Max errors..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- From Date -->
+            <div>
+                <label for="dateFromFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">From Date</label>
+                <input type="date" id="dateFromFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- To Date -->
+            <div>
+                <label for="dateToFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">To Date</label>
+                <input type="date" id="dateToFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Validation Status -->
+            <div>
+                <label for="validationStatusFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Validation</label>
+                <select id="validationStatusFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Validation</option>
+                    <option value="Validated">Validated</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            
+            <!-- Agent Pre Status -->
+            <div>
+                <label for="agentPreStatusFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Pre Status</label>
+                <select id="agentPreStatusFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Pre Status</option>
+                    <option value="No active quality concerns">No concerns</option>
+                    <option value="Pre-Quality">Pre-Quality</option>
+                    <option value="Quality Concern">Quality Concern</option>
+                    <option value="Performance Improvement Plan (PIP)">PIP</option>
+                    <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
+                    <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
+                </select>
+            </div>
+            
+            <!-- Agent Post Status -->
+            <div>
+                <label for="agentPostStatusFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Post Status</label>
+                <select id="agentPostStatusFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Post Status</option>
+                    <option value="No active quality concerns">No concerns</option>
+                    <option value="Pre-Quality">Pre-Quality</option>
+                    <option value="Quality Concern">Quality Concern</option>
+                    <option value="Performance Improvement Plan (PIP)">PIP</option>
+                    <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
+                    <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit List -->
+    <div id="auditList" style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+        <!-- Audits will be dynamically loaded here -->
+    </div>
+
+    <!-- No Audits Message -->
+    <div id="noAuditsMessage" style="display: none; text-align: center; padding: 2rem; color: #6b7280; font-family: 'Poppins', sans-serif; width: 100%;">
+        <p style="font-size: 1rem; margin-bottom: 0.5rem;">No audits found</p>
+        <p style="font-size: 0.875rem;">Submit your first audit to see it here.</p>
+    </div>
+
+</main>
+
+<script>
+// Audit Reports Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const auditList = document.getElementById('auditList');
+        const noAuditsMessage = document.getElementById('noAuditsMessage');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const quarterFilter = document.getElementById('quarterFilter');
+        const clearFilters = document.getElementById('clearFilters');
+    
+    let allAudits = [];
+    let filteredAudits = [];
+    
+    // Load audits from localStorage
+    function loadAudits() {
+        try {
+            allAudits = JSON.parse(localStorage.getItem('audits') || '[]');
+            filteredAudits = [...allAudits];
+            
+            // If no audits, create a test one
+            if (allAudits.length === 0) {
+                const testAudit = {
+                    id: 'test_audit_' + Date.now(),
+                    submittedAt: new Date().toISOString(),
+                    employeeName: 'Test Employee',
+                    auditorName: 'Test Auditor',
+                    auditType: 'Routine Audit (Recorded)',
+                    passingStatus: 'Passing',
+                    averageScore: '85',
+                    totalErrorsCount: '2',
+                    quarter: 'Q1',
+                    channel: 'FN Chat CFD',
+                    interactionId: 'TEST123',
+                    week: '15',
+                    countryOfEmployee: 'Bangladesh',
+                    employeeType: 'Agent',
+                    validationStatus: 'Validated',
+                    agentPreStatus: 'No active quality concerns',
+                    agentPostStatus: 'No active quality concerns',
+                    auditDuration: '00:15:30'
+                };
+                allAudits = [testAudit];
+                filteredAudits = [testAudit];
+            }
+            
+            renderAudits();
+        } catch (error) {
+            // Error loading audits
+        }
+    }
+    
+    // Render audits
+    function renderAudits() {
+        if (filteredAudits.length === 0) {
+            auditList.style.display = 'none';
+            noAuditsMessage.style.display = 'block';
+            return;
+        }
+        
+        auditList.style.display = 'flex';
+        noAuditsMessage.style.display = 'none';
+        
+        const auditCards = filteredAudits.map(audit => createAuditCard(audit));
+        auditList.innerHTML = auditCards.join('');
+    }
+    
+    // Create audit card
+    function createAuditCard(audit) {
+        const submittedDate = new Date(audit.submittedAt).toLocaleDateString();
+        const submittedTime = new Date(audit.submittedAt).toLocaleTimeString();
+        const statusColor = audit.passingStatus === 'Passing' ? '#10b981' : '#ef4444';
+        const statusIcon = audit.passingStatus === 'Passing' ? '✓' : '✗';
+        
+        return `
+            <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; cursor: pointer;" onclick="viewAuditDetails('${audit.id}')">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                    <div>
+                        <h3 style="font-size: 0.875rem; font-weight: 600; color: #1f2937; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif;">
+                            ${audit.employeeName || 'Unknown Employee'}
+                        </h3>
+                        <p style="font-size: 0.75rem; color: #6b7280; margin: 0; font-family: 'Poppins', sans-serif;">
+                            Interaction ID: ${audit.interactionId || 'N/A'} | ${audit.auditType || 'Unknown Type'}
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="display: inline-block; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600; color: white; background-color: ${statusColor}; font-family: 'Poppins', sans-serif;">
+                            ${statusIcon} ${audit.passingStatus || 'Unknown'}
+                        </span>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0.25rem 0 0 0; font-family: 'Poppins', sans-serif;">
+                            ${submittedDate} ${submittedTime}
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif;">Auditor</p>
+                        <p style="font-size: 0.75rem; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 500;">${audit.auditorName || 'Unknown'}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif;">Score</p>
+                        <p style="font-size: 0.75rem; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 500;">${audit.averageScore || '0'}%</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif;">Quarter</p>
+                        <p style="font-size: 0.75rem; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 500;">${audit.quarter || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif;">Channel</p>
+                        <p style="font-size: 0.75rem; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 500;">${audit.channel || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif;">Total Errors</p>
+                        <p style="font-size: 0.75rem; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 500;">${audit.totalErrorsCount || '0'}</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.6875rem; color: #6b7280; margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif;">Duration</p>
+                        <p style="font-size: 0.75rem; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 500;">${audit.auditDuration || 'N/A'}</p>
+                    </div>
+                </div>
+                
+                <div style="border-top: 0.0625rem solid #e5e7eb; padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif;">
+                        Click to view details
+                    </span>
+                    <button onclick="event.stopPropagation(); deleteAudit('${audit.id}')" style="padding: 0.25rem 0.5rem; background-color: #ef4444; color: white; border: none; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer;">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Filter audits
+    function filterAudits() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const quarterValue = quarterFilter.value;
+        
+        filteredAudits = allAudits.filter(audit => {
+            const matchesSearch = !searchTerm || 
+                (audit.employeeName && audit.employeeName.toLowerCase().includes(searchTerm)) ||
+                (audit.auditorName && audit.auditorName.toLowerCase().includes(searchTerm)) ||
+                (audit.interactionId && audit.interactionId.toLowerCase().includes(searchTerm));
+            
+            const matchesStatus = !statusValue || audit.passingStatus === statusValue;
+            const matchesQuarter = !quarterValue || audit.quarter === quarterValue;
+            
+            return matchesSearch && matchesStatus && matchesQuarter;
+        });
+        
+        renderAudits();
+    }
+    
+    // Event listeners - simplified
+    if (searchInput) {
+        searchInput.addEventListener('input', filterAudits);
+    }
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterAudits);
+    }
+    if (quarterFilter) {
+        quarterFilter.addEventListener('change', filterAudits);
+    }
+    
+    if (clearFilters) {
+        clearFilters.addEventListener('click', function() {
+            if (searchInput) searchInput.value = '';
+            if (statusFilter) statusFilter.value = '';
+            if (quarterFilter) quarterFilter.value = '';
+            filterAudits();
+        });
+    }
+    
+    // Export functionality
+    document.getElementById('exportFilters').addEventListener('click', function() {
+        if (filteredAudits.length === 0) {
+            alert('No audits to export. Please adjust your filters.');
+            return;
+        }
+        
+        // Convert audits to CSV format
+        const headers = [
+            'ID', 'Submitted At', 'Employee Name', 'Auditor Name', 'Audit Type', 
+            'Passing Status', 'Average Score', 'Total Errors', 'Quarter', 'Channel',
+            'Interaction ID', 'Week', 'Country', 'Employee Type', 'Validation Status',
+            'Agent Pre Status', 'Agent Post Status', 'Audit Duration'
+        ];
+        
+        const csvContent = [
+            headers.join(','),
+            ...filteredAudits.map(audit => [
+                audit.id || '',
+                audit.submittedAt || '',
+                audit.employeeName || '',
+                audit.auditorName || '',
+                audit.auditType || '',
+                audit.passingStatus || '',
+                audit.averageScore || '',
+                audit.totalErrorsCount || '',
+                audit.quarter || '',
+                audit.channel || '',
+                audit.interactionId || '',
+                audit.week || '',
+                audit.countryOfEmployee || '',
+                audit.employeeType || '',
+                audit.validationStatus || '',
+                audit.agentPreStatus || '',
+                audit.agentPostStatus || '',
+                audit.auditDuration || ''
+            ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `audit-reports-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+    
+    // View audit details
+    window.viewAuditDetails = function(auditId) {
+        const audit = allAudits.find(a => a.id === auditId);
+        if (audit) {
+            // Create a modal or redirect to detailed view
+            showAuditModal(audit);
+        }
+    };
+    
+    // Delete audit
+    window.deleteAudit = function(auditId) {
+        if (confirm('Are you sure you want to delete this audit?')) {
+            allAudits = allAudits.filter(a => a.id !== auditId);
+            localStorage.setItem('audits', JSON.stringify(allAudits));
+            loadAudits();
+        }
+    };
+    
+    // Show audit modal
+    function showAuditModal(audit) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); z-index: 1000; display: flex; 
+            align-items: center; justify-content: center; padding: 1rem;
+        `;
+        
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="font-size: 1.125rem; font-weight: 600; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif;">
+                        Audit Details
+                    </h2>
+                    <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">&times;</button>
+                </div>
+                <div style="display: grid; gap: 1rem;">
+                    ${Object.entries(audit).map(([key, value]) => `
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 500; color: #374151; font-family: 'Poppins', sans-serif;">
+                                ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                            </label>
+                            <p style="font-size: 0.875rem; color: #1f2937; margin: 0.25rem 0 0 0; font-family: 'Poppins', sans-serif;">
+                                ${value || 'N/A'}
+                            </p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    // Load audits on page load
+    loadAudits();
+    
+    // Additional debugging - check if elements exist
+    
+    // Load audits on page load
+    loadAudits();
+    
+    } catch (error) {
+        // Error in audit reports functionality
+    }
+});
+</script>
+
+</body>
+</html>

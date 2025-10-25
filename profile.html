@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Profile | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Profile</p>
+    <div style="margin-bottom: 1.5rem;"></div>
+
+
+<!-- Profile Content -->
+<div class="profile-container">
+    <!-- Profile Header Card -->
+    <div class="profile-header-card">
+        <div class="profile-header-content">
+            <div class="profile-avatar-container">
+                <div class="profile-avatar" id="profileAvatar">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+                    </svg>
+                </div>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name" id="profileName">Loading...</h1>
+                <p class="profile-email" id="profileEmail">Loading...</p>
+                <div class="profile-badges">
+                    <span class="badge badge-primary" id="accountAccessLevel">QC</span>
+                    <span class="badge badge-success">Active</span>
+                </div>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <button class="btn-icon" onclick="editProfile()" title="Edit Profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </button>
+            <button class="btn-icon" onclick="changePassword()" title="Change Password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </button>
+            <button class="btn-icon btn-danger" onclick="logout()" title="Logout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16,17 21,12 16,7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Profile Details Grid -->
+    <div class="profile-details-grid">
+        <!-- Personal Information Card -->
+        <div class="info-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Personal Information</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Full Name
+                    </div>
+                    <span class="info-value" id="fullName">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        Email Address
+                    </div>
+                    <span class="info-value" id="emailAddress">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        Employee ID
+                    </div>
+                    <span class="info-value" id="employeeId">754</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Information Card -->
+        <div class="info-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Work Information</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        Department
+                    </div>
+                    <span class="info-value" id="department">Quality Performance Training</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Team
+                    </div>
+                    <span class="info-value" id="team">Communications Quality Control</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="8.5" cy="7" r="4"/>
+                            <line x1="20" y1="8" x2="20" y2="14"/>
+                            <line x1="23" y1="11" x2="17" y2="11"/>
+                        </svg>
+                        Designation
+                    </div>
+                    <span class="info-value" id="designation">Executive</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Supervisor
+                    </div>
+                    <span class="info-value" id="supervisor">Sheikh Mohammad Fahim</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Information Card -->
+        <div class="info-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Account Information</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4"/>
+                            <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                            <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                            <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                            <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                        </svg>
+                        Access Level
+                    </div>
+                    <span class="info-value" id="accountAccessLevel">QC</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        Last Login
+                    </div>
+                    <span class="info-value" id="lastLogin">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Flat Design Profile Styles - Matching Theme */
+.profile-container {
+    width: 80%;
+    max-width: 75rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    background: var(--background-color);
+}
+
+/* Profile Header Card */
+.profile-header-card {
+    background: var(--background-color);
+    border-radius: 0.5rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 0.0625rem solid var(--border-light);
+}
+
+.profile-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 5rem;
+    height: 5rem;
+    border-radius: 50%;
+    background: var(--background-light);
+    border: 0.125rem solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.profile-avatar svg {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--text-secondary);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 0.25rem;
+    right: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    background: var(--success-color);
+    border: 0.125rem solid var(--background-color);
+    border-radius: 50%;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 0.25rem 0;
+}
+
+.profile-email {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0 0 1rem 0;
+}
+
+.profile-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-primary {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border: 0.0625rem solid var(--primary-color);
+}
+
+.badge-success {
+    background: var(--success-color);
+    color: var(--white);
+    border: 0.0625rem solid var(--success-color);
+}
+
+.profile-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.btn-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.25rem;
+    border: 0.0625rem solid var(--border-light);
+    background: var(--background-white);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--background-light);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-icon.btn-danger:hover {
+    background: var(--error-color);
+    border-color: var(--error-color);
+    color: var(--white);
+}
+
+.btn-icon svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* Profile Details Grid */
+.profile-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1.5rem;
+}
+
+.info-card {
+    background: var(--background-color);
+    border-radius: 0.5rem;
+    border: 0.0625rem solid var(--border-light);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.info-card:hover {
+    border-color: var(--border-color);
+}
+
+.card-header {
+    padding: 1.25rem 1.25rem 0 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.card-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.25rem;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-icon svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--white);
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.card-content {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem 0;
+    border-bottom: 0.0625rem solid var(--border-light);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    flex: 1;
+}
+
+.info-label svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.info-value {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* Responsive Design */
+@media (max-width: 48rem) {
+    .profile-container {
+        width: 95%;
+        padding: 1rem;
+    }
+    
+    .profile-header-card {
+        padding: 1.5rem;
+    }
+    
+    .profile-header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .profile-avatar {
+        width: 4rem;
+        height: 4rem;
+    }
+    
+    .profile-name {
+        font-size: 1.5rem;
+    }
+    
+    .profile-actions {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .profile-details-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .info-value {
+        text-align: left;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 30rem) {
+    .profile-header-card {
+        padding: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem 1rem 0 1rem;
+    }
+    
+    .card-content {
+        padding: 0 1rem 1rem 1rem;
+    }
+}
+</style>
+
+<script>
+// Profile page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserProfile();
+});
+
+function loadUserProfile() {
+    try {
+        const userInfo = localStorage.getItem('userInfo');
+        if (!userInfo) {
+            // No user info found
+            return;
+        }
+        
+        const user = JSON.parse(userInfo);
+        
+        // Update profile header
+        updateProfileHeader(user);
+        
+        // Update profile details
+        updateProfileDetails(user);
+        
+    } catch (error) {
+        // Error loading user profile
+    }
+}
+
+function updateProfileHeader(user) {
+    // Update profile name
+    const profileName = document.getElementById('profileName');
+    if (profileName && user.name) {
+        profileName.textContent = user.name;
+    }
+    
+    // Update profile email
+    const profileEmail = document.getElementById('profileEmail');
+    if (profileEmail && user.email) {
+        profileEmail.textContent = user.email;
+    }
+    
+    // Update profile avatar
+    const profileAvatar = document.getElementById('profileAvatar');
+    if (profileAvatar) {
+        if (user.picture || user.avatar) {
+            // Use Google profile picture (check both fields for backward compatibility)
+            const profilePicture = user.picture || user.avatar;
+            profileAvatar.innerHTML = `<img src="${profilePicture}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else if (user.name) {
+            // Create initials from name
+            const initials = user.name.split(' ').map(name => name.charAt(0)).join('').toUpperCase();
+            profileAvatar.innerHTML = `<div style="width: 100%; height: 100%; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 2rem;">${initials}</div>`;
+        }
+    }
+}
+
+function updateProfileDetails(user) {
+    // Update full name
+    const fullName = document.getElementById('fullName');
+    if (fullName && user.name) {
+        fullName.textContent = user.name;
+    }
+    
+    // Update email address
+    const emailAddress = document.getElementById('emailAddress');
+    if (emailAddress && user.email) {
+        emailAddress.textContent = user.email;
+    }
+    
+    // Update account access level
+    const accountAccessLevel = document.getElementById('accountAccessLevel');
+    if (accountAccessLevel) {
+        accountAccessLevel.textContent = 'QC';
+    }
+    
+    // Update last login (use current time as placeholder)
+    const lastLogin = document.getElementById('lastLogin');
+    if (lastLogin) {
+        lastLogin.textContent = new Date().toLocaleString();
+    }
+}
+
+function editProfile() {
+    alert('Edit profile functionality will be implemented soon.');
+}
+
+function changePassword() {
+    alert('Change password functionality will be implemented soon.');
+}
+
+function logout() {
+    if (window.AuthChecker) {
+        const authChecker = new window.AuthChecker();
+        authChecker.logout();
+    } else {
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+    }
+}
+</script>
+
+
+
+
+
+</main>
+</body>
+</html>

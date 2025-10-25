@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test | QMS</title>
+    <link rel="stylesheet" href="theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: var(--background-color, #f8fafc);
+        }
+        .test-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .test-button {
+            background: var(--primary-color, #1f9e4b);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.5rem;
+            font-size: 1rem;
+        }
+        .test-button:hover {
+            opacity: 0.9;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Supabase Connection Test</h1>
+        <p>This page tests the Supabase integration for your QMS application.</p>
+        
+        <div>
+            <button class="test-button" onclick="testSupabaseConnection()">Test Supabase Connection</button>
+            <button class="test-button" onclick="testAuthentication()">Test Authentication</button>
+            <button class="test-button" onclick="testGoogleSignIn()">Test Google Sign-In</button>
+            <button class="test-button" onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+
+        async function testSupabaseConnection() {
+            addResult('Testing Supabase connection...', 'info');
+            
+            try {
+                // Check if Supabase client is available
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not initialized');
+                }
+                
+                addResult('✓ Supabase client initialized successfully', 'success');
+                
+                // Test basic connection by getting current user
+                const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+                
+                if (error) {
+                    addResult(`⚠ Authentication error (expected if not logged in): ${error.message}`, 'info');
+                } else if (user) {
+                    addResult(`✓ User authenticated: ${user.email}`, 'success');
+                } else {
+                    addResult('ℹ No user currently authenticated', 'info');
+                }
+                
+                addResult('✓ Supabase connection test completed successfully', 'success');
+                
+            } catch (error) {
+                addResult(`✗ Supabase connection test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuthentication() {
+            addResult('Testing authentication system...', 'info');
+            
+            try {
+                const user = await window.SupabaseAuth.getCurrentUser();
+                
+                if (user) {
+                    addResult(`✓ User authenticated via Supabase: ${user.email}`, 'success');
+                    addResult(`  User ID: ${user.id}`, 'info');
+                    addResult(`  Provider: ${user.app_metadata?.provider || 'unknown'}`, 'info');
+                } else {
+                    addResult('ℹ No user currently authenticated', 'info');
+                }
+                
+            } catch (error) {
+                addResult(`✗ Authentication test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGoogleSignIn() {
+            addResult('Testing Google Sign-In...', 'info');
+            
+            try {
+                // This will redirect to Google OAuth, so we'll just show the attempt
+                addResult('Attempting Google Sign-In (will redirect if successful)...', 'info');
+                
+                const result = await window.SupabaseAuth.signInWithGoogle();
+                addResult('✓ Google Sign-In initiated successfully', 'success');
+                
+            } catch (error) {
+                addResult(`✗ Google Sign-In test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run connection test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testSupabaseConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
