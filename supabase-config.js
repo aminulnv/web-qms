@@ -105,7 +105,10 @@ window.SupabaseAuth = {
     const { data: { user }, error } = await supabaseClient.auth.getUser()
     
     if (error) {
-      console.error('Get user error:', error)
+      // Only log non-session-missing errors to reduce console noise
+      if (!error.message.includes('Auth session missing')) {
+        console.error('Get user error:', error)
+      }
       return null
     }
     
@@ -248,12 +251,12 @@ window.SupabaseUsers = {
   },
 
   /**
-   * Get user by ID from the users table
+   * Get user by ID from the users table (now uses email as primary key)
    */
   async getUserById(id) {
     try {
       const users = await window.SupabaseDB.fetch('users', {
-        filter: { column: 'id', value: id },
+        filter: { column: 'email', value: id },
         limit: 1
       })
       return users.length > 0 ? users[0] : null
@@ -278,9 +281,9 @@ window.SupabaseUsers = {
   /**
    * Update user information
    */
-  async updateUser(userId, userData) {
+  async updateUser(userEmail, userData) {
     try {
-      return await window.SupabaseDB.update('users', userData, { column: 'id', value: userId })
+      return await window.SupabaseDB.update('users', userData, { column: 'email', value: userEmail })
     } catch (error) {
       console.error('Error updating user:', error)
       throw error
@@ -334,10 +337,11 @@ window.SupabaseUsers = {
    */
   async updateLastLogin(userId) {
     try {
+      const currentCount = await this.incrementLoginCount(userId)
       return await window.SupabaseDB.update('users', {
         last_login: new Date().toISOString(),
-        login_count: await this.incrementLoginCount(userId)
-      }, { column: 'id', value: userId })
+        login_count: currentCount.toString()
+      }, { column: 'email', value: userId })
     } catch (error) {
       console.error('Error updating last login:', error)
       throw error
@@ -349,11 +353,12 @@ window.SupabaseUsers = {
    */
   async incrementLoginCount(userId) {
     try {
-      const user = await this.getUserById(userId)
-      return (user?.login_count || 0) + 1
+      const user = await this.getUserByEmail(userId)
+      const currentCount = parseInt(user?.login_count || '0')
+      return (currentCount + 1).toString()
     } catch (error) {
       console.error('Error incrementing login count:', error)
-      return 1
+      return '1'
     }
   }
 }

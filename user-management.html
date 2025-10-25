@@ -26,7 +26,8 @@
             gap: 1.5rem;
             padding: 0;
             width: 100%;
-            margin: 0;
+            margin: 0 auto;
+            max-width: 100%;
         }
 
         .stats-grid {
@@ -77,6 +78,14 @@
             font-weight: 700;
             color: var(--primary-color);
             margin-bottom: 0.25rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.625rem;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .controls-section {
@@ -413,6 +422,10 @@
                 grid-template-columns: repeat(2, 1fr);
             }
             
+            .stat-subtitle {
+                font-size: 0.5rem;
+            }
+            
             .controls-grid {
                 grid-template-columns: 1fr;
             }
@@ -458,6 +471,7 @@
                     </svg>
                 </div>
                 <div class="stat-value" id="totalUsers">-</div>
+                <div class="stat-subtitle" id="totalUsersSubtitle">All registered users</div>
             </div>
 
             <div class="stat-card">
@@ -469,6 +483,19 @@
                     </svg>
                 </div>
                 <div class="stat-value" id="activeUsers">-</div>
+                <div class="stat-subtitle" id="activeUsersSubtitle">Currently active</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Inactive Users</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                        <line x1="12" y1="2" x2="12" y2="22"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="inactiveUsers">-</div>
+                <div class="stat-subtitle" id="inactiveUsersSubtitle">Disabled accounts</div>
             </div>
 
             <div class="stat-card">
@@ -479,6 +506,18 @@
                     </svg>
                 </div>
                 <div class="stat-value" id="superAdmins">-</div>
+                <div class="stat-subtitle" id="superAdminsSubtitle">Highest access level</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Admins</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="admins">-</div>
+                <div class="stat-subtitle" id="adminsSubtitle">Administrative access</div>
             </div>
 
             <div class="stat-card">
@@ -491,6 +530,55 @@
                     </svg>
                 </div>
                 <div class="stat-value" id="qualityAnalysts">-</div>
+                <div class="stat-subtitle" id="qualityAnalystsSubtitle">Quality control team</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Agents</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="agents">-</div>
+                <div class="stat-subtitle" id="agentsSubtitle">Standard users</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Recent Logins</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="recentLogins">-</div>
+                <div class="stat-subtitle" id="recentLoginsSubtitle">Last 7 days</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">QPT Department</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="qptUsers">-</div>
+                <div class="stat-subtitle" id="qptUsersSubtitle">Quality Performance Training</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">CEx Department</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="cexUsers">-</div>
+                <div class="stat-subtitle" id="cexUsersSubtitle">Customer Experience</div>
             </div>
         </div>
 
@@ -654,6 +742,9 @@ async function loadUsers() {
             orderBy: { column: 'name', ascending: true }
         });
         
+        // Sort users by access level (role hierarchy)
+        allUsers = sortUsersByAccessLevel(allUsers);
+        
         filteredUsers = [...allUsers];
         
         updateStatistics();
@@ -675,16 +766,73 @@ async function loadUsers() {
     }
 }
 
+function sortUsersByAccessLevel(users) {
+    // Define role hierarchy (higher number = higher access level)
+    const roleHierarchy = {
+        'Super Admin': 4,
+        'Admin': 3,
+        'Quality Analyst': 2,
+        'Agent': 1
+    };
+    
+    return users.sort((a, b) => {
+        const aLevel = roleHierarchy[a.role] || 0;
+        const bLevel = roleHierarchy[b.role] || 0;
+        
+        // First sort by access level (descending - highest first)
+        if (aLevel !== bLevel) {
+            return bLevel - aLevel;
+        }
+        
+        // If same access level, sort by name (ascending)
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        return aName.localeCompare(bName);
+    });
+}
+
 function updateStatistics() {
     const totalUsers = allUsers.length;
     const activeUsers = allUsers.filter(user => user.is_active).length;
+    const inactiveUsers = allUsers.filter(user => !user.is_active).length;
     const superAdmins = allUsers.filter(user => user.role === 'Super Admin').length;
+    const admins = allUsers.filter(user => user.role === 'Admin').length;
     const qualityAnalysts = allUsers.filter(user => user.role === 'Quality Analyst').length;
+    const agents = allUsers.filter(user => user.role === 'Agent').length;
     
+    // Calculate recent logins (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentLogins = allUsers.filter(user => {
+        if (!user.last_login) return false;
+        const lastLoginDate = new Date(user.last_login);
+        return lastLoginDate >= sevenDaysAgo;
+    }).length;
+    
+    // Calculate department stats
+    const qptUsers = allUsers.filter(user => user.department === 'QPT').length;
+    const cexUsers = allUsers.filter(user => user.department === 'CEx').length;
+    
+    // Update all stat values
     document.getElementById('totalUsers').textContent = totalUsers;
     document.getElementById('activeUsers').textContent = activeUsers;
+    document.getElementById('inactiveUsers').textContent = inactiveUsers;
     document.getElementById('superAdmins').textContent = superAdmins;
+    document.getElementById('admins').textContent = admins;
     document.getElementById('qualityAnalysts').textContent = qualityAnalysts;
+    document.getElementById('agents').textContent = agents;
+    document.getElementById('recentLogins').textContent = recentLogins;
+    document.getElementById('qptUsers').textContent = qptUsers;
+    document.getElementById('cexUsers').textContent = cexUsers;
+    
+    // Update subtitles with percentages where relevant
+    const activePercentage = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
+    const inactivePercentage = totalUsers > 0 ? Math.round((inactiveUsers / totalUsers) * 100) : 0;
+    const recentPercentage = totalUsers > 0 ? Math.round((recentLogins / totalUsers) * 100) : 0;
+    
+    document.getElementById('activeUsersSubtitle').textContent = `${activePercentage}% of total users`;
+    document.getElementById('inactiveUsersSubtitle').textContent = `${inactivePercentage}% of total users`;
+    document.getElementById('recentLoginsSubtitle').textContent = `${recentPercentage}% logged in recently`;
 }
 
 function renderUsersTable() {
@@ -744,7 +892,7 @@ function createUserRow(user) {
             <td>${lastLogin}</td>
             <td>${user.login_count || 0}</td>
             <td>
-                <button class="btn-edit" onclick="editUser('${user.id}')" title="Edit User">
+                <button class="btn-edit" onclick="editUser('${user.email}')" title="Edit User">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -794,6 +942,9 @@ function filterUsers() {
         return matchesSearch && matchesRole && matchesDepartment && matchesStatus;
     });
     
+    // Re-sort filtered results by access level
+    filteredUsers = sortUsersByAccessLevel(filteredUsers);
+    
     renderUsersTable();
 }
 
@@ -802,15 +953,15 @@ function refreshUsers() {
 }
 
 // Edit User Functions
-function editUser(userId) {
-    const user = allUsers.find(u => u.id === userId);
+function editUser(userEmail) {
+    const user = allUsers.find(u => u.email === userEmail);
     if (!user) {
         console.error('User not found');
         return;
     }
 
     // Populate the form with user data
-    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editUserId').value = user.email;
     document.getElementById('editUserName').value = user.name || '';
     document.getElementById('editUserEmail').value = user.email || '';
     document.getElementById('editUserRole').value = user.role || '';
@@ -830,7 +981,7 @@ function closeEditModal() {
 }
 
 async function saveUserChanges() {
-    const userId = document.getElementById('editUserId').value;
+    const userEmail = document.getElementById('editUserId').value;
     const formData = {
         name: document.getElementById('editUserName').value,
         email: document.getElementById('editUserEmail').value,
@@ -854,14 +1005,14 @@ async function saveUserChanges() {
         }
 
         // Update user in Supabase
-        const result = await window.SupabaseUsers.updateUser(userId, formData);
+        const result = await window.SupabaseUsers.updateUser(userEmail, formData);
         
         if (result.error) {
             throw new Error(result.error.message);
         }
 
         // Update local data
-        const userIndex = allUsers.findIndex(u => u.id === userId);
+        const userIndex = allUsers.findIndex(u => u.email === userEmail);
         if (userIndex !== -1) {
             allUsers[userIndex] = { ...allUsers[userIndex], ...formData };
             filteredUsers = [...allUsers];

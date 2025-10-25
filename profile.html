@@ -590,16 +590,36 @@ function updateProfileDetails(user) {
         emailAddress.textContent = user.email;
     }
     
-    // Update account access level
-    const accountAccessLevel = document.getElementById('accountAccessLevel');
-    if (accountAccessLevel) {
-        accountAccessLevel.textContent = 'QC';
+    // Update employee ID
+    const employeeId = document.getElementById('employeeId');
+    if (employeeId && user.employee_id) {
+        employeeId.textContent = user.employee_id;
     }
     
-    // Update last login (use current time as placeholder)
+    // Update department
+    const department = document.getElementById('department');
+    if (department && user.department) {
+        department.textContent = user.department;
+    }
+    
+    // Update job title
+    const designation = document.getElementById('designation');
+    if (designation && user.job_title) {
+        designation.textContent = user.job_title;
+    }
+    
+    // Update account access level (role)
+    const accountAccessLevel = document.getElementById('accountAccessLevel');
+    if (accountAccessLevel && user.role) {
+        accountAccessLevel.textContent = user.role;
+    }
+    
+    // Update last login
     const lastLogin = document.getElementById('lastLogin');
     if (lastLogin) {
-        lastLogin.textContent = new Date().toLocaleString();
+        // Try to get last login from user data, otherwise use current time
+        const lastLoginTime = user.last_login || new Date().toISOString();
+        lastLogin.textContent = new Date(lastLoginTime).toLocaleString();
     }
 }
 

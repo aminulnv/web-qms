@@ -40,11 +40,23 @@ class AuthChecker {
           
           if (userData) {
             // Update last login
-            await window.SupabaseUsers.updateLastLogin(userData.id)
+            await window.SupabaseUsers.updateLastLogin(userData.email)
+            
+            // Update avatar URL from Google if available and not already set
+            if (authUser.user_metadata?.avatar_url && !userData.avatar_url) {
+              try {
+                await window.SupabaseUsers.updateUser(userData.email, {
+                  avatar_url: authUser.user_metadata.avatar_url
+                })
+                userData.avatar_url = authUser.user_metadata.avatar_url
+              } catch (error) {
+                console.warn('Failed to update avatar URL:', error)
+              }
+            }
             
             // Store user info in localStorage for compatibility
             const userInfo = {
-              id: userData.id,
+              id: userData.email, // Use email as ID since it's the primary key
               email: userData.email,
               name: userData.name,
               avatar: userData.avatar_url,
@@ -208,7 +220,10 @@ class AuthChecker {
     }
 
     window.SupabaseAuth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session)
+      // Only log significant auth state changes
+      if (event !== 'INITIAL_SESSION') {
+        console.log('Auth state changed:', event, session)
+      }
       
       if (event === 'SIGNED_IN' && session) {
         // User signed in - get data from users table
@@ -217,11 +232,23 @@ class AuthChecker {
           
           if (userData) {
             // Update last login
-            await window.SupabaseUsers.updateLastLogin(userData.id)
+            await window.SupabaseUsers.updateLastLogin(userData.email)
+            
+            // Update avatar URL from Google if available and not already set
+            if (session.user.user_metadata?.avatar_url && !userData.avatar_url) {
+              try {
+                await window.SupabaseUsers.updateUser(userData.email, {
+                  avatar_url: session.user.user_metadata.avatar_url
+                })
+                userData.avatar_url = session.user.user_metadata.avatar_url
+              } catch (error) {
+                console.warn('Failed to update avatar URL:', error)
+              }
+            }
             
             // Store user info in localStorage
             const userInfo = {
-              id: userData.id,
+              id: userData.email, // Use email as ID since it's the primary key
               email: userData.email,
               name: userData.name,
               avatar: userData.avatar_url,
