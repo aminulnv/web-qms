@@ -31,7 +31,7 @@ class AuthChecker {
    */
   async checkAuthentication() {
     try {
-      // First check Supabase authentication
+      // First check Supabase authentication (for Google OAuth users)
       if (this.initSupabase()) {
         const authUser = await window.SupabaseAuth.getCurrentUser()
         if (authUser) {

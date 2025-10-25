@@ -326,35 +326,28 @@
                 // Authentication successful
                 console.log('Login successful:', data);
                 
-                // Get user data from our users table
-                const userData = await window.SupabaseUsers.getUserByEmail(email);
+                // Update last login
+                await window.SupabaseUsers.updateLastLogin(email);
                 
-                if (userData) {
-                    // Update last login
-                    await window.SupabaseUsers.updateLastLogin(email);
-                    
-                    // Store user info in localStorage for compatibility
-                    const userInfo = {
-                        id: userData.email,
-                        email: userData.email,
-                        name: userData.name,
-                        avatar: userData.avatar_url,
-                        role: userData.role,
-                        department: userData.department,
-                        job_title: userData.job_title,
-                        employee_id: userData.employee_id,
-                        permissions: userData.permissions,
-                        provider: 'supabase',
-                        is_active: userData.is_active
-                    };
-                    
-                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
-                    
-                    // Redirect to home page
-                    window.location.href = 'home.html';
-                } else {
-                    throw new Error('User not found in system');
-                }
+                // Store user info in localStorage for compatibility
+                const userInfo = {
+                    id: data.user.id, // This is the email
+                    email: data.user.email,
+                    name: data.user.user_metadata.name,
+                    avatar: null, // No avatar for email/password login
+                    role: data.user.user_metadata.role,
+                    department: data.user.user_metadata.department,
+                    job_title: data.user.user_metadata.job_title,
+                    employee_id: data.user.user_metadata.employee_id,
+                    permissions: null, // Will be fetched from users table
+                    provider: 'email',
+                    is_active: true
+                };
+                
+                localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                
+                // Redirect to home page
+                window.location.href = 'home.html';
                 
             } catch (error) {
                 console.error('Login error:', error);

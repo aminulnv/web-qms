@@ -51,24 +51,65 @@ window.SupabaseConfig = {
 // Authentication helper functions
 window.SupabaseAuth = {
   /**
-   * Sign in with email and password
+   * Sign in with email and password using users table
    */
   async signInWithEmail(email, password) {
     if (!supabaseClient) {
       throw new Error('Supabase client not initialized')
     }
     
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    })
-    
-    if (error) {
+    try {
+      // Check if user exists in users table
+      const { data: users, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .eq('password_hash', password)
+        .single()
+      
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned - invalid credentials
+          throw new Error('Invalid login credentials')
+        }
+        throw error
+      }
+      
+      if (!users) {
+        throw new Error('Invalid login credentials')
+      }
+      
+      // Check if user is active
+      if (users.is_active === false) {
+        throw new Error('Account is deactivated')
+      }
+      
+      // Return user data in a format similar to Supabase Auth
+      return {
+        user: {
+          id: users.email, // Use email as ID
+          email: users.email,
+          email_confirmed_at: users.email_verified === 'true' ? new Date().toISOString() : null,
+          user_metadata: {
+            name: users.name,
+            role: users.role,
+            department: users.department,
+            job_title: users.job_title,
+            employee_id: users.employee_id
+          }
+        },
+        session: {
+          user: {
+            id: users.email,
+            email: users.email,
+            email_confirmed_at: users.email_verified === 'true' ? new Date().toISOString() : null
+          }
+        }
+      }
+    } catch (error) {
       console.error('Email sign-in error:', error)
       throw error
     }
-    
-    return data
   },
 
   /**
