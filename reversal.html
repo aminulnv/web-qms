@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Reversal Management | QMS</title>
+<meta name="description" content="Quality Management System - Reversal Management">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Reversal Management</p>
+    <div style="margin-bottom: 1.5rem; width: 100%;"></div>
+
+    <!-- Reversal Form -->
+    <form id="reversalForm" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 0; flex: 1; overflow-y: auto; min-height: 0; width: 100%; margin: 0;">
+        
+        <!-- Audit Reference Information -->
+        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Audit Reference Information</h3>
+            <div class="grid-4" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); width: 100%;">
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="auditId" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Audit ID</label>
+                    <input type="text" id="auditId" name="auditId" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="employeeName" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Employee Name</label>
+                    <input type="text" id="employeeName" name="employeeName" readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="auditorName" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Auditor Name</label>
+                    <input type="text" id="auditorName" name="auditorName" readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="originalScore" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Original Score</label>
+                    <input type="number" id="originalScore" name="originalScore" readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Reversal Information -->
+        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Reversal Information</h3>
+            <div class="grid-4" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); width: 100%;">
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalRequestedAt" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Requested At</label>
+                    <input type="datetime-local" id="reversalRequestedAt" name="reversalRequestedAt" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalReason" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Reason</label>
+                    <input type="text" id="reversalReason" name="reversalReason" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalRespondedAt" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Responded At</label>
+                    <input type="datetime-local" id="reversalRespondedAt" name="reversalRespondedAt" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="slaHours" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">SLA (In Hours)</label>
+                    <input type="number" id="slaHours" name="slaHours" min="0" step="0.1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reasonForReversalResponseDelay" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reason for Reversal Response Delay</label>
+                    <input type="text" id="reasonForReversalResponseDelay" name="reasonForReversalResponseDelay" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalApproved" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Approved?</label>
+                    <select id="reversalApproved" name="reversalApproved" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="withinAuditorsScope" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Within Auditor's Scope?</label>
+                    <select id="withinAuditorsScope" name="withinAuditorsScope" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="scoreBeforeAppeal" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Score Before Appeal</label>
+                    <input type="number" id="scoreBeforeAppeal" name="scoreBeforeAppeal" min="0" max="100" step="0.01" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="scoreAfterAppeal" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Score After Appeal</label>
+                    <input type="number" id="scoreAfterAppeal" name="scoreAfterAppeal" min="0" max="100" step="0.01" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="didThisResultInPass" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Did this result result in a pass?</label>
+                    <select id="didThisResultInPass" name="didThisResultInPass" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalType" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Type</label>
+                    <input type="text" id="reversalType" name="reversalType" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalApprovedBy" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Approved By (Employee's Supervisor)</label>
+                    <input type="text" id="reversalApprovedBy" name="reversalApprovedBy" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalResolvedBy" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Resolved By</label>
+                    <input type="text" id="reversalResolvedBy" name="reversalResolvedBy" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Reversal Details -->
+        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Reversal Details</h3>
+            <div class="grid-2" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(2, 1fr); width: 100%;">
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalMetricsParameters" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Metrics / Parameters</label>
+                    <textarea id="reversalMetricsParameters" name="reversalMetricsParameters" rows="4" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; width: 100%;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
+                    <label for="reversalJustificationFromAgent" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Justification from Employee</label>
+                    <textarea id="reversalJustificationFromAgent" name="reversalJustificationFromAgent" rows="4" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; width: 100%;"></textarea>
+                </div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 0; grid-column: span 2;">
+                    <label for="reversalAttachments" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Attachments</label>
+                    <input type="file" id="reversalAttachments" name="reversalAttachments" multiple style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem 0; border-top: 0.0625rem solid #e5e7eb; flex-shrink: 0; margin-top: 0.5rem;">
+            <button type="button" id="cancelBtn" class="btn btn-primary" style="background-color: #f9fafb; color: #374151; border-color: #d1d5db; flex: 1; min-width: 8rem;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 8rem;">Submit Reversal</button>
+        </div>
+    </form>
+
+</main>
+
+<script>
+// Auto-populate reversal requested date/time
+document.addEventListener('DOMContentLoaded', function() {
+    const reversalRequestedAt = document.getElementById('reversalRequestedAt');
+    if (reversalRequestedAt) {
+        const now = new Date();
+        reversalRequestedAt.value = now.toISOString().slice(0, 16);
+    }
+});
+
+// Form submission handling
+document.getElementById('reversalForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get form data
+    const formData = new FormData(this);
+    
+    // Convert to object for easier handling
+    const reversalData = {};
+    for (let [key, value] of formData.entries()) {
+        reversalData[key] = value;
+    }
+    
+    // Here you would typically send the data to your backend
+    // Reversal data processed
+    
+    // Show success message (you can customize this)
+    alert('Reversal submitted successfully!');
+    
+    // Optionally reset the form
+    // this.reset();
+});
+
+// Cancel button handling
+document.getElementById('cancelBtn').addEventListener('click', function() {
+    if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+        window.history.back();
+    }
+});
+</script>
+
+</body>
+</html>

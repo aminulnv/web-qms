@@ -1,0 +1,3087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Create Audit | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Create Audit</p>
+    <div style="margin-bottom: 1.5rem; width: 100%;"></div>
+
+<!-- Audit Timer Chip -->
+<div id="auditTimer" style="position: fixed; top: 1rem; right: 5rem; background:var(--primary-color); padding: 0.2rem 0.5rem 0.2rem 0.2rem; border-radius: 3.125rem; font-size: 0.9375rem; font-weight: 600; color: #ffffff; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; letter-spacing: 0.01875rem; flex-shrink: 0; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 7.5rem; display: flex; align-items: center; gap: 0.5rem; cursor: grab; user-select: none; z-index: 10001;">
+    <button id="timerControlBtn" title="Play/Pause/Reset Timer" style="width: 1.75rem; height: 1.75rem; background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; flex-shrink: 0; margin: 0; padding: 0;">
+        <svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+        </svg>
+    </button>
+    <span style="flex: 1; text-align: center; font-size: 0.9375rem; font-weight: 600; font-variant-numeric: tabular-nums;">Time Keeper</span>
+</div>
+<!-- End of Audit Timer Chip -->
+
+
+    <!-- Pending Audits Section -->
+    <div id="pendingAuditsSection" style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; margin-bottom: 1rem; width: 100%; display: block;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 0.0625rem solid #1A733E;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.01875rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11l3 3L22 4"/>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                <span id="auditsViewTitle">My Assigned Audits</span>
+                <span id="pendingCount" style="background-color: #1A733E; color: white; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; min-width: 1.5rem; text-align: center;">0</span>
+            </h3>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button id="createManualAuditBtn" onclick="createManualAudit()" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.375rem;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Create Manual Audit</span>
+                </button>
+                <button id="toggleAllAuditsBtn" onclick="toggleAllAuditsView()" style="padding: 0.375rem 0.75rem; background-color: #f9fafb; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.375rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span id="toggleBtnText">View All Audits</span>
+                </button>
+            </div>
+        </div>
+        <div id="pendingAuditsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="text-align: center; padding: 3rem 1.5rem; color: #6b7280;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.4;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="12" y1="18" x2="12" y2="12"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+                <p style="font-size: 0.875rem; font-weight: 500; color: #374151; margin: 0 0 0.5rem;">No audits have been assigned to you yet.</p>
+                <p style="font-size: 0.75rem; color: #9ca3af; margin: 0;">Audits will appear here once they are assigned to you.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Form Modal (Full Screen) -->
+<div id="auditFormModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 0; overflow-y: auto;">
+    <form id="auditForm" method="POST" style="background: white; width: 100%; min-height: 100vh; display: flex; flex-direction: column; gap: 0; padding: 0; margin: 0;">
+    <!-- Hidden audit information fields - populated behind the scenes -->
+    <input type="hidden" id="auditTimestamp" name="auditTimestamp">
+    <input type="hidden" id="auditDuration" name="auditDuration">
+    <input type="hidden" id="auditorEmail" name="auditorEmail">
+    <input type="hidden" id="auditorName" name="auditorName">
+    <input type="hidden" id="quarter" name="quarter">
+    <input type="hidden" id="week" name="week">
+    <input type="hidden" id="errorDescription" name="errorDescription">
+
+    <!-- Beautiful Header Section (Report-Style) -->
+    <div id="auditFormHeader" style="background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); padding: 1rem 1.5rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1.5rem; transition: background 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+            <div style="flex: 1;">
+                <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif;">Create New Audit</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <p id="formScorecardDisplay" style="font-size: 0.75rem; color: rgba(255,255,255,0.85); margin: 0; font-family: 'Poppins', sans-serif;">📋 Select a scorecard</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAuditForm()" style="background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 0.375rem; width: 2rem; height: 2rem; font-size: 1.25rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 1rem;">×</button>
+        </div>
+        <div>
+            
+            <!-- Employee Information in Header -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; margin-bottom: 0.75rem;">
+                <div>
+                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Employee *</p>
+                    <select id="employeeName" name="employeeName" required style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%; backdrop-filter: blur(10px);">
+                        <option value="">Select Employee...</option>
+                    </select>
+                </div>
+                <div>
+                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Email *</p>
+                    <input type="email" id="employeeEmail" name="employeeEmail" required readonly style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; width: 100%; word-break: break-all; backdrop-filter: blur(10px);">
+                </div>
+                <div>
+                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Type</p>
+                    <input type="text" id="employeeType" name="employeeType" readonly style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; width: 100%; backdrop-filter: blur(10px);">
+                </div>
+                <div>
+                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Country *</p>
+                    <select id="countryOfEmployee" name="countryOfEmployee" required style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%; backdrop-filter: blur(10px);">
+                        <option value="">Select Country</option>
+                        <option value="Bangladesh" selected>Bangladesh</option>
+                        <option value="Sri Lanka">Sri Lanka</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Audit Metadata Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
+            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
+                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Avg Score</p>
+                <input type="number" id="averageScore" name="averageScore" min="0" max="100" step="0.01" required readonly style="font-size: 1rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; cursor: not-allowed;">
+            </div>
+            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
+                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Total Errors</p>
+                <input type="number" id="totalErrorsCount" name="totalErrorsCount" min="0" required readonly style="font-size: 1rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; cursor: not-allowed;">
+            </div>
+            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
+                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Status</p>
+                <input type="text" id="passingStatus" name="passingStatus" readonly style="font-size: 0.875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; cursor: not-allowed;">
+            </div>
+            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
+                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Audit Type *</p>
+                <select id="auditType" name="auditType" required style="font-size: 0.875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0 center; background-size: 1rem; padding-right: 1.25rem; cursor: pointer;">
+                    <option value="">Select</option>
+                    <option value="Routine Audit (Recorded)" selected>Routine (Recorded)</option>
+                    <option value="Focused Audit (Recorded)">Focused (Recorded)</option>
+                    <option value="Focused Audit (Live)">Focused (Live)</option>
+                    <option value="Evaluation and Feedback">Evaluation</option>
+                </select>
+            </div>
+            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
+                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Validation</p>
+                <select id="validationStatus" name="validationStatus" required style="font-size: 0.875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0 center; background-size: 1rem; padding-right: 1.25rem; cursor: pointer;">
+                    <option value="Validated" selected>Validated</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scorecard Selector (Compact) -->
+    <div style="padding: 0 1.5rem; margin-bottom: 1rem;">
+        <div style="background: white; border-radius: 0.25rem; padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <svg style="width: 0.875rem; height: 0.875rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="#6b7280"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <label for="scorecardSelect" style="font-size: 0.75rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Scorecard:</label>
+            <select id="scorecardSelect" required style="padding: 0.375rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; flex: 1; min-width: 150px; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 0.875rem; padding-right: 2rem; cursor: pointer;">
+                <option value="">Loading scorecards...</option>
+            </select>
+            <div id="scorecardInfo" style="display: none; flex: 1; min-width: 200px;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.6875rem; color: #6b7280;">
+                    <span><strong id="scorecardScoringType" style="color: #1A733E;">--</strong></span>
+                    <span style="color: #d1d5db;">•</span>
+                    <span><strong id="scorecardParamsCount" style="color: #1A733E;">--</strong> params</span>
+                </div>
+            </div>
+            <a href="scorecards.html" target="_blank" style="padding: 0.375rem 0.75rem; background-color: #f9fafb; color: #6b7280; border: 1px solid #e5e7eb; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-decoration: none; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;">⚙️ Manage</a>
+        </div>
+    </div>
+
+    <!-- Two Column Layout (matching audit-reports.html) -->
+    <div id="auditContent" style="display: flex; padding: 1.5rem; max-width: 100%; gap: 0; flex-wrap: nowrap;">
+        
+        <!-- LEFT COLUMN: Interaction Details + Transcript -->
+        <div id="leftColumn" style="display: flex; flex-direction: column; gap: 1rem; width: 45%; min-width: 300px; padding-right: 0.5rem;">
+            
+            <!-- Interaction Details Bar -->
+            <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: nowrap;">
+                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                        <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                        <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">ID:</span>
+                        <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 80px;">
+                        <button type="button" id="viewChatBtn" style="padding: 0.25rem 0.5rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;">Open</button>
+                    </div>
+                    <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                        <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Date:</span>
+                        <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
+                    </div>
+                    <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                        <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Channel:</span>
+                        <select id="channel" name="channel" required style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.25rem center; background-size: 0.75rem; padding-right: 1.5rem; cursor: pointer; min-width: 80px;">
+                            <option value="">Select...</option>
+                        </select>
+                    </div>
+                    <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.25rem; min-width: 0; flex: 1;">
+                        <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Email:</span>
+                        <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; flex: 1; min-width: 80px;">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transcript -->
+            <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0; border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
+                <div style="background: #f9fafb; padding: 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
+                    <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                        Transcript
+                    </h3>
+                </div>
+                <div style="padding: 1rem; background: white; overflow-y: auto; flex: 1;">
+                    <textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.8125rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none;"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RESIZABLE SPLITTER -->
+        <div id="splitter" style="width: 8px; background: #e5e7eb; cursor: col-resize; position: relative; flex-shrink: 0; transition: background 0.2s;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 40px; background: #9ca3af; border-radius: 2px;"></div>
+        </div>
+        
+        <!-- RIGHT COLUMN: Pre/Post Status, Error Details & Recommendations -->
+        <div id="rightColumn" style="flex: 1; min-width: 300px; padding-left: 0.5rem; overflow-y: auto; max-height: 85vh;">
+            
+            <!-- Pre/Post Status -->
+            <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e5e7eb;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+                    <div style="background: #f0fdf4; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #bbf7d0;">
+                        <p style="font-size: 0.6875rem; color: #166534; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Pre-Status</p>
+                        <select id="agentPreStatus" name="agentPreStatus" style="padding: 0.5rem; border: 1px solid #bbf7d0; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; color: #15803d; background-color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2315803d\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                            <option value="">Select Status</option>
+                            <option value="No active quality concerns" selected>No active quality concerns</option>
+                            <option value="Pre-Quality">Pre-Quality</option>
+                            <option value="Quality Concern">Quality Concern</option>
+                            <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
+                            <option value="Performance Improvement Plan (PIP) - Alert">PIP - Alert</option>
+                            <option value="Performance Improvement Plan (PIP) - Priority">PIP - Priority</option>
+                        </select>
+                    </div>
+                    <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #bae6fd;">
+                        <p style="font-size: 0.6875rem; color: #075985; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Post-Status</p>
+                        <select id="agentPostStatus" name="agentPostStatus" style="padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; color: #0369a1; background-color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%230369a1\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
+                            <option value="">Select Status</option>
+                            <option value="No active quality concerns" selected>No active quality concerns</option>
+                            <option value="Pre-Quality">Pre-Quality</option>
+                            <option value="Quality Concern">Quality Concern</option>
+                            <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
+                            <option value="Performance Improvement Plan (PIP) - Alert">PIP - Alert</option>
+                            <option value="Performance Improvement Plan (PIP) - Priority">PIP - Priority</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Error Details (Report-Style Table) -->
+            <div id="errorParametersSection" style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                        Error Details
+                    </h3>
+                    <div id="errorSummaryBadges" style="display: flex; gap: 0.375rem;">
+                        <!-- Error summary badges will be displayed here -->
+                    </div>
+                </div>
+                
+                <div style="background: white; border-radius: 0.75rem; box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+                    <!-- Table Header -->
+                    <div style="background-color: #f8f9fa; padding: 0.75rem 1rem; border-bottom: 0.0625rem solid #e5e7eb;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 1rem; align-items: center; font-weight: 700; font-size: 0.875rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <div>Error Type</div>
+                            <div style="text-align: center;">Severity</div>
+                            <div style="text-align: center;">Status</div>
+                            <div>Feedback</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table Body -->
+                    <div id="errorParametersContainer" style="padding: 0 1rem 1rem 1rem; box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);">
+                        <!-- Error parameters will be dynamically loaded based on selected scorecard -->
+                        <div style="padding: 2rem; text-align: center; color: #6b7280; font-size: 0.875rem;">
+                            <p>Please select a scorecard above to load error parameters.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden error count fields (auto-calculated) -->
+            <input type="hidden" id="criticalErrors" name="criticalErrors">
+            <input type="hidden" id="criticalFailError" name="criticalFailError">
+            <input type="hidden" id="significantError" name="significantError">
+
+            <!-- Recommendations & Next Steps -->
+            <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
+                <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0 0 0.75rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
+                    Recommendations / Next Steps
+                </h3>
+                <textarea id="recommendations" name="recommendations" rows="4" placeholder="Enter recommendations and next steps for the employee..." style="width: 100%; padding: 0.875rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; font-size: 0.8125rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: white; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+        </div>
+    </div> <!-- End Two Column Layout -->
+
+    <!-- Form Actions -->
+    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 0.0625rem solid #e5e7eb; background-color: #f9fafb;">
+        <button type="button" id="cancelBtn" style="padding: 0.75rem 2rem; background-color: white; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Cancel</button>
+        <button type="submit" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(26, 115, 62, 0.2);">✓ Submit Audit</button>
+    </div>
+    </form>
+</div> <!-- End auditFormModal -->
+
+
+
+
+
+
+
+
+
+</main>
+
+<script>
+// Global test to verify JavaScript is running
+console.log('=== SCRIPT STARTED ===');
+
+// ============================================================================
+// Dynamic Scorecard System
+// ============================================================================
+let currentScorecard = null;
+let currentParameters = [];
+
+// Load available scorecards
+async function loadScorecards() {
+    const scorecardSelect = document.getElementById('scorecardSelect');
+    
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('scorecards')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        scorecardSelect.innerHTML = '<option value="">Select a scorecard...</option>';
+        
+        if (data && data.length > 0) {
+            data.forEach(scorecard => {
+                const option = document.createElement('option');
+                option.value = scorecard.id;
+                option.textContent = scorecard.name;
+                option.dataset.threshold = scorecard.passing_threshold;
+                option.dataset.tableName = scorecard.table_name;
+                scorecardSelect.appendChild(option);
+            });
+            
+            // Auto-select the first scorecard if only one exists
+            if (data.length === 1) {
+                scorecardSelect.value = data[0].id;
+                await loadScorecardParameters(data[0].id);
+            }
+        } else {
+            scorecardSelect.innerHTML = '<option value="">No scorecards available</option>';
+        }
+    } catch (error) {
+        console.error('Error loading scorecards:', error);
+        scorecardSelect.innerHTML = '<option value="">Error loading scorecards</option>';
+    }
+}
+
+// Load parameters for selected scorecard
+async function loadScorecardParameters(scorecardId) {
+    if (!scorecardId) {
+        currentScorecard = null;
+        currentParameters = [];
+        document.getElementById('scorecardInfo').style.display = 'none';
+        clearErrorParameters();
+        return;
+    }
+    
+    try {
+        // Load scorecard details
+        const { data: scorecard, error: scorecardError } = await window.supabaseClient
+            .from('scorecards')
+            .select('*')
+            .eq('id', scorecardId)
+            .single();
+        
+        if (scorecardError) throw scorecardError;
+        
+        // Load parameters
+        const { data: parameters, error: paramsError } = await window.supabaseClient
+            .from('scorecard_parameters')
+            .select('*')
+            .eq('scorecard_id', scorecardId)
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+        
+        if (paramsError) throw paramsError;
+        
+        currentScorecard = scorecard;
+        currentParameters = parameters || [];
+        
+        // Update scorecard info display
+        const scorecardScoringType = document.getElementById('scorecardScoringType');
+        const scorecardParamsCount = document.getElementById('scorecardParamsCount');
+        const scorecardInfo = document.getElementById('scorecardInfo');
+        
+        if (scorecardScoringType) {
+            const scoringTypeText = scorecard.scoring_type 
+                ? scorecard.scoring_type.charAt(0).toUpperCase() + scorecard.scoring_type.slice(1)
+                : 'Deductive';
+            scorecardScoringType.textContent = scoringTypeText;
+        }
+        if (scorecardParamsCount) scorecardParamsCount.textContent = currentParameters.length;
+        if (scorecardInfo) scorecardInfo.style.display = 'flex';
+        
+        // Render error parameters
+        renderErrorParameters();
+        
+        // Set initial average score based on scoring type
+        setInitialAverageScore();
+        
+    } catch (error) {
+        console.error('Error loading scorecard parameters:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to load scorecard parameters: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// ============================================================================
+// Pending Audits System
+// ============================================================================
+let pendingAudits = [];
+let isEditingPendingAudit = false;
+let currentEditingAuditId = null;
+let currentAssignmentId = null; // Separate tracking for assignment vs audit editing
+let showAllAudits = false; // Flag to track if showing all audits or just mine
+let isEditingExistingAudit = false; // Flag for editing from audit reports
+let currentEditingTableName = null; // Table name for the audit being edited
+
+// Toggle between my audits and all audits
+function toggleAllAuditsView() {
+    showAllAudits = !showAllAudits;
+    
+    // Update button text and title
+    const toggleBtn = document.getElementById('toggleBtnText');
+    const title = document.getElementById('auditsViewTitle');
+    
+    if (showAllAudits) {
+        toggleBtn.textContent = 'View My Audits';
+        title.textContent = 'All Assigned Audits';
+    } else {
+        toggleBtn.textContent = 'View All Audits';
+        title.textContent = 'My Assigned Audits';
+    }
+    
+    // Reload audits with new view
+    loadPendingAudits();
+}
+
+// Load pending audits for current user from audit_assignments table
+async function loadPendingAudits() {
+    try {
+        // Get current user info
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const currentUserEmail = userInfo.email;
+        
+        if (!currentUserEmail) {
+            console.log('No user email found');
+            return;
+        }
+        
+        // Load assigned audits from audit_assignments table with scorecard info
+        let query = window.supabaseClient
+            .from('audit_assignments')
+            .select(`
+                *,
+                scorecards:scorecard_id (
+                    id,
+                    name
+                )
+            `)
+            .in('status', ['pending', 'in_progress'])
+            .order('created_at', { ascending: false });
+        
+        // Filter by current user only if not showing all audits
+        if (!showAllAudits) {
+            query = query.eq('auditor_email', currentUserEmail);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        pendingAudits = data || [];
+        
+        // Display pending audits
+        displayPendingAudits();
+        
+    } catch (error) {
+        console.error('Error loading pending audits:', error);
+    }
+}
+
+// Display pending audits in the UI
+function displayPendingAudits() {
+    const section = document.getElementById('pendingAuditsSection');
+    const list = document.getElementById('pendingAuditsList');
+    const countBadge = document.getElementById('pendingCount');
+    
+    // Don't show the section if we're currently editing an audit
+    if (!isEditingPendingAudit) {
+        section.style.display = 'block';
+    }
+    
+    countBadge.textContent = pendingAudits.length;
+    
+    // Show empty state if no audits
+    if (pendingAudits.length === 0) {
+        const emptyStateMessage = showAllAudits 
+            ? 'No pending or in-progress audits found for any auditor.'
+            : 'No audits have been assigned to you yet.';
+        
+        list.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1.5rem; color: #6b7280;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.4;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="12" y1="18" x2="12" y2="12"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+                <p style="font-size: 0.875rem; font-weight: 500; color: #374151; margin: 0 0 0.5rem;">${emptyStateMessage}</p>
+                <p style="font-size: 0.75rem; color: #9ca3af; margin: 0;">Audits will appear here once they are assigned to you.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    list.innerHTML = '';
+    
+    pendingAudits.forEach(audit => {
+        const auditCard = document.createElement('div');
+        auditCard.style.cssText = `
+            background: #f9fafb;
+            border: 0.0625rem solid #e5e7eb;
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        `;
+        
+        // Get current user info
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const currentUserEmail = userInfo.email;
+        const isMyAudit = audit.auditor_email === currentUserEmail;
+        
+        // Status badge
+        const statusBadge = audit.status === 'in_progress' 
+            ? '<span style="background-color: #fef3c7; color: #92400e; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">In Progress</span>'
+            : '<span style="background-color: #dcfce7; color: #166534; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">Pending</span>';
+        
+        auditCard.innerHTML = `
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.25rem; background: #1A733E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem; flex-shrink: 0;">
+                    ${getInitials(audit.employee_name || 'Unknown')}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                        <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #1f2937;">
+                            ${escapeHtml(audit.employee_name || 'Unknown Employee')}
+                        </h4>
+                        ${statusBadge}
+                    </div>
+                    <p style="margin: 0; font-size: 0.75rem; color: #6b7280; display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
+                        <span>${escapeHtml(audit.employee_email || 'No email')}</span>
+                        <span style="color: #d1d5db;">•</span>
+                        <span style="font-weight: 500; color: #374151;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
+                        ${!isMyAudit ? `<span style="color: #d1d5db;">•</span><span style="color: #6366f1; font-weight: 500;">${escapeHtml(audit.auditor_email)}</span>` : ''}
+                    </p>
+                </div>
+            </div>
+            <button 
+                onclick="startAssignedAudit('${audit.id}', '${audit.employee_email}', '${audit.scorecard_id}')" 
+                style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0;"
+                onmouseover="this.style.backgroundColor='#15582E'"
+                onmouseout="this.style.backgroundColor='#1A733E'"
+            >
+                ${audit.status === 'in_progress' ? 'Continue' : 'Start Audit'}
+            </button>
+        `;
+        
+        auditCard.onmouseenter = () => {
+            auditCard.style.borderColor = '#1A733E';
+            auditCard.style.backgroundColor = '#ffffff';
+        };
+        
+        auditCard.onmouseleave = () => {
+            auditCard.style.borderColor = '#e5e7eb';
+            auditCard.style.backgroundColor = '#f9fafb';
+        };
+        
+        list.appendChild(auditCard);
+    });
+}
+
+// Load pending audit data into the form
+window.loadPendingAuditIntoForm = async function(auditId) {
+    const audit = pendingAudits.find(a => a.id === auditId);
+    
+    if (!audit) {
+        console.error('Audit not found:', auditId);
+        return;
+    }
+    
+    // Set editing mode
+    isEditingPendingAudit = true;
+    currentEditingAuditId = auditId;
+    
+    // Pre-fill employee information
+    const employeeSelect = document.getElementById('employeeName');
+    const employeeEmail = document.getElementById('employeeEmail');
+    const employeeType = document.getElementById('employeeType');
+    const countryOfEmployee = document.getElementById('countryOfEmployee');
+    
+    // Find and select the employee in dropdown
+    if (employeeSelect && audit.employee_email) {
+        for (let i = 0; i < employeeSelect.options.length; i++) {
+            if (employeeSelect.options[i].dataset.email === audit.employee_email) {
+                employeeSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    
+    if (employeeEmail) employeeEmail.value = audit.employee_email || '';
+    if (employeeType) employeeType.value = audit.employee_type || '';
+    if (countryOfEmployee) countryOfEmployee.value = audit.country_of_employee || '';
+    
+    // Pre-fill any other existing data
+    if (audit.channel) {
+        const channelField = document.getElementById('channel');
+        if (channelField) channelField.value = audit.channel;
+    }
+    if (audit.agent_pre_status) {
+        const agentPreStatusField = document.getElementById('agentPreStatus');
+        if (agentPreStatusField) agentPreStatusField.value = audit.agent_pre_status;
+    }
+    
+    // Scroll to form
+    document.getElementById('auditForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Show notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: #1A733E;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    notification.textContent = `✏️ Editing pending audit for ${audit.employee_name}`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// ============================================================================
+// Create Manual Audit Function
+// ============================================================================
+
+// Create a manual audit - open blank form for manual audit creation
+window.createManualAudit = async function() {
+    // Reset all editing and assignment tracking flags
+    isEditingPendingAudit = false;
+    currentEditingAuditId = null;
+    currentAssignmentId = null;
+    isEditingExistingAudit = false;
+    currentEditingTableName = null;
+    
+    // Reset the form
+    const auditForm = document.getElementById('auditForm');
+    if (auditForm) {
+        auditForm.reset();
+    }
+    
+    // Reset header back to green (passing state)
+    const headerElement = document.getElementById('auditFormHeader');
+    if (headerElement) {
+        headerElement.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+    }
+    
+    // Reset form header title
+    const scorecardDisplay = document.getElementById('formScorecardDisplay');
+    if (scorecardDisplay) {
+        scorecardDisplay.innerHTML = '📋 Select a scorecard';
+    }
+    
+    // Clear scorecard parameters container
+    const parametersContainer = document.getElementById('scorecardParameters');
+    if (parametersContainer) {
+        parametersContainer.innerHTML = '';
+    }
+    
+    // Reset scorecard select
+    const scorecardSelect = document.getElementById('scorecardSelect');
+    if (scorecardSelect) {
+        scorecardSelect.value = '';
+    }
+    
+    // Reset employee select
+    const employeeSelect = document.getElementById('employeeName');
+    if (employeeSelect) {
+        employeeSelect.selectedIndex = 0;
+        // Trigger change event to clear employee-related fields
+        employeeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Hide the assigned audits section
+    const pendingAuditsSection = document.getElementById('pendingAuditsSection');
+    if (pendingAuditsSection) {
+        pendingAuditsSection.style.display = 'none';
+    }
+    
+    // Show the full screen audit form modal
+    const auditFormModal = document.getElementById('auditFormModal');
+    if (auditFormModal) {
+        auditFormModal.style.display = 'flex';
+    }
+    
+    // Reset and start the timer
+    if (window.resetTimer && window.startTimer) {
+        window.resetTimer();
+        window.startTimer();
+    }
+    
+    // Scroll to top to show form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Show notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(135deg, #1A733E, #15582E);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-size: 0.875rem;
+        font-weight: 600;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = '📝 Manual audit form opened. Fill in the details to create a new audit.';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// ============================================================================
+// Start Assigned Audit Function
+// ============================================================================
+
+// Start an assigned audit - update status and pre-fill form
+window.startAssignedAudit = async function(assignmentId, employeeEmail, scorecardId) {
+    try {
+        // Update assignment status to 'in_progress'
+        const { error: updateError } = await window.supabaseClient
+            .from('audit_assignments')
+            .update({ status: 'in_progress' })
+            .eq('id', assignmentId);
+        
+        if (updateError) throw updateError;
+        
+        // Update local state
+        const assignmentIndex = pendingAudits.findIndex(a => a.id === assignmentId);
+        if (assignmentIndex !== -1) {
+            pendingAudits[assignmentIndex].status = 'in_progress';
+        }
+        
+        // Set assignment mode (NOT editing existing audit, but completing an assignment)
+        isEditingPendingAudit = false; // This is a NEW audit from assignment
+        currentEditingAuditId = null;
+        currentAssignmentId = assignmentId; // Track the assignment ID separately
+        
+        // Hide the assigned audits section
+        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
+        if (pendingAuditsSection) {
+            pendingAuditsSection.style.display = 'none';
+        }
+        
+        // Show the full screen audit form modal
+        const auditFormModal = document.getElementById('auditFormModal');
+        if (auditFormModal) {
+            auditFormModal.style.display = 'flex';
+        }
+        
+        // Auto-select the scorecard
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect && scorecardId) {
+            scorecardSelect.value = scorecardId;
+            // Load the scorecard parameters
+            await loadScorecardParameters(scorecardId);
+        }
+        
+        // Pre-fill employee information
+        const employeeSelect = document.getElementById('employeeName');
+        
+        // Find and select the employee in dropdown
+        if (employeeSelect && employeeEmail) {
+            for (let i = 0; i < employeeSelect.options.length; i++) {
+                if (employeeSelect.options[i].dataset.email === employeeEmail) {
+                    employeeSelect.selectedIndex = i;
+                    // Trigger change event to populate other fields
+                    employeeSelect.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+        }
+        
+        // Scroll to top to show scorecard selector
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Reset and start the timer
+        if (window.resetTimer && window.startTimer) {
+            window.resetTimer();
+            window.startTimer();
+        }
+        
+        // Show notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #1A733E, #15582E);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            font-size: 0.875rem;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = '✅ Audit started! Scorecard & employee info pre-filled.';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+        
+        // Reload pending audits to update the UI
+        await loadPendingAudits();
+        
+    } catch (error) {
+        console.error('Error starting assigned audit:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to start audit: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+};
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+// Helper function to get initials
+function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString();
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Set initial average score based on scoring type
+function setInitialAverageScore() {
+    if (!currentScorecard) return;
+    
+    const averageScoreField = document.getElementById('averageScore');
+    if (!averageScoreField) return;
+    
+    const scoringType = currentScorecard.scoring_type || 'deductive';
+    let initialScore = 0;
+    
+    switch(scoringType) {
+        case 'deductive':
+            initialScore = 100; // Start at 100%, deduct errors
+            break;
+        case 'additive':
+            initialScore = 0; // Start at 0%, add achievements
+            break;
+        case 'hybrid':
+            initialScore = 100; // Start at 100%, can deduct errors and add bonuses
+            break;
+        default:
+            initialScore = 100;
+    }
+    
+    averageScoreField.value = initialScore.toFixed(2);
+    updatePassingStatus(initialScore);
+}
+
+// Render error parameter fields dynamically
+function renderErrorParameters() {
+    const container = document.getElementById('errorParametersContainer');
+    const summaryBadges = document.getElementById('errorSummaryBadges');
+    container.innerHTML = '';
+    summaryBadges.innerHTML = '';
+    
+    if (currentParameters.length === 0) {
+        container.innerHTML = '<div style="padding: 2rem; text-align: center; color: #6b7280; font-size: 0.875rem;"><p>No parameters defined for this scorecard.</p></div>';
+        return;
+    }
+    
+    // Update scorecard display in header
+    const scorecardDisplay = document.getElementById('formScorecardDisplay');
+    if (scorecardDisplay && currentScorecard) {
+        let scoringTypeIcon = '';
+        if (currentScorecard.scoring_type === 'deductive') scoringTypeIcon = '📉 Deductive';
+        else if (currentScorecard.scoring_type === 'additive') scoringTypeIcon = '📈 Additive';
+        else if (currentScorecard.scoring_type === 'hybrid') scoringTypeIcon = '⚖️ Hybrid';
+        
+        scorecardDisplay.innerHTML = `📋 ${currentScorecard.name}${scoringTypeIcon ? ' <span style="background: rgba(255,255,255,0.25); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.4); margin-left: 0.5rem;">' + scoringTypeIcon + '</span>' : ''}`;
+    }
+    
+    // Initialize summary badges
+    summaryBadges.innerHTML = `
+        <span id="criticalFailBadge" style="background: #dc2626; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: 0</span>
+        <span id="criticalBadge" style="background: #f59e0b; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: 0</span>
+        <span id="significantBadge" style="background: #3b82f6; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: 0</span>
+    `;
+    
+    currentParameters.forEach(param => {
+        // Determine parameter styling based on type
+        const paramType = param.parameter_type || 'error';
+        const paramIcon = paramType === 'error' ? '−' : (paramType === 'achievement' || paramType === 'bonus' ? '+' : '');
+        
+        // Different colors for different parameter types (matching audit-reports.html exactly)
+        let severityColor = '#3b82f6';
+        let severityBg = '#eff6ff';
+        
+        if (paramType === 'error') {
+            if (param.error_category.includes('Fail')) {
+                severityColor = '#ef4444';
+                severityBg = '#fee2e2';
+            } else if (param.error_category.includes('Critical')) {
+                severityColor = '#f59e0b';
+                severityBg = '#fef3c7';
+            }
+        } else if (paramType === 'achievement' || paramType === 'bonus') {
+            severityColor = '#10b981';
+            severityBg = '#d1fae5';
+        }
+        
+        const severityLabel = paramType === 'achievement' || paramType === 'bonus' ? 'ACHIEVEMENT' : 
+                             (param.error_category.includes('Fail') ? 'Critical Fail' : 
+                              param.error_category.includes('Critical') ? 'Critical' : 'Significant');
+        
+        let inputHtml = '';
+        
+        if (param.field_type === 'radio') {
+            // Radio button field (YES/NO)
+            inputHtml = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                        <input type="radio" name="${param.field_id}" id="${param.field_id}_yes" value="1" required data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" onchange="calculateAverageScore()" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #10b981;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #10b981;">✓ YES</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                        <input type="radio" name="${param.field_id}" id="${param.field_id}_no" value="0" required data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" onchange="calculateAverageScore()" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #ef4444;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #ef4444;">✗ NO</span>
+                    </label>
+                </div>
+            `;
+        } else {
+            // Counter field (default)
+            inputHtml = `
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <button type="button" class="counter-btn" data-action="decrement" data-target="${param.field_id}" style="width: 1.75rem; height: 1.75rem; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                    <input type="number" id="${param.field_id}" name="${param.field_id}" min="0" value="0" readonly data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" style="width: 3rem; padding: 0.375rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 700; background-color: #ffffff; color: #1f2937; cursor: default;">
+                    <button type="button" class="counter-btn" data-action="increment" data-target="${param.field_id}" style="width: 1.75rem; height: 1.75rem; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                </div>
+            `;
+        }
+        
+        // Create row matching audit-reports.html exactly (lines 1232-1243)
+        const rowDiv = document.createElement('div');
+        rowDiv.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;';
+        
+        rowDiv.innerHTML = `
+            <div style="font-size: 0.875rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                <span style="font-weight: 700; color: ${paramType === 'error' ? '#dc2626' : '#10b981'};">${paramIcon}</span> ${param.error_name}
+                <span style="font-size: 0.6875rem; color: #6b7280; font-weight: 400;"> (${param.penalty_points} pts)</span>
+            </div>
+            <div style="display: flex; justify-content: center;">
+                <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">${severityLabel}</span>
+            </div>
+            <div style="display: flex; justify-content: center;">
+                ${inputHtml}
+            </div>
+            <div>
+                <textarea id="feedback_${param.field_id}" name="feedback_${param.field_id}" placeholder="Enter feedback details..." rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; resize: vertical; background-color: white; box-sizing: border-box;"></textarea>
+            </div>
+        `;
+        
+        container.appendChild(rowDiv);
+    });
+    
+    // Update summary badges when scores change
+    calculateAverageScore();
+}
+
+// Clear error parameters
+function clearErrorParameters() {
+    const container = document.getElementById('errorParametersContainer');
+    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #6b7280; font-size: 0.875rem;"><p>Please select a scorecard above to load error parameters.</p></div>';
+}
+
+// ============================================================================
+// Audit Timer Functionality
+(function() {
+    let timerInterval = null;
+    let startTime = null;
+    let elapsedTime = 0;
+    let isRunning = false;
+    
+    const timerDisplay = document.querySelector('#auditTimer span');
+    const timerControlBtn = document.querySelector('#timerControlBtn');
+    const playIcon = '<path d="M8 5v14l11-7z"/>';
+    const pauseIcon = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>';
+    const resetIcon = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>';
+    
+    function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        
+        if (hours > 0) {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+    }
+    
+    
+    function startTimer() {
+        if (!isRunning) {
+            startTime = Date.now() - (elapsedTime * 1000);
+            isRunning = true;
+            timerInterval = setInterval(updateDisplay, 1000);
+            timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+            timerControlBtn.title = "Pause Timer";
+        }
+    }
+    
+    function pauseTimer() {
+        if (isRunning) {
+            isRunning = false;
+            clearInterval(timerInterval);
+            timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+            timerControlBtn.title = "Resume Timer";
+        }
+    }
+    
+    function resetTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        elapsedTime = 0;
+        startTime = null;
+        timerDisplay.textContent = '00:00';
+        timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+        timerControlBtn.title = "Start Timer";
+    }
+    
+    function toggleTimer() {
+        if (isRunning) {
+            pauseTimer();
+        } else {
+            startTimer();
+        }
+    }
+    
+    // Make timer draggable
+    const auditTimer = document.querySelector('#auditTimer');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    
+    auditTimer.addEventListener('mousedown', (e) => {
+        if (e.target === timerControlBtn) return; // Don't drag when clicking the button
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = auditTimer.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        auditTimer.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        auditTimer.style.left = (startLeft + deltaX) + 'px';
+        auditTimer.style.top = (startTop + deltaY) + 'px';
+        auditTimer.style.right = 'auto';
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            auditTimer.style.cursor = 'grab';
+        }
+    });
+    
+    // Event listeners
+    timerControlBtn.addEventListener('click', toggleTimer);
+    
+    // Double-click to reset
+    timerControlBtn.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        resetTimer();
+    });
+    
+    // Initialize timer - start immediately
+    function initializeTimer() {
+        startTime = Date.now();
+        isRunning = true;
+        timerInterval = setInterval(updateDisplay, 1000);
+        timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+        timerControlBtn.title = "Pause Timer";
+        updateDisplay();
+        
+        // Audit timestamp will be set on submission (hidden field)
+        
+        // Load user data from cache and populate auditor fields
+        loadUserData();
+        
+        // Update week and quarter based on current date
+        updateWeekAndQuarter();
+    }
+    
+    // Load user data from localStorage cache (behind the scenes)
+    function loadUserData() {
+        try {
+            const userInfo = localStorage.getItem('userInfo');
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                
+                // Populate hidden auditor fields from cached user data
+                const auditorEmail = document.getElementById('auditorEmail');
+                const auditorName = document.getElementById('auditorName');
+                
+                if (auditorEmail && user.email) {
+                    auditorEmail.value = user.email;
+                }
+                if (auditorName && user.name) {
+                    auditorName.value = user.name;
+                }
+            } else {
+                // Fallback to default values if no cached data
+                const auditorEmail = document.getElementById('auditorEmail');
+                const auditorName = document.getElementById('auditorName');
+                if (auditorEmail) {
+                    auditorEmail.value = 'auditor@company.com';
+                }
+                if (auditorName) {
+                    auditorName.value = 'John Auditor';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user data from cache:', error);
+            // Fallback to default values on error
+            const auditorEmail = document.getElementById('auditorEmail');
+            const auditorName = document.getElementById('auditorName');
+            if (auditorEmail) {
+                auditorEmail.value = 'auditor@company.com';
+            }
+            if (auditorName) {
+                auditorName.value = 'John Auditor';
+            }
+        }
+    }
+    
+    // Calculate week number (1-52) from date
+    function getWeekNumber(date) {
+        const start = new Date(date.getFullYear(), 0, 1);
+        const days = Math.floor((date - start) / (24 * 60 * 60 * 1000));
+        return Math.ceil((days + start.getDay() + 1) / 7);
+    }
+    
+    // Calculate quarter (Q1-Q4) from date
+    function getQuarter(date) {
+        const month = date.getMonth() + 1; // getMonth() returns 0-11
+        if (month >= 1 && month <= 3) return 'Q1';
+        if (month >= 4 && month <= 6) return 'Q2';
+        if (month >= 7 && month <= 9) return 'Q3';
+        if (month >= 10 && month <= 12) return 'Q4';
+        return 'Q1'; // fallback
+    }
+    
+    // Update week and quarter based on audit timestamp
+    function updateWeekAndQuarter() {
+        const auditTimestamp = document.getElementById('auditTimestamp');
+        const weekField = document.getElementById('week');
+        const quarterField = document.getElementById('quarter');
+        
+        if (auditTimestamp && auditTimestamp.value) {
+            const auditDate = new Date(auditTimestamp.value);
+            if (weekField) {
+                weekField.value = getWeekNumber(auditDate);
+            }
+            if (quarterField) {
+                quarterField.value = getQuarter(auditDate);
+            }
+        } else {
+            // Use current date if no timestamp set yet
+            const now = new Date();
+            if (weekField) {
+                weekField.value = getWeekNumber(now);
+            }
+            if (quarterField) {
+                quarterField.value = getQuarter(now);
+            }
+        }
+    }
+    
+    // Update hidden audit duration field when timer changes
+    function updateAuditDuration() {
+        const auditDuration = document.getElementById('auditDuration');
+        if (auditDuration) {
+            auditDuration.value = formatTime(elapsedTime);
+        }
+    }
+    
+    // Modified updateDisplay to also update audit duration
+    function updateDisplay() {
+        if (isRunning && startTime) {
+            elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        }
+        timerDisplay.textContent = formatTime(elapsedTime);
+        updateAuditDuration();
+    }
+    
+    // Make functions globally accessible
+    window.resetTimer = resetTimer;
+    window.startTimer = startTimer;
+    window.loadUserData = loadUserData;
+    window.updateWeekAndQuarter = updateWeekAndQuarter;
+    
+    // Timer will start when user clicks "Start Audit" button
+    // Don't auto-start on page load
+})();
+
+// Employee List and Auto-Population Functionality
+let allEmployees = []; // Store all employees loaded from Supabase
+
+// Load employees from Supabase
+async function loadEmployees() {
+    try {
+        const employeeSelect = document.getElementById('employeeName');
+        
+        // Check if Supabase is available
+        if (!window.SupabaseUsers) {
+            console.error('Supabase not initialized');
+            employeeSelect.innerHTML = '<option value="">Error: Supabase not initialized</option>';
+            return;
+        }
+        
+        // Load users from Supabase
+        allEmployees = await window.SupabaseUsers.getAllUsers({
+            orderBy: { column: 'name', ascending: true }
+        });
+        
+        // Populate the dropdown
+        employeeSelect.innerHTML = '<option value="">Select Employee</option>';
+        
+        allEmployees.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.email; // Use email as the value
+            option.textContent = user.name;
+            option.dataset.email = user.email;
+            option.dataset.role = user.role || '';
+            option.dataset.department = user.department || '';
+            option.dataset.designation = user.designation || '';
+            option.dataset.employeeId = user.employee_id || '';
+            option.dataset.country = user.country || '';
+            employeeSelect.appendChild(option);
+        });
+        
+    } catch (error) {
+        console.error('Error loading employees:', error);
+        const employeeSelect = document.getElementById('employeeName');
+        employeeSelect.innerHTML = '<option value="">Error loading employees</option>';
+    }
+}
+
+// Load channels from channels table
+async function loadChannels() {
+    try {
+        const channelSelect = document.getElementById('channel');
+        
+        if (!window.supabaseClient) {
+            console.error('Supabase client not initialized');
+            channelSelect.innerHTML = '<option value="">Error: Supabase not initialized</option>';
+            return;
+        }
+        
+        // Fetch active channels from channels table
+        const { data, error } = await window.supabaseClient
+            .from('channels')
+            .select('name')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        // Populate the dropdown
+        channelSelect.innerHTML = '<option value="">Select Channel</option>';
+        
+        data.forEach(channel => {
+            const option = document.createElement('option');
+            option.value = channel.name;
+            option.textContent = channel.name;
+            channelSelect.appendChild(option);
+        });
+        
+        // Set first channel as default if available
+        if (data.length > 0) {
+            channelSelect.value = data[0].name;
+        }
+        
+        console.log('Loaded channels from channels table:', data.map(c => c.name));
+        
+    } catch (error) {
+        console.error('Error loading channels:', error);
+        const channelSelect = document.getElementById('channel');
+        channelSelect.innerHTML = '<option value="">Error loading channels</option>';
+    }
+}
+
+
+// Function to auto-populate Error Description from individual feedback fields (Dynamic)
+function populateErrorDescription() {
+    const allFeedback = [];
+    
+    currentParameters.forEach(param => {
+        const feedbackElement = document.getElementById(`feedback_${param.field_id}`);
+        if (feedbackElement && feedbackElement.value.trim()) {
+            allFeedback.push(`${param.error_name}: ${feedbackElement.value.trim()}`);
+        }
+    });
+    
+    const errorDescription = document.getElementById('errorDescription');
+    if (errorDescription) {
+        errorDescription.value = allFeedback.join('\n\n');
+    }
+}
+
+// ============================================================================
+// Close Audit Form Function
+// ============================================================================
+window.closeAuditForm = async function() {
+    const auditFormModal = document.getElementById('auditFormModal');
+    if (auditFormModal) {
+        auditFormModal.style.display = 'none';
+    }
+    
+    // Reset form
+    const auditForm = document.getElementById('auditForm');
+    if (auditForm) {
+        auditForm.reset();
+    }
+    
+    // Reset header back to green (passing state)
+    const headerElement = document.getElementById('auditFormHeader');
+    if (headerElement) {
+        headerElement.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+    }
+    
+    // Reset timer if exists
+    if (window.resetTimer) {
+        window.resetTimer();
+    }
+    
+    // Reset editing mode and assignment tracking
+    isEditingPendingAudit = false;
+    currentEditingAuditId = null;
+    currentAssignmentId = null;
+    isEditingExistingAudit = false;
+    currentEditingTableName = null;
+    
+    // Reload and show pending audits
+    await loadPendingAudits();
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ============================================================================
+// Load Audit for Editing from URL Parameters
+// ============================================================================
+async function loadAuditForEditing() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const auditId = urlParams.get('edit');
+    const scorecardId = urlParams.get('scorecard');
+    const tableName = urlParams.get('table');
+    
+    if (!auditId || !tableName) {
+        return; // No edit parameters, normal create mode
+    }
+    
+    try {
+        console.log('Loading audit for editing:', auditId, 'from table:', tableName);
+        
+        // Load the audit data from the specified table
+        const { data, error } = await window.supabaseClient
+            .from(tableName)
+            .select('*')
+            .eq('id', auditId)
+            .single();
+        
+        if (error) throw error;
+        
+        if (!data) {
+            alert('Audit not found');
+            return;
+        }
+        
+        console.log('Loaded audit data:', data);
+        
+        // Set editing mode
+        isEditingExistingAudit = true;
+        currentEditingAuditId = auditId;
+        currentEditingTableName = tableName;
+        
+        // Show the audit form modal
+        const auditFormModal = document.getElementById('auditFormModal');
+        if (auditFormModal) {
+            auditFormModal.style.display = 'flex';
+        }
+        
+        // Hide pending audits section when editing
+        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
+        if (pendingAuditsSection) {
+            pendingAuditsSection.style.display = 'none';
+        }
+        
+        // Load and select the scorecard
+        if (scorecardId) {
+            const scorecardSelect = document.getElementById('scorecardSelect');
+            if (scorecardSelect) {
+                scorecardSelect.value = scorecardId;
+                await loadScorecardParameters(scorecardId);
+            }
+        }
+        
+        // Populate form fields with audit data
+        await populateFormWithAuditData(data);
+        
+        // Update header to indicate editing mode
+        const formHeader = document.getElementById('formScorecardDisplay');
+        if (formHeader) {
+            formHeader.innerHTML = '✏️ Editing Audit - ' + formHeader.innerHTML;
+        }
+        
+        // Start timer if not already started
+        if (window.resetTimer && window.startTimer) {
+            window.resetTimer();
+            window.startTimer();
+        }
+        
+    } catch (error) {
+        console.error('Error loading audit for editing:', error);
+        alert('Failed to load audit for editing: ' + error.message);
+    }
+}
+
+// ============================================================================
+// Populate Form with Audit Data
+// ============================================================================
+async function populateFormWithAuditData(audit) {
+    try {
+        // Populate employee information
+        const employeeSelect = document.getElementById('employeeName');
+        const employeeEmail = document.getElementById('employeeEmail');
+        const employeeType = document.getElementById('employeeType');
+        const countryOfEmployee = document.getElementById('countryOfEmployee');
+        
+        if (employeeSelect && audit.employee_email) {
+            // Find and select the employee in dropdown
+            for (let i = 0; i < employeeSelect.options.length; i++) {
+                if (employeeSelect.options[i].dataset.email === audit.employee_email) {
+                    employeeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        if (employeeEmail) employeeEmail.value = audit.employee_email || '';
+        if (employeeType) employeeType.value = audit.employee_type || '';
+        if (countryOfEmployee) countryOfEmployee.value = audit.country_of_employee || '';
+        
+        // Populate interaction details
+        const interactionId = document.getElementById('interactionId');
+        const interactionDate = document.getElementById('interactionDate');
+        const channel = document.getElementById('channel');
+        const clientEmail = document.getElementById('clientEmail');
+        
+        if (interactionId) interactionId.value = audit.interaction_id || '';
+        if (interactionDate) interactionDate.value = audit.interaction_date || '';
+        if (channel) channel.value = audit.channel || '';
+        if (clientEmail) clientEmail.value = audit.client_email || '';
+        
+        // Populate audit type and validation
+        const auditType = document.getElementById('auditType');
+        const validationStatus = document.getElementById('validationStatus');
+        
+        if (auditType) auditType.value = audit.audit_type || '';
+        if (validationStatus) validationStatus.value = audit.validation_status || '';
+        
+        // Populate pre/post status
+        const agentPreStatus = document.getElementById('agentPreStatus');
+        const agentPostStatus = document.getElementById('agentPostStatus');
+        
+        if (agentPreStatus) agentPreStatus.value = audit.agent_pre_status || '';
+        if (agentPostStatus) agentPostStatus.value = audit.agent_post_status || '';
+        
+        // Populate transcript and recommendations
+        const transcript = document.getElementById('transcript');
+        const recommendations = document.getElementById('recommendations');
+        
+        if (transcript) transcript.value = audit.transcript || '';
+        if (recommendations) recommendations.value = audit.recommendations || '';
+        
+        // Wait a bit for scorecard parameters to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Populate error parameters
+        if (currentParameters && currentParameters.length > 0) {
+            currentParameters.forEach(param => {
+                const fieldValue = audit[param.field_id];
+                
+                if (param.field_type === 'radio') {
+                    // Set radio button selection
+                    const radioYes = document.getElementById(`${param.field_id}_yes`);
+                    const radioNo = document.getElementById(`${param.field_id}_no`);
+                    
+                    if (fieldValue === 1 || fieldValue === true || fieldValue === 'true' || fieldValue === '1') {
+                        if (radioYes) radioYes.checked = true;
+                    } else {
+                        if (radioNo) radioNo.checked = true;
+                    }
+                } else {
+                    // Set counter value
+                    const field = document.getElementById(param.field_id);
+                    if (field) {
+                        field.value = fieldValue || 0;
+                        
+                        // Update styling based on value
+                        if (fieldValue > 0) {
+                            field.style.backgroundColor = '#ef4444';
+                            field.style.color = '#ffffff';
+                            field.style.borderColor = '#dc2626';
+                        }
+                    }
+                }
+                
+                // Populate feedback
+                const feedbackField = document.getElementById(`feedback_${param.field_id}`);
+                if (feedbackField) {
+                    feedbackField.value = audit[`feedback_${param.field_id}`] || '';
+                    
+                    // Show feedback if there's a value
+                    if (audit[`feedback_${param.field_id}`]) {
+                        feedbackField.style.display = 'block';
+                        feedbackField.style.visibility = 'visible';
+                        feedbackField.style.opacity = '1';
+                    }
+                }
+            });
+        }
+        
+        // Recalculate scores
+        calculateAverageScore();
+        
+        console.log('Form populated with audit data');
+        
+    } catch (error) {
+        console.error('Error populating form with audit data:', error);
+    }
+}
+
+// Audit Form Submission Handler
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded fired');
+    
+    // Initialize form immediately - the submit handler will wait for Supabase
+    initializeForm();
+    
+    function initializeForm() {
+        const auditForm = document.getElementById('auditForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const employeeSelect = document.getElementById('employeeName');
+        const employeeEmail = document.getElementById('employeeEmail');
+        const employeeType = document.getElementById('employeeType');
+        const countryOfEmployee = document.getElementById('countryOfEmployee');
+        
+        if (!auditForm) {
+            console.error('auditForm element not found!');
+            window.confirmationDialog.show({
+                title: 'Form Error',
+                message: 'Error: Form element not found! Please refresh the page.',
+                confirmText: 'Refresh',
+                cancelText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        console.log('Form element found:', auditForm);
+        
+        // Load scorecards when page loads
+        loadScorecards();
+        
+        // Load pending audits when page loads (all assigned audits)
+        loadPendingAudits();
+        
+        // Check if we're editing an existing audit from URL parameters
+        setTimeout(() => {
+            loadAuditForEditing();
+        }, 1000); // Wait for Supabase and employees to load
+        
+        // Handle scorecard selection change
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect) {
+            scorecardSelect.addEventListener('change', async function() {
+                await loadScorecardParameters(this.value);
+            });
+        }
+        
+        // Load employees when page loads
+        loadEmployees();
+        
+        // Load channels from users' teams
+        loadChannels();
+        
+        // Handle employee selection change
+        employeeSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                // Auto-populate email from the selected employee
+                const email = selectedOption.dataset.email || selectedOption.value;
+                if (employeeEmail) {
+                    employeeEmail.value = email;
+                }
+                
+                // Auto-populate employee type from designation
+                const designation = selectedOption.dataset.designation || '';
+                if (employeeType && designation) {
+                    employeeType.value = designation;
+                }
+                
+                // Auto-populate country from selected employee
+                const country = selectedOption.dataset.country || '';
+                if (countryOfEmployee && country) {
+                    countryOfEmployee.value = country;
+                }
+            } else {
+                // Clear fields if no employee selected
+                if (employeeEmail) {
+                    employeeEmail.value = '';
+                }
+                if (employeeType) {
+                    employeeType.value = '';
+                }
+                if (countryOfEmployee) {
+                    countryOfEmployee.value = '';
+                }
+            }
+        });
+        
+        // Load user data when page loads
+        loadUserData();
+        
+        // Update week and quarter when page loads
+        updateWeekAndQuarter();
+        
+        // Refresh user data when window gains focus (in case user data was updated)
+        window.addEventListener('focus', function() {
+            loadUserData();
+            updateWeekAndQuarter();
+        });
+        
+        // Handle form submission
+        console.log('Setting up form submission handler...');
+        
+        // Also add click handler to submit button for debugging
+        const submitBtn = auditForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            console.log('Submit button found:', submitBtn);
+            submitBtn.addEventListener('click', function(e) {
+                console.log('Submit button clicked!');
+            });
+        } else {
+            console.log('Submit button not found');
+        }
+        
+        console.log('Attaching submit event listener to form...');
+        
+        // Handler function
+        const handleSubmit = async function(e) {
+            console.log('DEBUG: Form submit event fired!'); // Debug log only
+            console.log('Submit event fired! Event object:', e);
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            console.log('===== FORM SUBMISSION STARTED =====');
+            
+            // Validate scorecard selection
+            if (!currentScorecard || !currentParameters || currentParameters.length === 0) {
+                await window.confirmationDialog.show({
+                    title: 'No Scorecard Selected',
+                    message: 'Please select a scorecard before submitting the audit.',
+                    confirmText: 'OK',
+                    type: 'warning'
+                });
+                return;
+            }
+            
+            // Wait for Supabase client to be ready (maximum 5 seconds)
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds with 100ms intervals
+            while (!window.supabaseClient && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (!window.supabaseClient) {
+                await window.confirmationDialog.show({
+                    title: 'Initialization Error',
+                    message: 'Supabase client not initialized. Please refresh the page and try again.',
+                    confirmText: 'Refresh Page',
+                    cancelText: 'OK',
+                    type: 'error'
+                });
+                console.error('Supabase client not available after waiting');
+                return;
+            }
+            
+            console.log('Supabase client is ready');
+            console.log('Saving to table:', currentScorecard.table_name);
+            
+            // Set hidden audit timestamp to current time when submitting
+            const now = new Date();
+            const auditTimestamp = document.getElementById('auditTimestamp');
+            if (auditTimestamp) {
+                auditTimestamp.value = now.toISOString().slice(0, 16);
+            }
+            
+            // Update week and quarter based on the audit timestamp
+            updateWeekAndQuarter();
+            
+            // Auto-populate Error Description from individual feedback fields
+            populateErrorDescription();
+            
+            console.log('Form validation completed');
+            
+            // Collect all form data
+            const formData = new FormData(auditForm);
+            const auditData = {};
+            
+            // Convert FormData to object
+            for (let [key, value] of formData.entries()) {
+                auditData[key] = value;
+            }
+            
+            // Explicitly handle dynamic parameter fields (counters and radio buttons)
+            currentParameters.forEach(param => {
+                const feedbackField = document.getElementById(`feedback_${param.field_id}`);
+                
+                if (param.field_type === 'radio') {
+                    // For radio buttons, get the selected value
+                    const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+                    auditData[param.field_id] = selectedRadio ? parseInt(selectedRadio.value) : 0;
+                } else {
+                    // For counters, store the numeric value
+                    const field = document.getElementById(param.field_id);
+                    auditData[param.field_id] = field ? (parseInt(field.value) || 0) : 0;
+                }
+                
+                if (feedbackField && feedbackField.value) {
+                    auditData[`feedback_${param.field_id}`] = feedbackField.value;
+                }
+            });
+            
+            // Update employeeName with the actual name from the selected option
+            const selectedEmployeeOption = employeeSelect.options[employeeSelect.selectedIndex];
+            if (selectedEmployeeOption && selectedEmployeeOption.textContent) {
+                auditData.employeeName = selectedEmployeeOption.textContent;
+            }
+            
+            // Ensure auditorName is populated (from hidden field)
+            const auditorNameField = document.getElementById('auditorName');
+            if (auditorNameField && auditorNameField.value) {
+                auditData.auditorName = auditorNameField.value;
+            }
+            
+            // Ensure quarter and week are included
+            const quarterField = document.getElementById('quarter');
+            if (quarterField && quarterField.value) {
+                auditData.quarter = quarterField.value;
+            }
+            
+            const weekField = document.getElementById('week');
+            if (weekField && weekField.value) {
+                auditData.week = weekField.value;
+            }
+            
+            // Add unique ID and submission timestamp
+            auditData.id = 'audit_' + Date.now();
+            auditData.submittedAt = new Date().toISOString();
+            
+            console.log('All form data keys:', Object.keys(auditData));
+            console.log('Audit data to be saved:', auditData);
+            
+            // Save to Supabase
+            console.log('Saving to Supabase...');
+            
+            try {
+                // Build base payload
+                const auditPayload = {
+                    id: auditData.id,
+                    submitted_at: auditData.submittedAt,
+                    audit_timestamp: auditData.auditTimestamp || null,
+                    audit_duration: auditData.auditDuration || null,
+                    auditor_email: auditData.auditorEmail || null,
+                    auditor_name: auditData.auditorName || null,
+                    employee_name: auditData.employeeName || null,
+                    employee_email: auditData.employeeEmail || null,
+                    employee_type: auditData.employeeType || null,
+                    interaction_id: auditData.interactionId || null,
+                    interaction_date: auditData.interactionDate || null,
+                    audit_type: auditData.auditType || null,
+                    channel: auditData.channel || null,
+                    quarter: auditData.quarter || null,
+                    week: auditData.week ? parseInt(auditData.week) : null,
+                    country_of_employee: auditData.countryOfEmployee || null,
+                    client_email: auditData.clientEmail || null,
+                    agent_pre_status: auditData.agentPreStatus || null,
+                    agent_post_status: auditData.agentPostStatus || null,
+                    passing_status: auditData.passingStatus || null,
+                    validation_status: auditData.validationStatus || null,
+                    average_score: auditData.averageScore ? parseFloat(auditData.averageScore) : null,
+                    critical_errors: auditData.criticalErrors ? parseInt(auditData.criticalErrors) : 0,
+                    critical_fail_error: auditData.criticalFailError ? parseInt(auditData.criticalFailError) : 0,
+                    significant_error: auditData.significantError ? parseInt(auditData.significantError) : 0,
+                    total_errors_count: auditData.totalErrorsCount ? parseInt(auditData.totalErrorsCount) : 0,
+                    transcript: auditData.transcript || null,
+                    error_description: auditData.errorDescription || null,
+                    recommendations: auditData.recommendations || null
+                };
+                
+                // Add dynamic error fields based on currentParameters
+                currentParameters.forEach(param => {
+                    const fieldValue = auditData[param.field_id];
+                    auditPayload[param.field_id] = fieldValue ? parseInt(fieldValue) : 0;
+                    
+                    // Add feedback field
+                    const feedbackKey = `feedback_${param.field_id}`;
+                    auditPayload[feedbackKey] = auditData[feedbackKey] || null;
+                });
+                
+                console.log('Payload to save:', auditPayload);
+                console.log('Target table:', currentScorecard.table_name);
+                console.log('Is editing pending audit:', isEditingPendingAudit);
+                console.log('Current editing audit ID:', currentEditingAuditId);
+                
+                let data, error;
+                const wasEditingExistingAudit = isEditingExistingAudit; // Store before resetting
+                
+                // Check if we're editing an existing audit from audit reports
+                if (isEditingExistingAudit && currentEditingAuditId && currentEditingTableName) {
+                    // UPDATE existing audit record
+                    console.log('Updating existing audit from reports...');
+                    
+                    // Keep the original ID and submitted_at
+                    auditPayload.id = currentEditingAuditId;
+                    // Don't update submitted_at when editing, keep original
+                    delete auditPayload.submitted_at;
+                    
+                    const result = await window.supabaseClient
+                        .from(currentEditingTableName)
+                        .update(auditPayload)
+                        .eq('id', currentEditingAuditId)
+                        .select();
+                    
+                    data = result.data;
+                    error = result.error;
+                    
+                    if (!error) {
+                        console.log('Successfully updated audit from reports:', data);
+                        
+                        // Reset editing mode
+                        isEditingExistingAudit = false;
+                        currentEditingAuditId = null;
+                        currentEditingTableName = null;
+                    }
+                    
+                } else if (isEditingPendingAudit && currentEditingAuditId) {
+                    // UPDATE existing pending audit record
+                    console.log('Updating existing pending audit...');
+                    
+                    // Update validation status to 'Validated' when completing the audit
+                    auditPayload.validation_status = 'Validated';
+                    auditPayload.submitted_at = new Date().toISOString();
+                    
+                    const result = await window.supabaseClient
+                        .from(currentScorecard.table_name)
+                        .update(auditPayload)
+                        .eq('id', currentEditingAuditId)
+                        .select();
+                    
+                    data = result.data;
+                    error = result.error;
+                    
+                    if (!error) {
+                        console.log('Successfully updated pending audit:', data);
+                        
+                        // If this was from an audit assignment, mark it as completed
+                        if (isEditingPendingAudit && currentEditingAuditId) {
+                            try {
+                                const { data: updateData, error: assignmentError } = await window.supabaseClient
+                                    .from('audit_assignments')
+                                    .update({ 
+                                        status: 'completed',
+                                        completed_at: new Date().toISOString()
+                                    })
+                                    .eq('id', currentEditingAuditId)
+                                    .select();
+                                
+                                if (assignmentError) {
+                                    console.error('Error marking assignment as completed:', assignmentError);
+                                    console.error('Assignment error details:', JSON.stringify(assignmentError, null, 2));
+                                } else {
+                                    console.log('Successfully marked audit assignment as completed:', updateData);
+                                }
+                            } catch (assignmentError) {
+                                console.error('Exception marking assignment as completed:', assignmentError);
+                                // Don't fail the audit submission if marking as completed fails
+                            }
+                        }
+                        
+                        // Reset editing mode
+                        isEditingPendingAudit = false;
+                        currentEditingAuditId = null;
+                    }
+                    
+                } else {
+                    // INSERT new audit record
+                    console.log('Inserting new audit...');
+                    
+                    const result = await window.supabaseClient
+                        .from(currentScorecard.table_name)
+                        .insert([auditPayload])
+                        .select();
+                    
+                    data = result.data;
+                    error = result.error;
+                    
+                    if (!error) {
+                        console.log('Successfully inserted new audit:', data);
+                        
+                        // If this was from an audit assignment, mark it as completed
+                        if (currentAssignmentId) {
+                            try {
+                                const { data: updateData, error: assignmentError } = await window.supabaseClient
+                                    .from('audit_assignments')
+                                    .update({ 
+                                        status: 'completed',
+                                        completed_at: new Date().toISOString(),
+                                        audit_id: auditPayload.id  // Link the completed audit
+                                    })
+                                    .eq('id', currentAssignmentId)
+                                    .select();
+                                
+                                if (assignmentError) {
+                                    console.error('Error marking assignment as completed:', assignmentError);
+                                    console.error('Assignment error details:', JSON.stringify(assignmentError, null, 2));
+                                } else {
+                                    console.log('Successfully marked audit assignment as completed:', updateData);
+                                    console.log('Assignment ID:', currentAssignmentId);
+                                    console.log('Audit ID:', auditPayload.id);
+                                }
+                            } catch (assignmentError) {
+                                console.error('Exception marking assignment as completed:', assignmentError);
+                                // Don't fail the audit submission if marking as completed fails
+                            }
+                        } else {
+                            console.log('No currentAssignmentId - this is a manual audit creation');
+                        }
+                        
+                        // Reset editing mode and assignment tracking
+                        isEditingPendingAudit = false;
+                        currentEditingAuditId = null;
+                        currentAssignmentId = null;
+                    }
+                }
+                
+                if (error) {
+                    console.error('Error saving to Supabase:', error);
+                    console.error('Error details:', JSON.stringify(error, null, 2));
+                    await window.confirmationDialog.show({
+                        title: 'Error Saving Audit',
+                        message: 'An error occurred while saving the audit: ' + error.message,
+                        confirmText: 'OK',
+                        cancelText: 'Close',
+                        type: 'error'
+                    });
+                    return;
+                }
+                
+                // Show success message
+                const message = wasEditingExistingAudit ? 'Audit updated successfully!' : 'Audit submitted successfully!';
+                const confirmed = await window.confirmationDialog.show({
+                    title: 'Success!',
+                    message: message,
+                    confirmText: 'View Reports',
+                    cancelText: 'Stay Here',
+                    type: 'success'
+                });
+                
+                // Reset form
+                auditForm.reset();
+                
+                // Reset header back to green (passing state)
+                const headerElement = document.getElementById('auditFormHeader');
+                if (headerElement) {
+                    headerElement.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+                }
+                
+                // Reset timer
+                if (window.resetTimer) {
+                    window.resetTimer();
+                }
+                
+                // Hide form modal, show pending audits section
+                const auditFormModal = document.getElementById('auditFormModal');
+                if (auditFormModal) {
+                    auditFormModal.style.display = 'none';
+                }
+                
+                // Reload pending audits (in case there are more)
+                await loadPendingAudits();
+                
+                // Redirect to audit reports if user clicked "View Reports"
+                if (confirmed) {
+                    window.location.href = 'audit-reports.html';
+                } else {
+                    // Scroll to top to show pending audits
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                
+            } catch (err) {
+                console.error('Exception saving to Supabase:', err);
+                console.error('Exception stack:', err.stack);
+                await window.confirmationDialog.show({
+                    title: 'Error Saving Audit',
+                    message: 'An error occurred while saving the audit: ' + err.message,
+                    confirmText: 'OK',
+                    cancelText: 'Close',
+                    type: 'error'
+                });
+                return;
+            }
+        };
+        
+        // Attach the handler in multiple phases to ensure it runs
+        auditForm.addEventListener('submit', handleSubmit, true); // Capture phase
+        auditForm.addEventListener('submit', handleSubmit, false); // Bubble phase
+        
+        console.log('Event listeners attached successfully');
+        
+        // Handle cancel button
+        cancelBtn.addEventListener('click', async function() {
+            const confirmed = await window.confirmationDialog.show({
+                title: 'Cancel Audit',
+                message: 'Are you sure you want to cancel? All data will be lost.',
+                confirmText: 'Cancel Audit',
+                cancelText: 'Keep Editing',
+                type: 'warning'
+            });
+            
+            if (confirmed) {
+                auditForm.reset();
+                
+                // Reset header back to green (passing state)
+                const headerElement = document.getElementById('auditFormHeader');
+                if (headerElement) {
+                    headerElement.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+                }
+                
+                if (window.resetTimer) {
+                    window.resetTimer();
+                }
+                
+                // Reset editing mode and assignment tracking
+                isEditingPendingAudit = false;
+                currentEditingAuditId = null;
+                currentAssignmentId = null;
+                isEditingExistingAudit = false;
+                currentEditingTableName = null;
+                
+                // Hide form modal
+                const auditFormModal = document.getElementById('auditFormModal');
+                if (auditFormModal) {
+                    auditFormModal.style.display = 'none';
+                }
+                
+                // Reload and show pending audits
+                await loadPendingAudits();
+                
+                // Scroll to top to show pending audits
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    } // End of initializeForm()
+}); // End of DOMContentLoaded
+
+// Calculate errors by category (Dynamic)
+function calculateErrorsByCategory() {
+    const categoryCounts = {
+        'Critical Fail Error': 0,
+        'Critical Error': 0,
+        'Significant Error': 0
+    };
+    
+    const scoringType = currentScorecard ? currentScorecard.scoring_type : 'deductive';
+    
+    currentParameters.forEach(param => {
+        const paramType = param.parameter_type || 'error';
+        let count = 0;
+        
+        if (param.field_type === 'radio') {
+            // Get the selected radio button value
+            const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+            
+            // Only count if something is actually selected
+            if (selectedRadio) {
+                const selectedValue = parseInt(selectedRadio.value);
+                
+                // For additive/achievement types: NO (0) = not achieved = counts as error
+                // For error types: YES (1) = error occurred = counts as error
+                if (paramType === 'achievement' || paramType === 'bonus') {
+                    count = selectedValue === 0 ? 1 : 0; // NO = 1 error, YES = 0 errors
+                } else {
+                    count = selectedValue; // YES = 1 error, NO = 0 errors
+                }
+            }
+            // If nothing selected, count = 0 (don't count as error yet)
+        } else {
+            // Counter field
+            const field = document.getElementById(param.field_id);
+            count = field ? (parseInt(field.value) || 0) : 0;
+        }
+        
+        if (categoryCounts.hasOwnProperty(param.error_category)) {
+            categoryCounts[param.error_category] += count;
+        }
+    });
+    
+    // Update fields
+    const criticalFailField = document.getElementById('criticalFailError');
+    const criticalField = document.getElementById('criticalErrors');
+    const significantField = document.getElementById('significantError');
+    
+    if (criticalFailField) criticalFailField.value = categoryCounts['Critical Fail Error'];
+    if (criticalField) criticalField.value = categoryCounts['Critical Error'];
+    if (significantField) significantField.value = categoryCounts['Significant Error'];
+    
+    return categoryCounts;
+}
+
+// Calculate average score based on dynamic parameters
+function calculateAverageScore() {
+    if (!currentParameters || currentParameters.length === 0 || !currentScorecard) {
+        return 100; // Default if no parameters loaded
+    }
+    
+    const scoringType = currentScorecard.scoring_type || 'deductive';
+    let score = 0;
+    
+    switch(scoringType) {
+        case 'deductive':
+            score = calculateDeductiveScore();
+            break;
+        case 'additive':
+            score = calculateAdditiveScore();
+            break;
+        case 'hybrid':
+            score = calculateHybridScore();
+            break;
+        default:
+            score = calculateDeductiveScore();
+    }
+    
+    // Update average score field
+    const averageScoreField = document.getElementById('averageScore');
+    if (averageScoreField) {
+        averageScoreField.value = score.toFixed(2);
+    }
+    
+    // Calculate and update error counts and summary badges
+    let criticalFailCount = 0;
+    let criticalCount = 0;
+    let significantCount = 0;
+    let totalErrorsCount = 0;
+    
+    currentParameters.forEach(param => {
+        const paramType = param.parameter_type || 'error';
+        let value = 0;
+        let errorCount = 0;
+        
+        if (param.field_type === 'radio') {
+            const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+            value = selectedRadio ? parseInt(selectedRadio.value) : 0;
+            
+            // For additive/achievement: NO (0) = not achieved = error
+            // For error parameters: YES (1) = error occurred = error
+            if (paramType === 'achievement' || paramType === 'bonus') {
+                errorCount = value === 0 ? 1 : 0; // NO = error, YES = no error
+            } else {
+                errorCount = value; // YES = error, NO = no error
+            }
+        } else {
+            // Counter field - count is the value itself
+            const field = document.getElementById(param.field_id);
+            errorCount = field ? (parseInt(field.value) || 0) : 0;
+        }
+        
+        if (errorCount > 0) {
+            // Determine severity
+            const severity = param.error_category.includes('Fail') ? 'Critical Fail' : 
+                           param.error_category.includes('Critical') ? 'Critical' : 'Significant';
+            
+            if (severity === 'Critical Fail') {
+                criticalFailCount += errorCount;
+            } else if (severity === 'Critical') {
+                criticalCount += errorCount;
+            } else if (severity === 'Significant') {
+                significantCount += errorCount;
+            }
+            
+            totalErrorsCount += errorCount;
+        }
+    });
+    
+    // Update summary badges
+    const criticalFailBadge = document.getElementById('criticalFailBadge');
+    const criticalBadge = document.getElementById('criticalBadge');
+    const significantBadge = document.getElementById('significantBadge');
+    
+    if (criticalFailBadge) criticalFailBadge.textContent = `Critical Fail: ${criticalFailCount}`;
+    if (criticalBadge) criticalBadge.textContent = `Critical: ${criticalCount}`;
+    if (significantBadge) significantBadge.textContent = `Significant: ${significantCount}`;
+    
+    // Update hidden error count fields for form submission
+    const criticalErrorsField = document.getElementById('criticalErrors');
+    const criticalFailErrorField = document.getElementById('criticalFailError');
+    const significantErrorField = document.getElementById('significantError');
+    const totalErrorsField = document.getElementById('totalErrorsCount');
+    
+    if (criticalErrorsField) criticalErrorsField.value = criticalCount;
+    if (criticalFailErrorField) criticalFailErrorField.value = criticalFailCount;
+    if (significantErrorField) significantErrorField.value = significantCount;
+    if (totalErrorsField) totalErrorsField.value = totalErrorsCount;
+    
+    // Update passing status based on score and threshold
+    updatePassingStatus(score);
+    
+    return score;
+}
+
+// Deductive scoring: Start at 100, subtract for errors
+function calculateDeductiveScore() {
+    let totalDeduction = 0;
+    
+    currentParameters.forEach(param => {
+        if (param.parameter_type !== 'error' && param.points_direction !== 'subtract') return;
+        
+        let value = 0;
+        
+        if (param.field_type === 'radio') {
+            // Get the selected radio button value
+            const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+            value = selectedRadio ? parseInt(selectedRadio.value) : 0;
+        } else {
+            // Counter field
+            const field = document.getElementById(param.field_id);
+            value = field ? (parseInt(field.value) || 0) : 0;
+        }
+        
+        const penalty = parseFloat(param.penalty_points) || 0;
+        totalDeduction += value * penalty;
+    });
+    
+    return Math.max(0, 100 - totalDeduction);
+}
+
+// Additive scoring: Start at 0, add for achievements
+function calculateAdditiveScore() {
+    let totalPoints = 0;
+    let maxPossiblePoints = 0;
+    
+    currentParameters.forEach(param => {
+        if (param.parameter_type !== 'achievement' && param.points_direction !== 'add') return;
+        
+        const points = parseFloat(param.penalty_points) || 0;
+        
+        // Max possible is if all achievements were completed
+        if (param.field_type === 'radio') {
+            maxPossiblePoints += points;
+        } else {
+            // For counters in additive, we assume max count of 1 unless specified
+            maxPossiblePoints += points;
+        }
+        
+        let value = 0;
+        
+        if (param.field_type === 'radio') {
+            // Get the selected radio button value
+            const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+            value = selectedRadio ? parseInt(selectedRadio.value) : 0;
+        } else {
+            // Counter field
+            const field = document.getElementById(param.field_id);
+            value = field ? (parseInt(field.value) || 0) : 0;
+        }
+        
+        totalPoints += value * points;
+    });
+    
+    // Convert to percentage
+    if (maxPossiblePoints === 0) return 0;
+    return Math.min(100, (totalPoints / maxPossiblePoints) * 100);
+}
+
+// Hybrid scoring: Deduct for errors, add for achievements
+function calculateHybridScore() {
+    let baseScore = 100;
+    let bonusPoints = 0;
+    
+    currentParameters.forEach(param => {
+        let value = 0;
+        
+        if (param.field_type === 'radio') {
+            // Get the selected radio button value
+            const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+            value = selectedRadio ? parseInt(selectedRadio.value) : 0;
+        } else {
+            // Counter field
+            const field = document.getElementById(param.field_id);
+            value = field ? (parseInt(field.value) || 0) : 0;
+        }
+        
+        const points = parseFloat(param.penalty_points) || 0;
+        
+        if (param.parameter_type === 'error' || param.points_direction === 'subtract') {
+            // Subtract from base score
+            baseScore -= value * points;
+        } else if (param.parameter_type === 'achievement' || param.parameter_type === 'bonus' || param.points_direction === 'add') {
+            // Add to bonus
+            bonusPoints += value * points;
+        }
+    });
+    
+    // Apply max bonus cap if set
+    const maxBonus = parseFloat(currentScorecard.max_bonus_points) || 0;
+    if (maxBonus > 0) {
+        bonusPoints = Math.min(bonusPoints, maxBonus);
+    }
+    
+    // Calculate final score
+    let finalScore = baseScore + bonusPoints;
+    
+    // Apply over 100% cap if not allowed
+    const allowOver100 = currentScorecard.allow_over_100 || false;
+    if (!allowOver100) {
+        finalScore = Math.min(100, finalScore);
+    }
+    
+    // Ensure minimum of 0
+    finalScore = Math.max(0, finalScore);
+    
+    return finalScore;
+}
+
+// Update passing status based on average score and scorecard threshold
+function updatePassingStatus(score) {
+    const passingStatusField = document.getElementById('passingStatus');
+    const headerElement = document.getElementById('auditFormHeader');
+    
+    if (passingStatusField) {
+        const threshold = currentScorecard ? parseFloat(currentScorecard.passing_threshold) : 85;
+        
+        // Check if any "fail all" parameters have errors
+        let failAllErrorCount = 0;
+        
+        currentParameters.forEach(param => {
+            // Check if this parameter causes automatic fail
+            if (param.is_fail_all) {
+                const paramType = param.parameter_type || 'error';
+                let errorCount = 0;
+                
+                if (param.field_type === 'radio') {
+                    const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+                    const value = selectedRadio ? parseInt(selectedRadio.value) : 0;
+                    
+                    // For additive/achievement: NO (0) = error
+                    // For error parameters: YES (1) = error
+                    if (paramType === 'achievement' || paramType === 'bonus') {
+                        errorCount = value === 0 ? 1 : 0;
+                    } else {
+                        errorCount = value;
+                    }
+                } else {
+                    // Counter field
+                    const field = document.getElementById(param.field_id);
+                    errorCount = field ? (parseInt(field.value) || 0) : 0;
+                }
+                
+                failAllErrorCount += errorCount;
+            }
+        });
+        
+        let isPassing = false;
+        
+        // Check for "fail all" conditions first
+        if (failAllErrorCount > 0) {
+            // Any fail-all parameter has errors = automatic fail
+            passingStatusField.value = 'Not Passing';
+            isPassing = false;
+        } else if (score >= threshold) {
+            // No fail-all errors and score meets threshold = pass
+            passingStatusField.value = 'Passing';
+            isPassing = true;
+        } else {
+            // No fail-all errors but score below threshold = fail
+            passingStatusField.value = 'Not Passing';
+            isPassing = false;
+        }
+        
+        // Update header background color based on passing status
+        if (headerElement) {
+            if (isPassing) {
+                headerElement.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+            } else {
+                headerElement.style.background = 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)';
+            }
+        }
+    }
+}
+
+// Calculate total errors count (Dynamic)
+function calculateTotalErrorsCount() {
+    let totalCount = 0;
+    
+    currentParameters.forEach(param => {
+        const paramType = param.parameter_type || 'error';
+        let count = 0;
+        
+        if (param.field_type === 'radio') {
+            // Get the selected radio button value
+            const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+            
+            // Only count if something is actually selected
+            if (selectedRadio) {
+                const selectedValue = parseInt(selectedRadio.value);
+                
+                // For additive/achievement types: NO (0) = not achieved = counts as error
+                // For error types: YES (1) = error occurred = counts as error
+                if (paramType === 'achievement' || paramType === 'bonus') {
+                    count = selectedValue === 0 ? 1 : 0; // NO = 1 error, YES = 0 errors
+                } else {
+                    count = selectedValue; // YES = 1 error, NO = 0 errors
+                }
+            }
+            // If nothing selected, count = 0 (don't count as error yet)
+        } else {
+            // Counter field
+            const field = document.getElementById(param.field_id);
+            count = field ? (parseInt(field.value) || 0) : 0;
+        }
+        
+        totalCount += count;
+    });
+    
+    // Update total errors count field
+    const totalErrorsField = document.getElementById('totalErrorsCount');
+    if (totalErrorsField) {
+        totalErrorsField.value = totalCount;
+    }
+    
+    return totalCount;
+}
+
+// Counter Button Functionality
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('counter-btn')) {
+        const action = e.target.getAttribute('data-action');
+        const targetId = e.target.getAttribute('data-target');
+        const targetInput = document.getElementById(targetId);
+        
+        if (targetInput) {
+            let currentValue = parseInt(targetInput.value) || 0;
+            
+            if (action === 'increment') {
+                currentValue++;
+            } else if (action === 'decrement') {
+                currentValue = Math.max(0, currentValue - 1);
+            }
+            
+            targetInput.value = currentValue;
+            
+            // Calculate total errors count and average score whenever any error count changes
+            calculateTotalErrorsCount();
+            calculateAverageScore();
+            calculateErrorsByCategory();
+            
+            // Show/hide feedback textarea based on value (using new naming convention)
+            const feedbackId = `feedback_${targetId}`;
+            const feedbackTextarea = document.getElementById(feedbackId);
+            
+            // Update input styling based on value
+            if (currentValue > 0) {
+                targetInput.style.backgroundColor = '#ef4444';
+                targetInput.style.color = '#ffffff';
+                targetInput.style.borderColor = '#dc2626';
+            } else {
+                targetInput.style.backgroundColor = '#ffffff';
+                targetInput.style.color = '#374151';
+                targetInput.style.borderColor = '#d1d5db';
+            }
+            
+            if (feedbackTextarea) {
+                if (currentValue > 0) {
+                    feedbackTextarea.style.display = 'block';
+                    feedbackTextarea.style.visibility = 'visible';
+                    feedbackTextarea.style.opacity = '1';
+                } else {
+                    feedbackTextarea.style.display = 'none';
+                    feedbackTextarea.style.visibility = 'hidden';
+                    feedbackTextarea.style.opacity = '0';
+                    feedbackTextarea.value = ''; // Clear feedback when count is 0
+                }
+            }
+        }
+    }
+});
+
+// Radio Button Change Handler (for achievements/yes-no fields)
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'radio' && e.target.dataset.penalty) {
+        const fieldName = e.target.name;
+        const selectedValue = parseInt(e.target.value) || 0;
+        
+        // Calculate totals
+        calculateTotalErrorsCount();
+        calculateAverageScore();
+        calculateErrorsByCategory();
+        
+        // Show/hide feedback textarea based on selection
+        const feedbackId = `feedback_${fieldName}`;
+        const feedbackTextarea = document.getElementById(feedbackId);
+        
+        if (feedbackTextarea) {
+            const paramType = e.target.dataset.paramType || 'error';
+            
+            // Show feedback if:
+            // - Error parameter and YES selected (error occurred, need to explain)
+            // - Achievement/bonus parameter and NO selected (not achieved = error, need to explain why)
+            let shouldShowFeedback = false;
+            
+            if (paramType === 'error' && selectedValue === 1) {
+                shouldShowFeedback = true;  // Error occurred
+            } else if ((paramType === 'achievement' || paramType === 'bonus') && selectedValue === 0) {
+                shouldShowFeedback = true;  // Achievement NOT completed (counts as error)
+            }
+            
+            if (shouldShowFeedback) {
+                feedbackTextarea.style.display = 'block';
+                feedbackTextarea.style.visibility = 'visible';
+                feedbackTextarea.style.opacity = '1';
+            } else {
+                feedbackTextarea.style.display = 'none';
+                feedbackTextarea.style.visibility = 'hidden';
+                feedbackTextarea.style.opacity = '0';
+                feedbackTextarea.value = ''; // Clear feedback when not needed
+            }
+        }
+    }
+});
+
+// Intercom Chat Viewer Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const viewChatBtn = document.getElementById('viewChatBtn');
+    const interactionIdInput = document.getElementById('interactionId');
+    const chatViewer = document.getElementById('intercomChatViewer');
+    const intercomIframe = document.getElementById('intercomIframe');
+    const closeChatViewer = document.getElementById('closeChatViewer');
+    const chatLoadingIndicator = document.getElementById('chatLoadingIndicator');
+    const chatError = document.getElementById('chatError');
+
+    // Configuration - Updated with your Intercom app details
+    const INTERCOM_CONFIG = {
+        // Your Intercom app ID
+        appId: 'aphmhtyj',
+        // Base URL for Intercom conversation
+        baseUrl: 'https://app.intercom.com/a/inbox',
+        // Full URL pattern: https://app.intercom.com/a/inbox/aphmhtyj/inbox/conversation/{conversationId}?view
+    };
+
+    // View Chat button click handler
+    viewChatBtn.addEventListener('click', async function() {
+        const interactionId = interactionIdInput.value.trim();
+        
+        if (!interactionId) {
+            await window.confirmationDialog.show({
+                title: 'Interaction ID Required',
+                message: 'Please enter an Interaction ID to view the chat.',
+                confirmText: 'OK',
+                cancelText: 'Close',
+                type: 'info'
+            });
+            interactionIdInput.focus();
+            return;
+        }
+
+        // Construct Intercom conversation URL
+        const conversationUrl = constructConversationUrl(interactionId);
+        
+        // Open in new tab/window due to X-Frame-Options restriction
+        openConversationInNewTab(conversationUrl);
+    });
+
+    // Note: iframe viewer removed due to X-Frame-Options restriction
+    // Chat now opens in new tab instead
+
+    // Auto-focus Interaction ID when page loads
+    interactionIdInput.focus();
+
+    function constructConversationUrl(interactionId) {
+        // Construct URL based on your Intercom setup
+        // Pattern: https://app.intercom.com/a/inbox/aphmhtyj/inbox/conversation/{conversationId}?view
+        return `${INTERCOM_CONFIG.baseUrl}/${INTERCOM_CONFIG.appId}/inbox/conversation/${interactionId}?view`;
+    }
+
+    async function openConversationInNewTab(url) {
+        // Open Intercom conversation in new tab
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer,width=1200,height=800,scrollbars=yes,resizable=yes');
+        
+        if (newWindow) {
+            // Focus the new window
+            newWindow.focus();
+            
+            // Show a helpful message
+            showConversationOpenedMessage();
+        } else {
+            // Fallback if popup was blocked
+            await window.confirmationDialog.show({
+                title: 'Popup Blocked',
+                message: 'Please allow popups for this site to view the chat, or copy this URL: ' + url,
+                confirmText: 'Copy URL',
+                cancelText: 'OK',
+                type: 'warning'
+            });
+        }
+    }
+
+    function showConversationOpenedMessage() {
+        // Create a temporary notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1A733E;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+                Intercom conversation opened in new tab
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remove notification after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    // Removed iframe-related functions due to X-Frame-Options restriction
+
+    // Optional: Auto-load chat when Interaction ID is entered and Enter is pressed
+    interactionIdInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            viewChatBtn.click();
+        }
+    });
+});
+
+// ============================================================================
+// Resizable Splitter Functionality (matching audit-reports.html)
+// ============================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    const splitter = document.getElementById('splitter');
+    const leftColumn = document.getElementById('leftColumn');
+    const rightColumn = document.getElementById('rightColumn');
+    const auditContent = document.getElementById('auditContent');
+    
+    if (splitter && leftColumn && rightColumn && auditContent) {
+        let isResizing = false;
+        
+        splitter.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            splitter.style.background = '#9ca3af';
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            
+            const containerRect = auditContent.getBoundingClientRect();
+            const offsetX = e.clientX - containerRect.left;
+            const containerWidth = containerRect.width;
+            
+            // Calculate percentage (with min/max constraints)
+            let leftPercentage = (offsetX / containerWidth) * 100;
+            leftPercentage = Math.max(25, Math.min(75, leftPercentage));
+            
+            leftColumn.style.width = leftPercentage + '%';
+        });
+        
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                splitter.style.background = '#e5e7eb';
+            }
+        });
+        
+        // Hover effect
+        splitter.addEventListener('mouseenter', function() {
+            if (!isResizing) {
+                splitter.style.background = '#d1d5db';
+            }
+        });
+        
+        splitter.addEventListener('mouseleave', function() {
+            if (!isResizing) {
+                splitter.style.background = '#e5e7eb';
+            }
+        });
+    }
+});
+
+// ============================================================================
+// Helper Function: Submit Dummy Audit Data (for testing)
+// Usage: Call window.submitDummyAudit() in the browser console
+// ============================================================================
+window.submitDummyAudit = async function() {
+    console.log('=== Starting Dummy Audit Submission ===');
+    
+    try {
+        // Step 1: Open the manual audit form
+        if (typeof window.createManualAudit === 'function') {
+            await window.createManualAudit();
+            console.log('✓ Opened audit form');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        } else {
+            console.error('createManualAudit function not found');
+            return;
+        }
+        
+        // Step 2: Select first available scorecard
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (!scorecardSelect || scorecardSelect.options.length <= 1) {
+            console.error('No scorecards available');
+            return;
+        }
+        
+        scorecardSelect.value = scorecardSelect.options[1].value;
+        scorecardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log('✓ Selected scorecard:', scorecardSelect.options[1].text);
+        
+        // Wait for parameters to load
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Step 3: Fill employee information
+        const employeeSelect = document.getElementById('employeeName');
+        if (employeeSelect && employeeSelect.options.length > 1) {
+            employeeSelect.value = employeeSelect.options[1].value;
+            employeeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('✓ Selected employee:', employeeSelect.options[1].text);
+        } else {
+            // Fill manually if dropdown not available
+            const employeeName = document.getElementById('employeeName');
+            const employeeEmail = document.getElementById('employeeEmail');
+            const employeeType = document.getElementById('employeeType');
+            const countryOfEmployee = document.getElementById('countryOfEmployee');
+            
+            if (employeeName && employeeName.tagName === 'INPUT') employeeName.value = 'John Doe';
+            if (employeeEmail) employeeEmail.value = 'john.doe@example.com';
+            if (employeeType) employeeType.value = 'Employee';
+            if (countryOfEmployee) countryOfEmployee.value = 'Bangladesh';
+            console.log('✓ Filled employee info (dummy)');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Step 4: Fill interaction details
+        const interactionId = document.getElementById('interactionId');
+        const interactionDate = document.getElementById('interactionDate');
+        const channel = document.getElementById('channel');
+        const clientEmail = document.getElementById('clientEmail');
+        
+        if (interactionId) {
+            interactionId.value = 'INT-' + Date.now();
+            console.log('✓ Filled interaction ID:', interactionId.value);
+        }
+        
+        if (interactionDate) {
+            const today = new Date();
+            interactionDate.value = today.toISOString().split('T')[0];
+            console.log('✓ Filled interaction date:', interactionDate.value);
+        }
+        
+        if (channel) {
+            if (channel.options && channel.options.length > 1) {
+                channel.value = channel.options[1].value;
+                channel.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                channel.value = 'FN Email';
+            }
+            console.log('✓ Selected channel:', channel.value);
+        }
+        
+        if (clientEmail) {
+            clientEmail.value = 'client@example.com';
+            console.log('✓ Filled client email');
+        }
+        
+        // Step 5: Fill transcript
+        const transcript = document.getElementById('transcript');
+        if (transcript) {
+            transcript.value = `Customer: Hello, I need help with my account.
+Agent: Hello! I'd be happy to help you with your account. Could you please provide me with your account number?
+Customer: Sure, it's 123456789.
+Agent: Thank you. I can see your account. How can I assist you today?
+Customer: I want to update my email address.
+Agent: I can help you with that. What is your new email address?
+Customer: newemail@example.com
+Agent: Perfect, I've updated your email address. Is there anything else I can help you with?
+Customer: No, that's all. Thank you!
+Agent: You're welcome! Have a great day!`;
+            transcript.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('✓ Filled transcript');
+        }
+        
+        // Step 6: Fill audit type and validation status
+        const auditType = document.getElementById('auditType');
+        const validationStatus = document.getElementById('validationStatus');
+        
+        if (auditType) {
+            auditType.value = 'Routine Audit (Recorded)';
+            auditType.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('✓ Selected audit type');
+        }
+        
+        if (validationStatus) {
+            validationStatus.value = 'Validated';
+            console.log('✓ Selected validation status');
+        }
+        
+        // Step 7: Fill pre/post status
+        const agentPreStatus = document.getElementById('agentPreStatus');
+        const agentPostStatus = document.getElementById('agentPostStatus');
+        
+        if (agentPreStatus) {
+            agentPreStatus.value = 'No active quality concerns';
+            console.log('✓ Selected pre-status');
+        }
+        
+        if (agentPostStatus) {
+            agentPostStatus.value = 'No active quality concerns';
+            console.log('✓ Selected post-status');
+        }
+        
+        // Step 8: Fill error parameters
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const errorParametersContainer = document.getElementById('errorParametersContainer');
+        if (errorParametersContainer) {
+            const counterInputs = errorParametersContainer.querySelectorAll('input[type="number"]');
+            const radioGroups = errorParametersContainer.querySelectorAll('input[type="radio"]');
+            const feedbackTextareas = errorParametersContainer.querySelectorAll('textarea');
+            
+            // Fill first 3 counters with random values (1-2)
+            counterInputs.forEach((input, index) => {
+                if (index < 3) {
+                    input.value = Math.floor(Math.random() * 2) + 1;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log(`✓ Filled counter ${input.id || input.name}: ${input.value}`);
+                }
+            });
+            
+            // Select some radio buttons
+            let radioIndex = 0;
+            radioGroups.forEach((radio) => {
+                if (radioIndex < 2 && radio.value === '1') {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log(`✓ Selected radio ${radio.name}: ${radio.value}`);
+                    radioIndex++;
+                }
+            });
+            
+            // Fill feedback fields
+            feedbackTextareas.forEach((textarea, index) => {
+                if (index < 3 && (!textarea.value || textarea.value.trim() === '')) {
+                    textarea.value = `Sample feedback for error parameter ${index + 1}. This is dummy data for testing purposes. Agent demonstrated good communication skills but needs improvement in handling customer requests.`;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log(`✓ Filled feedback ${textarea.id || textarea.name}`);
+                }
+            });
+        }
+        
+        // Wait for calculations to update
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Step 9: Fill recommendations
+        const recommendations = document.getElementById('recommendations');
+        if (recommendations) {
+            recommendations.value = `Recommendations for improvement:
+1. Continue maintaining professional communication standards
+2. Ensure all customer information is verified before making changes
+3. Follow up with customers to ensure satisfaction
+
+Next Steps:
+- Review this audit with the employee
+- Provide additional training if needed
+- Schedule follow-up audit in next quarter`;
+            recommendations.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log('✓ Filled recommendations');
+        }
+        
+        // Step 10: Final wait and submit
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('=== Submitting form ===');
+        const auditForm = document.getElementById('auditForm');
+        if (auditForm) {
+            // Trigger form validation and submission
+            const submitBtn = auditForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.click();
+                console.log('✓ Form submission triggered!');
+            } else {
+                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                auditForm.dispatchEvent(submitEvent);
+                console.log('✓ Form submitted via event!');
+            }
+            console.log('=== Dummy Audit Submission Complete ===');
+        } else {
+            console.error('Audit form not found');
+        }
+        
+    } catch (error) {
+        console.error('Error submitting dummy audit:', error);
+        console.error('Stack:', error.stack);
+    }
+};
+</script>
+
+</body>
+</html>
+

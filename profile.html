@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Profile | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Profile</p>
+    <div style="margin-bottom: 1.5rem;"></div>
+
+<!-- Profile Content -->
+<div class="profile-container">
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p>Loading profile...</p>
+    </div>
+
+    <!-- Profile Content (hidden initially) -->
+    <div id="profileContent" style="display: none;">
+    <!-- Profile Header Card -->
+    <div class="profile-header-card">
+        <div class="profile-header-content">
+            <div class="profile-avatar-container">
+                <div class="profile-avatar" id="profileAvatar">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+                    </svg>
+                </div>
+                    <div class="status-indicator" id="statusIndicator"></div>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name" id="profileName">Loading...</h1>
+                <p class="profile-email" id="profileEmail">Loading...</p>
+                    <div class="profile-badges" id="profileBadges">
+                        <span class="badge badge-primary" id="accountAccessLevel">-</span>
+                        <span class="badge badge-success" id="statusBadge">Active</span>
+                </div>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <button class="btn-primary" onclick="openResetPasswordModal()" title="Reset Password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem; margin-right: 0.5rem;">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Reset Password
+            </button>
+        </div>
+    </div>
+        
+        <!-- Stats Cards -->
+        <div class="profile-stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Login Count</div>
+                    <div class="stat-value" id="loginCount">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12速度"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Account Status</div>
+                    <div class="stat-value" id="accountStatus">Active</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon-wrapper">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Department</div>
+                    <div class="stat-value" id="statDepartment">-</div>
+                </div>
+            </div>
+        </div>
+    
+    <!-- Profile Details Grid -->
+    <div class="profile-details-grid">
+        <!-- Personal Information Card -->
+        <div class="info-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Personal Information</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Full Name
+                    </div>
+                        <span class="info-value" id="fullName">-</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        Email Address
+                    </div>
+                        <span class="info-value" id="emailAddress">-</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        Employee ID
+                    </div>
+                        <span class="info-value" id="employeeId">-</span>
+                </div>
+                    <div class="info-item" id="countryItem" style="display: none;">
+                        <div class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            Country
+                        </div>
+                        <span class="info-value" id="country">-</span>
+                    </div>
+            </div>
+        </div>
+
+        <!-- Work Information Card -->
+        <div class="info-card">
+            <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Work Information</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        Department
+                    </div>
+                        <span class="info-value" id="department">-</span>
+                </div>
+                    <div class="info-item" id="channelItem" style="display: none;">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            </svg>
+                            Channel
+                        </div>
+                        <span class="info-value" id="channel">-</span>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <svg viewBox="0 0 24 24就有 fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Team
+                    </div>
+                        <span class="info-value" id="team">-</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="8.5" cy="7" r="4"/>
+                            <line x1="20" y1="8" x2="20" y2="14"/>
+                            <line x1="23" y1="11" x2="17" y2="11"/>
+                        </svg>
+                        Designation
+                    </div>
+                        <span class="info-value" id="designation">-</span>
+                </div>
+                    <div class="info-item" id="teamSupervisorItem" style="display: none;">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                            Team Supervisor
+                    </div>
+                        <span class="info-value" id="teamSupervisor">-</span>
+                </div>
+                    <div class="info-item" id="qualitySupervisorItem" style="display: none;">
+                        <div class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4"/>
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Quality Supervisor
+                        </div>
+                        <span class="info-value" id="qualitySupervisor">-</span>
+                    </div>
+            </div>
+        </div>
+
+        <!-- Account Information Card -->
+        <div class="info-card">
+                <div class="card-header">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+                    </svg>
+                </div>
+                <h3 class="card-title">Account Information</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4"/>
+                            <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                            <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                            <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                                <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                        </svg>
+                        Access Level
+                    </div>
+                        <span class="info-value" id="accessLevel">-</span>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        Last Login
+                    </div>
+                        <span class="info-value" id="lastLogin">-</span>
+                </div>
+                    <div class="info-item">
+                        <div class="info-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3L22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            Account Status
+            </div>
+                        <span class="info-value" id="accountStatusValue">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div id="resetPasswordModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Reset Password</h3>
+            <button class="modal-close" onclick="closeResetPasswordModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="resetPasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password *</label>
+                    <input type="password" id="currentPassword" required placeholder="Enter current password">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password *</label>
+                    <input type="password" id="newPassword" required placeholder="Enter new password" minlength="6">
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.25rem; display: block;">Password must be at least 6 characters long</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password *</label>
+                    <input type="password" id="confirmPassword" required placeholder="Confirm new password">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeResetPasswordModal()">Cancel</button>
+            <button type="button" class="btn-primary" onclick="savePasswordReset()">Reset Password</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Profile Container */
+.profile-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    background: var(--background-color);
+}
+
+/* Loading State */
+.loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 0.25rem solid var(--border-light);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+/* Profile Header Card */
+.profile-header-card {
+    background: var(--background-white);
+    border-radius: 0.75rem;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    border: 0.0625rem solid var(--border-light);
+    box-shadow: var(--shadow-md);
+}
+
+.profile-header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: 0.25rem solid var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.profile-avatar svg {
+    width: 3rem;
+    height: 3rem;
+    color: var(--white);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 0.25rem;
+    right: 0.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    background: var(--success-color);
+    border: 0.25rem solid var(--background-white);
+    border-radius: 50%;
+}
+
+.status-indicator.inactive {
+    background: var(--error-color);
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.profile-email {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0 0 1rem 0;
+}
+
+.profile-badges {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-primary {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border: 0.0625rem solid var(--primary-color);
+}
+
+.badge-success {
+    background: var(--success-color);
+    color: var(--white);
+    border: 0.0625rem solid var(--success-color);
+}
+
+.badge-error {
+    background: #fee2e2;
+    color: var(--error-color);
+    border: 0.0625rem solid var(--error-color);
+}
+
+.profile-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.5rem;
+    border: 0.0625rem solid var(--border-light);
+    background: var(--background-white);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--background-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-0.125rem);
+}
+
+.btn-icon.btn-danger:hover {
+    background: var(--error-color);
+    border-color: var(--error-color);
+    color: var(--white);
+}
+
+.btn-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Stats Grid */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--background-white);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 0.0625rem solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-0.125rem);
+}
+
+.stat-icon-wrapper {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-icon-wrapper svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--primary-color);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* Profile Details Grid */
+.profile-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-card {
+    background: var(--background-white);
+    border-radius: 0.75rem;
+    border: 0.0625rem solid var(--border-light);
+    overflow: hidden;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.info-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    padding: 1.5rem 1.5rem 0 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.card-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--white);
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.card-content {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1枕 0;
+    border-bottom: 0.0625rem solid var(--border-light);
+    gap: 1rem;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.info-label svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.info-value {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 0.0625rem solid var(--border-light);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: var(--background-light);
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-top: 0.0625rem solid var(--border-light);
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 0.0625rem solid var(--border-light);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-family: var(--font-family);
+    transition: all 0.2s ease;
+    background: var(--background-white);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-0.0625rem);
+}
+
+.btn-secondary {
+    background-color: var(--background-white);
+    color: var(--text-color);
+    border: 0.0625rem solid var(--border-light);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: var(--background-light);
+    border-color: var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-container {
+        width: 95%;
+        padding: 1rem;
+    }
+    
+    .profile-header-card {
+        padding: 1.5rem;
+    }
+    
+    .profile-header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 5rem;
+        height: 5rem;
+    }
+    
+    .profile-name {
+        font-size: 1.75rem;
+    }
+    
+    .profile-actions {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .profile-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .profile-details-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .info-value {
+        text-align: left;
+        max-width: 100%;
+    }
+}
+</style>
+
+<script>
+// Global variables
+let currentUserData = null;
+let allUsers = [];
+let availableChannels = [];
+
+// Profile page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    waitForSupabaseAndLoadProfile();
+});
+
+async function waitForSupabaseAndLoadProfile() {
+    let attempts = 0;
+    const maxAttempts = 50;
+    
+    while (attempts < maxAttempts) {
+        if (window.SupabaseUsers && window.supabaseClient) {
+            await loadUserProfile();
+            await loadChannels();
+            await loadAllUsers();
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
+    document.getElementById('loadingState').innerHTML = 
+        '<div class="error">Supabase not initialized. Please refresh the page.</div>';
+}
+
+async function loadChannels() {
+    try {
+        if (!window.supabaseClient) return;
+        
+        const { data, error } = await window.supabaseClient
+            .from('channels')
+            .select('name')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        availableChannels = data.map(channel => channel.name);
+    } catch (error) {
+        console.error('Error loading channels:', error);
+        availableChannels = [];
+    }
+}
+
+async function loadAllUsers() {
+    try {
+        if (!window.SupabaseUsers) return;
+        
+        allUsers = await window.SupabaseUsers.getAllUsers({
+            orderBy: { column: 'name', ascending: true }
+        });
+    } catch (error) {
+        console.error('Error loading users:', error);
+        allUsers = [];
+    }
+}
+
+async function loadUserProfile() {
+    try {
+        const userInfo = localStorage.getItem('userInfo');
+        if (!userInfo) {
+            document.getElementById('loadingState').innerHTML = 
+                '<div class="error">No user information found. Please login again.</div>';
+            return;
+        }
+        
+        const user = JSON.parse(userInfo);
+        
+        if (!user || !user.email) {
+            document.getElementById('loadingState').innerHTML = 
+                '<div class="error">Invalid user information. Please login again.</div>';
+            return;
+        }
+        
+        // Fetch full user data from Supabase
+        const userData = await window.SupabaseUsers.getUserByEmail(user.email);
+        
+        if (!userData) {
+            document.getElementById('loadingState').innerHTML = 
+                '<div class="error">User data not found in database.</div>';
+            return;
+        }
+        
+        currentUserData = userData;
+        
+        // Hide loading, show content
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('profileContent').style.display = 'block';
+        
+        // Update profile with fetched data
+        updateProfileDisplay(userData);
+        
+    } catch (error) {
+        console.error('Error loading user profile:', error);
+        document.getElementById('loadingState').innerHTML = 
+            '<div class="error">Error loading profile: ' + error.message + '</div>';
+    }
+}
+
+function updateProfileDisplay(userData) {
+    // Update header
+    updateProfileHeader(userData);
+    
+    // Update stats
+    updateStats(userData);
+    
+    // Update details
+    updateProfileDetails(userData);
+}
+
+function updateProfileHeader(userData) {
+    // Name
+    const profileName = document.getElementById('profileName');
+    if (profileName && userData.name) {
+        profileName.textContent = userData.name;
+    }
+    
+    // Email
+    const profileEmail = document.getElementById('profileEmail');
+    if (profileEmail && userData.email) {
+        profileEmail.textContent = userData.email;
+    }
+    
+    // Avatar
+    const profileAvatar = document.getElementById('profileAvatar');
+    if (profileAvatar) {
+        if (userData.avatar_url) {
+            profileAvatar.innerHTML = `<img src="${userData.avatar_url}" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else if (userData.name) {
+            const initials = userData.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase();
+            profileAvatar.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 2rem;">${initials}</div>`;
+        }
+    }
+    
+    // Status indicator
+    const statusIndicator = document.getElementById('statusIndicator');
+    if (statusIndicator) {
+        if (!userData.is_active) {
+            statusIndicator.classList.add('inactive');
+        }
+    }
+    
+    // Badges
+    const accountAccessLevel = document.getElementById('accountAccessLevel');
+    if (accountAccessLevel && userData.role) {
+        accountAccessLevel.textContent = userData.role;
+    }
+    
+    const statusBadge = document.getElementById('statusBadge');
+    if (statusBadge) {
+        if (userData.is_active) {
+            statusBadge.textContent = 'Active';
+            statusBadge.className = 'badge badge-success';
+        } else {
+            statusBadge.textContent = 'Inactive';
+            statusBadge.className = 'badge badge-error';
+        }
+    }
+}
+
+function updateStats(userData) {
+    // Login count
+    const loginCount = document.getElementById('loginCount');
+    if (loginCount) {
+        loginCount.textContent = userData.login_count || '0';
+    }
+    
+    // Account status
+    const accountStatus = document.getElementById('accountStatus');
+    if (accountStatus) {
+        accountStatus.textContent = userData.is_active ? 'Active' : 'Inactive';
+    }
+    
+    // Department
+    const statDepartment = document.getElementById('statDepartment');
+    if (statDepartment) {
+        statDepartment.textContent = userData.department || '-';
+    }
+}
+
+function updateProfileDetails(userData) {
+    // Personal Information
+    const fullName = document.getElementById('fullName');
+    if (fullName) fullName.textContent = userData.name || '-';
+    
+    const emailAddress = document.getElementById('emailAddress');
+    if (emailAddress) emailAddress.textContent = userData.email || '-';
+    
+    const employeeId = document.getElementById('employeeId');
+    if (employeeId) employeeId.textContent = userData.employee_id || '-';
+    
+    const country = document.getElementById('country');
+    const countryItem = document.getElementById('countryItem');
+    if (userData.country) {
+        if (country) country.textContent = userData.country;
+        if (countryItem) countryItem.style.display = 'flex';
+    }
+    
+    // Work Information
+    const department = document.getElementById('department');
+    if (department) department.textContent = userData.department || '-';
+    
+    const channel = document.getElementById('channel');
+    const channelItem = document.getElementById('channelItem');
+    if (userData.channel) {
+        if (channel) channel.textContent = userData.channel;
+        if (channelItem) channelItem.style.display = 'flex';
+    }
+    
+    const team = document.getElementById('team');
+    if (team) team.textContent = userData.team || '-';
+    
+    const designation = document.getElementById('designation');
+    if (designation) designation.textContent = userData.designation || '-';
+    
+    // Supervisor names
+    const teamSupervisorItem = document.getElementById('teamSupervisorItem');
+    const teamSupervisor = document.getElementById('teamSupervisor');
+    if (userData.team_supervisor) {
+        const supervisor = allUsers.find(u => u.email === userData.team_supervisor);
+        if (teamSupervisor) {
+            teamSupervisor.textContent = supervisor ? supervisor.name : userData.team_supervisor;
+        }
+        if (teamSupervisorItem) teamSupervisorItem.style.display = 'flex';
+    }
+    
+    const qualitySupervisorItem = document.getElementById('qualitySupervisorItem');
+    const qualitySupervisor = document.getElementById('qualitySupervisor');
+    if (userData.quality_supervisor) {
+        const supervisor = allUsers.find(u => u.email === userData.quality_supervisor);
+        if (qualitySupervisor) {
+            qualitySupervisor.textContent = supervisor ? supervisor.name : userData.quality_supervisor;
+        }
+        if (qualitySupervisorItem) qualitySupervisorItem.style.display = 'flex';
+    }
+    
+    // Account Information
+    const accessLevel = document.getElementById('accessLevel');
+    if (accessLevel) accessLevel.textContent = userData.role || '-';
+    
+    const lastLogin = document.getElementById('lastLogin');
+    if (lastLogin) {
+        if (userData.last_login) {
+            lastLogin.textContent = new Date(userData.last_login).toLocaleString();
+        } else {
+            lastLogin.textContent = 'Never';
+        }
+    }
+    
+    const accountStatusValue = document.getElementById('accountStatusValue');
+    if (accountStatusValue) {
+        accountStatusValue.textContent = userData.is_active ? 'Active' : 'Inactive';
+    }
+}
+
+function openResetPasswordModal() {
+    if (!currentUserData) return;
+    
+    // Reset form
+    document.getElementById('resetPasswordForm').reset();
+    document.getElementById('resetPasswordModal').style.display = 'flex';
+}
+
+function closeResetPasswordModal() {
+    document.getElementById('resetPasswordModal').style.display = 'none';
+    document.getElementById('resetPasswordForm').reset();
+}
+
+// Hash password using SHA-256
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+async function savePasswordReset() {
+    if (!currentUserData) return;
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        alert('New password and confirm password do not match');
+        return;
+    }
+    
+    try {
+        // Get current user data from database
+        const user = await window.SupabaseUsers.getUserByEmail(currentUserData.email);
+        
+        if (!user) {
+            alert('User not found in database');
+            return;
+        }
+        
+        // Verify current password
+        if (!user.password_hash) {
+            // If no password hash exists, allow setting a new password
+            // (This handles the case where user doesn't have a password set yet)
+        } else {
+            // Check if password_hash is a SHA-256 hash (64 hex characters)
+            const isHashed = /^[a-f0-9]{64}$/i.test(user.password_hash);
+            
+            let passwordValid = false;
+            
+            if (isHashed) {
+                // Password is stored as hash, so hash the entered password and compare
+                const currentPasswordHash = await hashPassword(currentPassword);
+                passwordValid = user.password_hash === currentPasswordHash;
+            } else {
+                // Password is stored as plain text (backwards compatibility)
+                passwordValid = user.password_hash === currentPassword;
+            }
+            
+            if (!passwordValid) {
+                alert('Current password is incorrect');
+                return;
+            }
+        }
+        
+        // Hash the new password
+        const newPasswordHash = await hashPassword(newPassword);
+        
+        // Update password hash in database
+        const updateResult = await window.SupabaseUsers.updateUser(currentUserData.email, {
+            password_hash: newPasswordHash
+        });
+        
+        if (updateResult.error) {
+            throw new Error(updateResult.error.message);
+        }
+        
+        // Close modal and reset form
+        closeResetPasswordModal();
+        
+        // Show success message
+        alert('Password reset successfully!');
+        
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        alert('Error resetting password: ' + error.message);
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('resetPasswordModal');
+    if (event.target === modal) {
+        closeResetPasswordModal();
+    }
+});
+</script>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Home | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Home</p>
+    <div style="margin-bottom: 1.5rem;"></div>
+
+    <!-- Main Clock positioned above buttons -->
+    <div style="text-align: center; margin-bottom: 1rem; margin-top: 4rem;">
+        <div style="font-size: 1.2rem; color: var(--text-color); font-weight: 600;" id="clock-date">-- -- ----</div>
+        <div style="font-size: 4rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;" id="clock-time">--:--</div>
+        <script>
+            (function() {
+                function updateClock() {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('en-US', {
+                        hour12: true,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                    const dateString = now.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    document.getElementById('clock-time').textContent = timeString;
+                    document.getElementById('clock-date').textContent = dateString;
+                }
+                updateClock();
+                setInterval(updateClock, 1000);
+            })();
+        </script>
+    </div>
+
+    <!-- World Clocks -->
+    <div style="display: flex; gap: 1rem; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem; min-height: 200px;">
+        <div style="text-align: center; background-color: rgba(255, 255, 255, 0.05); border-radius: 0.5rem; border: 0.0625rem solid rgba(255, 255, 255, 0.1); padding: 1rem; min-width: 7.5rem;">
+            <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600; margin-bottom: 0.5rem;">
+                <span class="world-clock-flag">🇱🇰</span>
+                <span>🇱🇰</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" id="sri-lanka-time">--:--</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.8;" id="sri-lanka-date">-- -- ----</div>
+        </div>
+        <div style="text-align: center; background-color: rgba(255, 255, 255, 0.05); border-radius: 0.5rem; border: 0.0625rem solid rgba(255, 255, 255, 0.1); padding: 1rem; min-width: 7.5rem;">
+            <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600; margin-bottom: 0.5rem;">
+                <span class="world-clock-flag">🇲🇾</span>
+                <span>🇲🇾</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" id="malaysia-time">--:--</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.8;" id="malaysia-date">-- -- ----</div>
+        </div>
+        <div style="text-align: center; background-color: rgba(255, 255, 255, 0.05); border-radius: 0.5rem; border: 0.0625rem solid rgba(255, 255, 255, 0.1); padding: 1rem; min-width: 7.5rem;">
+            <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600; margin-bottom: 0.5rem;">
+                <span class="world-clock-flag">🇨🇾</span>
+                <span>🇨🇾</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" id="cyprus-time">--:--</div>
+            <div style="font-size: 0.75rem; color: var(--text-color); opacity: 0.8;" id="cyprus-date">-- -- ----</div>
+        </div>
+        <script>
+            (function() {
+                function updateWorldClocks() {
+                    const timezones = [
+                        { id: 'sri-lanka', timezone: 'Asia/Colombo' },
+                        { id: 'malaysia', timezone: 'Asia/Kuala_Lumpur' },
+                        { id: 'cyprus', timezone: 'Europe/Nicosia' }
+                    ];
+
+                    timezones.forEach(({ id, timezone }) => {
+                        const now = new Date();
+                        const timeString = now.toLocaleTimeString('en-US', {
+                            timeZone: timezone,
+                            hour12: true,
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        const dateString = now.toLocaleDateString('en-US', {
+                            timeZone: timezone,
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        });
+                        
+                        document.getElementById(`${id}-time`).textContent = timeString;
+                        document.getElementById(`${id}-date`).textContent = dateString;
+                    });
+                }
+                updateWorldClocks();
+                setInterval(updateWorldClocks, 1000);
+            })();
+        </script>
+    </div>
+
+    <div class="button-group">
+        <button class="btn btn-primary" aria-label="Open Dashboard" onclick="window.location.href='auditor-dashboard.html'">Open Dashboard</button>
+        <button class="btn btn-primary" aria-label="Start Auditing Process" onclick="window.location.href='create-audit.html'">Start Auditing</button>
+    </div>
+
+</main>
+</body>
+</html>

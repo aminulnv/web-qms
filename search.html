@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Search | QMS</title>
+<meta name="description" content="Search Quality Management System">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+    <style>
+        /* Search Page Specific Styles */
+        .search-page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .search-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .search-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .search-subtitle {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+
+        .search-input-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .search-input-large {
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.125rem;
+            border: 2px solid var(--border-light);
+            border-radius: 1rem;
+            background: var(--white);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-input-large:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(26, 115, 62, 0.1);
+        }
+
+        .search-input-large::placeholder {
+            color: var(--gray-400);
+        }
+
+        .search-btn-large {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-btn-large:hover {
+            background: var(--primary-dark);
+            transform: translateY(-50%) scale(1.02);
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 0.5rem;
+            background: var(--white);
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .search-results-container {
+            margin-top: 2rem;
+        }
+
+        .search-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .results-count {
+            font-size: 1rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .results-sort {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sort-select {
+            padding: 0.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 0.375rem;
+            background: var(--white);
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        .search-results-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        }
+
+        .search-result-card {
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .search-result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .search-result-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .result-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-card-icon {
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, rgba(26, 115, 62, 0.1), rgba(26, 115, 62, 0.05));
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .result-card-icon svg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        .result-card-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .result-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .result-card-type {
+            display: inline-block;
+            background: rgba(26, 115, 62, 0.1);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-card-description {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .result-card-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .result-keyword {
+            background: rgba(26, 115, 62, 0.1);
+            color: var(--primary-color);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .no-results-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray-500);
+        }
+
+        .no-results-icon {
+            width: 4rem;
+            height: 4rem;
+            margin: 0 auto 1.5rem;
+            color: var(--gray-300);
+        }
+
+        .no-results-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .no-results-subtitle {
+            font-size: 1rem;
+            color: var(--gray-500);
+            margin-bottom: 2rem;
+        }
+
+        .search-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .suggestion-btn {
+            padding: 0.5rem 1rem;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+        }
+
+        .suggestion-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(26, 115, 62, 0.2);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            border-radius: 0.75rem;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        @media (max-width: 768px) {
+            .search-page-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .search-title {
+                font-size: 2rem;
+            }
+
+            .search-input-large {
+                padding: 1rem 1.25rem;
+                font-size: 1rem;
+            }
+
+            .search-results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-filters {
+                gap: 0.5rem;
+            }
+
+            .filter-btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.8125rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <div class="search-page-container">
+        <!-- Search Header -->
+        <div class="search-header">
+            <h1 class="search-title">Search QMS</h1>
+            <p class="search-subtitle">Find pages, features, and information across the Quality Management System</p>
+            
+            <!-- Search Input -->
+            <div class="search-input-container">
+                <input type="text" id="search-input-large" class="search-input-large" placeholder="Search for pages, features, settings..." autocomplete="off">
+                <button class="search-btn-large" id="search-btn-large">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    Search
+                </button>
+            </div>
+
+            <!-- Search Filters -->
+            <div class="search-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="page">Pages</button>
+                <button class="filter-btn" data-filter="audit">Audits</button>
+                <button class="filter-btn" data-filter="report">Reports</button>
+                <button class="filter-btn" data-filter="dashboard">Dashboards</button>
+                <button class="filter-btn" data-filter="setting">Settings</button>
+            </div>
+        </div>
+
+        <!-- Search Stats -->
+        <div class="search-stats" id="search-stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-number" id="total-results">0</div>
+                <div class="stat-label">Results Found</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="search-time">0ms</div>
+                <div class="stat-label">Search Time</div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="search-results-container" id="search-results-container">
+            <div class="no-results-state" id="no-results-state">
+                <div class="no-results-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </div>
+                <h3 class="no-results-title">Start Searching</h3>
+                <p class="no-results-subtitle">Enter a search term above to find pages, features, and information</p>
+                <div class="search-suggestions">
+                    <button class="suggestion-btn" data-suggestion="audit">audit</button>
+                    <button class="suggestion-btn" data-suggestion="dashboard">dashboard</button>
+                    <button class="suggestion-btn" data-suggestion="reports">reports</button>
+                    <button class="suggestion-btn" data-suggestion="settings">settings</button>
+                    <button class="suggestion-btn" data-suggestion="performance">performance</button>
+                </div>
+            </div>
+
+            <div class="search-results-header" id="search-results-header" style="display: none;">
+                <div class="results-count" id="results-count">0 results found</div>
+                <div class="results-sort">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="relevance">Relevance</option>
+                        <option value="title">Title A-Z</option>
+                        <option value="type">Type</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="search-results-grid" id="search-results-grid"></div>
+        </div>
+    </div>
+</main>
+
+<script>
+// Search Page Functionality
+class SearchPage {
+    constructor() {
+        this.searchIndex = new Map()
+        this.searchResults = []
+        this.currentFilter = 'all'
+        this.currentSort = 'relevance'
+        this.isSearching = false
+        this.init()
+    }
+
+    init() {
+        this.buildSearchIndex()
+        this.setupEventListeners()
+        this.handleURLParams()
+    }
+
+    buildSearchIndex() {
+        const searchableContent = [
+            { type: "page", title: "Home", url: "home.html", keywords: ["home", "dashboard", "main", "overview"], description: "Main dashboard and overview page" },
+            { type: "audit", title: "Create Audit", url: "create-audit.html", keywords: ["create", "audit", "new", "start", "begin"], description: "Create and initiate new audit processes" },
+            { type: "dashboard", title: "Auditor Dashboard", url: "auditor-dashboard.html", keywords: ["auditor", "dashboard", "monitor", "track"], description: "Comprehensive auditor dashboard for monitoring audit activities" },
+            { type: "audit", title: "Audit Distribution", url: "audit-distribution.html", keywords: ["distribution", "assign", "allocate", "spread"], description: "Distribute and assign audits to team members" },
+            { type: "report", title: "Audit Reports", url: "audit-reports.html", keywords: ["reports", "analytics", "data", "statistics"], description: "Generate and view comprehensive audit reports" },
+            { type: "performance", title: "Performance", url: "employee-performance.html", keywords: ["performance", "metrics", "kpi", "employee"], description: "Monitor and analyze employee performance metrics" },
+            { type: "audit", title: "Reversal", url: "reversal.html", keywords: ["reversal", "undo", "cancel", "reverse"], description: "Reverse or undo audit actions and processes" },
+            { type: "setting", title: "Settings", url: "settings.html", keywords: ["settings", "config", "preferences", "options"], description: "System configuration and user preferences" },
+            { type: "profile", title: "Profile", url: "profile.html", keywords: ["profile", "user", "account", "personal"], description: "User profile and account management" },
+            { type: "feature", title: "Improvement Corner", url: "improvement-corner.html", keywords: ["improvement", "suggestions", "feedback", "enhancement"], description: "Submit and track improvement suggestions" }
+        ]
+
+        searchableContent.forEach((item) => {
+            this.searchIndex.set(item.title.toLowerCase(), item)
+            item.keywords.forEach((keyword) => {
+                if (!this.searchIndex.has(keyword)) {
+                    this.searchIndex.set(keyword, [])
+                }
+                const keywordArray = this.searchIndex.get(keyword)
+                if (Array.isArray(keywordArray)) {
+                    keywordArray.push(item)
+                } else {
+                    this.searchIndex.set(keyword, [item])
+                }
+            })
+        })
+    }
+
+    setupEventListeners() {
+        const searchInput = document.getElementById('search-input-large')
+        const searchBtn = document.getElementById('search-btn-large')
+        const filterBtns = document.querySelectorAll('.filter-btn')
+        const sortSelect = document.getElementById('sort-select')
+        const suggestionBtns = document.querySelectorAll('.suggestion-btn')
+
+        // Search input events
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.handleSearch(e.target.value)
+            })
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault()
+                    this.performSearch(e.target.value)
+                }
+            })
+        }
+
+        // Search button
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                this.performSearch(searchInput.value)
+            })
+        }
+
+        // Filter buttons
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setFilter(btn.dataset.filter)
+            })
+        })
+
+        // Sort select
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                this.setSort(e.target.value)
+            })
+        }
+
+        // Suggestion buttons
+        suggestionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                searchInput.value = btn.dataset.suggestion
+                this.performSearch(btn.dataset.suggestion)
+            })
+        })
+    }
+
+    handleURLParams() {
+        const urlParams = new URLSearchParams(window.location.search)
+        const query = urlParams.get('q')
+        if (query) {
+            document.getElementById('search-input-large').value = query
+            this.performSearch(query)
+        }
+    }
+
+    handleSearch(query) {
+        if (query.length < 2) {
+            this.showNoResultsState()
+            return
+        }
+
+        this.searchResults = this.search(query)
+        this.displayResults()
+    }
+
+    performSearch(query) {
+        if (!query.trim()) return
+
+        this.isSearching = true
+        this.showLoadingState()
+
+        // Simulate search delay for better UX
+        setTimeout(() => {
+            this.searchResults = this.search(query)
+            this.isSearching = false
+            this.displayResults()
+            this.updateURL(query)
+        }, 300)
+    }
+
+    search(query) {
+        const results = []
+        const queryLower = query.toLowerCase()
+
+        for (const [key, value] of this.searchIndex) {
+            if (key.includes(queryLower)) {
+                if (Array.isArray(value)) {
+                    results.push(...value)
+                } else {
+                    results.push(value)
+                }
+            }
+        }
+
+        const uniqueResults = this.removeDuplicates(results)
+        return this.sortByRelevance(uniqueResults, query)
+    }
+
+    removeDuplicates(results) {
+        const seen = new Set()
+        return results.filter((result) => {
+            const key = `${result.type}-${result.title}`
+            if (seen.has(key)) {
+                return false
+            }
+            seen.add(key)
+            return true
+        })
+    }
+
+    sortByRelevance(results, query) {
+        return results.sort((a, b) => {
+            const aScore = this.calculateRelevanceScore(a, query)
+            const bScore = this.calculateRelevanceScore(b, query)
+            return bScore - aScore
+        })
+    }
+
+    calculateRelevanceScore(result, query) {
+        let score = 0
+        const queryLower = query.toLowerCase()
+        const titleLower = result.title.toLowerCase()
+
+        if (titleLower === queryLower) {
+            score += 100
+        } else if (titleLower.startsWith(queryLower)) {
+            score += 50
+        } else if (titleLower.includes(queryLower)) {
+            score += 25
+        }
+
+        if (result.keywords) {
+            result.keywords.forEach((keyword) => {
+                if (keyword.toLowerCase().includes(queryLower)) {
+                    score += 10
+                }
+            })
+        }
+
+        return score
+    }
+
+    setFilter(filter) {
+        this.currentFilter = filter
+        
+        // Update filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter)
+        })
+
+        this.displayResults()
+    }
+
+    setSort(sort) {
+        this.currentSort = sort
+        this.displayResults()
+    }
+
+    displayResults() {
+        const container = document.getElementById('search-results-container')
+        const header = document.getElementById('search-results-header')
+        const grid = document.getElementById('search-results-grid')
+        const noResults = document.getElementById('no-results-state')
+        const stats = document.getElementById('search-stats')
+
+        if (this.isSearching) {
+            this.showLoadingState()
+            return
+        }
+
+        let filteredResults = this.searchResults
+
+        // Apply filter
+        if (this.currentFilter !== 'all') {
+            filteredResults = filteredResults.filter(result => result.type === this.currentFilter)
+        }
+
+        // Apply sort
+        filteredResults = this.applySort(filteredResults)
+
+        if (filteredResults.length === 0) {
+            this.showNoResultsState()
+            return
+        }
+
+        // Show results
+        noResults.style.display = 'none'
+        header.style.display = 'flex'
+        stats.style.display = 'flex'
+        grid.innerHTML = ''
+
+        // Update stats
+        document.getElementById('total-results').textContent = filteredResults.length
+        document.getElementById('results-count').textContent = `${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''} found`
+
+        // Display results
+        filteredResults.forEach(result => {
+            const card = this.createResultCard(result)
+            grid.appendChild(card)
+        })
+    }
+
+    applySort(results) {
+        switch (this.currentSort) {
+            case 'title':
+                return results.sort((a, b) => a.title.localeCompare(b.title))
+            case 'type':
+                return results.sort((a, b) => a.type.localeCompare(b.type))
+            case 'relevance':
+            default:
+                return results
+        }
+    }
+
+    createResultCard(result) {
+        const card = document.createElement('div')
+        card.className = 'search-result-card'
+        card.onclick = () => window.location.href = result.url
+
+        const icon = this.getResultIcon(result.type)
+        const keywords = this.getResultKeywords(result)
+        const highlightedTitle = this.highlightSearchTerm(result.title, this.getCurrentQuery())
+
+        card.innerHTML = `
+            <div class="result-card-header">
+                <div class="result-card-icon">
+                    ${icon}
+                </div>
+                <div class="result-card-content">
+                    <h3 class="result-card-title">${highlightedTitle}</h3>
+                    <div class="result-card-type">${result.type}</div>
+                    <p class="result-card-description">${result.description || 'No description available'}</p>
+                    <div class="result-card-keywords">${keywords}</div>
+                </div>
+            </div>
+        `
+
+        return card
+    }
+
+    getResultIcon(type) {
+        const icons = {
+            page: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>`,
+            audit: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>`,
+            dashboard: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>`,
+            report: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>`,
+            performance: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>`,
+            setting: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+            </svg>`,
+            profile: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+            </svg>`,
+            feature: `<svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>`
+        }
+        return icons[type] || icons.page
+    }
+
+    getResultKeywords(result) {
+        if (!result.keywords || result.keywords.length === 0) return ''
+        
+        const maxKeywords = 4
+        const keywords = result.keywords.slice(0, maxKeywords)
+        
+        return keywords.map(keyword => 
+            `<span class="result-keyword">${keyword}</span>`
+        ).join('')
+    }
+
+    highlightSearchTerm(text, query) {
+        if (!query || query.length < 2) return text
+        
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+        return text.replace(regex, '<mark style="background: rgba(26, 115, 62, 0.2); color: var(--primary-color); padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-weight: 600;">$1</mark>')
+    }
+
+    getCurrentQuery() {
+        const searchInput = document.getElementById('search-input-large')
+        return searchInput ? searchInput.value : ''
+    }
+
+    showNoResultsState() {
+        document.getElementById('no-results-state').style.display = 'block'
+        document.getElementById('search-results-header').style.display = 'none'
+        document.getElementById('search-stats').style.display = 'none'
+        document.getElementById('search-results-grid').innerHTML = ''
+    }
+
+    showLoadingState() {
+        const grid = document.getElementById('search-results-grid')
+        grid.innerHTML = `
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Searching...</p>
+            </div>
+        `
+        document.getElementById('no-results-state').style.display = 'none'
+        document.getElementById('search-results-header').style.display = 'none'
+        document.getElementById('search-stats').style.display = 'none'
+    }
+
+    updateURL(query) {
+        const url = new URL(window.location)
+        url.searchParams.set('q', query)
+        window.history.replaceState({}, '', url)
+    }
+}
+
+// Initialize search page when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.SearchPage = new SearchPage()
+})
+</script>
+</body>
+</html>
