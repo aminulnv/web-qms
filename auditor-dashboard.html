@@ -65,6 +65,11 @@
                     <div id="stat5Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
                     <div id="stat5Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;"></div>
                 </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat6Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Avg Duration</div>
+                    <div id="stat6Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                    <div id="stat6Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                </div>
             </div>
 
             <!-- Filters Section -->
@@ -251,7 +256,7 @@ function updateDashboard() {
     }
 }
 
-function updateYourStats() {
+async function updateYourStats() {
     const totalAssigned = allAssignments.length;
     const completed = allAssignments.filter(a => a.status === 'completed').length;
     const inProgress = allAssignments.filter(a => a.status === 'in_progress').length;
@@ -267,6 +272,36 @@ function updateYourStats() {
     endOfWeek.setDate(today.getDate() + (5 - today.getDay())); // Friday
     const daysRemaining = Math.max(0, Math.ceil((endOfWeek - today) / (1000 * 60 * 60 * 24)));
     
+    // Calculate average audit duration
+    let avgDuration = 0;
+    let avgDurationText = '-';
+    let avgDurationSubtitle = 'per audit';
+    
+    try {
+        // Get all audits created by the current user
+        const { data: audits, error } = await window.supabaseClient
+            .from('audits')
+            .select('duration')
+            .eq('auditor_email', currentUserEmail)
+            .not('duration', 'is', null);
+        
+        if (!error && audits && audits.length > 0) {
+            const totalDuration = audits.reduce((sum, audit) => sum + (audit.duration || 0), 0);
+            avgDuration = totalDuration / audits.length;
+            
+            // Format duration
+            if (avgDuration >= 60) {
+                const hours = Math.floor(avgDuration / 60);
+                const minutes = Math.round(avgDuration % 60);
+                avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+            } else {
+                avgDurationText = `${Math.round(avgDuration)}m`;
+            }
+        }
+    } catch (error) {
+        console.error('Error calculating average duration:', error);
+    }
+    
     // Update stat card labels
     document.getElementById('stat1Label').textContent = 'ASSIGNED';
     document.getElementById('stat1Count').textContent = totalAssigned;
@@ -279,6 +314,9 @@ function updateYourStats() {
     document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
     document.getElementById('stat5Count').textContent = '0';
     document.getElementById('stat5Subtitle').textContent = '';
+    document.getElementById('stat6Label').textContent = 'AVG DURATION';
+    document.getElementById('stat6Count').textContent = avgDurationText;
+    document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
     
     // Update table header
     const tableHeader = document.getElementById('tableHeader');
@@ -363,6 +401,36 @@ async function updateTeamStats() {
         const remaining = pending + inProgress;
         const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
+        // Calculate team average audit duration
+        let avgDuration = 0;
+        let avgDurationText = '-';
+        let avgDurationSubtitle = 'per audit';
+        
+        try {
+            // Get all audits created by team members
+            const { data: audits, error: auditsError } = await window.supabaseClient
+                .from('audits')
+                .select('duration')
+                .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                .not('duration', 'is', null);
+            
+            if (!auditsError && audits && audits.length > 0) {
+                const totalDuration = audits.reduce((sum, audit) => sum + (audit.duration || 0), 0);
+                avgDuration = totalDuration / audits.length;
+                
+                // Format duration
+                if (avgDuration >= 60) {
+                    const hours = Math.floor(avgDuration / 60);
+                    const minutes = Math.round(avgDuration % 60);
+                    avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                } else {
+                    avgDurationText = `${Math.round(avgDuration)}m`;
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating team average duration:', error);
+        }
+        
         // Update stat cards with team stats
         document.getElementById('stat1Label').textContent = 'ASSIGNED';
         document.getElementById('stat1Count').textContent = totalAssigned;
@@ -375,6 +443,9 @@ async function updateTeamStats() {
         document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
         document.getElementById('stat5Count').textContent = '0';
         document.getElementById('stat5Subtitle').textContent = '';
+        document.getElementById('stat6Label').textContent = 'AVG DURATION';
+        document.getElementById('stat6Count').textContent = avgDurationText;
+        document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
         
         // Update table header
         const tableHeader = document.getElementById('tableHeader');
@@ -526,6 +597,26 @@ async function updateStandupView() {
         const passingPercent = totalCompleted > 0 ? Math.round((totalPassed / totalCompleted) * 100) : 0;
         const completionPercent = totalAuditable > 0 ? Math.round((totalCompleted / totalAuditable) * 100) : 0;
         
+        // Calculate overall average audit duration for standup view
+        let avgDuration = 0;
+        let avgDurationText = '-';
+        let avgDurationSubtitle = 'per audit';
+        
+        const auditsWithDuration = audits.filter(a => a.duration !== null && a.duration !== undefined);
+        if (auditsWithDuration.length > 0) {
+            const totalDuration = auditsWithDuration.reduce((sum, audit) => sum + (audit.duration || 0), 0);
+            avgDuration = totalDuration / auditsWithDuration.length;
+            
+            // Format duration
+            if (avgDuration >= 60) {
+                const hours = Math.floor(avgDuration / 60);
+                const minutes = Math.round(avgDuration % 60);
+                avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+            } else {
+                avgDurationText = `${Math.round(avgDuration)}m`;
+            }
+        }
+        
         // Update stat cards
         document.getElementById('stat1Label').textContent = 'ASSIGNED';
         document.getElementById('stat1Count').textContent = totalAuditable;
@@ -538,6 +629,9 @@ async function updateStandupView() {
         document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
         document.getElementById('stat5Count').textContent = '0';
         document.getElementById('stat5Subtitle').textContent = '';
+        document.getElementById('stat6Label').textContent = 'AVG DURATION';
+        document.getElementById('stat6Count').textContent = avgDurationText;
+        document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
         
         // Update stat card label for "Remaining" to "Coverage"
         const remainingCard = document.querySelector('#remainingCount').closest('div');

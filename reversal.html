@@ -12,11 +12,51 @@
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <style>
+        /* Reversal Management Specific Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 0.0625rem solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1);
+            transform: translateY(-0.125rem);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
 </head>
 
 <body>
@@ -25,168 +65,708 @@
     <p class="page-heading">Reversal Management</p>
     <div style="margin-bottom: 1.5rem; width: 100%;"></div>
 
-    <!-- Reversal Form -->
-    <form id="reversalForm" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 0; flex: 1; overflow-y: auto; min-height: 0; width: 100%; margin: 0;">
-        
-        <!-- Audit Reference Information -->
-        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
-            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Audit Reference Information</h3>
-            <div class="grid-4" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); width: 100%;">
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="auditId" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Audit ID</label>
-                    <input type="text" id="auditId" name="auditId" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+    <!-- Statistics Overview -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalReversals">-</div>
+            <div class="stat-title">Total Reversals</div>
                 </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="employeeName" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Employee Name</label>
-                    <input type="text" id="employeeName" name="employeeName" readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+        <div class="stat-card">
+            <div class="stat-value" id="pendingReversals">-</div>
+            <div class="stat-title">Pending</div>
                 </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="auditorName" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Auditor Name</label>
-                    <input type="text" id="auditorName" name="auditorName" readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+        <div class="stat-card">
+            <div class="stat-value" id="approvedReversals">-</div>
+            <div class="stat-title">Approved</div>
                 </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="originalScore" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Original Score</label>
-                    <input type="number" id="originalScore" name="originalScore" readonly style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
+        <div class="stat-card">
+            <div class="stat-value" id="rejectedReversals">-</div>
+            <div class="stat-title">Rejected</div>
                 </div>
+            </div>
+
+    <!-- Filter Toggle Button -->
+    <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.375rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif;">
+            <svg style="width: 1rem; height: 1rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Z"/>
+            </svg>
+            Filters
+        </button>
+        <button id="exportBtn" style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Export</button>
+    </div>
+
+    <!-- Filters Section -->
+    <div id="filterPanel" style="display: none; background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="font-size: 0.875rem; font-weight: 600; color: #1A733E;">Search & Filters</div>
+            <button id="clearFilters" style="padding: 0.375rem 0.75rem; background-color: #f9fafb; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Clear All</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; align-items: end;">
+            <!-- Search -->
+            <div>
+                <label for="searchInput" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Search</label>
+                <input type="text" id="searchInput" placeholder="Search..." style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                </div>
+            
+            <!-- Reversal Status -->
+            <div>
+                <label for="statusFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Status</label>
+                <select id="statusFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            
+            <!-- Reversal Type -->
+            <div>
+                <label for="typeFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Type</label>
+                <select id="typeFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Types</option>
+                    <option value="Clarification Requested">Clarification Requested</option>
+                    <option value="Revision Requested">Revision Requested</option>
+                    </select>
+                </div>
+            
+            <!-- Date Range -->
+            <div>
+                <label for="dateFromFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">From Date</label>
+                <input type="date" id="dateFromFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+
+            <div>
+                <label for="dateToFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">To Date</label>
+                <input type="date" id="dateToFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
             </div>
         </div>
 
-        <!-- Reversal Information -->
-        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
-            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Reversal Information</h3>
-            <div class="grid-4" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(4, 1fr); width: 100%;">
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalRequestedAt" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Requested At</label>
-                    <input type="datetime-local" id="reversalRequestedAt" name="reversalRequestedAt" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalReason" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Reason</label>
-                    <input type="text" id="reversalReason" name="reversalReason" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalRespondedAt" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Responded At</label>
-                    <input type="datetime-local" id="reversalRespondedAt" name="reversalRespondedAt" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="slaHours" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">SLA (In Hours)</label>
-                    <input type="number" id="slaHours" name="slaHours" min="0" step="0.1" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reasonForReversalResponseDelay" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reason for Reversal Response Delay</label>
-                    <input type="text" id="reasonForReversalResponseDelay" name="reasonForReversalResponseDelay" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalApproved" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Approved?</label>
-                    <select id="reversalApproved" name="reversalApproved" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="withinAuditorsScope" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Within Auditor's Scope?</label>
-                    <select id="withinAuditorsScope" name="withinAuditorsScope" required style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="scoreBeforeAppeal" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Score Before Appeal</label>
-                    <input type="number" id="scoreBeforeAppeal" name="scoreBeforeAppeal" min="0" max="100" step="0.01" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="scoreAfterAppeal" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Score After Appeal</label>
-                    <input type="number" id="scoreAfterAppeal" name="scoreAfterAppeal" min="0" max="100" step="0.01" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="didThisResultInPass" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Did this result result in a pass?</label>
-                    <select id="didThisResultInPass" name="didThisResultInPass" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalType" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Type</label>
-                    <input type="text" id="reversalType" name="reversalType" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalApprovedBy" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Approved By (Employee's Supervisor)</label>
-                    <input type="text" id="reversalApprovedBy" name="reversalApprovedBy" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalResolvedBy" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Resolved By</label>
-                    <input type="text" id="reversalResolvedBy" name="reversalResolvedBy" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-            </div>
+    <!-- Reversal List -->
+    <div id="reversalList" style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" style="text-align: center; padding: 2rem; color: #6b7280; font-family: 'Poppins', sans-serif;">
+            <p>Loading reversals...</p>
         </div>
+    </div>
 
-        <!-- Reversal Details -->
-        <div style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; transition: all 0.2s ease; position: relative;">
-            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 0.0625rem solid #1A733E; text-transform: uppercase; letter-spacing: 0.01875rem;">Reversal Details</h3>
-            <div class="grid-2" style="display: grid; gap: 0.75rem; grid-template-columns: repeat(2, 1fr); width: 100%;">
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalMetricsParameters" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Metrics / Parameters</label>
-                    <textarea id="reversalMetricsParameters" name="reversalMetricsParameters" rows="4" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; width: 100%;"></textarea>
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0;">
-                    <label for="reversalJustificationFromAgent" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Justification from Employee</label>
-                    <textarea id="reversalJustificationFromAgent" name="reversalJustificationFromAgent" rows="4" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; resize: vertical; width: 100%;"></textarea>
-                </div>
-                <div style="display: flex; flex-direction: column; margin-bottom: 0; grid-column: span 2;">
-                    <label for="reversalAttachments" style="font-size: 0.75rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif; display: block;">Reversal Attachments</label>
-                    <input type="file" id="reversalAttachments" name="reversalAttachments" multiple style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; width: 100%;">
-                </div>
-            </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem 0; border-top: 0.0625rem solid #e5e7eb; flex-shrink: 0; margin-top: 0.5rem;">
-            <button type="button" id="cancelBtn" class="btn btn-primary" style="background-color: #f9fafb; color: #374151; border-color: #d1d5db; flex: 1; min-width: 8rem;">Cancel</button>
-            <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 8rem;">Submit Reversal</button>
-        </div>
-    </form>
-
+    <!-- No Reversals Message -->
+    <div id="noReversalsMessage" style="display: none; text-align: center; padding: 2rem; color: #6b7280; font-family: 'Poppins', sans-serif;">
+        <p style="font-size: 1rem; margin-bottom: 0.5rem;">No reversal requests found</p>
+        <p style="font-size: 0.875rem;">Reversal requests will appear here once submitted.</p>
+    </div>
 </main>
 
 <script>
-// Auto-populate reversal requested date/time
+// Reversal Management Functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const reversalRequestedAt = document.getElementById('reversalRequestedAt');
-    if (reversalRequestedAt) {
+    try {
+        const reversalList = document.getElementById('reversalList');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noReversalsMessage = document.getElementById('noReversalsMessage');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const clearFilters = document.getElementById('clearFilters');
+        
+        let allReversals = [];
+        let filteredReversals = [];
+        let allScorecards = [];
+        
+        // Load scorecards first
+        async function loadScorecards() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('*');
+                
+                if (error) throw error;
+                allScorecards = data || [];
+            } catch (error) {
+                console.error('Error loading scorecards:', error);
+            }
+        }
+        
+        // Load reversals from all audit tables
+        async function loadReversals() {
+            try {
+                console.log('Loading reversals from Supabase...');
+                
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not initialized');
+                }
+                
+                await loadScorecards();
+                
+                let combinedReversals = [];
+                
+                // Load from all scorecard tables
+                for (const scorecard of allScorecards) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('*')
+                            .not('reversal_requested_at', 'is', null)
+                            .order('reversal_requested_at', { ascending: false });
+                        
+                        if (error) {
+                            console.warn(`Error loading from ${scorecard.table_name}:`, error);
+                            continue;
+                        }
+                        
+                        if (data && data.length > 0) {
+                            const reversalsWithScorecard = data.map(audit => ({
+                                ...audit,
+                                _scorecard_id: scorecard.id,
+                                _scorecard_name: scorecard.name,
+                                _scorecard_table: scorecard.table_name
+                            }));
+                            combinedReversals = combinedReversals.concat(reversalsWithScorecard);
+                        }
+                    } catch (err) {
+                        console.warn(`Exception loading from ${scorecard.table_name}:`, err);
+                        continue;
+                    }
+                }
+                
+                // Sort by reversal request date descending
+                combinedReversals.sort((a, b) => {
+                    const dateA = new Date(a.reversal_requested_at);
+                    const dateB = new Date(b.reversal_requested_at);
+                    return dateB - dateA;
+                });
+                
+                console.log(`Total reversals loaded: ${combinedReversals.length}`);
+                
+                allReversals = combinedReversals;
+                filteredReversals = [...allReversals];
+                
+                updateStatistics();
+                renderReversals();
+            } catch (error) {
+                console.error('Error loading reversals:', error);
+                loadingIndicator.style.display = 'none';
+                noReversalsMessage.style.display = 'block';
+            }
+        }
+        
+        // Update statistics
+        function updateStatistics() {
+            const total = filteredReversals.length;
+            const pending = filteredReversals.filter(r => r.reversal_approved === null).length;
+            const approved = filteredReversals.filter(r => r.reversal_approved === true).length;
+            const rejected = filteredReversals.filter(r => r.reversal_approved === false).length;
+            
+            document.getElementById('totalReversals').textContent = total;
+            document.getElementById('pendingReversals').textContent = pending;
+            document.getElementById('approvedReversals').textContent = approved;
+            document.getElementById('rejectedReversals').textContent = rejected;
+        }
+        
+        // Render reversals
+        function renderReversals() {
+            loadingIndicator.style.display = 'none';
+            
+            updateStatistics();
+            
+            if (filteredReversals.length === 0) {
+                reversalList.style.display = 'none';
+                noReversalsMessage.style.display = 'block';
+                return;
+            }
+            
+            reversalList.style.display = 'flex';
+            noReversalsMessage.style.display = 'none';
+            
+            const reversalCards = filteredReversals.map(reversal => createReversalCard(reversal));
+            reversalList.innerHTML = reversalCards.join('');
+        }
+        
+        // Helper functions
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatCardDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
         const now = new Date();
-        reversalRequestedAt.value = now.toISOString().slice(0, 16);
-    }
-});
-
-// Form submission handling
-document.getElementById('reversalForm').addEventListener('submit', function(e) {
+            const diffMs = now - date;
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+        
+        // Create reversal card
+        function createReversalCard(reversal) {
+            const requestedDate = formatCardDate(reversal.reversal_requested_at);
+            
+            let statusColor, statusBgColor, statusTextColor, statusText;
+            if (reversal.reversal_approved === null) {
+                statusColor = '#f59e0b';
+                statusBgColor = '#fef3c7';
+                statusTextColor = '#92400e';
+                statusText = '⏳ Pending';
+            } else if (reversal.reversal_approved === true) {
+                statusColor = '#10b981';
+                statusBgColor = '#dcfce7';
+                statusTextColor = '#166534';
+                statusText = '✓ Approved';
+            } else {
+                statusColor = '#ef4444';
+                statusBgColor = '#fee2e2';
+                statusTextColor = '#991b1b';
+                statusText = '✗ Rejected';
+            }
+            
+            return `
+                <div class="reversal-card" style="background: #f9fafb; border: 0.0625rem solid #e5e7eb; border-radius: 0.25rem; padding: 0.75rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; cursor: pointer;" 
+                     onclick="viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')"
+                     onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='#ffffff';"
+                     onmouseleave="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb';">
+                    
+                    <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
+                        <!-- Avatar -->
+                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.25rem; background: ${statusColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem; flex-shrink: 0;">
+                            ${getInitials(reversal.employee_name || 'Unknown')}
+                        </div>
+                        
+                        <!-- Info -->
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                                <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #1f2937;">
+                                    ${escapeHtml(reversal.employee_name || 'Unknown Employee')}
+                                </h4>
+                                <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">
+                                    ${statusText}
+                                </span>
+                                ${reversal.reversal_type ? `
+                                    <span style="background-color: #ede9fe; color: #6b21a8; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600;">
+                                        ${escapeHtml(reversal.reversal_type)}
+                                    </span>
+                                ` : ''}
+                                ${reversal._scorecard_name ? `
+                                    <span style="background-color: #f3f4f6; color: #374151; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; border: 0.0625rem solid #d1d5db;">
+                                        📋 ${escapeHtml(reversal._scorecard_name)}
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <p style="margin: 0; font-size: 0.75rem; color: #6b7280; display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
+                                <span>${escapeHtml(reversal.interaction_id || 'No ID')}</span>
+                                <span style="color: #d1d5db;">•</span>
+                                <span>Score: ${reversal.score_before_appeal || reversal.average_score || '0'}%</span>
+                                <span style="color: #d1d5db;">•</span>
+                                <span>${escapeHtml(reversal.reversal_reason || 'No reason provided')}</span>
+                                <span style="color: #d1d5db;">•</span>
+                                <span>${requestedDate}</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                        <button 
+                            onclick="event.stopPropagation(); viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')"
+                            style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                            onmouseover="this.style.backgroundColor='#15582E'"
+                            onmouseout="this.style.backgroundColor='#1A733E'"
+                        >
+                            View Details
+                        </button>
+                        ${reversal.reversal_approved === null ? `
+                            <button 
+                                onclick="event.stopPropagation(); processReversal('${reversal.id}', '${reversal._scorecard_table}')"
+                                style="padding: 0.5rem 1rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                                onmouseover="this.style.backgroundColor='#d97706'"
+                                onmouseout="this.style.backgroundColor='#f59e0b'"
+                            >
+                                Process
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Toggle filters
+        window.toggleFilters = function() {
+            const panel = document.getElementById('filterPanel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        };
+        
+        // Filter reversals
+        function filterReversals() {
+            const searchTerm = (searchInput?.value || '').toLowerCase();
+            const statusValue = statusFilter?.value || '';
+            const typeValue = typeFilter?.value || '';
+            const dateFrom = document.getElementById('dateFromFilter')?.value || '';
+            const dateTo = document.getElementById('dateToFilter')?.value || '';
+            
+            filteredReversals = allReversals.filter(reversal => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    (reversal.employee_name && reversal.employee_name.toLowerCase().includes(searchTerm)) ||
+                    (reversal.interaction_id && reversal.interaction_id.toLowerCase().includes(searchTerm)) ||
+                    (reversal.reversal_reason && reversal.reversal_reason.toLowerCase().includes(searchTerm));
+                
+                // Status filter
+                let matchesStatus = true;
+                if (statusValue === 'pending') {
+                    matchesStatus = reversal.reversal_approved === null;
+                } else if (statusValue === 'approved') {
+                    matchesStatus = reversal.reversal_approved === true;
+                } else if (statusValue === 'rejected') {
+                    matchesStatus = reversal.reversal_approved === false;
+                }
+                
+                // Type filter
+                const matchesType = !typeValue || reversal.reversal_type === typeValue;
+                
+                // Date range filter
+                let matchesDateRange = true;
+                if (dateFrom || dateTo) {
+                    const reversalDate = new Date(reversal.reversal_requested_at);
+                    if (dateFrom) {
+                        const fromDate = new Date(dateFrom);
+                        if (reversalDate < fromDate) matchesDateRange = false;
+                    }
+                    if (dateTo) {
+                        const toDate = new Date(dateTo);
+                        toDate.setHours(23, 59, 59, 999);
+                        if (reversalDate > toDate) matchesDateRange = false;
+                    }
+                }
+                
+                return matchesSearch && matchesStatus && matchesType && matchesDateRange;
+            });
+            
+            renderReversals();
+        }
+        
+        // Event listeners
+        if (searchInput) {
+            searchInput.addEventListener('input', filterReversals);
+        }
+        if (statusFilter) {
+            statusFilter.addEventListener('change', filterReversals);
+        }
+        if (typeFilter) {
+            typeFilter.addEventListener('change', filterReversals);
+        }
+        if (clearFilters) {
+            clearFilters.addEventListener('click', function() {
+                document.querySelectorAll('input[id$="Filter"], select[id$="Filter"], #searchInput').forEach(input => {
+                    input.value = '';
+                });
+                filterReversals();
+            });
+        }
+        
+        const dateFromFilter = document.getElementById('dateFromFilter');
+        const dateToFilter = document.getElementById('dateToFilter');
+        if (dateFromFilter) dateFromFilter.addEventListener('change', filterReversals);
+        if (dateToFilter) dateToFilter.addEventListener('change', filterReversals);
+        
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            if (filteredReversals.length === 0) {
+                alert('No reversals to export.');
+                return;
+            }
+            
+            const headers = [
+                'ID', 'Employee Name', 'Auditor Name', 'Score Before Appeal', 
+                'Reversal Type', 'Reversal Reason', 'Reversal Status', 'Requested At', 
+                'Responded At', 'Interaction ID', 'Scorecard'
+            ];
+            
+            const csvContent = [
+                headers.join(','),
+                ...filteredReversals.map(r => [
+                    r.id || '',
+                    r.employee_name || '',
+                    r.auditor_name || '',
+                    r.score_before_appeal || r.average_score || '',
+                    r.reversal_type || '',
+                    r.reversal_reason || '',
+                    r.reversal_approved === null ? 'Pending' : (r.reversal_approved ? 'Approved' : 'Rejected'),
+                    r.reversal_requested_at || '',
+                    r.reversal_responded_at || '',
+                    r.interaction_id || '',
+                    r._scorecard_name || ''
+                ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `reversal-reports-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        // View reversal details
+        window.viewReversalDetails = function(auditId, tableName) {
+            window.location.href = `audit-view.html?id=${auditId}&table=${tableName}`;
+        };
+        
+        // Process reversal
+        window.processReversal = async function(auditId, tableName) {
+            // Find the reversal in our data
+            const reversal = allReversals.find(r => r.id === auditId && r._scorecard_table === tableName);
+            
+            if (!reversal) {
+                alert('Reversal not found');
+                return;
+            }
+            
+            // Open processing modal
+            showReversalProcessingModal(reversal, tableName);
+        };
+        
+        // Show reversal processing modal
+        function showReversalProcessingModal(reversal, tableName) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'processingModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.6); z-index: 1000; display: flex; 
+                align-items: center; justify-content: center; padding: 1rem;
+                overflow-y: auto;
+            `;
+            
+            const currentUser = JSON.parse(localStorage.getItem('user'));
+            const currentUserName = currentUser?.name || currentUser?.email || 'Unknown';
+            
+            // Get scorecard info for passing threshold
+            const scorecard = allScorecards.find(s => s.table_name === tableName);
+            const passingThreshold = scorecard?.passing_threshold || 85;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 0.5rem; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); padding: 1.5rem; color: white; border-radius: 0.5rem 0.5rem 0 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h2 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 700; font-family: 'Poppins', sans-serif;">Process Reversal Request</h2>
+                                <p style="margin: 0; font-size: 0.875rem; opacity: 0.9; font-family: 'Poppins', sans-serif;">Review and respond to the reversal request</p>
+                            </div>
+                            <button onclick="document.getElementById('processingModal').remove()" style="background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 0.375rem; width: 2rem; height: 2rem; font-size: 1.25rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s;">×</button>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 1.5rem;">
+                        <!-- Reversal Details -->
+                        <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #e5e7eb;">
+                            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0 0 0.75rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Request Details</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                                <div>
+                                    <span style="color: #6b7280; font-weight: 500;">Employee:</span>
+                                    <span style="color: #1f2937; font-weight: 600; margin-left: 0.5rem;">${escapeHtml(reversal.employee_name || 'N/A')}</span>
+                                </div>
+                                <div>
+                                    <span style="color: #6b7280; font-weight: 500;">Auditor:</span>
+                                    <span style="color: #1f2937; font-weight: 600; margin-left: 0.5rem;">${escapeHtml(reversal.auditor_name || 'N/A')}</span>
+                                </div>
+                                <div>
+                                    <span style="color: #6b7280; font-weight: 500;">Original Score:</span>
+                                    <span style="color: #1f2937; font-weight: 600; margin-left: 0.5rem;">${reversal.score_before_appeal || reversal.average_score || '0'}%</span>
+                                </div>
+                                <div>
+                                    <span style="color: #6b7280; font-weight: 500;">Passing Threshold:</span>
+                                    <span style="color: #1f2937; font-weight: 600; margin-left: 0.5rem;">${passingThreshold}%</span>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <span style="color: #6b7280; font-weight: 500;">Reversal Type:</span>
+                                    <span style="color: #1f2937; font-weight: 600; margin-left: 0.5rem;">${escapeHtml(reversal.reversal_type || 'N/A')}</span>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <span style="color: #6b7280; font-weight: 500;">Reason:</span>
+                                    <span style="color: #1f2937; font-weight: 600; margin-left: 0.5rem;">${escapeHtml(reversal.reversal_reason || 'N/A')}</span>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <span style="color: #6b7280; font-weight: 500;">Justification:</span>
+                                    <div style="margin-top: 0.5rem; padding: 0.75rem; background: white; border-radius: 0.375rem; border: 1px solid #e5e7eb; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(reversal.reversal_justification || 'No justification provided')}</div>
+                                </div>
+                                ${reversal.reversal_metrics ? `
+                                    <div style="grid-column: span 2;">
+                                        <span style="color: #6b7280; font-weight: 500;">Affected Parameters:</span>
+                                        <div style="margin-top: 0.5rem; padding: 0.75rem; background: white; border-radius: 0.375rem; border: 1px solid #e5e7eb;">${escapeHtml(reversal.reversal_metrics)}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Processing Form -->
+                        <form id="processReversalForm" style="display: grid; gap: 1rem;">
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <!-- Decision -->
+                                <div>
+                                    <label for="reversalDecision" style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                                        Decision <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <select id="reversalDecision" required style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                                        <option value="">Select decision...</option>
+                                        <option value="approved">Approve Reversal</option>
+                                        <option value="rejected">Reject Reversal</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Score After Appeal -->
+                                <div>
+                                    <label for="scoreAfterAppeal" style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                                        Score After Appeal <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="number" id="scoreAfterAppeal" min="0" max="100" step="0.01" value="${reversal.score_before_appeal || reversal.average_score || 0}" required style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                                    <span id="passingStatusIndicator" style="font-size: 0.75rem; margin-top: 0.25rem; display: block; font-family: 'Poppins', sans-serif;"></span>
+                                </div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <!-- Approved By -->
+                                <div>
+                                    <label for="approvedBy" style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                                        Approved By (Supervisor)
+                                    </label>
+                                    <input type="text" id="approvedBy" placeholder="Supervisor name..." style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                                </div>
+                                
+                                <!-- Resolved By -->
+                                <div>
+                                    <label for="resolvedBy" style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                                        Resolved By
+                                    </label>
+                                    <input type="text" id="resolvedBy" value="${escapeHtml(currentUserName)}" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                                </div>
+                            </div>
+                            
+                            <!-- Response Delay Reason -->
+                            <div>
+                                <label for="delayReason" style="display: block; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                                    Response Delay Reason (if applicable)
+                                </label>
+                                <textarea id="delayReason" rows="2" placeholder="Explain if response took longer than expected..." style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; resize: vertical;"></textarea>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                                <button type="button" onclick="document.getElementById('processingModal').remove()" style="padding: 0.625rem 1.25rem; background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                                    Cancel
+                                </button>
+                                <button type="submit" style="padding: 0.625rem 1.25rem; background-color: #1A733E; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                                    Submit Decision
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Update passing status indicator when score changes
+            const scoreInput = document.getElementById('scoreAfterAppeal');
+            const statusIndicator = document.getElementById('passingStatusIndicator');
+            
+            function updatePassingStatus() {
+                const score = parseFloat(scoreInput.value) || 0;
+                if (score >= passingThreshold) {
+                    statusIndicator.textContent = '✓ Score will result in PASSING';
+                    statusIndicator.style.color = '#10b981';
+                } else {
+                    statusIndicator.textContent = '✗ Score will result in NOT PASSING';
+                    statusIndicator.style.color = '#ef4444';
+                }
+            }
+            
+            scoreInput.addEventListener('input', updatePassingStatus);
+            updatePassingStatus();
+            
+            // Handle form submission
+            document.getElementById('processReversalForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Get form data
-    const formData = new FormData(this);
-    
-    // Convert to object for easier handling
-    const reversalData = {};
-    for (let [key, value] of formData.entries()) {
-        reversalData[key] = value;
-    }
-    
-    // Here you would typically send the data to your backend
-    // Reversal data processed
-    
-    // Show success message (you can customize this)
-    alert('Reversal submitted successfully!');
-    
-    // Optionally reset the form
-    // this.reset();
-});
-
-// Cancel button handling
-document.getElementById('cancelBtn').addEventListener('click', function() {
-    if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-        window.history.back();
+                const decision = document.getElementById('reversalDecision').value;
+                const scoreAfterAppeal = parseFloat(document.getElementById('scoreAfterAppeal').value);
+                const approvedBy = document.getElementById('approvedBy').value;
+                const resolvedBy = document.getElementById('resolvedBy').value;
+                const delayReason = document.getElementById('delayReason').value;
+                
+                // Calculate SLA hours (time between request and now)
+                const requestedAt = new Date(reversal.reversal_requested_at);
+                const respondedAt = new Date();
+                const slaHours = ((respondedAt - requestedAt) / (1000 * 60 * 60)).toFixed(2);
+                
+                // Determine if passing
+                const passedAfterAppeal = scoreAfterAppeal >= passingThreshold;
+                
+                // Prepare update data
+                const updateData = {
+                    reversal_status: decision === 'approved' ? 'Approved' : 'Rejected',
+                    reversal_approved: decision === 'approved',
+                    reversal_responded_at: respondedAt.toISOString(),
+                    reversal_sla_hours: parseFloat(slaHours),
+                    reversal_response_delay_reason: delayReason || null,
+                    reversal_approved_by: approvedBy || null,
+                    reversal_resolved_by: resolvedBy || null,
+                    score_after_appeal: scoreAfterAppeal,
+                    passed_after_appeal: passedAfterAppeal
+                };
+                
+                // If approved, update the actual audit score and passing status
+                if (decision === 'approved') {
+                    updateData.average_score = scoreAfterAppeal;
+                    updateData.passing_status = passedAfterAppeal ? 'Passing' : 'Not Passing';
+                }
+                
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from(tableName)
+                        .update(updateData)
+                        .eq('id', reversal.id)
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    alert('✓ Reversal processed successfully!');
+                    
+                    // Close modal and reload data
+                    document.getElementById('processingModal').remove();
+                    loadReversals();
+                    
+                } catch (error) {
+                    console.error('Error processing reversal:', error);
+                    alert('Failed to process reversal. Please try again.');
+                }
+            });
+        }
+        
+        // Initialize
+        loadReversals();
+        
+    } catch (error) {
+        console.error('Error in reversal management functionality:', error);
     }
 });
 </script>
