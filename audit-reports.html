@@ -201,7 +201,7 @@
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-title">Passing</span>
+                    <span class="stat-title">Passed</span>
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="8 12 12 16 16 12"/>
@@ -215,7 +215,7 @@
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-title">Not Passing</span>
+                    <span class="stat-title">Not Passed</span>
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="8" x2="12" y2="12"/>
@@ -292,8 +292,8 @@
                 <label for="statusFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">Status</label>
                 <select id="statusFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
                     <option value="">All Statuses</option>
-                    <option value="Passing">Passing</option>
-                    <option value="Not Passing">Not Passing</option>
+                    <option value="Passed">Passed</option>
+                    <option value="Not Passed">Not Passed</option>
                 </select>
             </div>
             
@@ -441,6 +441,54 @@
         <!-- Audits will be dynamically loaded here -->
     </div>
 
+    <!-- Pagination Controls -->
+    <div id="paginationContainer" style="display: none; margin-top: 1.5rem; padding: 1rem; background: #ffffff; border-radius: 0.5rem; border: 0.0625rem solid #e5e7eb; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #374151; font-family: 'Poppins', sans-serif;">
+                <span>Showing</span>
+                <select id="itemsPerPageSelect" style="padding: 0.25rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; cursor: pointer;">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span>items per page</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #374151; font-family: 'Poppins', sans-serif;">
+                <span id="paginationInfo">Page 1 of 1</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <button id="firstPageBtn" onclick="goToPage(1)" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="First Page">
+                    <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="11 17 6 12 11 7"></polyline>
+                        <polyline points="18 17 13 12 18 7"></polyline>
+                    </svg>
+                </button>
+                <button id="prevPageBtn" onclick="goToPreviousPage()" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="Previous Page">
+                    <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span>Previous</span>
+                </button>
+                <div id="pageNumbers" style="display: flex; align-items: center; gap: 0.25rem;">
+                    <!-- Page numbers will be dynamically generated here -->
+                </div>
+                <button id="nextPageBtn" onclick="goToNextPage()" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="Next Page">
+                    <span>Next</span>
+                    <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+                <button id="lastPageBtn" onclick="goToLastPage()" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="Last Page">
+                    <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="13 17 18 12 13 7"></polyline>
+                        <polyline points="6 17 11 12 6 7"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- No Audits Message -->
     <div id="noAuditsMessage" style="display: none; text-align: center; padding: 2rem; color: #6b7280; font-family: 'Poppins', sans-serif; width: 100%;">
         <p style="font-size: 1rem; margin-bottom: 0.5rem;">No audits found</p>
@@ -466,6 +514,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let filteredAudits = [];
     let currentScorecard = null;
     let allScorecards = [];
+    
+    // Pagination state
+    let currentPage = 1;
+    let itemsPerPage = 25;
+    let totalPages = 1;
     
     // Load available scorecards
     async function loadScorecards() {
@@ -505,6 +558,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle scorecard selection change
     scorecardSelector.addEventListener('change', async function() {
         const selectedId = this.value;
+        
+        // Reset pagination when changing scorecard
+        currentPage = 1;
         
         if (selectedId === 'all') {
             // Show all scorecards
@@ -688,7 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     clientEmail: audit.client_email,
                     agentPreStatus: audit.agent_pre_status,
                     agentPostStatus: audit.agent_post_status,
-                    passingStatus: audit.passing_status,
+                    passingStatus: normalizePassingStatus(audit.passing_status),
                     validationStatus: audit.validation_status,
                     averageScore: audit.average_score,
                     criticalErrors: audit.critical_errors,
@@ -698,7 +754,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     criticalFailError: audit.critical_fail_error,
                     criticalError: audit.critical_error,
                     significantError: audit.significant_error,
-                        recommendations: audit.recommendations
+                    recommendations: audit.recommendations,
+                    // Reversal tracking fields
+                    reversalRequestedAt: audit.reversal_requested_at,
+                    reversalRespondedAt: audit.reversal_responded_at,
+                    slaInHours: audit.sla_in_hours,
+                    reasonForReversalResponseDelay: audit.reason_for_reversal_response_delay,
+                    reversalApproved: audit.reversal_approved,
+                    withinAuditorScope: audit.within_auditor_scope,
+                    scoreBeforeAppeal: audit.score_before_appeal,
+                    scoreAfterAppeal: audit.score_after_appeal,
+                    didResultInPass: audit.did_result_in_pass,
+                    reversalType: audit.reversal_type,
+                    reversalMetricsParameters: audit.reversal_metrics_parameters,
+                    reversalJustificationFromAgent: audit.reversal_justification_from_agent,
+                    reversalAttachments: audit.reversal_attachments,
+                    reversalApprovedBy: audit.reversal_approved_by,
+                    reversalResolvedBy: audit.reversal_resolved_by,
+                    // Acknowledgement tracking fields
+                    acknowledgementStatus: audit.acknowledgement_status,
+                    acknowledgementStatusUpdatedAt: audit.acknowledgement_status_updated_at
                     };
                     return mapped;
                 });
@@ -728,19 +803,186 @@ document.addEventListener('DOMContentLoaded', function() {
         const notPassingAudits = document.getElementById('notPassingAudits');
         
         const total = filteredAudits.length;
-        const passing = filteredAudits.filter(a => a.passingStatus === 'Passing').length;
-        const notPassing = filteredAudits.filter(a => a.passingStatus === 'Not Passing').length;
+        const passing = filteredAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Passed').length;
+        const notPassing = filteredAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Not Passed').length;
         
         if (totalAudits) totalAudits.textContent = total;
         if (passingAudits) passingAudits.textContent = passing;
         if (notPassingAudits) notPassingAudits.textContent = notPassing;
     }
     
+    // Calculate pagination
+    function calculatePagination() {
+        totalPages = Math.ceil(filteredAudits.length / itemsPerPage);
+        if (currentPage > totalPages && totalPages > 0) {
+            currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+    }
+    
+    // Get paginated audits
+    function getPaginatedAudits() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredAudits.slice(startIndex, endIndex);
+    }
+    
+    // Update pagination UI
+    function updatePaginationUI() {
+        const paginationContainer = document.getElementById('paginationContainer');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const pageNumbers = document.getElementById('pageNumbers');
+        const firstPageBtn = document.getElementById('firstPageBtn');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const lastPageBtn = document.getElementById('lastPageBtn');
+        
+        if (filteredAudits.length === 0) {
+            if (paginationContainer) paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        if (paginationContainer) {
+            paginationContainer.style.display = 'flex';
+        }
+        
+        // Update pagination info
+        const startIndex = (currentPage - 1) * itemsPerPage + 1;
+        const endIndex = Math.min(currentPage * itemsPerPage, filteredAudits.length);
+        if (paginationInfo) {
+            paginationInfo.textContent = `Page ${currentPage} of ${totalPages} (Showing ${startIndex}-${endIndex} of ${filteredAudits.length})`;
+        }
+        
+        // Update button states
+        if (firstPageBtn) {
+            firstPageBtn.disabled = currentPage === 1;
+            firstPageBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            firstPageBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+        }
+        if (prevPageBtn) {
+            prevPageBtn.disabled = currentPage === 1;
+            prevPageBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            prevPageBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+        }
+        if (nextPageBtn) {
+            nextPageBtn.disabled = currentPage === totalPages;
+            nextPageBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+            nextPageBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+        }
+        if (lastPageBtn) {
+            lastPageBtn.disabled = currentPage === totalPages;
+            lastPageBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+            lastPageBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+        }
+        
+        // Generate page numbers
+        if (pageNumbers) {
+            pageNumbers.innerHTML = '';
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust start page if we're near the end
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // First page
+            if (startPage > 1) {
+                const firstBtn = document.createElement('button');
+                firstBtn.textContent = '1';
+                firstBtn.onclick = () => goToPage(1);
+                firstBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                pageNumbers.appendChild(firstBtn);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cssText = 'padding: 0.5rem 0.25rem; color: #6b7280; font-size: 0.875rem;';
+                    pageNumbers.appendChild(ellipsis);
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i.toString();
+                pageBtn.onclick = () => goToPage(i);
+                if (i === currentPage) {
+                    pageBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #1A733E; color: #ffffff; border: 0.0625rem solid #1A733E; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                } else {
+                    pageBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                }
+                pageBtn.onmouseover = function() {
+                    if (i !== currentPage) {
+                        this.style.backgroundColor = '#f3f4f6';
+                    }
+                };
+                pageBtn.onmouseout = function() {
+                    if (i !== currentPage) {
+                        this.style.backgroundColor = '#ffffff';
+                    }
+                };
+                pageNumbers.appendChild(pageBtn);
+            }
+            
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cssText = 'padding: 0.5rem 0.25rem; color: #6b7280; font-size: 0.875rem;';
+                    pageNumbers.appendChild(ellipsis);
+                }
+                
+                const lastBtn = document.createElement('button');
+                lastBtn.textContent = totalPages.toString();
+                lastBtn.onclick = () => goToPage(totalPages);
+                lastBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                pageNumbers.appendChild(lastBtn);
+            }
+        }
+    }
+    
+    // Pagination navigation functions
+    window.goToPage = function(page) {
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
+            currentPage = page;
+            renderAudits();
+            // Scroll to top of audit list
+            const auditList = document.getElementById('auditList');
+            if (auditList) {
+                auditList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    };
+    
+    window.goToPreviousPage = function() {
+        if (currentPage > 1) {
+            goToPage(currentPage - 1);
+        }
+    };
+    
+    window.goToNextPage = function() {
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1);
+        }
+    };
+    
+    window.goToLastPage = function() {
+        if (totalPages > 0) {
+            goToPage(totalPages);
+        }
+    };
+    
     // Render audits
     function renderAudits() {
         console.log('Rendering audits. Total filtered:', filteredAudits.length);
         
         updateStatistics();
+        calculatePagination();
         
         // Update audits count display
         if (auditsCount) {
@@ -751,6 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (filteredAudits.length === 0) {
             auditList.style.display = 'none';
             noAuditsMessage.style.display = 'block';
+            updatePaginationUI();
             console.log('No audits to display');
             return;
         }
@@ -758,9 +1001,24 @@ document.addEventListener('DOMContentLoaded', function() {
         auditList.style.display = 'flex';
         noAuditsMessage.style.display = 'none';
         
-        const auditCards = filteredAudits.map(audit => createAuditCard(audit));
+        // Get paginated audits
+        const paginatedAudits = getPaginatedAudits();
+        const auditCards = paginatedAudits.map(audit => createAuditCard(audit));
         auditList.innerHTML = auditCards.join('');
-        console.log('Rendered audit cards');
+        
+        // Update pagination UI
+        updatePaginationUI();
+        
+        console.log(`Rendered ${paginatedAudits.length} audit cards (page ${currentPage} of ${totalPages})`);
+    }
+    
+    // Helper function to normalize passing status (handles both old and new values)
+    function normalizePassingStatus(status) {
+        if (!status) return status;
+        // Convert old values to new ones for consistency
+        if (status === 'Passing') return 'Passed';
+        if (status === 'Not Passing') return 'Not Passed';
+        return status; // Return as-is if already normalized or unknown
     }
     
     // Helper function to get initials
@@ -798,10 +1056,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create audit card
     function createAuditCard(audit) {
         const submittedDateTime = formatCardDate(audit.submittedAt);
-        const statusColor = audit.passingStatus === 'Passing' ? '#10b981' : '#ef4444';
-        const statusBgColor = audit.passingStatus === 'Passing' ? '#dcfce7' : '#fee2e2';
-        const statusTextColor = audit.passingStatus === 'Passing' ? '#166534' : '#991b1b';
-        const statusIcon = audit.passingStatus === 'Passing' ? '✓' : '✗';
+        const normalizedStatus = normalizePassingStatus(audit.passingStatus);
+        const statusColor = normalizedStatus === 'Passed' ? '#10b981' : '#ef4444';
+        const statusBgColor = normalizedStatus === 'Passed' ? '#dcfce7' : '#fee2e2';
+        const statusTextColor = normalizedStatus === 'Passed' ? '#166534' : '#991b1b';
+        const statusIcon = normalizedStatus === 'Passed' ? '✓' : '✗';
         
         // Create card element
         const cardHtml = `
@@ -823,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${escapeHtml(audit.employeeName || 'Unknown Employee')}
                             </h4>
                             <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">
-                                ${statusIcon} ${audit.passingStatus || 'Unknown'}
+                                ${statusIcon} ${normalizedStatus || 'Unknown'}
                             </span>
                             ${audit._scorecard_name ? `
                                 <span style="background-color: #f3f4f6; color: #374151; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; border: 0.0625rem solid #d1d5db;">
@@ -884,6 +1143,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Filter audits
     function filterAudits() {
+        // Reset to first page when filters change
+        currentPage = 1;
+        
         const searchTerm = (searchInput?.value || '').toLowerCase();
         const statusValue = statusFilter?.value || '';
         const quarterValue = quarterFilter?.value || '';
@@ -896,7 +1158,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 (audit.interactionId && audit.interactionId.toLowerCase().includes(searchTerm));
             
             // Specific filters
-            const matchesStatus = !statusValue || audit.passingStatus === statusValue;
+            const normalizedAuditStatus = normalizePassingStatus(audit.passingStatus);
+            const matchesStatus = !statusValue || normalizedAuditStatus === statusValue;
             const matchesQuarter = !quarterValue || audit.quarter === quarterValue;
             
             // Get all other filter values
@@ -1008,6 +1271,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Items per page change handler
+    const itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
+    if (itemsPerPageSelect) {
+        itemsPerPageSelect.addEventListener('change', function() {
+            itemsPerPage = parseInt(this.value);
+            currentPage = 1; // Reset to first page when changing items per page
+            renderAudits();
+        });
+    }
+    
     // Export functionality
     document.getElementById('exportFilters').addEventListener('click', function() {
         if (filteredAudits.length === 0) {
@@ -1018,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Convert audits to CSV format
         const headers = [
             'ID', 'Submitted At', 'Employee Name', 'Auditor Name', 'Audit Type', 
-            'Passing Status', 'Average Score', 'Total Errors', 'Quarter', 'Channel',
+            'Passed Status', 'Average Score', 'Total Errors', 'Quarter', 'Channel',
             'Interaction ID', 'Week', 'Country', 'Employee Type', 'Validation Status',
             'Employee Pre Status', 'Employee Post Status', 'Audit Duration'
         ];
@@ -1180,8 +1453,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const submittedDateTime = formatDate(audit.submittedAt, true);
-        const statusColor = audit.passingStatus === 'Passing' ? '#10b981' : '#ef4444';
-        const statusIcon = audit.passingStatus === 'Passing' ? '✓' : '✗';
+        const normalizedStatus = normalizePassingStatus(audit.passingStatus);
+        const statusColor = normalizedStatus === 'Passed' ? '#10b981' : '#ef4444';
+        const statusIcon = normalizedStatus === 'Passed' ? '✓' : '✗';
         
         // Generate error details HTML
         function generateErrorDetails() {
@@ -1311,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         ` : '';
         
-        const headerGradient = audit.passingStatus === 'Not Passing' 
+        const headerGradient = normalizedStatus === 'Not Passed' 
             ? 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)' 
             : 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
         
@@ -1363,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
                         <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
                             <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Status</p>
-                            <p style="font-size: 1rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">${statusIcon} ${audit.passingStatus || 'N/A'}</p>
+                            <p style="font-size: 1rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">${statusIcon} ${normalizedStatus || 'N/A'}</p>
                         </div>
                         <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
                             <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Score</p>

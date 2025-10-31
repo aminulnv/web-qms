@@ -67,7 +67,7 @@
                 </div>
                 <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
                     <div id="stat6Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Avg Duration</div>
-                    <div id="stat6Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                    <div id="stat6Count" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
                     <div id="stat6Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
                 </div>
             </div>
@@ -199,7 +199,7 @@ async function loadAllUsers() {
     try {
         const { data, error } = await window.supabaseClient
             .from('users')
-            .select('email, name, role, quality_supervisor')
+            .select('email, name, role, channel, quality_supervisor')
             .eq('is_active', true);
         
         if (error) throw error;
@@ -231,7 +231,7 @@ async function loadAssignments() {
         populateChannelFilter();
         
         // Update dashboard based on current tab
-        updateDashboard();
+        await updateDashboard();
         
     } catch (error) {
         console.error('Error loading assignments:', error);
@@ -243,16 +243,16 @@ async function loadAssignments() {
 // ============================================================================
 // Update Dashboard
 // ============================================================================
-function updateDashboard() {
+async function updateDashboard() {
     if (currentTab === 0) {
         // Your Stats
-        updateYourStats();
+        await updateYourStats();
     } else if (currentTab === 1) {
         // Team Stats
-        updateTeamStats();
+        await updateTeamStats();
     } else if (currentTab === 2) {
         // Standup View
-        updateStandupView();
+        await updateStandupView();
     }
 }
 
@@ -302,17 +302,79 @@ async function updateYourStats() {
         console.error('Error calculating average duration:', error);
     }
     
+    // Calculate reversal count for current user
+    let reversalCount = 0;
+    try {
+        const { data: scorecards, error: scError } = await window.supabaseClient
+            .from('scorecards')
+            .select('table_name')
+            .eq('is_active', true);
+        
+        if (!scError && scorecards) {
+            for (const scorecard of scorecards) {
+                try {
+                    const { data, error } = await window.supabaseClient
+                        .from(scorecard.table_name)
+                        .select('id')
+                        .eq('auditor_email', currentUserEmail)
+                        .not('reversal_requested_at', 'is', null);
+                    
+                    if (!error && data) {
+                        reversalCount += data.length;
+                    }
+                } catch (err) {
+                    console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error calculating reversal count:', error);
+    }
+    
+    console.log('Your Stats - Reversal count:', reversalCount);
+    
+    // Show the 4th and 6th stat cards (in case they were hidden in standup view)
+    const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat4Card) {
+        stat4Card.style.display = 'flex';
+        // Remove progress bar if it exists
+        const progressBar = stat4Card.querySelector('.progress-bar-container');
+        if (progressBar) progressBar.remove();
+    }
+    
+    const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat6Card) {
+        stat6Card.style.display = 'flex';
+    }
+    
+    // Reset 3rd card label to REMAINING and remove progress bar
+    const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
+    if (remainingCard) {
+        const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
+        if (label) label.textContent = 'REMAINING';
+        
+        // Remove progress bar if it exists
+        const progressBar = remainingCard.querySelector('.progress-bar-container');
+        if (progressBar) progressBar.remove();
+    }
+    
     // Update stat card labels
     document.getElementById('stat1Label').textContent = 'ASSIGNED';
     document.getElementById('stat1Count').textContent = totalAssigned;
     document.getElementById('completedCount').textContent = completed;
     document.getElementById('targetAchieved').textContent = `${percentage}% Target Achieved`;
-    document.getElementById('remainingCount').textContent = remaining;
+    
+    const remainingCount = document.getElementById('remainingCount');
+    remainingCount.style.fontSize = '3.5rem';
+    remainingCount.textContent = remaining;
+    
     document.getElementById('stat4Label').textContent = 'IN PROGRESS';
-    document.getElementById('stat4Count').textContent = inProgress;
+    const stat4Count = document.getElementById('stat4Count');
+    stat4Count.style.fontSize = '3.5rem';
+    stat4Count.textContent = inProgress;
     document.getElementById('stat4Subtitle').textContent = `${daysRemaining} working day${daysRemaining !== 1 ? 's' : ''} remaining`;
     document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
-    document.getElementById('stat5Count').textContent = '0';
+    document.getElementById('stat5Count').textContent = reversalCount;
     document.getElementById('stat5Subtitle').textContent = '';
     document.getElementById('stat6Label').textContent = 'AVG DURATION';
     document.getElementById('stat6Count').textContent = avgDurationText;
@@ -431,17 +493,79 @@ async function updateTeamStats() {
             console.error('Error calculating team average duration:', error);
         }
         
+        // Calculate reversal count for team
+        let teamReversalCount = 0;
+        try {
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
+            
+            if (!scError && scorecards) {
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('id')
+                            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                            .not('reversal_requested_at', 'is', null);
+                        
+                        if (!error && data) {
+                            teamReversalCount += data.length;
+                        }
+                    } catch (err) {
+                        console.warn(`Error counting team reversals in ${scorecard.table_name}:`, err);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating team reversal count:', error);
+        }
+        
+        console.log('Team Stats - Reversal count:', teamReversalCount);
+        
+        // Show the 4th and 6th stat cards (in case they were hidden in standup view)
+        const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat4Card) {
+            stat4Card.style.display = 'flex';
+            // Remove progress bar if it exists
+            const progressBar = stat4Card.querySelector('.progress-bar-container');
+            if (progressBar) progressBar.remove();
+        }
+        
+        const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat6Card) {
+            stat6Card.style.display = 'flex';
+        }
+        
+        // Reset 3rd card label to REMAINING and remove progress bar
+        const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (remainingCard) {
+            const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
+            if (label) label.textContent = 'REMAINING';
+            
+            // Remove progress bar if it exists
+            const progressBar = remainingCard.querySelector('.progress-bar-container');
+            if (progressBar) progressBar.remove();
+        }
+        
         // Update stat cards with team stats
         document.getElementById('stat1Label').textContent = 'ASSIGNED';
         document.getElementById('stat1Count').textContent = totalAssigned;
         document.getElementById('completedCount').textContent = completed;
         document.getElementById('targetAchieved').textContent = `${percentage}% Team Target Achieved`;
-        document.getElementById('remainingCount').textContent = remaining;
+        
+        const remainingCount = document.getElementById('remainingCount');
+        remainingCount.style.fontSize = '3.5rem';
+        remainingCount.textContent = remaining;
+        
         document.getElementById('stat4Label').textContent = 'IN PROGRESS';
-        document.getElementById('stat4Count').textContent = inProgress;
+        const stat4Count = document.getElementById('stat4Count');
+        stat4Count.style.fontSize = '3.5rem';
+        stat4Count.textContent = inProgress;
         document.getElementById('stat4Subtitle').textContent = `${qualityAnalysts.length} auditor${qualityAnalysts.length !== 1 ? 's' : ''}`;
         document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
-        document.getElementById('stat5Count').textContent = '0';
+        document.getElementById('stat5Count').textContent = teamReversalCount;
         document.getElementById('stat5Subtitle').textContent = '';
         document.getElementById('stat6Label').textContent = 'AVG DURATION';
         document.getElementById('stat6Count').textContent = avgDurationText;
@@ -518,94 +642,38 @@ async function updateTeamStats() {
 
 async function updateStandupView() {
     try {
-        // Load all completed audits (with results) to calculate metrics
-        const { data: completedAudits, error: auditsError } = await window.supabaseClient
-            .from('audits')
+        // Load all audit assignments (same as Team Stats)
+        const { data, error } = await window.supabaseClient
+            .from('audit_assignments')
             .select('*')
-            .eq('status', 'completed')
             .order('created_at', { ascending: false });
         
-        if (auditsError) {
-            console.error('Error loading audits:', auditsError);
-        }
+        if (error) throw error;
         
-        const audits = completedAudits || [];
-        
-        // Get all employees who have been audited
-        const { data: employees, error: employeesError } = await window.supabaseClient
-            .from('users')
-            .select('email, channel')
-            .eq('is_active', true)
-            .neq('role', 'Quality Analyst');
-        
-        if (employeesError) {
-            console.error('Error loading employees:', employeesError);
-        }
-        
-        const allEmployees = employees || [];
-        
-        // Group by channel
-        const channelStats = {};
-        
-        // Initialize with all unique channels
-        const uniqueChannels = [...new Set(allEmployees.map(emp => emp.channel).filter(Boolean))];
-        uniqueChannels.forEach(channel => {
-            channelStats[channel] = {
-                totalAuditable: allEmployees.filter(emp => emp.channel === channel).length,
-                completed: 0,
-                passed: 0,
-                totalScore: 0,
-                count: 0
-            };
-        });
-        
-        // Calculate completed and passing stats from audits
-        audits.forEach(audit => {
-            const emp = allEmployees.find(e => e.email === audit.employee_email);
-            if (emp && emp.channel && channelStats[emp.channel]) {
-                channelStats[emp.channel].completed++;
-                channelStats[emp.channel].count++;
-                
-                // Calculate total score
-                if (audit.final_score !== null && audit.final_score !== undefined) {
-                    channelStats[emp.channel].totalScore += parseFloat(audit.final_score) || 0;
-                    
-                    // Count as passed if score >= 60 (adjust threshold as needed)
-                    if (parseFloat(audit.final_score) >= 60) {
-                        channelStats[emp.channel].passed++;
-                    }
-                }
-            }
-        });
+        const allAuditAssignments = data || [];
         
         // Calculate overall stats
-        let totalAuditable = 0;
-        let totalCompleted = 0;
-        let totalPassed = 0;
-        let totalScoreSum = 0;
-        let totalScoreCount = 0;
+        const totalAssigned = allAuditAssignments.length;
+        const completed = allAuditAssignments.filter(a => a.status === 'completed').length;
+        const inProgress = allAuditAssignments.filter(a => a.status === 'in_progress').length;
+        const pending = allAuditAssignments.filter(a => a.status === 'pending').length;
+        const remaining = pending + inProgress;
+        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
-        Object.values(channelStats).forEach(stats => {
-            totalAuditable += stats.totalAuditable;
-            totalCompleted += stats.completed;
-            totalPassed += stats.passed;
-            totalScoreSum += stats.totalScore;
-            totalScoreCount += stats.count;
-        });
-        
-        const coveragePercent = totalAuditable > 0 ? Math.round((totalCompleted / totalAuditable) * 100) : 0;
-        const passingPercent = totalCompleted > 0 ? Math.round((totalPassed / totalCompleted) * 100) : 0;
-        const completionPercent = totalAuditable > 0 ? Math.round((totalCompleted / totalAuditable) * 100) : 0;
-        
-        // Calculate overall average audit duration for standup view
+        // Calculate average audit duration from completed audits
         let avgDuration = 0;
         let avgDurationText = '-';
         let avgDurationSubtitle = 'per audit';
         
-        const auditsWithDuration = audits.filter(a => a.duration !== null && a.duration !== undefined);
-        if (auditsWithDuration.length > 0) {
-            const totalDuration = auditsWithDuration.reduce((sum, audit) => sum + (audit.duration || 0), 0);
-            avgDuration = totalDuration / auditsWithDuration.length;
+        try {
+            const { data: audits, error: auditsError } = await window.supabaseClient
+                .from('audits')
+                .select('duration')
+                .not('duration', 'is', null);
+            
+            if (!auditsError && audits && audits.length > 0) {
+                const totalDuration = audits.reduce((sum, audit) => sum + (audit.duration || 0), 0);
+                avgDuration = totalDuration / audits.length;
             
             // Format duration
             if (avgDuration >= 60) {
@@ -616,33 +684,164 @@ async function updateStandupView() {
                 avgDurationText = `${Math.round(avgDuration)}m`;
             }
         }
+        } catch (error) {
+            console.error('Error calculating average duration:', error);
+        }
+        
+        // Calculate coverage percentage
+        const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        
+        // Calculate passing rate from completed audits
+        let passingRate = 0;
+        try {
+            const { data: completedAudits, error: auditsError } = await window.supabaseClient
+                .from('audits')
+                .select('final_score')
+                .eq('status', 'completed')
+                .not('final_score', 'is', null);
+            
+            if (!auditsError && completedAudits && completedAudits.length > 0) {
+                const passedAudits = completedAudits.filter(audit => parseFloat(audit.final_score) >= 60);
+                passingRate = Math.round((passedAudits.length / completedAudits.length) * 100);
+            }
+        } catch (error) {
+            console.error('Error calculating passing rate:', error);
+        }
+        
+        // Calculate reversal count for all audits
+        let standupReversalCount = 0;
+        try {
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
+            
+            if (!scError && scorecards) {
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('id')
+                            .not('reversal_requested_at', 'is', null);
+                        
+                        if (!error && data) {
+                            standupReversalCount += data.length;
+                        }
+                    } catch (err) {
+                        console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating reversal count:', error);
+        }
+        
+        console.log('Standup View - Reversal count:', standupReversalCount);
         
         // Update stat cards
         document.getElementById('stat1Label').textContent = 'ASSIGNED';
-        document.getElementById('stat1Count').textContent = totalAuditable;
-        document.getElementById('completedCount').textContent = totalCompleted;
-        document.getElementById('targetAchieved').textContent = `${completionPercent}% Target Achieved`;
-        document.getElementById('remainingCount').textContent = coveragePercent + '%';
-        document.getElementById('stat4Label').textContent = 'PASSING RATE';
-        document.getElementById('stat4Count').textContent = passingPercent + '%';
-        document.getElementById('stat4Subtitle').textContent = '';
-        document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
-        document.getElementById('stat5Count').textContent = '0';
-        document.getElementById('stat5Subtitle').textContent = '';
-        document.getElementById('stat6Label').textContent = 'AVG DURATION';
-        document.getElementById('stat6Count').textContent = avgDurationText;
-        document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
+        document.getElementById('stat1Count').textContent = totalAssigned;
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('targetAchieved').textContent = `${percentage}% Target Achieved`;
         
-        // Update stat card label for "Remaining" to "Coverage"
-        const remainingCard = document.querySelector('#remainingCount').closest('div');
+        // Update 3rd card to COVERAGE with progress bar
+        const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
         if (remainingCard) {
-            const label = remainingCard.querySelector('div');
+            const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
             if (label) label.textContent = 'COVERAGE';
+            
+            const countDiv = remainingCard.querySelector('#remainingCount');
+            countDiv.style.fontSize = '3.5rem';
+            countDiv.textContent = coveragePercent + '%';
+            
+            // Add/update progress bar
+            let progressContainer = remainingCard.querySelector('.progress-bar-container');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-bar-container';
+                progressContainer.style.cssText = 'width: 100%; height: 0.5rem; background-color: rgba(255,255,255,0.2); border-radius: 0.25rem; overflow: hidden; margin-top: 0.5rem;';
+                countDiv.parentElement.appendChild(progressContainer);
+            }
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.25rem; transition: width 0.3s ease; width: ${coveragePercent}%;"></div>`;
         }
+        
+        // Update 4th card to PASSING RATE with progress bar
+        const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat4Card) {
+            stat4Card.style.display = 'flex';
+            
+            const label = stat4Card.querySelector('#stat4Label');
+            if (label) label.textContent = 'PASSING RATE';
+            
+            const countDiv = stat4Card.querySelector('#stat4Count');
+            countDiv.style.fontSize = '3.5rem';
+            countDiv.textContent = passingRate + '%';
+            
+            const subtitle = stat4Card.querySelector('#stat4Subtitle');
+            if (subtitle) subtitle.textContent = '';
+            
+            // Add/update progress bar
+            let progressContainer = stat4Card.querySelector('.progress-bar-container');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-bar-container';
+                progressContainer.style.cssText = 'width: 100%; height: 0.5rem; background-color: rgba(255,255,255,0.2); border-radius: 0.25rem; overflow: hidden; margin-top: 0.5rem;';
+                countDiv.parentElement.appendChild(progressContainer);
+            }
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.25rem; transition: width 0.3s ease; width: ${passingRate}%;"></div>`;
+        }
+        
+        // Update 5th card to REVERSALS
+        document.getElementById('stat5Label').textContent = 'REVERSALS';
+        document.getElementById('stat5Count').textContent = standupReversalCount;
+        document.getElementById('stat5Subtitle').textContent = '';
+        
+        // Hide 6th card (AVG DURATION)
+        const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat6Card) {
+            stat6Card.style.display = 'none';
+        }
+        
+        // Group assignments by channel
+        const channelStats = {};
+        
+        allAuditAssignments.forEach(assignment => {
+            // Find the employee to get their channel
+            const emp = allUsers.find(u => u.email === assignment.employee_email);
+            const channel = emp?.channel || 'Unknown';
+            
+            if (!channelStats[channel]) {
+                channelStats[channel] = {
+                    assigned: 0,
+                    completed: 0,
+                    inProgress: 0,
+                    pending: 0,
+                    remaining: 0,
+                    percentage: 0
+                };
+            }
+            
+            channelStats[channel].assigned++;
+            
+            if (assignment.status === 'completed') {
+                channelStats[channel].completed++;
+            } else if (assignment.status === 'in_progress') {
+                channelStats[channel].inProgress++;
+            } else if (assignment.status === 'pending') {
+                channelStats[channel].pending++;
+            }
+        });
+        
+        // Calculate remaining and percentage for each channel
+        Object.keys(channelStats).forEach(channel => {
+            const stats = channelStats[channel];
+            stats.remaining = stats.pending + stats.inProgress;
+            stats.percentage = stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0;
+        });
         
         // Update table header for standup view
         const tableHeader = document.getElementById('tableHeader');
-        tableHeader.style.gridTemplateColumns = 'minmax(150px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr)';
+        tableHeader.style.gridTemplateColumns = 'minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr)';
         tableHeader.style.display = 'grid';
         tableHeader.style.gap = '1rem';
         tableHeader.style.alignItems = 'center';
@@ -650,9 +849,8 @@ async function updateStandupView() {
             <div>Channel</div>
             <div>Assigned</div>
             <div>Completed</div>
-            <div>Coverage %</div>
-            <div>Passing Rate %</div>
-            <div>Average Score</div>
+            <div>Remaining</div>
+            <div>Progress Meter</div>
         `;
         
         // Sort channels by name
@@ -660,23 +858,30 @@ async function updateStandupView() {
         
         // Update table with channel statistics
         const tableBody = document.getElementById('performanceTableBody');
+        if (sortedChannels.length === 0) {
+            tableBody.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6b7280;">No channel data available</div>';
+        } else {
         tableBody.innerHTML = sortedChannels.map(channel => {
             const stats = channelStats[channel];
-            const coverage = stats.totalAuditable > 0 ? ((stats.completed / stats.totalAuditable) * 100).toFixed(2) : '0.00';
-            const passingRate = stats.completed > 0 ? ((stats.passed / stats.completed) * 100).toFixed(2) : '0.00';
-            const avgScore = stats.count > 0 ? (stats.totalScore / stats.count).toFixed(2) : '0.00';
             
             return `
-                <div style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(120px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr); gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;">
+                    <div style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;">
                     <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600;" data-label="Channel">${escapeHtml(channel)}</div>
-                    <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Total Auditable">${stats.totalAuditable}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
                     <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
-                    <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Coverage %">${coverage}%</div>
-                    <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Passing Rate %">${passingRate}%</div>
-                    <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Average Score">${avgScore}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Progress">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color); min-width: 2.5rem;">${stats.percentage}%</span>
+                                <div style="flex: 1; height: 0.75rem; background-color: var(--dark-forest); border-radius: 0.375rem; overflow: hidden; position: relative;">
+                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.375rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
+                                </div>
+                            </div>
+                        </div>
                 </div>
             `;
-        }).join('') || '<div style="text-align: center; padding: 2rem; color: #6b7280;">No channel data available</div>';
+            }).join('');
+        }
         
     } catch (error) {
         console.error('Error loading standup view:', error);
@@ -686,7 +891,7 @@ async function updateStandupView() {
 // ============================================================================
 // Tab Switching
 // ============================================================================
-    function switchTab(tabElement, index) {
+    async function switchTab(tabElement, index) {
     currentTab = index;
     
         const tabs = document.querySelectorAll('button[onclick*="switchTab"]');
@@ -707,7 +912,7 @@ async function updateStandupView() {
         slider.style.width = `${tabWidth}px`;
         
     // Update dashboard based on tab
-    updateDashboard();
+    await updateDashboard();
 }
 
 // ============================================================================
@@ -766,7 +971,7 @@ function populateChannelFilter() {
     });
 }
 
-function applyFilters() {
+async function applyFilters() {
     // Get filter values
     currentFilters.status = document.getElementById('statusFilter').value;
     currentFilters.channel = document.getElementById('channelFilter').value;
@@ -797,10 +1002,10 @@ function applyFilters() {
     console.log(`Filtered to ${allAssignments.length} assignments`);
     
     // Update the dashboard with filtered data
-    updateDashboard();
+    await updateDashboard();
 }
 
-function clearFilters() {
+async function clearFilters() {
     // Reset filter inputs
     document.getElementById('statusFilter').value = '';
     document.getElementById('channelFilter').value = '';
@@ -817,7 +1022,7 @@ function clearFilters() {
     allAssignments = [...unfilteredAssignments];
     
     // Update the dashboard
-    updateDashboard();
+    await updateDashboard();
 }
 
 // ============================================================================

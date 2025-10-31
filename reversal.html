@@ -140,7 +140,7 @@
             <div>
                 <label for="dateToFilter" style="font-size: 0.6875rem; font-weight: 500; color: #374151; margin-bottom: 0.125rem; font-family: 'Poppins', sans-serif; display: block;">To Date</label>
                 <input type="date" id="dateToFilter" style="padding: 0.25rem 0.375rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
+                </div>
             </div>
         </div>
 
@@ -255,9 +255,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update statistics
         function updateStatistics() {
             const total = filteredReversals.length;
-            const pending = filteredReversals.filter(r => r.reversal_approved === null).length;
-            const approved = filteredReversals.filter(r => r.reversal_approved === true).length;
-            const rejected = filteredReversals.filter(r => r.reversal_approved === false).length;
+            
+            // Use reversal_status with fallback to reversal_approved for backward compatibility
+            const getStatus = (r) => r.reversal_status || 
+                                    (r.reversal_approved === null ? 'Pending' : 
+                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
+            
+            const pending = filteredReversals.filter(r => getStatus(r) === 'Pending').length;
+            const approved = filteredReversals.filter(r => getStatus(r) === 'Approved').length;
+            const rejected = filteredReversals.filter(r => getStatus(r) === 'Rejected').length;
             
             document.getElementById('totalReversals').textContent = total;
             document.getElementById('pendingReversals').textContent = pending;
@@ -315,22 +321,37 @@ document.addEventListener('DOMContentLoaded', function() {
         function createReversalCard(reversal) {
             const requestedDate = formatCardDate(reversal.reversal_requested_at);
             
+            // Use reversal_status column (with fallback to reversal_approved for backward compatibility)
+            const status = reversal.reversal_status || 
+                          (reversal.reversal_approved === null ? 'Pending' : 
+                           (reversal.reversal_approved ? 'Approved' : 'Rejected'));
+            
             let statusColor, statusBgColor, statusTextColor, statusText;
-            if (reversal.reversal_approved === null) {
+            if (status === 'Pending') {
                 statusColor = '#f59e0b';
                 statusBgColor = '#fef3c7';
                 statusTextColor = '#92400e';
                 statusText = '⏳ Pending';
-            } else if (reversal.reversal_approved === true) {
+            } else if (status === 'Approved') {
                 statusColor = '#10b981';
                 statusBgColor = '#dcfce7';
                 statusTextColor = '#166534';
                 statusText = '✓ Approved';
-            } else {
+            } else if (status === 'Rejected') {
                 statusColor = '#ef4444';
                 statusBgColor = '#fee2e2';
                 statusTextColor = '#991b1b';
                 statusText = '✗ Rejected';
+            } else if (status === 'Acknowledged') {
+                statusColor = '#3b82f6';
+                statusBgColor = '#dbeafe';
+                statusTextColor = '#1e40af';
+                statusText = '✓ Acknowledged';
+            } else {
+                statusColor = '#6b7280';
+                statusBgColor = '#f3f4f6';
+                statusTextColor = '#374151';
+                statusText = status;
             }
             
             return `
@@ -507,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     r.score_before_appeal || r.average_score || '',
                     r.reversal_type || '',
                     r.reversal_reason || '',
-                    r.reversal_approved === null ? 'Pending' : (r.reversal_approved ? 'Approved' : 'Rejected'),
+                    r.reversal_status || (r.reversal_approved === null ? 'Pending' : (r.reversal_approved ? 'Approved' : 'Rejected')),
                     r.reversal_requested_at || '',
                     r.reversal_responded_at || '',
                     r.interaction_id || '',

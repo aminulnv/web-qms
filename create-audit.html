@@ -1938,7 +1938,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     total_errors_count: auditData.totalErrorsCount ? parseInt(auditData.totalErrorsCount) : 0,
                     transcript: auditData.transcript || null,
                     error_description: auditData.errorDescription || null,
-                    recommendations: auditData.recommendations || null
+                    recommendations: auditData.recommendations || null,
+                    // Reversal tracking fields
+                    reversal_requested_at: auditData.reversalRequestedAt || null,
+                    reversal_responded_at: auditData.reversalRespondedAt || null,
+                    sla_in_hours: auditData.slaInHours ? parseFloat(auditData.slaInHours) : null,
+                    reason_for_reversal_response_delay: auditData.reasonForReversalResponseDelay || null,
+                    reversal_approved: auditData.reversalApproved !== undefined ? auditData.reversalApproved : null,
+                    within_auditor_scope: auditData.withinAuditorScope !== undefined ? auditData.withinAuditorScope : null,
+                    score_before_appeal: auditData.scoreBeforeAppeal ? parseFloat(auditData.scoreBeforeAppeal) : null,
+                    score_after_appeal: auditData.scoreAfterAppeal ? parseFloat(auditData.scoreAfterAppeal) : null,
+                    did_result_in_pass: auditData.didResultInPass !== undefined ? auditData.didResultInPass : null,
+                    reversal_type: auditData.reversalType || null,
+                    reversal_metrics_parameters: auditData.reversalMetricsParameters || null,
+                    reversal_justification_from_agent: auditData.reversalJustificationFromAgent || null,
+                    reversal_attachments: auditData.reversalAttachments || null,
+                    reversal_approved_by: auditData.reversalApprovedBy || null,
+                    reversal_resolved_by: auditData.reversalResolvedBy || null,
+                    // Acknowledgement tracking fields
+                    acknowledgement_status: auditData.acknowledgementStatus || 'Pending',
+                    acknowledgement_status_updated_at: auditData.acknowledgementStatusUpdatedAt || null
                 };
                 
                 // Add dynamic error fields based on currentParameters
