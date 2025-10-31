@@ -741,6 +741,15 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <h3 style="font-size: 0.875rem; font-weight: 600; color: #374151; margin: 0;">All Assignments</h3>
+                        <button id="groupByEmployeeBtn" class="btn-secondary" onclick="toggleGroupByEmployee()" style="display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.875rem; font-size: 0.75rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; font-weight: 600; transition: all 0.2s; cursor: pointer;">
+                            <svg id="groupByEmployeeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span id="groupByEmployeeText">Group by Employee</span>
+                        </button>
                         <button id="clearFiltersBtn" class="btn-secondary" onclick="clearColumnFilters()" style="display: none; align-items: center; gap: 0.375rem; padding: 0.375rem 0.875rem; font-size: 0.75rem; background: #ef4444; color: white; border: none; font-weight: 600; transition: all 0.2s;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
@@ -819,6 +828,28 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div id="paginationControls" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.8125rem; color: #6b7280;">
+                        <span id="paginationInfo">Showing 0-0 of 0 items</span>
+                        <span style="color: #d1d5db;">|</span>
+                        <span>Rows per page:</span>
+                        <select id="pageSizeSelect" onchange="changePageSize(parseInt(this.value))" style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; cursor: pointer;">
+                            <option value="10">10</option>
+                            <option value="15" selected>15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button id="firstPageBtn" onclick="goToPage(1)" class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: 'Poppins', sans-serif;" disabled>First</button>
+                        <button id="prevPageBtn" onclick="goToPreviousPage()" class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: 'Poppins', sans-serif;" disabled>Previous</button>
+                        <div id="pageNumbers" style="display: flex; align-items: center; gap: 0.25rem;"></div>
+                        <button id="nextPageBtn" onclick="goToNextPage()" class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: 'Poppins', sans-serif;" disabled>Next</button>
+                        <button id="lastPageBtn" onclick="goToPage(totalPages)" class="btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: 'Poppins', sans-serif;" disabled>Last</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -837,6 +868,7 @@ let selectedEmployees = new Map(); // email -> { employee, auditCount }
 let qualityAnalysts = [];
 let channels = [];
 let allAssignments = []; // Store all assignments for filtering
+let filteredAssignments = []; // Assignments after filtering (for pagination)
 let columnFilters = {
     week: [],
     employee: [],
@@ -845,6 +877,15 @@ let columnFilters = {
     scorecard: [],
     status: []
 };
+
+// Pagination state
+let currentPage = 1;
+let pageSize = 15;
+let totalPages = 1;
+
+// Grouping state (simpler approach)
+let groupByEmployee = false;
+let expandedEmployeeGroups = new Set(); // Track which employee groups are expanded (stores employee keys)
 
 // ============================================================================
 // Initialize Page
@@ -1031,153 +1072,614 @@ async function loadAssignedAudits() {
         // Store assignments for filtering
         allAssignments = data || [];
         
-        // Calculate stats
-        const stats = {
-            pending: 0,
-            in_progress: 0,
-            completed: 0,
-            total: data ? data.length : 0
-        };
-        
-        if (data) {
-            data.forEach(assignment => {
-                if (assignment.status === 'pending') stats.pending++;
-                else if (assignment.status === 'in_progress') stats.in_progress++;
-                else if (assignment.status === 'completed') stats.completed++;
-            });
-        }
-        
-        // Update stats
-        
-        // Populate table
-        const tbody = document.getElementById('assignedAuditsTableBody');
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #6b7280;">No assignments found</td></tr>';
-            populateBulkEditDropdowns();
-            return;
-        }
-        
-        // Populate bulk edit dropdowns
-        populateBulkEditDropdowns();
-        
-        tbody.innerHTML = data.map((assignment, index) => {
-            const statusColors = {
-                'pending': 'background: #fef3c7; color: #92400e;',
-                'in_progress': 'background: #dbeafe; color: #1e40af;',
-                'completed': 'background: #d1fae5; color: #065f46;',
-                'cancelled': 'background: #fee2e2; color: #991b1b;'
-            };
-            
-            const createdDate = new Date(assignment.created_at);
-            const formattedDate = createdDate.toLocaleDateString() + ' ' + createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            // Find auditor name from qualityAnalysts, allEmployees, or allUsers
-            let auditorName = assignment.auditor_email.split('@')[0];
-            const auditor = qualityAnalysts.find(qa => qa.email === assignment.auditor_email) || 
-                           allEmployees.find(emp => emp.email === assignment.auditor_email) ||
-                           allUsers.find(u => u.email === assignment.auditor_email);
-            if (auditor && auditor.name) {
-                auditorName = auditor.name;
-            }
-            
-            // Get channel by looking up in allUsers
-            const user = allUsers.find(u => u.email === assignment.employee_email);
-            const channel = user?.channel || '-';
-            
-            // Debug first assignment
-            if (index === 0) {
-                console.log('First assignment:', {
-                    employee_email: assignment.employee_email,
-                    auditor_email: assignment.auditor_email,
-                    user_found: !!user,
-                    channel: channel,
-                    auditor_found: !!auditor,
-                    auditorName: auditorName,
-                    allUsers_sample: allUsers.slice(0, 2).map(u => ({ email: u.email, channel: u.channel }))
-                });
-            }
-            
-            // Find employee to get applicable scorecards
-            const employee = allEmployees.find(emp => emp.email === assignment.employee_email) ||
-                           allUsers.find(u => u.email === assignment.employee_email);
-            const applicableScorecards = employee ? getApplicableScorecardsForEmployee(employee) : [];
-            
-            // Disable edit/delete for completed/in_progress audits
-            const isEditable = assignment.status === 'pending';
-            
-            // Build auditor options
-            let auditorOptions = '';
-            if (isEditable) {
-                auditorOptions = qualityAnalysts.map(qa => 
-                    `<option value="${qa.email}" ${qa.email === assignment.auditor_email ? 'selected' : ''}>${escapeHtml(qa.name)}</option>`
-                ).join('');
-            }
-            
-            // Build scorecard options
-            let scorecardOptions = '';
-            if (isEditable) {
-                if (applicableScorecards.length > 0) {
-                    scorecardOptions = applicableScorecards.map(sc => 
-                        `<option value="${sc.id}" ${sc.id === assignment.scorecard_id ? 'selected' : ''}>${escapeHtml(sc.name)}</option>`
-                    ).join('');
-                } else {
-                    scorecardOptions = `<option value="${assignment.scorecard_id}" selected>${escapeHtml(assignment.scorecard?.name || 'Current Scorecard')}</option>`;
-                }
-            }
-            
-            return `
-                <tr style="border-bottom: 0.0625rem solid #f3f4f6;" data-assignment-id="${assignment.id}">
-                    <td style="padding: 0.375rem; text-align: center;">
-                        <input type="checkbox" class="assignment-checkbox" data-assignment-id="${assignment.id}" 
-                               onchange="toggleAssignmentSelection()" style="cursor: pointer; accent-color: #1A733E;">
-                    </td>
-                    <td style="padding: 0.375rem; font-size: 0.75rem;">
-                        ${isEditable ? `
-                            <input type="number" class="week-input" data-assignment-id="${assignment.id}" 
-                                   value="${assignment.week || ''}" min="1" max="52" 
-                                   onchange="updateWeek('${assignment.id}', this.value)"
-                                   style="width: 3rem; padding: 0.125rem 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; text-align: center;">
-                        ` : (assignment.week || '-')}
-                    </td>
-                    <td style="padding: 0.375rem; font-size: 0.75rem;">${escapeHtml(assignment.employee_name || assignment.employee_email)}</td>
-                    <td style="padding: 0.375rem; color: #6b7280; font-size: 0.75rem;">${escapeHtml(channel)}</td>
-                    <td style="padding: 0.375rem; font-size: 0.75rem;">
-                        ${escapeHtml(auditorName)}
-                    </td>
-                    <td style="padding: 0.375rem; font-size: 0.75rem;">
-                        ${escapeHtml(assignment.scorecard?.name || 'N/A')}
-                    </td>
-                    <td style="padding: 0.375rem;">
-                        <span style="padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; ${statusColors[assignment.status] || ''}">
-                            ${assignment.status.replace('_', ' ').toUpperCase()}
-                        </span>
-                    </td>
-                    <td style="padding: 0.375rem; color: #6b7280; font-size: 0.6875rem;">${formattedDate}</td>
-                    <td style="padding: 0.375rem; text-align: center;">
-                            ${isEditable ? `
-                                <button onclick="deleteAssignment('${assignment.id}')" 
-                                    style="padding: 0.125rem 0.375rem; background: #ef4444; color: white; border: none; border-radius: 0.1875rem; cursor: pointer; font-size: 0.625rem; font-family: 'Poppins', sans-serif;"
-                                    title="Delete">
-                                🗑️
-                                </button>
-                            ` : `
-                            <span style="color: #9ca3af; font-size: 0.625rem;">-</span>
-                            `}
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        // Process and display with pagination
+        processAndDisplayAssignments();
         
     } catch (error) {
         console.error('Error loading assigned audits:', error);
         const tbody = document.getElementById('assignedAuditsTableBody');
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading assignments: ${error.message || 'Unknown error'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading assignments: ${error.message || 'Unknown error'}</td></tr>`;
+    }
+}
+
+// ============================================================================
+// Process and Display Assignments (with filtering and pagination)
+// ============================================================================
+function processAndDisplayAssignments() {
+    try {
+        // Ensure allAssignments is initialized
+        if (!Array.isArray(allAssignments)) {
+            allAssignments = [];
+        }
+        
+        // Apply filters to get filtered assignments
+        let assignmentsToShow = [...allAssignments];
+        
+        // Apply column filters
+        if (Object.values(columnFilters).some(filters => filters.length > 0)) {
+            assignmentsToShow = allAssignments.filter(assignment => {
+                let matches = true;
+                
+                // Check week filter
+                if (columnFilters.week.length > 0) {
+                    const weekStr = assignment.week ? String(assignment.week) : '-';
+                    if (!columnFilters.week.some(filter => weekStr.includes(filter))) {
+                        matches = false;
+                    }
+                }
+                
+                // Check employee filter
+                if (columnFilters.employee.length > 0 && matches) {
+                    const employeeName = assignment.employee_name || assignment.employee_email || '';
+                    if (!columnFilters.employee.some(filter => employeeName.includes(filter))) {
+                        matches = false;
+                    }
+                }
+                
+                // Check channel filter
+                if (columnFilters.channel.length > 0 && matches) {
+                    const user = allUsers.find(u => u.email === assignment.employee_email);
+                    const channel = user?.channel || '-';
+                    if (!columnFilters.channel.some(filter => channel.includes(filter))) {
+                        matches = false;
+                    }
+                }
+                
+                // Check auditor filter
+                if (columnFilters.auditor.length > 0 && matches) {
+                    let auditorName = assignment.auditor_email.split('@')[0];
+                    const auditor = qualityAnalysts.find(qa => qa.email === assignment.auditor_email) || 
+                                   allEmployees.find(emp => emp.email === assignment.auditor_email) ||
+                                   allUsers.find(u => u.email === assignment.auditor_email);
+                    if (auditor && auditor.name) {
+                        auditorName = auditor.name;
+                    }
+                    if (!columnFilters.auditor.some(filter => auditorName.includes(filter))) {
+                        matches = false;
+                    }
+                }
+                
+                // Check scorecard filter
+                if (columnFilters.scorecard.length > 0 && matches) {
+                    const scorecardName = assignment.scorecard?.name || 'N/A';
+                    if (!columnFilters.scorecard.some(filter => scorecardName.includes(filter))) {
+                        matches = false;
+                    }
+                }
+                
+                // Check status filter
+                if (columnFilters.status.length > 0 && matches) {
+                    const status = assignment.status || '';
+                    if (!columnFilters.status.some(filter => status.includes(filter))) {
+                        matches = false;
+                    }
+                }
+                
+                return matches;
+            });
+        }
+        
+        // Store filtered assignments
+        filteredAssignments = assignmentsToShow;
+        
+        // Handle grouping vs non-grouping
+        if (groupByEmployee && filteredAssignments.length > 0) {
+            // Group mode: paginate by groups
+            const groupedData = groupAssignmentsByEmployee(filteredAssignments);
+            const totalGroups = groupedData.length;
+            totalPages = Math.max(1, Math.ceil(totalGroups / pageSize));
+            
+            // Ensure currentPage is within valid range
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+            
+            // Get current page groups
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const currentPageGroups = groupedData.slice(startIndex, endIndex);
+            
+            // Render grouped table
+            renderGroupedAssignmentsTable(currentPageGroups);
+            
+            // Update pagination - show group count
+            updatePaginationControls(totalGroups, currentPage, totalPages);
+        } else {
+            // Non-group mode: paginate by assignments (existing behavior)
+            const totalItems = filteredAssignments.length;
+            totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+            
+            // Ensure currentPage is within valid range
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+            
+            // Get current page data
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const currentPageData = filteredAssignments.slice(startIndex, endIndex);
+            
+            // Render table with current page data
+            renderAssignmentsTable(currentPageData);
+            
+            // Update pagination controls
+            updatePaginationControls(totalItems, currentPage, totalPages);
+        }
+    
+    // Populate bulk edit dropdowns
+    if (typeof populateBulkEditDropdowns === 'function') {
+        populateBulkEditDropdowns();
+    }
+    
+    // Update clear filters button visibility
+    if (typeof updateClearFiltersButton === 'function') {
+        updateClearFiltersButton();
+    }
+    } catch (error) {
+        console.error('Error processing assignments:', error);
+        console.error('Error stack:', error.stack);
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #ef4444;">Error processing assignments: ${error.message}</td></tr>`;
+        }
+    }
+}
+
+// ============================================================================
+// Group Assignments by Employee (Simple Approach)
+// ============================================================================
+function groupAssignmentsByEmployee(assignments) {
+    const grouped = new Map();
+    
+    assignments.forEach(assignment => {
+        const employeeKey = assignment.employee_email || assignment.employee_name || 'unknown';
+        const employeeName = assignment.employee_name || assignment.employee_email || 'Unknown';
+        
+        if (!grouped.has(employeeKey)) {
+            grouped.set(employeeKey, {
+                employeeKey: employeeKey,
+                employeeName: employeeName,
+                employeeEmail: assignment.employee_email,
+                assignments: []
+            });
+        }
+        
+        grouped.get(employeeKey).assignments.push(assignment);
+    });
+    
+    // Convert to array and sort by employee name
+    const groups = Array.from(grouped.values()).map(group => {
+        // Count statuses
+        const statusCounts = {
+            pending: 0,
+            in_progress: 0,
+            completed: 0,
+            cancelled: 0
+        };
+        
+        group.assignments.forEach(assignment => {
+            if (assignment.status && statusCounts.hasOwnProperty(assignment.status)) {
+                statusCounts[assignment.status]++;
+            }
+        });
+        
+        // Sort assignments within group by created_at descending
+        group.assignments.sort((a, b) => {
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+        
+        return {
+            employeeKey: group.employeeKey,
+            employeeName: group.employeeName,
+            employeeEmail: group.employeeEmail,
+            count: group.assignments.length,
+            statusCounts: statusCounts,
+            assignments: group.assignments
+        };
+    }).sort((a, b) => {
+        // Sort groups alphabetically by employee name
+        return a.employeeName.localeCompare(b.employeeName);
+    });
+    
+    return groups;
+}
+
+// ============================================================================
+// Toggle Group by Employee
+// ============================================================================
+function toggleGroupByEmployee() {
+    groupByEmployee = !groupByEmployee;
+    
+    // Update button appearance
+    const btn = document.getElementById('groupByEmployeeBtn');
+    const text = document.getElementById('groupByEmployeeText');
+    
+    if (groupByEmployee) {
+        btn.style.background = '#1A733E';
+        btn.style.color = 'white';
+        btn.style.borderColor = '#1A733E';
+        text.textContent = 'Ungroup';
+        
+        // Keep groups collapsed by default - don't auto-expand
+        expandedEmployeeGroups.clear();
+    } else {
+        btn.style.background = '#f3f4f6';
+        btn.style.color = '#374151';
+        btn.style.borderColor = '#d1d5db';
+        text.textContent = 'Group by Employee';
+        expandedEmployeeGroups.clear();
+    }
+    
+    // Reset to first page and reprocess
+    currentPage = 1;
+    processAndDisplayAssignments();
+}
+
+// ============================================================================
+// Toggle Employee Group Expand/Collapse
+// ============================================================================
+function toggleEmployeeGroup(employeeKey) {
+    if (expandedEmployeeGroups.has(employeeKey)) {
+        expandedEmployeeGroups.delete(employeeKey);
+    } else {
+        expandedEmployeeGroups.add(employeeKey);
+    }
+    
+    // Re-render current page (expand/collapse doesn't change pagination)
+    if (groupByEmployee && filteredAssignments.length > 0) {
+        const groupedData = groupAssignmentsByEmployee(filteredAssignments);
+        const totalGroups = groupedData.length;
+        totalPages = Math.max(1, Math.ceil(totalGroups / pageSize));
+        
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const currentPageGroups = groupedData.slice(startIndex, endIndex);
+        
+        renderGroupedAssignmentsTable(currentPageGroups);
+    }
+}
+
+// ============================================================================
+// Render Grouped Assignments Table
+// ============================================================================
+function renderGroupedAssignmentsTable(groups) {
+    try {
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        
+        if (!groups || groups.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #6b7280;">No assignments found</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        
+        groups.forEach(group => {
+            const isExpanded = expandedEmployeeGroups.has(group.employeeKey);
+            const expandIcon = isExpanded ? '▼' : '▶';
+            
+            // Calculate status summary
+            const statusParts = [];
+            if (group.statusCounts.pending > 0) statusParts.push(`${group.statusCounts.pending} Pending`);
+            if (group.statusCounts.in_progress > 0) statusParts.push(`${group.statusCounts.in_progress} In Progress`);
+            if (group.statusCounts.completed > 0) statusParts.push(`${group.statusCounts.completed} Completed`);
+            if (group.statusCounts.cancelled > 0) statusParts.push(`${group.statusCounts.cancelled} Cancelled`);
+            const statusSummary = statusParts.length > 0 ? statusParts.join(', ') : 'No status';
+            
+            // Group header row
+            html += `
+                <tr class="group-header-row" style="background: #f9fafb; border-bottom: 0.125rem solid #e5e7eb; cursor: pointer;" data-employee-key="${group.employeeKey}">
+                    <td colspan="2" style="padding: 0.625rem 0.375rem; font-weight: 600; color: #1A733E;" onclick="toggleEmployeeGroup('${group.employeeKey}')">
+                        <span style="display: inline-block; width: 1.5rem; text-align: center; margin-right: 0.5rem; font-size: 0.75rem;">${expandIcon}</span>
+                        <span style="font-size: 0.875rem;">${escapeHtml(group.employeeName)}</span>
+                        <span style="margin-left: 0.5rem; padding: 0.125rem 0.5rem; background: #1A733E; color: white; border-radius: 0.75rem; font-size: 0.6875rem; font-weight: 600;">${group.count}</span>
+                    </td>
+                    <td colspan="6" style="padding: 0.625rem 0.375rem; color: #6b7280; font-size: 0.75rem;" onclick="toggleEmployeeGroup('${group.employeeKey}')">
+                        ${escapeHtml(statusSummary)}
+                    </td>
+                    <td style="padding: 0.625rem 0.375rem; text-align: center;" onclick="toggleEmployeeGroup('${group.employeeKey}')">
+                        <span style="color: #9ca3af; font-size: 0.625rem;">-</span>
+                    </td>
+                </tr>
+            `;
+            
+            // Assignment rows (only if expanded)
+            if (isExpanded) {
+                group.assignments.forEach((assignment, index) => {
+                    html += renderAssignmentRow(assignment, true);
+                });
+            }
+        });
+        
+        tbody.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error rendering grouped assignments table:', error);
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #ef4444;">Error rendering table: ${error.message}</td></tr>`;
+        }
+    }
+}
+
+// ============================================================================
+// Render Assignment Row (Helper Function)
+// ============================================================================
+function renderAssignmentRow(assignment, isGrouped = false) {
+    const statusColors = {
+        'pending': 'background: #fef3c7; color: #92400e;',
+        'in_progress': 'background: #dbeafe; color: #1e40af;',
+        'completed': 'background: #d1fae5; color: #065f46;',
+        'cancelled': 'background: #fee2e2; color: #991b1b;'
+    };
+    
+    const createdDate = new Date(assignment.created_at);
+    const formattedDate = createdDate.toLocaleDateString() + ' ' + createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // Find auditor name from qualityAnalysts, allEmployees, or allUsers
+    let auditorName = assignment.auditor_email.split('@')[0];
+    const auditor = qualityAnalysts.find(qa => qa.email === assignment.auditor_email) || 
+                   allEmployees.find(emp => emp.email === assignment.auditor_email) ||
+                   allUsers.find(u => u.email === assignment.auditor_email);
+    if (auditor && auditor.name) {
+        auditorName = auditor.name;
+    }
+    
+    // Get channel by looking up in allUsers
+    const user = allUsers.find(u => u.email === assignment.employee_email);
+    const channel = user?.channel || '-';
+    
+    // Find employee to get applicable scorecards
+    const employee = allEmployees.find(emp => emp.email === assignment.employee_email) ||
+                   allUsers.find(u => u.email === assignment.employee_email);
+    const applicableScorecards = employee ? getApplicableScorecardsForEmployee(employee) : [];
+    
+    // Disable edit/delete for completed/in_progress audits
+    const isEditable = assignment.status === 'pending';
+    
+    // Build auditor options
+    let auditorOptions = '';
+    if (isEditable) {
+        auditorOptions = qualityAnalysts.map(qa => 
+            `<option value="${qa.email}" ${qa.email === assignment.auditor_email ? 'selected' : ''}>${escapeHtml(qa.name)}</option>`
+        ).join('');
+    }
+    
+    // Build scorecard options
+    let scorecardOptions = '';
+    if (isEditable) {
+        if (applicableScorecards.length > 0) {
+            scorecardOptions = applicableScorecards.map(sc => 
+                `<option value="${sc.id}" ${sc.id === assignment.scorecard_id ? 'selected' : ''}>${escapeHtml(sc.name)}</option>`
+            ).join('');
+        } else {
+            scorecardOptions = `<option value="${assignment.scorecard_id}" selected>${escapeHtml(assignment.scorecard?.name || 'Current Scorecard')}</option>`;
+        }
+    }
+    
+    return `
+        <tr style="border-bottom: 0.0625rem solid #f3f4f6; ${isGrouped ? 'background: #fafbfc;' : ''}" data-assignment-id="${assignment.id}">
+            <td style="padding: 0.375rem; text-align: center;">
+                <input type="checkbox" class="assignment-checkbox" data-assignment-id="${assignment.id}" 
+                       onchange="toggleAssignmentSelection()" style="cursor: pointer; accent-color: #1A733E;">
+            </td>
+            <td style="padding: 0.375rem; font-size: 0.75rem;">
+                ${isEditable ? `
+                    <input type="number" class="week-input" data-assignment-id="${assignment.id}" 
+                           value="${assignment.week || ''}" min="1" max="52" 
+                           onchange="updateWeek('${assignment.id}', this.value)"
+                           style="width: 3rem; padding: 0.125rem 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; text-align: center;">
+                ` : (assignment.week || '-')}
+            </td>
+            <td style="padding: 0.375rem; font-size: 0.75rem; ${isGrouped ? 'padding-left: 2rem;' : ''}">${escapeHtml(assignment.employee_name || assignment.employee_email)}</td>
+            <td style="padding: 0.375rem; color: #6b7280; font-size: 0.75rem;">${escapeHtml(channel)}</td>
+            <td style="padding: 0.375rem; font-size: 0.75rem;">
+                ${escapeHtml(auditorName)}
+            </td>
+            <td style="padding: 0.375rem; font-size: 0.75rem;">
+                ${escapeHtml(assignment.scorecard?.name || 'N/A')}
+            </td>
+            <td style="padding: 0.375rem;">
+                <span style="padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; ${statusColors[assignment.status] || ''}">
+                    ${assignment.status.replace('_', ' ').toUpperCase()}
+                </span>
+            </td>
+            <td style="padding: 0.375rem; color: #6b7280; font-size: 0.6875rem;">${formattedDate}</td>
+            <td style="padding: 0.375rem; text-align: center;">
+                ${isEditable ? `
+                    <button onclick="deleteAssignment('${assignment.id}')" 
+                        style="padding: 0.125rem 0.375rem; background: #ef4444; color: white; border: none; border-radius: 0.1875rem; cursor: pointer; font-size: 0.625rem; font-family: 'Poppins', sans-serif;"
+                        title="Delete">
+                    🗑️
+                    </button>
+                ` : `
+                <span style="color: #9ca3af; font-size: 0.625rem;">-</span>
+                `}
+            </td>
+        </tr>
+    `;
+}
+
+// ============================================================================
+// Render Assignments Table (Non-Grouped)
+// ============================================================================
+function renderAssignmentsTable(assignments) {
+    try {
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        
+        if (!assignments || assignments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #6b7280;">No assignments found</td></tr>';
+            return;
+        }
+        
+        // Use the helper function to render rows
+        tbody.innerHTML = assignments.map((assignment) => {
+            return renderAssignmentRow(assignment, false);
+        }).join('');
+    } catch (error) {
+        console.error('Error rendering assignments table:', error);
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #ef4444;">Error rendering table: ${error.message}</td></tr>`;
+        }
     }
 }
 
 async function refreshAssignedAudits() {
+    // Reset to first page on refresh
+    currentPage = 1;
     await loadAssignedAudits();
+}
+
+// ============================================================================
+// Pagination Functions
+// ============================================================================
+function updatePaginationControls(totalItems, currentPageNum, totalPagesNum) {
+    const controls = document.getElementById('paginationControls');
+    const info = document.getElementById('paginationInfo');
+    const firstBtn = document.getElementById('firstPageBtn');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    const lastBtn = document.getElementById('lastPageBtn');
+    const pageNumbers = document.getElementById('pageNumbers');
+    
+    if (!controls || !info || !firstBtn || !prevBtn || !nextBtn || !lastBtn || !pageNumbers) {
+        console.error('Pagination controls not found');
+        return;
+    }
+    
+    if (totalItems === 0) {
+        controls.style.display = 'none';
+        return;
+    }
+    
+    controls.style.display = 'flex';
+    
+    // Update info text
+    const start = totalItems === 0 ? 0 : (currentPageNum - 1) * pageSize + 1;
+    const end = Math.min(currentPageNum * pageSize, totalItems);
+    info.textContent = `Showing ${start}-${end} of ${totalItems} items`;
+    
+    // Update button states
+    firstBtn.disabled = currentPageNum <= 1;
+    prevBtn.disabled = currentPageNum <= 1;
+    nextBtn.disabled = currentPageNum >= totalPagesNum;
+    lastBtn.disabled = currentPageNum >= totalPagesNum;
+    
+    // Style disabled buttons
+    [firstBtn, prevBtn, nextBtn, lastBtn].forEach(btn => {
+        if (btn.disabled) {
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        } else {
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        }
+    });
+    
+    // Update page numbers
+    pageNumbers.innerHTML = '';
+    
+    // Show page numbers (max 5 visible at once)
+    let startPage = Math.max(1, currentPageNum - 2);
+    let endPage = Math.min(totalPagesNum, currentPageNum + 2);
+    
+    // Adjust if near the start or end
+    if (endPage - startPage < 4) {
+        if (startPage === 1) {
+            endPage = Math.min(5, totalPagesNum);
+        } else if (endPage === totalPagesNum) {
+            startPage = Math.max(1, totalPagesNum - 4);
+        }
+    }
+    
+    // First page button if not visible
+    if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.textContent = '1';
+        btn.className = 'btn-secondary';
+        btn.style.cssText = 'padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: "Poppins", sans-serif;';
+        btn.onclick = () => goToPage(1);
+        pageNumbers.appendChild(btn);
+        
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.style.cssText = 'padding: 0 0.5rem; color: #6b7280;';
+            pageNumbers.appendChild(ellipsis);
+        }
+    }
+    
+    // Page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i.toString();
+        btn.className = 'btn-secondary';
+        
+        if (i === currentPageNum) {
+            btn.style.cssText = 'padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #1A733E; color: white; border: 1px solid #1A733E; cursor: pointer; font-family: "Poppins", sans-serif; font-weight: 600;';
+        } else {
+            btn.style.cssText = 'padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: "Poppins", sans-serif;';
+        }
+        
+        btn.onclick = () => goToPage(i);
+        pageNumbers.appendChild(btn);
+    }
+    
+    // Last page button if not visible
+    if (endPage < totalPagesNum) {
+        if (endPage < totalPagesNum - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.style.cssText = 'padding: 0 0.5rem; color: #6b7280;';
+            pageNumbers.appendChild(ellipsis);
+        }
+        
+        const btn = document.createElement('button');
+        btn.textContent = totalPagesNum.toString();
+        btn.className = 'btn-secondary';
+        btn.style.cssText = 'padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; cursor: pointer; font-family: "Poppins", sans-serif;';
+        btn.onclick = () => goToPage(totalPagesNum);
+        pageNumbers.appendChild(btn);
+    }
+}
+
+function goToPage(pageNum) {
+    if (pageNum < 1 || pageNum > totalPages) {
+        return;
+    }
+    
+    currentPage = pageNum;
+    processAndDisplayAssignments();
+    
+    // Scroll to top of table
+    const table = document.getElementById('assignedAuditsTableBody');
+    if (table) {
+        table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function goToNextPage() {
+    if (currentPage < totalPages) {
+        goToPage(currentPage + 1);
+    }
+}
+
+function goToPreviousPage() {
+    if (currentPage > 1) {
+        goToPage(currentPage - 1);
+    }
+}
+
+function changePageSize(newSize) {
+    pageSize = newSize;
+    currentPage = 1; // Reset to first page
+    processAndDisplayAssignments();
 }
 
 // ============================================================================
@@ -2510,39 +3012,11 @@ function closeFilterOnClickOutside(e) {
 }
 
 function applyColumnFilters() {
-    const tbody = document.getElementById('assignedAuditsTableBody');
-    const rows = tbody.querySelectorAll('tr');
+    // Reset to first page when filters change
+    currentPage = 1;
     
-    rows.forEach(row => {
-        let shouldShow = true;
-        
-        // Check each active filter
-        Object.keys(columnFilters).forEach(column => {
-            if (columnFilters[column].length > 0) {
-                const cellIndex = {
-                    'week': 1,
-                    'employee': 2,
-                    'channel': 3,
-                    'auditor': 4,
-                    'scorecard': 5,
-                    'status': 6
-                }[column];
-                
-                const cell = row.cells[cellIndex];
-                if (cell) {
-                    const cellText = cell.textContent.trim();
-                    if (!columnFilters[column].some(filter => cellText.includes(filter))) {
-                        shouldShow = false;
-                    }
-                }
-            }
-        });
-        
-        row.style.display = shouldShow ? '' : 'none';
-    });
-    
-    // Show/hide clear filters button
-    updateClearFiltersButton();
+    // Reprocess and display with filters applied
+    processAndDisplayAssignments();
 }
 
 function updateClearFiltersButton() {
@@ -2563,7 +3037,9 @@ function clearColumnFilters() {
         scorecard: [],
         status: []
     };
-    applyColumnFilters();
+    // Reset to first page and reprocess
+    currentPage = 1;
+    processAndDisplayAssignments();
 }
 
 // ============================================================================

@@ -85,14 +85,6 @@
                 </svg>
                 Edit Audit
             </button>
-            <button onclick="window.print()" style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem;">
-                <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 6 2 18 2 18 9"/>
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                    <rect x="6" y="14" width="12" height="8"/>
-                </svg>
-                Print
-            </button>
         </div>
     </div>
 
@@ -314,25 +306,6 @@ async function loadAuditFromURL() {
             criticalError: data.critical_error,
             significantError: data.significant_error,
             recommendations: data.recommendations,
-            // Reversal tracking fields
-            reversalRequestedAt: data.reversal_requested_at,
-            reversalRespondedAt: data.reversal_responded_at,
-            slaInHours: data.sla_in_hours,
-            reasonForReversalResponseDelay: data.reason_for_reversal_response_delay,
-            reversalApproved: data.reversal_approved,
-            withinAuditorScope: data.within_auditor_scope,
-            scoreBeforeAppeal: data.score_before_appeal,
-            scoreAfterAppeal: data.score_after_appeal,
-            didResultInPass: data.did_result_in_pass,
-            reversalType: data.reversal_type,
-            reversalMetricsParameters: data.reversal_metrics_parameters,
-            reversalJustificationFromAgent: data.reversal_justification_from_agent,
-            reversalAttachments: data.reversal_attachments,
-            reversalApprovedBy: data.reversal_approved_by,
-            reversalResolvedBy: data.reversal_resolved_by,
-            // Acknowledgement tracking fields
-            acknowledgementStatus: data.acknowledgement_status,
-            acknowledgementStatusUpdatedAt: data.acknowledgement_status_updated_at,
             _scorecard_id: scorecardId,
             _scorecard_table: tableName
         };
@@ -952,22 +925,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Check if Supabase client is initialized
-            if (!window.supabaseClient) {
-                alert('Error: Database connection not available. Please refresh the page and try again.');
-                return;
-            }
-            
-            // Validate required fields
-            const reversalType = document.getElementById('reversalType').value;
-            const reversalReason = document.getElementById('reversalReasonDropdown').value;
-            const reversalJustification = document.getElementById('reversalJustification').value;
-            
-            if (!reversalType || !reversalReason || !reversalJustification.trim()) {
-                alert('Please fill in all required fields (marked with *)');
-                return;
-            }
-            
             // Gather selected error parameters
             const selectedParameters = Array.from(document.querySelectorAll('input[name="errorParameter"]:checked'))
                 .map(checkbox => checkbox.value)
@@ -976,9 +933,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Gather form data
             const reversalData = {
                 reversal_requested_at: new Date().toISOString(),
-                reversal_type: reversalType,
-                reversal_reason: reversalReason,
-                reversal_justification: reversalJustification,
+                reversal_type: document.getElementById('reversalType').value,
+                reversal_reason: document.getElementById('reversalReasonDropdown').value,
+                reversal_justification: document.getElementById('reversalJustification').value,
                 reversal_metrics: selectedParameters || null,
                 within_auditor_scope: document.getElementById('withinAuditorScope').checked,
                 score_before_appeal: currentAudit.average_score,
@@ -987,10 +944,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 reversal_approved: null,
                 reversal_responded_at: null
             };
-            
-            console.log('Submitting reversal request with data:', reversalData);
-            console.log('Table name:', currentTableName);
-            console.log('Audit ID:', currentAudit.id);
             
             try {
                 // Update the audit record with reversal request
@@ -1010,16 +963,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             } catch (error) {
                 console.error('Error submitting reversal request:', error);
-                console.error('Error details:', error.message, error);
-                
-                // Provide more helpful error message
-                let errorMsg = 'Failed to submit reversal request.\n\n';
-                if (error.message) {
-                    errorMsg += 'Error: ' + error.message + '\n\n';
-                }
-                errorMsg += 'Please try again or contact support if the issue persists.';
-                
-                alert(errorMsg);
+                alert('Failed to submit reversal request. Please try again or contact support.');
             }
         });
     }
