@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Audit Details | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="intercom-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="search.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f9fafb;
+        }
+        
+        .full-width-container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+    </style>
+</head>
+
+<body>
+<!-- Full screen layout without sidebar -->
+<div class="full-width-container">
+
+    <!-- Reversal Request Form (hidden by default) -->
+    <div id="reversalFormContainer" class="no-print" style="display: none; background: #fff3cd; border: 2px solid #ffc107; border-radius: 0.5rem; padding: 1rem; margin: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <svg style="width: 1.25rem; height: 1.25rem; color: #f59e0b;" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+            <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #b45309; font-family: 'Poppins', sans-serif;">Submit Reversal Request</h3>
+        </div>
+        
+        <p style="font-size: 0.8125rem; color: #92400e; margin-bottom: 1rem; line-height: 1.5; font-family: 'Poppins', sans-serif;">
+            If you believe this audit contains errors or inaccuracies, please provide detailed information below.
+        </p>
+        
+        <form id="reversalForm" style="display: grid; gap: 0.75rem;">
+            <!-- Two-column grid for compact layout -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <!-- Reversal Type -->
+                <div>
+                    <label for="reversalType" style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                        Reversal Type <span style="color: #ef4444;">*</span>
+                    </label>
+                    <select id="reversalType" required style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; background-color: white;">
+                        <option value="">Select type...</option>
+                        <option value="Clarification Requested">Clarification Requested</option>
+                        <option value="Revision Requested">Revision Requested</option>
+                    </select>
+                </div>
+                
+                <!-- Reversal Reason Dropdown -->
+                <div>
+                    <label for="reversalReasonDropdown" style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                        Reversal Reason <span style="color: #ef4444;">*</span>
+                    </label>
+                    <select id="reversalReasonDropdown" required style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; background-color: white;">
+                        <option value="">Select reason...</option>
+                        <option value="Error in Scoring">Error in Scoring</option>
+                        <option value="Incorrect Parameter Applied">Incorrect Parameter Applied</option>
+                        <option value="Misinterpretation">Misinterpretation of Interaction</option>
+                        <option value="Technical Issue">Technical Issue</option>
+                        <option value="Policy Clarification">Policy Clarification Needed</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Detailed Justification -->
+            <div>
+                <label for="reversalJustification" style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                    Detailed Justification <span style="color: #ef4444;">*</span>
+                </label>
+                <textarea id="reversalJustification" required placeholder="Please provide a detailed explanation of why you believe this audit should be reviewed..." rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; resize: vertical;"></textarea>
+            </div>
+            
+            <!-- Reversal Metrics (affected parameters) -->
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.375rem;">
+                    <label style="font-size: 0.75rem; font-weight: 600; color: #374151; font-family: 'Poppins', sans-serif;">
+                        Affected Error Parameters
+                    </label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" onclick="selectAllParameters()" style="font-size: 0.6875rem; color: #1A733E; background: none; border: none; cursor: pointer; padding: 0; font-family: 'Poppins', sans-serif; text-decoration: underline;">
+                            Select All
+                        </button>
+                        <button type="button" onclick="clearAllParameters()" style="font-size: 0.6875rem; color: #ef4444; background: none; border: none; cursor: pointer; padding: 0; font-family: 'Poppins', sans-serif; text-decoration: underline;">
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+                <div id="reversalMetricsContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem; background-color: white;">
+                    <p style="margin: 0; font-size: 0.75rem; color: #6b7280; font-family: 'Poppins', sans-serif;">Loading parameters...</p>
+                </div>
+            </div>
+            
+            <!-- Within Auditor Scope -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="withinAuditorScope" style="width: 1rem; height: 1rem; cursor: pointer;">
+                <label for="withinAuditorScope" style="font-size: 0.8125rem; color: #374151; font-family: 'Poppins', sans-serif; cursor: pointer;">
+                    I believe this can be resolved by the original auditor
+                </label>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.5rem;">
+                <button type="button" onclick="toggleReversalForm()" style="padding: 0.625rem 1.25rem; background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    Cancel
+                </button>
+                <button type="submit" style="padding: 0.625rem 1.25rem; background-color: #ef4444; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13"/>
+                        <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                    Submit Reversal Request
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Audit Content Container -->
+    <div id="auditContainer" style="width: 100%; box-sizing: border-box;">
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" style="display: flex; align-items: center; justify-content: center; padding: 4rem; width: 100%;">
+            <div style="text-align: center;">
+                <div style="border: 4px solid #f3f4f6; border-top: 4px solid #1A733E; border-radius: 50%; width: 3rem; height: 3rem; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                <p style="color: #6b7280; font-family: 'Poppins', sans-serif;">Loading audit details...</p>
+            </div>
+        </div>
+
+        <!-- Error message -->
+        <div id="errorMessage" style="display: none; text-align: center; padding: 2rem; color: #ef4444; font-family: 'Poppins', sans-serif; width: 100%;">
+            <p style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Error Loading Audit</p>
+            <p id="errorText" style="font-size: 0.875rem;"></p>
+            <button onclick="window.history.back()" style="margin-top: 1rem; padding: 0.5rem 1.5rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer;">Go Back</button>
+        </div>
+
+        <!-- Audit content will be dynamically loaded here -->
+        <div id="auditContent"></div>
+    </div>
+
+</div>
+<!-- End full-width-container -->
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<script>
+// Global audit data
+let currentAudit = null;
+let currentScorecardId = null;
+let currentTableName = null;
+let currentErrorFields = [];
+
+// Load audit on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        await loadAuditFromURL();
+        
+        // Add escape key listener to go back to audit reports
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.location.href = 'audit-reports.html';
+            }
+        });
+    } catch (error) {
+        console.error('Error loading audit:', error);
+        showError('Failed to load audit: ' + error.message);
+    }
+});
+
+// Load audit from URL parameters
+async function loadAuditFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const auditId = urlParams.get('id');
+    const scorecardId = urlParams.get('scorecard');
+    const tableName = urlParams.get('table');
+
+    if (!auditId || !tableName) {
+        showError('Invalid URL parameters. Missing audit ID or table name.');
+        return;
+    }
+
+    currentScorecardId = scorecardId;
+    currentTableName = tableName;
+
+    try {
+        // Wait for Supabase to initialize
+        let attempts = 0;
+        const maxAttempts = 50;
+        while (!window.supabaseClient && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.supabaseClient) {
+            throw new Error('Supabase client not initialized');
+        }
+
+        // Load audit data
+        // Try to get the audit - if .single() fails, check if it's because no results were found
+        let data, error;
+        const result = await window.supabaseClient
+            .from(tableName)
+            .select('*')
+            .eq('id', auditId);
+        
+        if (result.error) {
+            error = result.error;
+            data = null;
+        } else if (result.data && result.data.length === 0) {
+            // No results found
+            error = { message: `Audit with ID "${auditId}" not found in table "${tableName}"` };
+            data = null;
+        } else if (result.data && result.data.length === 1) {
+            // Exactly one result - success
+            data = result.data[0];
+            error = null;
+        } else if (result.data && result.data.length > 1) {
+            // Multiple results - use first one but log warning
+            console.warn(`Multiple audits found with ID "${auditId}" in table "${tableName}". Using first result.`);
+            data = result.data[0];
+            error = null;
+        } else {
+            error = { message: 'Unknown error loading audit' };
+            data = null;
+        }
+
+        if (error) throw error;
+        if (!data) throw new Error('Audit not found');
+
+        currentAudit = data;
+
+        // Map snake_case to camelCase
+        const audit = {
+            ...data,
+            id: data.id,
+            submittedAt: data.submitted_at || data.audit_timestamp,
+            auditTimestamp: data.submitted_at || data.audit_timestamp, // Using submitted_at for backward compatibility
+            auditDuration: data.audit_duration,
+            auditorEmail: data.auditor_email,
+            auditorName: data.auditor_name,
+            employeeName: data.employee_name,
+            employeeEmail: data.employee_email,
+            employeeType: data.employee_type,
+            employeeDepartment: data.employee_department,
+            interactionId: data.interaction_id,
+            interactionDate: data.interaction_date,
+            auditType: data.audit_type,
+            channel: data.channel,
+            quarter: data.quarter,
+            week: data.week,
+            countryOfEmployee: data.country_of_employee,
+            clientEmail: data.client_email,
+            agentPreStatus: data.agent_pre_status,
+            agentPostStatus: data.agent_post_status,
+            passingStatus: data.passing_status,
+            validationStatus: data.validation_status,
+            averageScore: data.average_score,
+            criticalErrors: data.critical_errors,
+            totalErrorsCount: data.total_errors_count,
+            transcript: data.transcript,
+            errorDescription: data.error_description,
+            criticalFailError: data.critical_fail_error,
+            criticalError: data.critical_error,
+            significantError: data.significant_error,
+            recommendations: data.recommendations,
+            // Reversal tracking fields
+            reversalRequestedAt: data.reversal_requested_at,
+            reversalRespondedAt: data.reversal_responded_at,
+            slaInHours: data.sla_in_hours,
+            reasonForReversalResponseDelay: data.reason_for_reversal_response_delay,
+            reversalApproved: data.reversal_approved,
+            withinAuditorScope: data.within_auditor_scope,
+            scoreBeforeAppeal: data.score_before_appeal,
+            scoreAfterAppeal: data.score_after_appeal,
+            didResultInPass: data.did_result_in_pass,
+            reversalType: data.reversal_type,
+            reversalMetricsParameters: data.reversal_metrics_parameters,
+            reversalJustificationFromAgent: data.reversal_justification_from_agent,
+            reversalAttachments: data.reversal_attachments,
+            reversalApprovedBy: data.reversal_approved_by,
+            reversalResolvedBy: data.reversal_resolved_by,
+            // Acknowledgement tracking fields
+            acknowledgementStatus: data.acknowledgement_status,
+            acknowledgementStatusUpdatedAt: data.acknowledgement_status_updated_at,
+            _scorecard_id: scorecardId,
+            _scorecard_table: tableName
+        };
+
+        // Load scorecard parameters
+        let errorFields = [];
+        let auditScorecard = null;
+
+        if (scorecardId) {
+            try {
+                // Load scorecard info
+                const { data: scorecardData, error: scorecardError } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('*')
+                    .eq('id', scorecardId)
+                    .single();
+
+                if (!scorecardError && scorecardData) {
+                    auditScorecard = scorecardData;
+                }
+
+                // Load parameters
+                const { data: parameters, error: paramsError } = await window.supabaseClient
+                    .from('scorecard_parameters')
+                    .select('*')
+                    .eq('scorecard_id', scorecardId)
+                    .eq('is_active', true)
+                    .order('display_order', { ascending: true });
+
+                if (!paramsError && parameters) {
+                    errorFields = parameters.map(param => ({
+                        key: param.field_id,
+                        label: param.error_name,
+                        feedback: `feedback_${param.field_id}`,
+                        severity: param.error_category.includes('Fail') ? 'Critical Fail' : 
+                                 param.error_category.includes('Critical') ? 'Critical' : 
+                                 'Significant',
+                        field_type: param.field_type || 'counter',
+                        parameter_type: param.parameter_type || 'error',
+                        points: param.penalty_points || 0
+                    }));
+                }
+            } catch (err) {
+                console.error('Error loading scorecard parameters:', err);
+            }
+        }
+
+        // Store errorFields globally for reversal form
+        currentErrorFields = errorFields;
+
+        // Render the audit
+        renderAudit(audit, auditScorecard, errorFields);
+
+        // Hide loading indicator
+        document.getElementById('loadingIndicator').style.display = 'none';
+
+    } catch (error) {
+        console.error('Error loading audit:', error);
+        showError(error.message);
+    }
+}
+
+// Show error message
+function showError(message) {
+    document.getElementById('loadingIndicator').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'block';
+    document.getElementById('errorText').textContent = message;
+}
+
+// Edit current audit
+function editCurrentAudit() {
+    if (!currentAudit || !currentScorecardId || !currentTableName) {
+        alert('Cannot edit audit: missing required data');
+        return;
+    }
+    window.location.href = `create-audit.html?edit=${currentAudit.id}&scorecard=${currentScorecardId}&table=${currentTableName}`;
+}
+
+// Generate error details HTML
+function generateErrorDetails(audit, errorFields) {
+    // Calculate actual totals from individual error counts
+    let criticalFailTotal = 0;
+    let criticalTotal = 0;
+    let significantTotal = 0;
+    
+    errorFields.forEach(field => {
+        const count = audit[field.key] ? parseInt(audit[field.key]) : 0;
+        if (count > 0) {
+            if (field.severity === 'Critical Fail') {
+                criticalFailTotal += count;
+            } else if (field.severity === 'Critical') {
+                criticalTotal += count;
+            } else if (field.severity === 'Significant') {
+                significantTotal += count;
+            }
+        }
+    });
+    
+    // Determine column header based on field types
+    let statusColumnHeader = 'Status';
+    if (errorFields.length > 0) {
+        const allCounters = errorFields.every(field => field.field_type === 'counter');
+        const allRadio = errorFields.every(field => field.field_type === 'radio');
+        
+        if (allCounters) {
+            statusColumnHeader = 'Counts';
+        } else if (allRadio) {
+            statusColumnHeader = 'Achieved?';
+        }
+    }
+    
+    const errorRows = errorFields.map(field => {
+        const rawValue = audit[field.key];
+        let displayValue = '';
+        let count = 0;
+        
+        if (field.field_type === 'radio') {
+            // For radio buttons, show YES/NO
+            const isYes = rawValue === 1 || rawValue === true || rawValue === 'true' || rawValue === '1';
+            displayValue = isYes ? '✓ YES' : '✗ NO';
+            count = isYes ? 1 : 0;
+        } else {
+            // For counters, show the number
+            count = rawValue ? parseInt(rawValue) : 0;
+            displayValue = count.toString();
+        }
+        
+        const feedback = audit[field.feedback] && audit[field.feedback].trim() ? audit[field.feedback] : '-';
+        
+        // Different colors for different parameter types
+        let severityColor = '#3b82f6';
+        let severityBg = '#eff6ff';
+        let paramIcon = '';
+        
+        if (field.parameter_type === 'error') {
+            paramIcon = '';
+            if (field.severity === 'Critical Fail') {
+                severityColor = '#ef4444';
+                severityBg = '#fee2e2';
+            } else if (field.severity === 'Critical') {
+                severityColor = '#f59e0b';
+                severityBg = '#fef3c7';
+            }
+        } else if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
+            paramIcon = '';
+            severityColor = '#10b981';
+            severityBg = '#d1fae5';
+        }
+        
+        return `
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;">
+                <div style="font-size: 0.875rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                    <span style="font-weight: 700; color: ${field.parameter_type === 'error' ? '#dc2626' : '#10b981'};">${paramIcon}</span> ${field.label}
+                    <span style="font-size: 0.6875rem; color: #6b7280; font-weight: 400;"> (${field.points} pts)</span>
+                </div>
+                <div style="display: flex; justify-content: center;">
+                    <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">${field.parameter_type === 'achievement' || field.parameter_type === 'bonus' ? 'ACHIEVEMENT' : field.severity}</span>
+                </div>
+                <div style="font-size: 0.875rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
+                <div style="font-size: 0.875rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
+            </div>
+        `;
+    }).join('');
+    
+    return `
+        <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e5e7eb;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                    Error Details
+                </h3>
+                <div style="display: flex; gap: 0.375rem;">
+                    <span style="background: #dc2626; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: ${criticalFailTotal}</span>
+                    <span style="background: #f59e0b; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: ${criticalTotal}</span>
+                    <span style="background: #3b82f6; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: ${significantTotal}</span>
+                </div>
+            </div>
+            
+            <div style="background: white; border-radius: 0.75rem; box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; margin-bottom: 1rem;">
+                <div style="background-color: #f8f9fa; padding: 0.75rem 1rem; border-bottom: 0.0625rem solid #e5e7eb;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 1rem; align-items: center; font-weight: 700; font-size: 0.875rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <div>Error Type</div>
+                        <div style="text-align: center;">Severity</div>
+                        <div style="text-align: center;">${statusColumnHeader}</div>
+                        <div>Feedback</div>
+                    </div>
+                </div>
+                <div style="padding: 0 1rem 1rem 1rem; box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);">
+                    ${errorRows}
+                </div>
+            </div>
+            
+            <!-- Pre/Post Status -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+                <div style="background: #f0fdf4; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #bbf7d0;">
+                    <p style="font-size: 0.6875rem; color: #166534; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Pre-Status</p>
+                    <p style="font-size: 0.875rem; color: #15803d; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPreStatus || 'N/A'}</p>
+                </div>
+                <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #bae6fd;">
+                    <p style="font-size: 0.6875rem; color: #075985; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Post-Status</p>
+                    <p style="font-size: 0.875rem; color: #0369a1; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPostStatus || 'N/A'}</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Render audit HTML
+function renderAudit(audit, auditScorecard, errorFields) {
+    // Date formatting helper function
+    function formatDate(dateString, includeTime = false) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        
+        if (includeTime) {
+            let hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+        }
+        return `${day} ${month} ${year}`;
+    }
+
+    // Get country flag emoji
+    function getCountryFlag(countryName) {
+        if (!countryName) return '🏳️';
+        const country = countryName.toLowerCase();
+        const flagMap = {
+            'bangladesh': '🇧🇩',
+            'india': '🇮🇳',
+            'pakistan': '🇵🇰',
+            'philippines': '🇵🇭',
+            'indonesia': '🇮🇩',
+            'sri lanka': '🇱🇰',
+            'nepal': '🇳🇵',
+            'thailand': '🇹🇭',
+            'vietnam': '🇻🇳',
+            'malaysia': '🇲🇾',
+            'singapore': '🇸🇬',
+            'usa': '🇺🇸',
+            'united states': '🇺🇸',
+            'uk': '🇬🇧',
+            'united kingdom': '🇬🇧',
+            'canada': '🇨🇦',
+            'australia': '🇦🇺',
+            'new zealand': '🇳🇿',
+            'south africa': '🇿🇦',
+            'egypt': '🇪🇬',
+            'kenya': '🇰🇪',
+            'nigeria': '🇳🇬',
+            'ghana': '🇬🇭'
+        };
+        return flagMap[country] || '🏳️';
+    }
+
+    // Check for passing status (handle both "Passing" and "Passed", but exclude "Not Passing")
+    const passingStatus = audit.passingStatus ? audit.passingStatus.toLowerCase() : '';
+    const isPassing = passingStatus && passingStatus.includes('pass') && !passingStatus.includes('not');
+    const statusColor = isPassing ? '#10b981' : '#ef4444';
+    const statusIcon = isPassing ? '✓' : '✗';
+
+    const errorDetailsHtml = errorFields.length > 0 ? generateErrorDetails(audit, errorFields) : '';
+
+    // Determine header gradient based on passing status (handle both old and new values)
+    const normalizedPassingStatus = passingStatus && passingStatus.includes('not') ? 'Not Passed' : 'Passed';
+    const headerGradient = normalizedPassingStatus === 'Not Passed' 
+        ? 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)' 
+        : 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+
+    // Build interaction ID HTML (clickable link if available)
+    let interactionIdHtml;
+    if (audit.interactionId) {
+        const interactionId = audit.interactionId;
+        // Use Intercom app ID from config (which is gitignored)
+        const intercomAppId = window.intercomConfig?.appId || '';
+        const intercomUrl = intercomAppId 
+            ? `https://app.intercom.com/a/inbox/${intercomAppId}/inbox/conversation/${interactionId}?view`
+            : `#`;
+        interactionIdHtml = '<a href="' + intercomUrl + '" target="_blank" rel="noopener noreferrer" style="font-size: 0.75rem; color: #1A733E; font-family: \'Poppins\', sans-serif; font-weight: 600; text-decoration: underline; cursor: pointer; transition: color 0.2s ease;" onmouseover="this.style.color=\'#2d9a5a\'" onmouseout="this.style.color=\'#1A733E\'">' + interactionId + '</a>';
+    } else {
+        interactionIdHtml = '<span style="font-size: 0.75rem; color: #1f2937; font-family: \'Poppins\', sans-serif; font-weight: 600;">N/A</span>';
+    }
+
+    const html = `
+        <div style="background: white; width: 100%; min-height: calc(100vh - 5rem);">
+            <div style="background: ${headerGradient}; padding: 0.75rem 1.5rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative;">
+                <button onclick="window.location.href='audit-reports.html'" style="position: absolute; top: 0.75rem; right: 1.5rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 0.375rem; width: 2rem; height: 2rem; font-size: 1.25rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; backdrop-filter: blur(10px); z-index: 10;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Close (Esc)">
+                    ×
+                </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; padding-right: 3.5rem;">
+                    <div style="flex: 1; display: flex; align-items: center; gap: 1rem; min-width: 0;">
+                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.375rem;">
+                           
+                            <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
+                                <div>
+                                    <p style="font-size: 0.5rem; color: rgba(255,255,255,0.7); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; line-height: 1;">Employee</p>
+                                    <div>
+                                        <p style="font-size: 0.75rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap;">${audit.employeeName || 'N/A'}</p>
+                                        <p style="font-size: 0.5rem; color: rgba(255,255,255,0.75); margin: 0.125rem 0 0 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;" title="${audit.employeeEmail || 'N/A'}">${audit.employeeEmail || 'N/A'}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.5rem; color: rgba(255,255,255,0.7); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; line-height: 1;">Type</p>
+                                    <p style="font-size: 0.75rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap;">${audit.employeeType || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.5rem; color: rgba(255,255,255,0.7); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; line-height: 1;">Department</p>
+                                    <p style="font-size: 0.75rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap;">${audit.employeeDepartment || 'N/A'}</p>
+                                </div>
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-size: 1.25rem; line-height: 1;" title="${audit.countryOfEmployee || 'Unknown'}">${getCountryFlag(audit.countryOfEmployee)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.375rem; flex-wrap: nowrap; flex-shrink: 0;">
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Status</p>
+                            <p style="font-size: 0.8125rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${statusIcon} ${audit.passingStatus || 'N/A'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Score</p>
+                            <p style="font-size: 0.8125rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.averageScore || '0'}%</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Errors</p>
+                            <p style="font-size: 0.8125rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.totalErrorsCount || '0'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Type</p>
+                            <p style="font-size: 0.6875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; max-width: 120px; overflow: hidden; text-overflow: ellipsis;" title="${audit.auditType || 'N/A'}">${audit.auditType || 'N/A'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Date</p>
+                            <p style="font-size: 0.625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${formatDate(audit.auditTimestamp, true)}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Qtr</p>
+                            <p style="font-size: 0.75rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.quarter ? (audit.quarter.toString().startsWith('Q') ? audit.quarter : 'Q' + audit.quarter) : 'N/A'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.25rem; padding: 0.375rem 0.625rem; backdrop-filter: blur(10px); white-space: nowrap;">
+                            <p style="font-size: 0.5rem; color: rgba(255,255,255,0.8); margin: 0 0 0.125rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; line-height: 1;">Week</p>
+                            <p style="font-size: 0.75rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.week || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Two Column Layout -->
+            <div id="auditMainContent" style="display: flex; padding: 1.5rem; max-width: 100%; gap: 0; flex-wrap: nowrap;">
+                
+                <!-- LEFT COLUMN: Interaction Details + Transcript -->
+                <div id="leftColumn" style="display: flex; flex-direction: column; gap: 1rem; width: 45%; min-width: 300px; padding-right: 0.5rem;">
+                    
+                    <!-- Interaction Details -->
+                    <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: nowrap;">
+                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">ID:</span>
+                                ${interactionIdHtml}
+                            </div>
+                            <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Date:</span>
+                                <span style="font-size: 0.75rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${formatDate(audit.interactionDate, false)}</span>
+                            </div>
+                            <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Channel:</span>
+                                <span style="font-size: 0.75rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.channel || 'N/A'}</span>
+                            </div>
+                            <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.25rem; min-width: 0; flex: 1;">
+                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Email:</span>
+                                <span style="font-size: 0.75rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${audit.clientEmail || 'N/A'}">${audit.clientEmail || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Transcript -->
+                    <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0; border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
+                        <div style="background: #f9fafb; padding: 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
+                            <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
+                                <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                                Transcript
+                            </h3>
+                        </div>
+                        <div style="padding: 1rem; background: white; overflow-y: auto; flex: 1;">
+                            <div style="white-space: pre-wrap; font-size: 0.8125rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.transcript || '<span style="color: #9ca3af; font-style: italic;">No transcript available</span>'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- RESIZABLE SPLITTER -->
+                <div id="splitter" class="no-print" style="width: 8px; background: #e5e7eb; cursor: col-resize; position: relative; flex-shrink: 0; transition: background 0.2s;">
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 40px; background: #9ca3af; border-radius: 2px;"></div>
+                </div>
+                
+                <!-- RIGHT COLUMN: Error Details & Recommendations -->
+                <div id="rightColumn" style="flex: 1; min-width: 300px; padding-left: 0.5rem;">
+                    
+                    <!-- Error Details -->
+                    ${errorDetailsHtml}
+                    
+                    <!-- Recommendations -->
+                    ${audit.recommendations ? `<div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e5e7eb;"><h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0 0 0.75rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;"><svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.875rem; border-radius: 0.375rem; border: 1px solid #e5e7eb; white-space: pre-wrap; font-size: 0.8125rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>` : ''}
+                </div>
+            </div>
+            
+            <!-- Action Buttons (below the columns) -->
+            <div class="no-print" style="padding: 1.5rem; border-top: 1px solid #e5e7eb; background: white; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                <!-- Split button for Acknowledge/Reversal -->
+                <div style="position: relative; display: inline-flex;">
+                    <button id="acknowledgeBtn" onclick="acknowledgeAudit()" style="padding: 0.75rem 1.5rem; background-color: #10b981; color: white; border: none; border-radius: 0.375rem 0 0 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Acknowledge
+                    </button>
+                    <button onclick="toggleReversalForm()" style="padding: 0.75rem 1.5rem; background-color: #ef4444; color: white; border: none; border-radius: 0 0.375rem 0.375rem 0; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; border-left: 1px solid rgba(255,255,255,0.3);">
+                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        Submit Reversal
+                    </button>
+                </div>
+                
+                <button id="editAuditBtn" onclick="editCurrentAudit()" style="padding: 0.75rem 1.5rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit Audit
+                </button>
+            </div>
+        </div>
+    `;
+
+    const auditContentDiv = document.getElementById('auditContent');
+    auditContentDiv.innerHTML = html;
+
+    // Move reversal form container into audit content (after buttons)
+    const reversalFormContainer = document.getElementById('reversalFormContainer');
+    if (reversalFormContainer && auditContentDiv) {
+        const buttonsSection = auditContentDiv.querySelector('.no-print[style*="border-top"]');
+        if (buttonsSection) {
+            buttonsSection.parentElement.insertBefore(reversalFormContainer, buttonsSection.nextSibling);
+        } else {
+            auditContentDiv.appendChild(reversalFormContainer);
+        }
+    }
+
+    // Handle reversal status UI updates
+    handleReversalStatusUI(audit);
+
+    // Make splitter draggable
+    initializeSplitter();
+}
+
+// Handle reversal status UI updates
+function handleReversalStatusUI(audit) {
+    const acknowledgeBtn = document.getElementById('acknowledgeBtn');
+    const reversalFormContainer = document.getElementById('reversalFormContainer');
+    
+    // Get the reversal status from audit data
+    const reversalStatus = currentAudit?.reversal_status;
+    
+    if (reversalStatus) {
+        // Create status banner
+        const statusBanner = document.createElement('div');
+        statusBanner.style.cssText = `
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        `;
+        
+        if (reversalStatus === 'Pending') {
+            statusBanner.style.background = '#fef3c7';
+            statusBanner.style.color = '#92400e';
+            statusBanner.style.border = '1px solid #fbbf24';
+            statusBanner.innerHTML = `
+                <svg style="width: 1.25rem; height: 1.25rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <span>Reversal request is pending review by the quality team.</span>
+            `;
+            // Disable the buttons
+            if (acknowledgeBtn) acknowledgeBtn.disabled = true;
+            const reversalBtn = acknowledgeBtn?.parentElement?.querySelector('button[onclick="toggleReversalForm()"]');
+            if (reversalBtn) reversalBtn.disabled = true;
+        } else if (reversalStatus === 'Approved') {
+            statusBanner.style.background = '#d1fae5';
+            statusBanner.style.color = '#065f46';
+            statusBanner.style.border = '1px solid #10b981';
+            statusBanner.innerHTML = `
+                <svg style="width: 1.25rem; height: 1.25rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>✓ Reversal request has been approved. Score updated to ${currentAudit?.score_after_appeal || 'N/A'}%</span>
+            `;
+            // Hide the button container (parent div with border-top style)
+            const buttonsContainer = acknowledgeBtn?.closest('.no-print[style*="border-top"]');
+            if (buttonsContainer) {
+                buttonsContainer.style.display = 'none';
+            }
+        } else if (reversalStatus === 'Rejected') {
+            statusBanner.style.background = '#fee2e2';
+            statusBanner.style.color = '#991b1b';
+            statusBanner.style.border = '1px solid #ef4444';
+            statusBanner.innerHTML = `
+                <svg style="width: 1.25rem; height: 1.25rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <span>Reversal request has been rejected.</span>
+            `;
+            // Hide the button container (parent div with border-top style)
+            const buttonsContainer = acknowledgeBtn?.closest('.no-print[style*="border-top"]');
+            if (buttonsContainer) {
+                buttonsContainer.style.display = 'none';
+            }
+        } else if (reversalStatus === 'Acknowledged') {
+            statusBanner.style.background = '#dbeafe';
+            statusBanner.style.color = '#1e40af';
+            statusBanner.style.border = '1px solid #3b82f6';
+            statusBanner.innerHTML = `
+                <svg style="width: 1.25rem; height: 1.25rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>Audit has been acknowledged by the employee.</span>
+            `;
+            // Hide the button container (parent div with border-top style)
+            const buttonsContainer = acknowledgeBtn?.closest('.no-print[style*="border-top"]');
+            if (buttonsContainer) {
+                buttonsContainer.style.display = 'none';
+            }
+        }
+        
+        // Insert banner in the audit content, above the action buttons
+        const auditContentDiv = document.getElementById('auditContent');
+        if (auditContentDiv) {
+            const buttonsSection = auditContentDiv.querySelector('.no-print[style*="border-top"]');
+            if (buttonsSection && buttonsSection.parentElement) {
+                buttonsSection.parentElement.insertBefore(statusBanner, buttonsSection);
+            } else {
+                auditContentDiv.appendChild(statusBanner);
+            }
+        }
+    }
+}
+
+// Initialize resizable splitter
+function initializeSplitter() {
+    const splitter = document.getElementById('splitter');
+    const leftColumn = document.getElementById('leftColumn');
+    const rightColumn = document.getElementById('rightColumn');
+    const auditContent = document.getElementById('auditMainContent');
+    
+    if (splitter && leftColumn && rightColumn && auditContent) {
+        let isResizing = false;
+        
+        splitter.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            splitter.style.background = '#9ca3af';
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            
+            const containerRect = auditContent.getBoundingClientRect();
+            const offsetX = e.clientX - containerRect.left;
+            const containerWidth = containerRect.width;
+            
+            // Calculate percentage (with min/max constraints)
+            let leftPercentage = (offsetX / containerWidth) * 100;
+            leftPercentage = Math.max(25, Math.min(75, leftPercentage));
+            
+            leftColumn.style.width = leftPercentage + '%';
+        });
+        
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                splitter.style.background = '#e5e7eb';
+            }
+        });
+        
+        // Hover effect
+        splitter.addEventListener('mouseenter', function() {
+            if (!isResizing) {
+                splitter.style.background = '#d1d5db';
+            }
+        });
+        
+        splitter.addEventListener('mouseleave', function() {
+            if (!isResizing) {
+                splitter.style.background = '#e5e7eb';
+            }
+        });
+    }
+}
+
+// Toggle reversal form visibility
+function toggleReversalForm() {
+    const formContainer = document.getElementById('reversalFormContainer');
+    const auditContentDiv = document.getElementById('auditContent');
+    
+    if (formContainer.style.display === 'none' || !formContainer.style.display) {
+        formContainer.style.display = 'block';
+        
+        // Move form container to be after the action buttons if not already in auditContent
+        if (auditContentDiv && formContainer.parentElement !== auditContentDiv) {
+            const buttonsSection = auditContentDiv.querySelector('.no-print[style*="border-top"]');
+            if (buttonsSection) {
+                buttonsSection.parentElement.insertBefore(formContainer, buttonsSection.nextSibling);
+            } else {
+                auditContentDiv.appendChild(formContainer);
+            }
+        }
+        
+        // Populate error parameters checkboxes
+        populateErrorParametersCheckboxes();
+        
+        formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        formContainer.style.display = 'none';
+    }
+}
+
+// Populate error parameters checkboxes
+function populateErrorParametersCheckboxes() {
+    const container = document.getElementById('reversalMetricsContainer');
+    
+    if (!container) return;
+    
+    if (currentErrorFields.length === 0) {
+        container.innerHTML = '<p style="margin: 0; font-size: 0.75rem; color: #6b7280; font-family: \'Poppins\', sans-serif;">No parameters available</p>';
+        return;
+    }
+    
+    // Create checkbox list
+    const checkboxesHtml = currentErrorFields.map(field => `
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0;">
+            <input type="checkbox" 
+                   id="param_${field.key}" 
+                   name="errorParameter" 
+                   value="${field.label}"
+                   style="width: 1rem; height: 1rem; cursor: pointer; flex-shrink: 0;">
+            <label for="param_${field.key}" 
+                   style="font-size: 0.8125rem; color: #374151; font-family: 'Poppins', sans-serif; cursor: pointer; line-height: 1.4;">
+                ${field.label}
+                <span style="font-size: 0.6875rem; color: #6b7280;"> (${field.points} pts)</span>
+            </label>
+        </div>
+    `).join('');
+    
+    container.innerHTML = checkboxesHtml;
+}
+
+// Select all parameters
+function selectAllParameters() {
+    document.querySelectorAll('input[name="errorParameter"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+// Clear all parameters
+function clearAllParameters() {
+    document.querySelectorAll('input[name="errorParameter"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+// Acknowledge audit
+async function acknowledgeAudit() {
+    const result = await showConfirmDialog(
+        'Acknowledge Audit',
+        'By acknowledging this audit, you confirm that you have reviewed the results and do not wish to submit a reversal request. Continue?',
+        'Acknowledge',
+        'Cancel'
+    );
+    
+    if (result) {
+        if (!currentAudit || !currentTableName) {
+            alert('Error: Audit data not available');
+            return;
+        }
+        
+        try {
+            // Record acknowledgment in the database
+            const { data, error } = await window.supabaseClient
+                .from(currentTableName)
+                .update({
+                    reversal_status: 'Acknowledged',
+                    reversal_requested_at: new Date().toISOString()
+                })
+                .eq('id', currentAudit.id)
+                .select();
+            
+            if (error) throw error;
+            
+            alert('✓ Audit acknowledged. Thank you for your confirmation.');
+            
+            // Reload audit data to reflect changes
+            loadAuditFromURL();
+            
+        } catch (error) {
+            console.error('Error acknowledging audit:', error);
+            alert('Failed to record acknowledgment. Please try again.');
+        }
+    }
+}
+
+// Handle reversal form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const reversalForm = document.getElementById('reversalForm');
+    if (reversalForm) {
+        reversalForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!currentAudit || !currentTableName) {
+                alert('Error: Audit data not available');
+                return;
+            }
+            
+            // Check if Supabase client is initialized
+            if (!window.supabaseClient) {
+                alert('Error: Database connection not available. Please refresh the page and try again.');
+                return;
+            }
+            
+            // Validate required fields
+            const reversalType = document.getElementById('reversalType').value;
+            const reversalReason = document.getElementById('reversalReasonDropdown').value;
+            const reversalJustification = document.getElementById('reversalJustification').value;
+            
+            if (!reversalType || !reversalReason || !reversalJustification.trim()) {
+                alert('Please fill in all required fields (marked with *)');
+                return;
+            }
+            
+            // Gather selected error parameters
+            const selectedParameters = Array.from(document.querySelectorAll('input[name="errorParameter"]:checked'))
+                .map(checkbox => checkbox.value)
+                .join(', ');
+            
+            // Gather form data
+            const reversalData = {
+                reversal_requested_at: new Date().toISOString(),
+                reversal_type: reversalType,
+                reversal_reason: reversalReason,
+                reversal_justification: reversalJustification,
+                reversal_metrics: selectedParameters || null,
+                within_auditor_scope: document.getElementById('withinAuditorScope').checked,
+                score_before_appeal: currentAudit.average_score,
+                reversal_status: 'Pending',
+                // reversal_approved and other fields will be null until reviewed
+                reversal_approved: null,
+                reversal_responded_at: null
+            };
+            
+            console.log('Submitting reversal request with data:', reversalData);
+            console.log('Table name:', currentTableName);
+            console.log('Audit ID:', currentAudit.id);
+            
+            try {
+                // Update the audit record with reversal request
+                const { data, error } = await window.supabaseClient
+                    .from(currentTableName)
+                    .update(reversalData)
+                    .eq('id', currentAudit.id)
+                    .select();
+                
+                if (error) throw error;
+                
+                alert('✓ Reversal request submitted successfully!\n\nYour request will be reviewed by the quality team. You will be notified once a decision has been made.');
+                
+                // Hide form and reload audit data
+                toggleReversalForm();
+                location.reload();
+                
+            } catch (error) {
+                console.error('Error submitting reversal request:', error);
+                console.error('Error details:', error.message, error);
+                
+                // Provide more helpful error message
+                let errorMsg = 'Failed to submit reversal request.\n\n';
+                if (error.message) {
+                    errorMsg += 'Error: ' + error.message + '\n\n';
+                }
+                errorMsg += 'Please try again or contact support if the issue persists.';
+                
+                alert(errorMsg);
+            }
+        });
+    }
+});
+</script>
+
+</body>
+</html>
+

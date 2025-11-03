@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Create Audit | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Auditor's Dashboard</p>
+    <div style="margin-bottom: 1.5rem;"></div>
+
+
+<!-- page content here -->
+
+        
+            <!-- Tab Navigation -->
+            <div style="position: relative; display: flex; background-color: var(--dark-forest); border-radius: 0.625rem; overflow: hidden; width: 100%; max-width: 20rem; margin: 1.25rem auto; padding: 0.3125rem;">
+                <div style="position: absolute; top: 0.3125rem; height: calc(100% - 0.625rem); background-color: var(--primary-color); border-radius: 0.3125rem; transition: all 0.3s ease; left: 0.3125rem; width: calc(50% - 0.3125rem);"></div>
+                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" class="active" onclick="switchTab(this, 0)">Team Stats</button>
+                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" onclick="switchTab(this, 1)">Standup View</button>
+            </div>
+
+            <!-- stat Cards -->
+            <div id="statsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1.5rem; margin-bottom: 2rem; width: 100%;">
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat1Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Assigned</div>
+                    <div id="stat1Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Completed</div>
+                    <div id="completedCount" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                    <div id="targetAchieved" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Remaining</div>
+                    <div id="remainingCount" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat4Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">In Progress</div>
+                    <div id="stat4Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                    <div id="stat4Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat5Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Reversal Rate</div>
+                    <div id="stat5Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                    <div id="stat5Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;"></div>
+                </div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat6Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Avg Duration</div>
+                    <div id="stat6Count" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                    <div id="stat6Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div style="margin-bottom: 2rem; text-align: left;">
+                <button id="filterToggleBtn" onclick="toggleFilters()" onmouseover="this.style.backgroundColor='var(--dark-forest)'" onmouseout="this.style.backgroundColor='var(--primary-color)'" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: 0.0625rem solid var(--primary-color); border-radius: 0.375rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05);">
+                    <svg style="width: 1rem; height: 1rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.5rem" viewBox="0 -960 960 960" width="1.5rem" fill="currentColor">
+                        <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
+                    </svg>
+                    Filters
+                </button>
+            </div>
+
+            <!-- Filter Panel -->
+            <div id="filterPanel" style="display: none; background: #f9fafb; border: 0.0625rem solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    <div id="statusFilterContainer" style="display: flex; flex-direction: column;">
+                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Status</label>
+                        <select id="statusFilter" onchange="applyFilters()" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div id="channelFilterContainer" style="display: flex; flex-direction: column;">
+                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Channel</label>
+                        <select id="channelFilter" onchange="applyFilters()" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                            <option value="">All Channels</option>
+                        </select>
+                    </div>
+                    <div id="weekFilterContainer" style="display: flex; flex-direction: column;">
+                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Week</label>
+                        <input type="number" id="weekFilter" min="1" max="52" placeholder="Filter by week" onchange="applyFilters()" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="clearFilters()" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'" style="padding: 0.375rem 0.75rem; background: #6b7280; color: white; border: none; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.2s;">
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div id="performanceTable" style="background-color: var(--white); border-radius: 0.75rem; box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 80%; width: fit-content; min-width: 100%;">
+                <div style="background-color: #f8f9fa; padding: 0.75rem 1rem; border-bottom: 0.0625rem solid #e5e7eb;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-color);">Performance Overview</h3>
+                </div>
+                <div style="padding: 1rem; overflow-x: auto;">
+                    <div id="tableHeader" style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0 0.75rem 0; font-weight: 700; font-size: 0.875rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; min-width: fit-content;">
+                        <div>Name</div>
+                        <div>Assigned</div>
+                        <div>Completed</div>
+                        <div>Remaining</div>
+                        <div>Progress Meter</div>
+                    </div>
+                    <div id="performanceTableBody" style="min-width: fit-content;">
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+<script>
+// ============================================================================
+// Global Variables
+// ============================================================================
+let currentTab = 0; // 0 = Team Stats, 1 = Standup View (removed Your Stats)
+let allAssignments = [];
+let unfilteredAssignments = []; // Store unfiltered data
+let currentUserEmail = '';
+let allUsers = [];
+let currentFilters = {
+    status: '',
+    channel: '',
+    week: ''
+};
+
+// ============================================================================
+// Initialize Page
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async function() {
+    await initializeDashboard();
+    initializeSlider();
+});
+
+async function initializeDashboard() {
+    try {
+        // Wait for Supabase to be ready
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.supabaseClient) {
+            console.error('Supabase client not initialized');
+            return;
+        }
+
+        // Get current user
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        currentUserEmail = userInfo.email;
+
+        if (!currentUserEmail) {
+            console.error('No user logged in');
+            return;
+        }
+
+        // Load all users for lookups
+        await loadAllUsers();
+        
+        // Load assignments and update dashboard
+        await loadAssignments();
+        
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+    }
+}
+
+// ============================================================================
+// Load Data
+// ============================================================================
+async function loadAllUsers() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('email, name, role, channel, quality_supervisor')
+            .eq('is_active', true);
+        
+        if (error) throw error;
+        
+        allUsers = data || [];
+        console.log(`Loaded ${allUsers.length} users`);
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        allUsers = [];
+    }
+}
+
+async function loadAssignments() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('audit_assignments')
+            .select('*')
+            .eq('auditor_email', currentUserEmail)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        allAssignments = data || [];
+        unfilteredAssignments = [...allAssignments]; // Store unfiltered copy
+        console.log(`Loaded ${allAssignments.length} assignments`);
+        
+        // Populate channel filter
+        populateChannelFilter();
+        
+        // Update dashboard based on current tab
+        await updateDashboard();
+        
+    } catch (error) {
+        console.error('Error loading assignments:', error);
+        allAssignments = [];
+        unfilteredAssignments = [];
+    }
+}
+
+// ============================================================================
+// Update Dashboard
+// ============================================================================
+async function updateDashboard() {
+    if (currentTab === 0) {
+        // Team Stats
+        await updateTeamStats();
+    } else if (currentTab === 1) {
+        // Standup View
+        await updateStandupView();
+    }
+}
+
+// Note: updateYourStats() function has been moved to create-audit.html
+
+async function updateTeamStats() {
+    // Get all Quality Analysts (auditors)
+    const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
+    
+    if (qualityAnalysts.length === 0) {
+        const tableBody = document.getElementById('performanceTableBody');
+        tableBody.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                No Quality Analysts found in the system.
+            </div>
+        `;
+        
+        // Reset stats
+        document.getElementById('stat1Label').textContent = 'ASSIGNED';
+        document.getElementById('stat1Count').textContent = '0';
+        document.getElementById('completedCount').textContent = '0';
+        document.getElementById('targetAchieved').textContent = '-';
+        document.getElementById('remainingCount').textContent = '0';
+        document.getElementById('stat4Label').textContent = 'IN PROGRESS';
+        document.getElementById('stat4Count').textContent = '0';
+        document.getElementById('stat4Subtitle').textContent = '-';
+        document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
+        document.getElementById('stat5Count').textContent = '0';
+        return;
+    }
+    
+    // Load all assignments for all Quality Analysts
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('audit_assignments')
+            .select('*')
+            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const teamAssignments = data || [];
+        
+        // Calculate overall team stats
+        const totalAssigned = teamAssignments.length;
+        const completed = teamAssignments.filter(a => a.status === 'completed').length;
+        const inProgress = teamAssignments.filter(a => a.status === 'in_progress').length;
+        const pending = teamAssignments.filter(a => a.status === 'pending').length;
+        const remaining = pending + inProgress;
+        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        
+        // Calculate team average audit duration
+        let avgDuration = 0;
+        let avgDurationText = '-';
+        let avgDurationSubtitle = 'per audit';
+        
+        try {
+            // Get all scorecards to query audit tables
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
+            
+            if (!scError && scorecards) {
+                let totalDuration = 0; // Total in minutes
+                let auditCount = 0;
+                
+                // Query each scorecard table for audits by team members
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data: audits, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('audit_duration')
+                            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                            .not('audit_duration', 'is', null);
+                        
+                        if (!error && audits) {
+                            audits.forEach(audit => {
+                                // Handle duration conversion (new format: seconds, legacy format: minutes)
+                                let durationInMinutes = 0;
+                                if (typeof audit.audit_duration === 'number') {
+                                    const value = audit.audit_duration;
+                                    // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
+                                    // Otherwise, assume it's already in minutes (legacy format)
+                                    if (value >= 1440) {
+                                        durationInMinutes = value / 60; // Convert seconds to minutes
+                                    } else {
+                                        durationInMinutes = value; // Already in minutes
+                                    }
+                                } else if (typeof audit.audit_duration === 'string') {
+                                    const asInt = parseInt(audit.audit_duration);
+                                    if (!isNaN(asInt)) {
+                                        if (asInt >= 1440) {
+                                            durationInMinutes = asInt / 60; // Convert seconds to minutes
+                                        } else {
+                                            durationInMinutes = asInt; // Already in minutes
+                                        }
+                                    }
+                                }
+                                
+                                if (durationInMinutes > 0) {
+                                    totalDuration += durationInMinutes;
+                                    auditCount++;
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.warn(`Error getting duration from ${scorecard.table_name}:`, err);
+                    }
+                }
+                
+                if (auditCount > 0) {
+                    avgDuration = totalDuration / auditCount; // Average in minutes
+                    
+                    // Format duration (avgDuration is in minutes)
+                    if (avgDuration >= 60) {
+                        const hours = Math.floor(avgDuration / 60);
+                        const minutes = Math.round(avgDuration % 60);
+                        avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                    } else {
+                        avgDurationText = `${Math.round(avgDuration)}m`;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating team average duration:', error);
+        }
+        
+        // Calculate reversal count for team
+        let teamReversalCount = 0;
+        try {
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
+            
+            if (!scError && scorecards) {
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('id')
+                            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                            .not('reversal_requested_at', 'is', null);
+                        
+                        if (!error && data) {
+                            teamReversalCount += data.length;
+                        }
+                    } catch (err) {
+                        console.warn(`Error counting team reversals in ${scorecard.table_name}:`, err);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating team reversal count:', error);
+        }
+        
+        console.log('Team Stats - Reversal count:', teamReversalCount);
+        
+        // Show the 4th and 6th stat cards (in case they were hidden in standup view)
+        const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat4Card) {
+            stat4Card.style.display = 'flex';
+            // Remove progress bar if it exists
+            const progressBar = stat4Card.querySelector('.progress-bar-container');
+            if (progressBar) progressBar.remove();
+        }
+        
+        const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat6Card) {
+            stat6Card.style.display = 'flex';
+        }
+        
+        // Reset 3rd card label to REMAINING and remove progress bar
+        const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (remainingCard) {
+            const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
+            if (label) label.textContent = 'REMAINING';
+            
+            // Remove progress bar if it exists
+            const progressBar = remainingCard.querySelector('.progress-bar-container');
+            if (progressBar) progressBar.remove();
+        }
+        
+        // Update stat cards with team stats
+        document.getElementById('stat1Label').textContent = 'ASSIGNED';
+        document.getElementById('stat1Count').textContent = totalAssigned;
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('targetAchieved').textContent = `${percentage}% Team Target Achieved`;
+        
+        const remainingCount = document.getElementById('remainingCount');
+        remainingCount.style.fontSize = '3.5rem';
+        remainingCount.textContent = remaining;
+        
+        document.getElementById('stat4Label').textContent = 'IN PROGRESS';
+        const stat4Count = document.getElementById('stat4Count');
+        stat4Count.style.fontSize = '3.5rem';
+        stat4Count.textContent = inProgress;
+        document.getElementById('stat4Subtitle').textContent = `${qualityAnalysts.length} auditor${qualityAnalysts.length !== 1 ? 's' : ''}`;
+        document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
+        document.getElementById('stat5Count').textContent = teamReversalCount;
+        document.getElementById('stat5Subtitle').textContent = '';
+        document.getElementById('stat6Label').textContent = 'AVG DURATION';
+        document.getElementById('stat6Count').textContent = avgDurationText;
+        document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
+        
+        // Update table header
+        const tableHeader = document.getElementById('tableHeader');
+        tableHeader.style.gridTemplateColumns = 'minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr)';
+        tableHeader.style.display = 'grid';
+        tableHeader.style.gap = '1rem';
+        tableHeader.style.alignItems = 'center';
+        tableHeader.innerHTML = `
+            <div>Name</div>
+            <div>Assigned</div>
+            <div>Completed</div>
+            <div>Remaining</div>
+            <div>Progress Meter</div>
+        `;
+        
+        // Calculate stats for each Quality Analyst
+        const auditorStats = [];
+        qualityAnalysts.forEach(qa => {
+            const qaAssignments = teamAssignments.filter(a => a.auditor_email === qa.email);
+            const qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
+            const qaInProgress = qaAssignments.filter(a => a.status === 'in_progress').length;
+            const qaPending = qaAssignments.filter(a => a.status === 'pending').length;
+            const qaRemaining = qaPending + qaInProgress;
+            const qaPercentage = qaAssignments.length > 0 ? Math.round((qaCompleted / qaAssignments.length) * 100) : 0;
+            
+            auditorStats.push({
+                name: qa.name || qa.email,
+                email: qa.email,
+                assigned: qaAssignments.length,
+                completed: qaCompleted,
+                remaining: qaRemaining,
+                percentage: qaPercentage,
+                isCurrentUser: qa.email === currentUserEmail
+            });
+        });
+        
+        // Sort by assigned count (descending) and then by name
+        auditorStats.sort((a, b) => {
+            if (b.assigned !== a.assigned) {
+                return b.assigned - a.assigned;
+            }
+            return a.name.localeCompare(b.name);
+        });
+        
+        // Update table with all Quality Analysts
+        const tableBody = document.getElementById('performanceTableBody');
+        tableBody.innerHTML = auditorStats.map(stats => `
+            <div style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
+                <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600;" data-label="Name">
+                    ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.75rem;">(You)</span>' : ''}
+                </div>
+                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
+                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
+                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Progress">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color); min-width: 2.5rem;">${stats.percentage}%</span>
+                        <div style="flex: 1; height: 0.75rem; background-color: var(--dark-forest); border-radius: 0.375rem; overflow: hidden; position: relative;">
+                            <div style="height: 100%; background: var(--success-color); border-radius: 0.375rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading team stats:', error);
+    }
+}
+
+async function updateStandupView() {
+    try {
+        // Load all audit assignments (same as Team Stats)
+        const { data, error } = await window.supabaseClient
+            .from('audit_assignments')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const allAuditAssignments = data || [];
+        
+        // Calculate overall stats
+        const totalAssigned = allAuditAssignments.length;
+        const completed = allAuditAssignments.filter(a => a.status === 'completed').length;
+        const inProgress = allAuditAssignments.filter(a => a.status === 'in_progress').length;
+        const pending = allAuditAssignments.filter(a => a.status === 'pending').length;
+        const remaining = pending + inProgress;
+        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        
+        // Calculate average audit duration from completed audits
+        let avgDuration = 0;
+        let avgDurationText = '-';
+        let avgDurationSubtitle = 'per audit';
+        
+        try {
+            // Get all scorecards to query audit tables
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
+            
+            if (!scError && scorecards) {
+                let totalDuration = 0; // Total in minutes
+                let auditCount = 0;
+                
+                // Query each scorecard table for all audits
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data: audits, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('audit_duration')
+                            .not('audit_duration', 'is', null);
+                        
+                        if (!error && audits) {
+                            audits.forEach(audit => {
+                                // Handle duration conversion (new format: seconds, legacy format: minutes)
+                                let durationInMinutes = 0;
+                                if (typeof audit.audit_duration === 'number') {
+                                    const value = audit.audit_duration;
+                                    // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
+                                    // Otherwise, assume it's already in minutes (legacy format)
+                                    if (value >= 1440) {
+                                        durationInMinutes = value / 60; // Convert seconds to minutes
+                                    } else {
+                                        durationInMinutes = value; // Already in minutes
+                                    }
+                                } else if (typeof audit.audit_duration === 'string') {
+                                    const asInt = parseInt(audit.audit_duration);
+                                    if (!isNaN(asInt)) {
+                                        if (asInt >= 1440) {
+                                            durationInMinutes = asInt / 60; // Convert seconds to minutes
+                                        } else {
+                                            durationInMinutes = asInt; // Already in minutes
+                                        }
+                                    }
+                                }
+                                
+                                if (durationInMinutes > 0) {
+                                    totalDuration += durationInMinutes;
+                                    auditCount++;
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.warn(`Error getting duration from ${scorecard.table_name}:`, err);
+                    }
+                }
+                
+                if (auditCount > 0) {
+                    avgDuration = totalDuration / auditCount; // Average in minutes
+                    
+                    // Format duration (avgDuration is in minutes)
+                    if (avgDuration >= 60) {
+                        const hours = Math.floor(avgDuration / 60);
+                        const minutes = Math.round(avgDuration % 60);
+                        avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                    } else {
+                        avgDurationText = `${Math.round(avgDuration)}m`;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating average duration:', error);
+        }
+        
+        // Calculate coverage percentage
+        const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        
+        // Calculate passing rate from completed audits
+        let passingRate = 0;
+        try {
+            const { data: completedAudits, error: auditsError } = await window.supabaseClient
+                .from('audits')
+                .select('final_score')
+                .eq('status', 'completed')
+                .not('final_score', 'is', null);
+            
+            if (!auditsError && completedAudits && completedAudits.length > 0) {
+                const passedAudits = completedAudits.filter(audit => parseFloat(audit.final_score) >= 60);
+                passingRate = Math.round((passedAudits.length / completedAudits.length) * 100);
+            }
+        } catch (error) {
+            console.error('Error calculating passing rate:', error);
+        }
+        
+        // Calculate reversal count for all audits
+        let standupReversalCount = 0;
+        try {
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
+            
+            if (!scError && scorecards) {
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data, error } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('id')
+                            .not('reversal_requested_at', 'is', null);
+                        
+                        if (!error && data) {
+                            standupReversalCount += data.length;
+                        }
+                    } catch (err) {
+                        console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error calculating reversal count:', error);
+        }
+        
+        console.log('Standup View - Reversal count:', standupReversalCount);
+        
+        // Update stat cards
+        document.getElementById('stat1Label').textContent = 'ASSIGNED';
+        document.getElementById('stat1Count').textContent = totalAssigned;
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('targetAchieved').textContent = `${percentage}% Target Achieved`;
+        
+        // Update 3rd card to COVERAGE with progress bar
+        const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (remainingCard) {
+            const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
+            if (label) label.textContent = 'COVERAGE';
+            
+            const countDiv = remainingCard.querySelector('#remainingCount');
+            countDiv.style.fontSize = '3.5rem';
+            countDiv.textContent = coveragePercent + '%';
+            
+            // Add/update progress bar
+            let progressContainer = remainingCard.querySelector('.progress-bar-container');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-bar-container';
+                progressContainer.style.cssText = 'width: 100%; height: 0.5rem; background-color: rgba(255,255,255,0.2); border-radius: 0.25rem; overflow: hidden; margin-top: 0.5rem;';
+                countDiv.parentElement.appendChild(progressContainer);
+            }
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.25rem; transition: width 0.3s ease; width: ${coveragePercent}%;"></div>`;
+        }
+        
+        // Update 4th card to PASSING RATE with progress bar
+        const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat4Card) {
+            stat4Card.style.display = 'flex';
+            
+            const label = stat4Card.querySelector('#stat4Label');
+            if (label) label.textContent = 'PASSING RATE';
+            
+            const countDiv = stat4Card.querySelector('#stat4Count');
+            countDiv.style.fontSize = '3.5rem';
+            countDiv.textContent = passingRate + '%';
+            
+            const subtitle = stat4Card.querySelector('#stat4Subtitle');
+            if (subtitle) subtitle.textContent = '';
+            
+            // Add/update progress bar
+            let progressContainer = stat4Card.querySelector('.progress-bar-container');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-bar-container';
+                progressContainer.style.cssText = 'width: 100%; height: 0.5rem; background-color: rgba(255,255,255,0.2); border-radius: 0.25rem; overflow: hidden; margin-top: 0.5rem;';
+                countDiv.parentElement.appendChild(progressContainer);
+            }
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.25rem; transition: width 0.3s ease; width: ${passingRate}%;"></div>`;
+        }
+        
+        // Update 5th card to REVERSALS
+        document.getElementById('stat5Label').textContent = 'REVERSALS';
+        document.getElementById('stat5Count').textContent = standupReversalCount;
+        document.getElementById('stat5Subtitle').textContent = '';
+        
+        // Hide 6th card (AVG DURATION)
+        const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
+        if (stat6Card) {
+            stat6Card.style.display = 'none';
+        }
+        
+        // Group assignments by channel
+        const channelStats = {};
+        
+        allAuditAssignments.forEach(assignment => {
+            // Find the employee to get their channel
+            const emp = allUsers.find(u => u.email === assignment.employee_email);
+            const channel = emp?.channel || 'Unknown';
+            
+            if (!channelStats[channel]) {
+                channelStats[channel] = {
+                    assigned: 0,
+                    completed: 0,
+                    inProgress: 0,
+                    pending: 0,
+                    remaining: 0,
+                    percentage: 0
+                };
+            }
+            
+            channelStats[channel].assigned++;
+            
+            if (assignment.status === 'completed') {
+                channelStats[channel].completed++;
+            } else if (assignment.status === 'in_progress') {
+                channelStats[channel].inProgress++;
+            } else if (assignment.status === 'pending') {
+                channelStats[channel].pending++;
+            }
+        });
+        
+        // Calculate remaining and percentage for each channel
+        Object.keys(channelStats).forEach(channel => {
+            const stats = channelStats[channel];
+            stats.remaining = stats.pending + stats.inProgress;
+            stats.percentage = stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0;
+        });
+        
+        // Update table header for standup view
+        const tableHeader = document.getElementById('tableHeader');
+        tableHeader.style.gridTemplateColumns = 'minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr)';
+        tableHeader.style.display = 'grid';
+        tableHeader.style.gap = '1rem';
+        tableHeader.style.alignItems = 'center';
+        tableHeader.innerHTML = `
+            <div>Channel</div>
+            <div>Assigned</div>
+            <div>Completed</div>
+            <div>Remaining</div>
+            <div>Progress Meter</div>
+        `;
+        
+        // Sort channels by name
+        const sortedChannels = Object.keys(channelStats).sort();
+        
+        // Update table with channel statistics
+        const tableBody = document.getElementById('performanceTableBody');
+        if (sortedChannels.length === 0) {
+            tableBody.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6b7280;">No channel data available</div>';
+        } else {
+        tableBody.innerHTML = sortedChannels.map(channel => {
+            const stats = channelStats[channel];
+            
+            return `
+                    <div style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;">
+                    <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600;" data-label="Channel">${escapeHtml(channel)}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
+                    <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Progress">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color); min-width: 2.5rem;">${stats.percentage}%</span>
+                                <div style="flex: 1; height: 0.75rem; background-color: var(--dark-forest); border-radius: 0.375rem; overflow: hidden; position: relative;">
+                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.375rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            `;
+            }).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error loading standup view:', error);
+    }
+}
+
+// ============================================================================
+// Tab Switching
+// ============================================================================
+    async function switchTab(tabElement, index) {
+    currentTab = index;
+    
+        const tabs = document.querySelectorAll('button[onclick*="switchTab"]');
+        const slider = document.querySelector('div[style*="position: absolute"]');
+        const tabBar = document.querySelector('div[style*="position: relative"]');
+        
+        // Remove active class from all tabs
+        tabs.forEach(tab => tab.classList.remove('active'));
+        // Add active class to clicked tab
+        tabElement.classList.add('active');
+        
+        // Calculate position based on tab index and container width
+        const containerPadding = 5; // 0.3125rem = 5px
+        const tabWidth = (tabBar.offsetWidth - (containerPadding * 2)) / 2; // 2 tabs
+        const sliderLeft = containerPadding + (index * tabWidth);
+        
+        slider.style.left = `${sliderLeft}px`;
+        slider.style.width = `${tabWidth}px`;
+        
+    // Update dashboard based on tab
+    await updateDashboard();
+}
+
+// ============================================================================
+// Initialize Slider
+// ============================================================================
+function initializeSlider() {
+        const slider = document.querySelector('div[style*="position: absolute"]');
+        const tabBar = document.querySelector('div[style*="position: relative"]');
+        
+        if (slider && tabBar) {
+            // Disable transition for initial positioning
+            slider.style.transition = 'none';
+            
+            // Calculate position for first tab (index 0)
+            const containerPadding = 5; // 0.3125rem = 5px
+            const tabWidth = (tabBar.offsetWidth - (containerPadding * 2)) / 2; // 2 tabs
+            const sliderLeft = containerPadding + (0 * tabWidth); // First tab
+            
+            slider.style.left = `${sliderLeft}px`;
+            slider.style.width = `${tabWidth}px`;
+            
+            // Re-enable transition after positioning
+            requestAnimationFrame(() => {
+                slider.style.transition = 'all 0.3s ease';
+            });
+        }
+}
+
+// ============================================================================
+// Filter Functions
+// ============================================================================
+function toggleFilters() {
+    const panel = document.getElementById('filterPanel');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function populateChannelFilter() {
+    const channelFilter = document.getElementById('channelFilter');
+    
+    // Get unique channels from all users
+    const uniqueChannels = [...new Set(allUsers.map(u => u.channel).filter(Boolean))];
+    
+    // Clear existing options except "All Channels"
+    channelFilter.innerHTML = '<option value="">All Channels</option>';
+    
+    // Add channel options
+    uniqueChannels.sort().forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel;
+        option.textContent = channel;
+        channelFilter.appendChild(option);
+    });
+}
+
+async function applyFilters() {
+    // Get filter values
+    currentFilters.status = document.getElementById('statusFilter').value;
+    currentFilters.channel = document.getElementById('channelFilter').value;
+    currentFilters.week = document.getElementById('weekFilter').value;
+    
+    // Start with unfiltered assignments
+    allAssignments = [...unfilteredAssignments];
+    
+    // Apply status filter
+    if (currentFilters.status) {
+        allAssignments = allAssignments.filter(a => a.status === currentFilters.status);
+    }
+    
+    // Apply channel filter (need to look up employee's channel)
+    if (currentFilters.channel) {
+        allAssignments = allAssignments.filter(a => {
+            const emp = allUsers.find(u => u.email === a.employee_email);
+            return emp && emp.channel === currentFilters.channel;
+        });
+    }
+    
+    // Apply week filter
+    if (currentFilters.week) {
+        const weekNum = parseInt(currentFilters.week);
+        allAssignments = allAssignments.filter(a => a.week === weekNum);
+    }
+    
+    console.log(`Filtered to ${allAssignments.length} assignments`);
+    
+    // Update the dashboard with filtered data
+    await updateDashboard();
+}
+
+async function clearFilters() {
+    // Reset filter inputs
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('channelFilter').value = '';
+    document.getElementById('weekFilter').value = '';
+    
+    // Reset filter state
+    currentFilters = {
+        status: '',
+        channel: '',
+        week: ''
+    };
+    
+    // Restore unfiltered data
+    allAssignments = [...unfilteredAssignments];
+    
+    // Update the dashboard
+    await updateDashboard();
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
+
+</body>
+</html>

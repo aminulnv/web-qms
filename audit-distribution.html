@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Audit Distribution | QMS</title>
+<meta name="description" content="Quality Management System - Audit Distribution Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+    <style>
+        .distribution-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0;
+            width: 100%;
+            margin: 0;
+        }
+
+        .section-card {
+            background: #ffffff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 0.0625rem solid #e5e7eb;
+            box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 0.0625rem solid #e5e7eb;
+        }
+
+        .section-header[onclick] {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .section-header[onclick]:hover {
+            background-color: #f9fafb;
+        }
+
+        .section-number {
+            background: #1A733E;
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1A733E;
+            margin: 0;
+        }
+
+        .section-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin: 0.125rem 0 0 0;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .filter-select, .filter-input {
+            padding: 0.375rem 0.5rem;
+            border: 0.0625rem solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.8125rem;
+            font-family: 'Poppins', sans-serif;
+            background-color: white;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: #1A733E;
+            box-shadow: 0 0 0 0.1875rem rgba(26, 115, 62, 0.1);
+        }
+
+        .group-container {
+            border: 0.0625rem solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .group-header {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .group-header:hover {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .group-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .group-checkbox {
+            width: 0.875rem;
+            height: 0.875rem;
+            cursor: pointer;
+            accent-color: #1A733E;
+        }
+
+        .group-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #1A733E;
+            margin: 0;
+        }
+
+        .group-count {
+            background: #1A733E;
+            color: white;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+        }
+
+        .group-expand {
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+
+        .group-expand.expanded {
+            transform: rotate(180deg);
+        }
+
+        .group-content {
+            display: none;
+            flex-direction: column;
+            padding: 0;
+            background: white;
+            width: 100%;
+        }
+
+        .group-content.expanded {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+        }
+
+        .employee-item {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 0.0625rem solid #e5e7eb;
+            transition: all 0.2s;
+            background: white;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            clear: both;
+        }
+
+        .employee-item:hover {
+            background: #f9fafb;
+        }
+
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .employee-checkbox {
+            width: 0.8125rem;
+            height: 0.8125rem;
+            cursor: pointer;
+            accent-color: #1A733E;
+        }
+
+        .employee-avatar {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1A733E, #15582E);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.6875rem;
+        }
+
+        .employee-details {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 0;
+        }
+
+        .employee-meta {
+            font-size: 0.6875rem;
+            color: #6b7280;
+            margin: 0.0625rem 0 0 0;
+        }
+
+        .counter-container {
+            display: flex;
+            align-items: center;
+            gap: 0.125rem;
+        }
+        
+        .counter-btn {
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 0.0625rem solid #d1d5db;
+            background-color: #ffffff;
+            color: #4b5563;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .counter-btn:hover:not(:disabled) {
+            background-color: #f9fafb;
+            border-color: #1A733E;
+            color: #1A733E;
+        }
+        
+        .counter-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .audit-count-input {
+            width: 2.5rem;
+            padding: 0.25rem 0.375rem;
+            border: 0.0625rem solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            font-weight: 700;
+            background-color: #ffffff;
+            color: #1f2937;
+            cursor: default;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        
+        .audit-count-input::-webkit-inner-spin-button,
+        .audit-count-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+        
+        .audit-count-input:disabled {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .bulk-actions-bar {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 0.0625rem solid #e5e7eb;
+            padding: 0.75rem 1rem;
+            margin: 0 -1rem -1rem -1rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+        }
+
+        .bulk-actions-bar.active {
+            display: flex;
+        }
+
+        .bulk-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .selected-count {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #1A733E;
+        }
+
+        .total-audits {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .assign-select {
+            padding: 0.375rem 0.625rem;
+            border: 0.0625rem solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.8125rem;
+            font-family: 'Poppins', sans-serif;
+            min-width: 180px;
+        }
+
+        .btn-assign {
+            background: #1A733E;
+            color: white;
+            padding: 0.375rem 1rem;
+            border: none;
+            border-radius: 0.25rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-assign:hover {
+            background: #15582E;
+            transform: translateY(-0.0625rem);
+            box-shadow: 0 0.25rem 0.5rem rgba(26, 115, 62, 0.2);
+        }
+
+        .btn-assign:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            padding: 0.1875rem 0.375rem;
+            border: 0.0625rem solid #e5e7eb;
+            border-radius: 0.1875rem;
+            font-size: 0.6875rem;
+            font-weight: 400;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        #autoAssignBySupervisorBtn {
+            background: #1A733E !important;
+            color: white !important;
+            padding: 0.1875rem 0.375rem !important;
+            font-size: 0.6875rem !important;
+            font-weight: 400 !important;
+            border: 0.0625rem solid #1A733E !important;
+        }
+
+        #autoAssignBySupervisorBtn:hover {
+            background: #15582E !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Force vertical list layout - prevent any grid wrapping */
+        #groupedEmployeesContainer {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem;
+        }
+        
+        #groupedEmployeesContainer > * {
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6b7280;
+        }
+
+        .empty-state svg {
+            width: 4rem;
+            height: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            padding: 0.5rem;
+            min-width: 200px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 9999;
+            display: none;
+            margin-top: 0.25rem;
+            pointer-events: auto;
+        }
+
+        .filter-dropdown.active {
+            display: block;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.5rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            font-size: 0.8125rem;
+            user-select: none;
+            pointer-events: auto;
+        }
+
+        .filter-option:hover {
+            background: #f3f4f6;
+        }
+
+        .filter-option input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: #1A733E;
+            pointer-events: auto;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 0.5rem;
+        }
+
+        .filter-actions button {
+            flex: 1;
+            padding: 0.375rem;
+            font-size: 0.75rem;
+            border-radius: 0.25rem;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            pointer-events: auto;
+        }
+
+        .filter-apply {
+            background: #1A733E;
+            color: white;
+        }
+
+        .filter-apply:hover {
+            background: #15582E;
+        }
+
+        .filter-clear {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .filter-clear:hover {
+            background: #e5e7eb;
+        }
+
+        #clearFiltersBtn:hover {
+            background: #dc2626 !important;
+        }
+
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Stack page heading and auto assign button on mobile */
+            main .main-content > div:first-of-type {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+            
+            #topAutoAssignBtn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .bulk-actions-bar {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .bulk-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .assign-select, .btn-assign {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0 1rem;">
+        <p class="page-heading" style="margin: 0;">Audit Distribution</p>
+        <button id="topAutoAssignBtn" class="btn-assign" onclick="autoAssignBySupervisor()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <polyline points="17 11 19 13 23 9"/>
+            </svg>
+            Auto Assign by Supervisor
+        </button>
+    </div>
+
+    <div class="distribution-container">
+        
+        <!-- Step 1: Manual Assignment -->
+        <div class="section-card" id="employeesSection">
+            <div class="section-header" onclick="toggleManualSection()" style="cursor: pointer;">
+                <div class="section-number">1</div>
+                <div style="flex: 1;">
+                    <h2 class="section-title">Manual Assignment</h2>
+                    <p class="section-subtitle">Filter and select employees to assign for auditing (scorecards will be auto-assigned based on their channel)</p>
+                </div>
+                <svg id="manualSectionIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(0deg); transition: transform 0.3s;">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+            <div id="manualSectionContent" style="display: none;">
+
+            <!-- Filters -->
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Group By</label>
+                    <select id="groupBySelect" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="none">None</option>
+                        <option value="channel">Channel</option>
+                        <option value="team">Team</option>
+                        <option value="quality_supervisor" selected>Quality Supervisor</option>
+                        <option value="team_supervisor">Team Supervisor</option>
+                        <option value="department">Department</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Channel</label>
+                    <select id="channelFilter" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="">All Channels</option>
+                    </select>
+            </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Quality Supervisor</label>
+                    <select id="qualitySupervisorFilter" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="">All Supervisors</option>
+                    </select>
+        </div>
+                <div class="filter-group">
+                    <label class="filter-label">Search Employee</label>
+                    <input type="text" id="employeeSearch" class="filter-input" placeholder="Search by name..." oninput="applyFiltersAndGroup()">
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                <button class="btn-secondary" onclick="selectAllVisible()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.375rem;">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Select All Visible
+                </button>
+                <button class="btn-secondary" onclick="deselectAll()">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.375rem;">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Deselect All
+                </button>
+                <div style="display: none; align-items: flex-end; gap: 0.75rem;" id="quickAuditInputWrapper">
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                            <span style="color: #ef4444;">*</span> Audits per employee:
+                        </label>
+                        <div class="counter-container">
+                            <button type="button" class="counter-btn" onclick="updateBulkAuditCountQuick(Math.max(1, (parseInt(document.getElementById('bulkAuditCountQuick').value) || 1) - 1))">−</button>
+                            <input type="number" id="bulkAuditCountQuick" min="1" max="10" value="1" readonly class="audit-count-input" oninput="updateBulkAuditCountQuick(parseInt(this.value))">
+                            <button type="button" class="counter-btn" onclick="updateBulkAuditCountQuick(Math.min(10, (parseInt(document.getElementById('bulkAuditCountQuick').value) || 1) + 1))">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: none; align-items: flex-end; gap: 0.75rem;" id="quickAssignWrapper">
+                    <select id="assignToSelectQuick" class="assign-select" style="min-width: 200px;">
+                        <option value="">Select Quality Analyst...</option>
+                        <option value="distribute">📊 Distribute Evenly to All</option>
+                    </select>
+                    <button class="btn-assign" onclick="performBulkAssignmentQuick()" id="assignButtonQuick" disabled>Assign Audits</button>
+                </div>
+            </div>
+
+            <!-- Grouped Employees -->
+            <div id="groupedEmployeesContainer">
+                <!-- Groups will be populated here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem 0;">No employees found</p>
+                <p style="font-size: 0.875rem; margin: 0;">Try adjusting your filters or selecting a different scorecard</p>
+            </div>
+
+            <!-- Bulk Actions Bar -->
+            <div class="bulk-actions-bar" id="bulkActionsBar">
+                <div class="bulk-info">
+                    <span class="selected-count" id="bulkSelectedCount">0 employees selected</span>
+                    <span class="total-audits" id="bulkTotalAudits">0 total audits</span>
+                </div>
+                <div class="bulk-actions">
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                            <span style="color: #ef4444;">*</span> Audits per employee:
+                        </label>
+                        <div class="counter-container">
+                            <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.max(1, (parseInt(document.getElementById('bulkAuditCount').value) || 1) - 1))">−</button>
+                            <input type="number" id="bulkAuditCount" min="1" max="10" value="1" readonly class="audit-count-input" oninput="updateBulkAuditCount(parseInt(this.value))">
+                            <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.min(10, (parseInt(document.getElementById('bulkAuditCount').value) || 1) + 1))">+</button>
+                        </div>
+                    </div>
+                    <select id="assignToSelect" class="assign-select">
+                        <option value="">Select Quality Analyst...</option>
+                        <option value="distribute">📊 Distribute Evenly to All</option>
+                    </select>
+                    <button class="btn-assign" onclick="performBulkAssignment()" id="assignButton" disabled>Assign Audits</button>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Audits Summary -->
+        <div class="section-card" id="assignedAuditsSection">
+            <div class="section-header">
+                <div style="flex: 1; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <h2 class="section-title">📊 Assigned Audits Overview</h2>
+                    </div>
+                    <button class="btn-secondary" onclick="refreshAssignedAudits()" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            <!-- Recent Assignments Table -->
+            <div style="margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <h3 style="font-size: 0.875rem; font-weight: 600; color: #374151; margin: 0;">All Assignments</h3>
+                        <button id="clearFiltersBtn" class="btn-secondary" onclick="clearColumnFilters()" style="display: none; align-items: center; gap: 0.375rem; padding: 0.375rem 0.875rem; font-size: 0.75rem; background: #ef4444; color: white; border: none; font-weight: 600; transition: all 0.2s;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                            </svg>
+                            Clear Filters
+                        </button>
+                    </div>
+                    <div id="bulkAssignmentActions" style="display: none; gap: 0.5rem; align-items: center;">
+                        <span id="bulkAssignmentCount" style="font-size: 0.8125rem; color: #6b7280;">0 selected</span>
+                        <input type="number" id="bulkEditWeek" class="filter-input" placeholder="Week (1-52)" min="1" max="52" style="width: 100px; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                        <select id="bulkEditAuditor" class="filter-select" style="min-width: 150px; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            <option value="">Change Auditor...</option>
+                        </select>
+                        <select id="bulkEditScorecard" class="filter-select" style="min-width: 150px; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            <option value="">Change Scorecard...</option>
+                        </select>
+                        <button onclick="applyBulkEdit()" class="btn-secondary" style="background: #1A733E; color: white; border-color: #1A733E; padding: 0.25rem 0.75rem; font-size: 0.75rem;">
+                            Apply Changes
+                        </button>
+                        <button onclick="bulkDeleteAssignments()" class="btn-secondary" style="background: #ef4444; color: white; border-color: #ef4444; padding: 0.25rem 0.75rem; font-size: 0.75rem;">
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto; overflow-y: visible;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                        <thead style="position: relative;">
+                            <tr style="background: #f9fafb; border-bottom: 0.125rem solid #e5e7eb;">
+                                <th style="text-align: center; padding: 0.375rem; font-weight: 600; color: #374151; width: 30px;">
+                                    <input type="checkbox" id="selectAllAssignments" onchange="toggleAllAssignments(this.checked)" style="cursor: pointer; accent-color: #1A733E;">
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151; cursor: pointer; position: relative;" onclick="toggleColumnFilter('week', event)">
+                                    Week
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.25rem;">
+                                        <polygon points="12 2 2 12 22 12"/>
+                                    </svg>
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151; cursor: pointer; position: relative;" onclick="toggleColumnFilter('employee', event)">
+                                    Employee
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.25rem;">
+                                        <polygon points="12 2 2 12 22 12"/>
+                                    </svg>
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151; cursor: pointer; position: relative;" onclick="toggleColumnFilter('channel', event)">
+                                    Channel
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.25rem;">
+                                        <polygon points="12 2 2 12 22 12"/>
+                                    </svg>
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151; cursor: pointer; position: relative;" onclick="toggleColumnFilter('auditor', event)">
+                                    Auditor
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.25rem;">
+                                        <polygon points="12 2 2 12 22 12"/>
+                                    </svg>
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151; cursor: pointer; position: relative;" onclick="toggleColumnFilter('scorecard', event)">
+                                    Scorecard
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.25rem;">
+                                        <polygon points="12 2 2 12 22 12"/>
+                                    </svg>
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151; cursor: pointer; position: relative;" onclick="toggleColumnFilter('status', event)">
+                                    Status
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.25rem;">
+                                        <polygon points="12 2 2 12 22 12"/>
+                                    </svg>
+                                </th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151;">Created</th>
+                                <th style="text-align: center; padding: 0.375rem; font-weight: 600; color: #374151;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assignedAuditsTableBody">
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 2rem; color: #6b7280;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+// ============================================================================
+// Global Variables
+// ============================================================================
+let allScorecards = []; // All active scorecards
+let allEmployees = [];
+let allUsers = []; // All users including QAs (for lookups)
+let filteredEmployees = [];
+let selectedEmployees = new Map(); // email -> { employee, auditCount }
+let qualityAnalysts = [];
+let channels = [];
+let allAssignments = []; // Store all assignments for filtering
+let columnFilters = {
+    week: [],
+    employee: [],
+    channel: [],
+    auditor: [],
+    scorecard: [],
+    status: []
+};
+
+// ============================================================================
+// Initialize Page
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async function() {
+    await initializePage();
+});
+
+async function initializePage() {
+    try {
+        // Wait for Supabase to be ready
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.supabaseClient) {
+            console.error('Supabase client not initialized');
+            return;
+        }
+
+        // Load users first (needed for lookups)
+        await loadAllUsers();
+        
+        // Then load everything else in parallel
+        await Promise.all([
+            loadScorecards(),
+            loadQualityAnalysts(),
+            loadChannels(),
+            loadEmployees()
+        ]);
+        
+        // Then load assignments (depends on allUsers being loaded)
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error initializing page:', error);
+    }
+}
+
+// ============================================================================
+// Load Data
+// ============================================================================
+async function loadScorecards() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('scorecards')
+            .select('*')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        allScorecards = data || [];
+        console.log(`Loaded ${allScorecards.length} active scorecards`);
+        
+    } catch (error) {
+        console.error('Error loading scorecards:', error);
+        allScorecards = [];
+    }
+}
+
+async function loadQualityAnalysts() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('*')
+            .eq('role', 'Quality Analyst')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        qualityAnalysts = data || [];
+        populateQADropdown();
+        
+    } catch (error) {
+        console.error('Error loading Quality Analysts:', error);
+        qualityAnalysts = [];
+    }
+}
+
+async function loadChannels() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('channels')
+            .select('name')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        channels = data.map(c => c.name);
+        
+    } catch (error) {
+        console.error('Error loading channels:', error);
+        channels = [];
+    }
+}
+
+async function loadAllUsers() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('email, name, channel, role')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) {
+            console.error('Supabase error loading all users:', error);
+            throw error;
+        }
+        
+        allUsers = data || [];
+        console.log(`Loaded ${allUsers.length} users for lookups`);
+        
+    } catch (error) {
+        console.error('Error loading all users:', error);
+        allUsers = [];
+    }
+}
+
+async function loadEmployees() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('*')
+            .eq('is_active', true)
+            .neq('role', 'Quality Analyst') // Exclude QA from being audited
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        allEmployees = data || [];
+        
+        // No filtering by scorecard - load ALL employees
+        populateFilters();
+        applyFiltersAndGroup();
+        
+    } catch (error) {
+        console.error('Error loading employees:', error);
+        allEmployees = [];
+    }
+}
+
+// ============================================================================
+// Get Applicable Scorecards for Employee
+// ============================================================================
+function getApplicableScorecardsForEmployee(employee) {
+    if (!employee.channel) {
+        return [];
+    }
+    
+    return allScorecards.filter(scorecard => {
+        if (!scorecard.channels) return false;
+        const scorecardChannels = scorecard.channels.split(',').map(c => c.trim());
+        return scorecardChannels.includes(employee.channel);
+    });
+}
+
+// ============================================================================
+// Load Assigned Audits
+// ============================================================================
+async function loadAssignedAudits() {
+    try {
+        console.log('Loading assignments. allUsers count:', allUsers.length, 'qualityAnalysts count:', qualityAnalysts.length);
+        
+        const { data, error } = await window.supabaseClient
+            .from('audit_assignments')
+            .select(`
+                *,
+                scorecard:scorecards(name)
+            `)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error fetching assignments:', error);
+            throw error;
+        }
+        
+        console.log('Loaded assignments:', data?.length || 0);
+        
+        // Store assignments for filtering
+        allAssignments = data || [];
+        
+        // Calculate stats
+        const stats = {
+            pending: 0,
+            in_progress: 0,
+            completed: 0,
+            total: data ? data.length : 0
+        };
+        
+        if (data) {
+            data.forEach(assignment => {
+                if (assignment.status === 'pending') stats.pending++;
+                else if (assignment.status === 'in_progress') stats.in_progress++;
+                else if (assignment.status === 'completed') stats.completed++;
+            });
+        }
+        
+        // Update stats
+        
+        // Populate table
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 2rem; color: #6b7280;">No assignments found</td></tr>';
+            populateBulkEditDropdowns();
+            return;
+        }
+        
+        // Populate bulk edit dropdowns
+        populateBulkEditDropdowns();
+        
+        tbody.innerHTML = data.map((assignment, index) => {
+            const statusColors = {
+                'pending': 'background: #fef3c7; color: #92400e;',
+                'in_progress': 'background: #dbeafe; color: #1e40af;',
+                'completed': 'background: #d1fae5; color: #065f46;',
+                'cancelled': 'background: #fee2e2; color: #991b1b;'
+            };
+            
+            const createdDate = new Date(assignment.created_at);
+            const formattedDate = createdDate.toLocaleDateString() + ' ' + createdDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Find auditor name from qualityAnalysts, allEmployees, or allUsers
+            let auditorName = assignment.auditor_email.split('@')[0];
+            const auditor = qualityAnalysts.find(qa => qa.email === assignment.auditor_email) || 
+                           allEmployees.find(emp => emp.email === assignment.auditor_email) ||
+                           allUsers.find(u => u.email === assignment.auditor_email);
+            if (auditor && auditor.name) {
+                auditorName = auditor.name;
+            }
+            
+            // Get channel by looking up in allUsers
+            const user = allUsers.find(u => u.email === assignment.employee_email);
+            const channel = user?.channel || '-';
+            
+            // Debug first assignment
+            if (index === 0) {
+                console.log('First assignment:', {
+                    employee_email: assignment.employee_email,
+                    auditor_email: assignment.auditor_email,
+                    user_found: !!user,
+                    channel: channel,
+                    auditor_found: !!auditor,
+                    auditorName: auditorName,
+                    allUsers_sample: allUsers.slice(0, 2).map(u => ({ email: u.email, channel: u.channel }))
+                });
+            }
+            
+            // Find employee to get applicable scorecards
+            const employee = allEmployees.find(emp => emp.email === assignment.employee_email) ||
+                           allUsers.find(u => u.email === assignment.employee_email);
+            const applicableScorecards = employee ? getApplicableScorecardsForEmployee(employee) : [];
+            
+            // Disable edit/delete for completed/in_progress audits
+            const isEditable = assignment.status === 'pending';
+            
+            // Build auditor options
+            let auditorOptions = '';
+            if (isEditable) {
+                auditorOptions = qualityAnalysts.map(qa => 
+                    `<option value="${qa.email}" ${qa.email === assignment.auditor_email ? 'selected' : ''}>${escapeHtml(qa.name)}</option>`
+                ).join('');
+            }
+            
+            // Build scorecard options
+            let scorecardOptions = '';
+            if (isEditable) {
+                if (applicableScorecards.length > 0) {
+                    scorecardOptions = applicableScorecards.map(sc => 
+                        `<option value="${sc.id}" ${sc.id === assignment.scorecard_id ? 'selected' : ''}>${escapeHtml(sc.name)}</option>`
+                    ).join('');
+                } else {
+                    scorecardOptions = `<option value="${assignment.scorecard_id}" selected>${escapeHtml(assignment.scorecard?.name || 'Current Scorecard')}</option>`;
+                }
+            }
+            
+            return `
+                <tr style="border-bottom: 0.0625rem solid #f3f4f6;" data-assignment-id="${assignment.id}">
+                    <td style="padding: 0.375rem; text-align: center;">
+                        <input type="checkbox" class="assignment-checkbox" data-assignment-id="${assignment.id}" 
+                               onchange="toggleAssignmentSelection()" style="cursor: pointer; accent-color: #1A733E;">
+                    </td>
+                    <td style="padding: 0.375rem; font-size: 0.75rem;">
+                        ${isEditable ? `
+                            <input type="number" class="week-input" data-assignment-id="${assignment.id}" 
+                                   value="${assignment.week || ''}" min="1" max="52" 
+                                   onchange="updateWeek('${assignment.id}', this.value)"
+                                   style="width: 3rem; padding: 0.125rem 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; text-align: center;">
+                        ` : (assignment.week || '-')}
+                    </td>
+                    <td style="padding: 0.375rem; font-size: 0.75rem;">${escapeHtml(assignment.employee_name || assignment.employee_email)}</td>
+                    <td style="padding: 0.375rem; color: #6b7280; font-size: 0.75rem;">${escapeHtml(channel)}</td>
+                    <td style="padding: 0.375rem; font-size: 0.75rem;">
+                        ${escapeHtml(auditorName)}
+                    </td>
+                    <td style="padding: 0.375rem; font-size: 0.75rem;">
+                        ${escapeHtml(assignment.scorecard?.name || 'N/A')}
+                    </td>
+                    <td style="padding: 0.375rem;">
+                        <span style="padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; ${statusColors[assignment.status] || ''}">
+                            ${assignment.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                    </td>
+                    <td style="padding: 0.375rem; color: #6b7280; font-size: 0.6875rem;">${formattedDate}</td>
+                    <td style="padding: 0.375rem; text-align: center;">
+                            ${isEditable ? `
+                                <button onclick="deleteAssignment('${assignment.id}')" 
+                                    style="padding: 0.125rem 0.375rem; background: #ef4444; color: white; border: none; border-radius: 0.1875rem; cursor: pointer; font-size: 0.625rem; font-family: 'Poppins', sans-serif;"
+                                    title="Delete">
+                                🗑️
+                                </button>
+                            ` : `
+                            <span style="color: #9ca3af; font-size: 0.625rem;">-</span>
+                            `}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading assigned audits:', error);
+        const tbody = document.getElementById('assignedAuditsTableBody');
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading assignments: ${error.message || 'Unknown error'}</td></tr>`;
+    }
+}
+
+async function refreshAssignedAudits() {
+    await loadAssignedAudits();
+}
+
+// ============================================================================
+// Edit & Delete Assignments
+// ============================================================================
+function handleAssignmentChange(assignmentId) {
+    // Show the save button for this row
+    const saveBtn = document.querySelector(`.save-assignment-btn[data-assignment-id="${assignmentId}"]`);
+    if (saveBtn) {
+        saveBtn.style.display = 'flex';
+    }
+}
+
+async function saveAssignment(assignmentId) {
+    try {
+        // Get the new values from the dropdowns
+        const auditorSelect = document.querySelector(`.assignment-auditor-select[data-assignment-id="${assignmentId}"]`);
+        const scorecardSelect = document.querySelector(`.assignment-scorecard-select[data-assignment-id="${assignmentId}"]`);
+        
+        if (!auditorSelect || !scorecardSelect) {
+            throw new Error('Could not find assignment fields');
+        }
+        
+        const newAuditor = auditorSelect.value;
+        const newScorecard = scorecardSelect.value;
+        const originalAuditor = auditorSelect.dataset.original;
+        const originalScorecard = scorecardSelect.dataset.original;
+        
+        // Check if anything changed
+        if (newAuditor === originalAuditor && newScorecard === originalScorecard) {
+            // Nothing changed, just hide the save button
+            const saveBtn = document.querySelector(`.save-assignment-btn[data-assignment-id="${assignmentId}"]`);
+            if (saveBtn) saveBtn.style.display = 'none';
+            return;
+        }
+        
+        // Update the assignment
+        const { error: updateError } = await window.supabaseClient
+            .from('audit_assignments')
+            .update({
+                auditor_email: newAuditor,
+                scorecard_id: newScorecard
+            })
+            .eq('id', assignmentId);
+        
+        if (updateError) throw updateError;
+        
+        // Show success message
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: 'Assignment updated successfully.',
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Refresh the table
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error saving assignment:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to update assignment: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+async function deleteAssignment(assignmentId) {
+    try {
+        // Fetch the assignment details for confirmation
+        const { data: assignment, error: fetchError } = await window.supabaseClient
+            .from('audit_assignments')
+            .select('*, scorecard:scorecards(name)')
+            .eq('id', assignmentId)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        // Find auditor name
+        let auditorName = assignment.auditor_email.split('@')[0];
+        const auditor = qualityAnalysts.find(qa => qa.email === assignment.auditor_email) || 
+                       allEmployees.find(emp => emp.email === assignment.auditor_email) ||
+                       allUsers.find(u => u.email === assignment.auditor_email);
+        if (auditor && auditor.name) {
+            auditorName = auditor.name;
+        }
+        
+        const confirmed = await window.confirmationDialog.show({
+            title: 'Delete Assignment',
+            message: `Are you sure you want to delete this assignment?\n\nEmployee: ${assignment.employee_name || assignment.employee_email}\nAuditor: ${auditorName}\nScorecard: ${assignment.scorecard?.name || 'N/A'}\n\nThis action cannot be undone.`,
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            type: 'warning'
+        });
+        
+        if (!confirmed) return;
+        
+        // Delete the assignment
+        const { error: deleteError } = await window.supabaseClient
+            .from('audit_assignments')
+            .delete()
+            .eq('id', assignmentId);
+        
+        if (deleteError) throw deleteError;
+        
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: 'Assignment deleted successfully.',
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Refresh the table
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error deleting assignment:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to delete assignment: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// ============================================================================
+// Populate Dropdowns
+// ============================================================================
+function populateQADropdown() {
+    const select = document.getElementById('assignToSelect');
+    const selectQuick = document.getElementById('assignToSelectQuick');
+    
+    // Keep the placeholder and distribute option
+    const optionsHTML = `
+        <option value="">Select Quality Analyst...</option>
+        <option value="distribute">📊 Distribute Evenly to All</option>
+    `;
+    
+    select.innerHTML = optionsHTML;
+    if (selectQuick) {
+        selectQuick.innerHTML = optionsHTML;
+    }
+    
+    qualityAnalysts.forEach(qa => {
+        const option = document.createElement('option');
+        option.value = qa.email;
+        option.textContent = qa.name;
+        select.appendChild(option);
+        
+        if (selectQuick) {
+            const optionQuick = document.createElement('option');
+            optionQuick.value = qa.email;
+            optionQuick.textContent = qa.name;
+            selectQuick.appendChild(optionQuick);
+        }
+    });
+}
+
+function populateFilters() {
+    // Populate channel filter
+    const channelFilter = document.getElementById('channelFilter');
+    const uniqueChannels = [...new Set(allEmployees.map(e => e.channel).filter(Boolean))];
+    
+    channelFilter.innerHTML = '<option value="">All Channels</option>';
+    uniqueChannels.sort().forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel;
+        option.textContent = channel;
+        channelFilter.appendChild(option);
+    });
+    
+    // Populate quality supervisor filter
+    const qsFilter = document.getElementById('qualitySupervisorFilter');
+    const uniqueQS = [...new Set(allEmployees.map(e => e.quality_supervisor).filter(Boolean))];
+    
+    qsFilter.innerHTML = '<option value="">All Supervisors</option>';
+    
+    // Create options with names and sort by name
+    const supervisorOptions = uniqueQS.map(qs => {
+        const qsUser = allUsers.find(u => u.email === qs);
+        return {
+            email: qs,
+            name: qsUser ? qsUser.name : qs
+        };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+    
+    supervisorOptions.forEach(supervisor => {
+        const option = document.createElement('option');
+        option.value = supervisor.email;
+        option.textContent = supervisor.name;
+        qsFilter.appendChild(option);
+    });
+}
+
+// ============================================================================
+// Filter & Group Employees
+// ============================================================================
+function applyFiltersAndGroup() {
+    const channelFilter = document.getElementById('channelFilter').value;
+    const qsFilter = document.getElementById('qualitySupervisorFilter').value;
+    const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+    const groupBy = document.getElementById('groupBySelect').value;
+    
+    // Apply filters
+    filteredEmployees = allEmployees.filter(emp => {
+        const matchesChannel = !channelFilter || emp.channel === channelFilter;
+        const matchesQS = !qsFilter || emp.quality_supervisor === qsFilter;
+        const matchesSearch = !searchTerm || 
+            (emp.name && emp.name.toLowerCase().includes(searchTerm)) ||
+            (emp.email && emp.email.toLowerCase().includes(searchTerm));
+        
+        return matchesChannel && matchesQS && matchesSearch;
+    });
+    
+    // Apply filters (stats removed)
+    
+    // Show/hide action buttons based on grouping and selections
+    const quickAuditInputWrapper = document.getElementById('quickAuditInputWrapper');
+    const quickAssignWrapper = document.getElementById('quickAssignWrapper');
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    
+    // Show quick action buttons (audits input and assign) for all group by options when employees are filtered
+    if (filteredEmployees.length > 0) {
+        if (quickAuditInputWrapper) quickAuditInputWrapper.style.display = 'flex';
+        if (quickAssignWrapper) quickAssignWrapper.style.display = 'flex';
+    } else {
+        if (quickAuditInputWrapper) quickAuditInputWrapper.style.display = 'none';
+        if (quickAssignWrapper) quickAssignWrapper.style.display = 'none';
+    }
+    
+    // Hide bottom bulk actions bar - all actions are now in Quick Actions section
+    if (bulkActionsBar) {
+        bulkActionsBar.classList.remove('active');
+    }
+    
+    // Group employees (or render flat list if none)
+    if (groupBy === 'none') {
+        renderFlatList(filteredEmployees);
+    } else {
+        const groups = groupEmployees(filteredEmployees, groupBy);
+        renderGroups(groups, groupBy);
+    }
+    
+    updateQuickAssignButton();
+}
+
+function groupEmployees(employees, groupBy) {
+    const groups = new Map();
+    
+    // If groupBy is 'none', return empty map - handled separately
+    if (groupBy === 'none') {
+        return groups;
+    }
+    
+    employees.forEach(emp => {
+        let groupKey = emp[groupBy] || 'Unassigned';
+        
+        // For supervisors, try to get their name from allUsers (includes QAs)
+        if (groupBy === 'quality_supervisor' || groupBy === 'team_supervisor') {
+            if (groupKey && groupKey !== 'Unassigned') {
+                const supervisor = allUsers.find(u => u.email === groupKey);
+                groupKey = supervisor ? supervisor.name : groupKey;
+            }
+        }
+        
+        if (!groups.has(groupKey)) {
+            groups.set(groupKey, []);
+        }
+        groups.get(groupKey).push(emp);
+    });
+    
+    return groups;
+}
+
+function renderFlatList(employees) {
+    const container = document.getElementById('groupedEmployeesContainer');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (employees.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    container.innerHTML = '';
+    
+    // Create a simple container for flat list - ensure vertical layout
+    const flatListContainer = document.createElement('div');
+    flatListContainer.style.cssText = 'display: flex; flex-direction: column; width: 100%; gap: 0;';
+    
+    // Render each employee as a flat list item
+    employees.forEach(emp => {
+        const employeeElement = createEmployeeElement(emp);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = employeeElement;
+        const employeeNode = tempDiv.firstElementChild;
+        flatListContainer.appendChild(employeeNode);
+    });
+    
+    container.appendChild(flatListContainer);
+}
+
+function renderGroups(groups, groupBy) {
+    const container = document.getElementById('groupedEmployeesContainer');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (groups.size === 0 || filteredEmployees.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    container.innerHTML = '';
+    
+    // Sort groups by key
+    const sortedGroups = Array.from(groups.entries()).sort((a, b) => 
+        a[0].localeCompare(b[0])
+    );
+    
+    sortedGroups.forEach(([groupName, employees]) => {
+        const groupDiv = createGroupElement(groupName, employees, groupBy);
+        container.appendChild(groupDiv);
+    });
+}
+
+function createGroupElement(groupName, employees, groupBy) {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'group-container';
+    
+    const groupId = `group-${groupName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    const allSelected = employees.every(emp => selectedEmployees.has(emp.email));
+    
+    groupDiv.innerHTML = `
+        <div class="group-header" onclick="toggleGroup('${groupId}')">
+            <div class="group-header-left">
+                <input type="checkbox" class="group-checkbox" 
+                       ${allSelected ? 'checked' : ''}
+                       onclick="event.stopPropagation(); toggleGroupSelection('${groupId}', this.checked)"
+                       id="checkbox-${groupId}">
+                <h3 class="group-title">${escapeHtml(groupName)}</h3>
+                <span class="group-count">${employees.length}</span>
+                </div>
+            <svg class="group-expand" id="expand-${groupId}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            </div>
+        <div class="group-content" id="content-${groupId}">
+            ${employees.map(emp => createEmployeeElement(emp)).join('')}
+                </div>
+    `;
+    
+    return groupDiv;
+}
+
+function createEmployeeElement(employee) {
+    const initials = employee.name ? employee.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+    const isSelected = selectedEmployees.has(employee.email);
+    const auditCount = isSelected ? selectedEmployees.get(employee.email).auditCount : 1;
+    
+    return `
+        <div class="employee-item">
+            <div class="employee-info">
+                <input type="checkbox" class="employee-checkbox" 
+                       data-email="${employee.email}"
+                       ${isSelected ? 'checked' : ''}
+                       onchange="toggleEmployeeSelection('${employee.email}', this.checked)">
+                <div class="employee-avatar">${initials}</div>
+                <div class="employee-details">
+                    <p class="employee-name">${escapeHtml(employee.name || 'Unknown')}</p>
+                    <p class="employee-meta">
+                        ${employee.channel || '-'} • ${employee.team || '-'} • ${employee.designation || '-'}
+                    </p>
+                </div>
+            </div>
+            <div class="counter-container">
+                <button type="button" class="counter-btn" 
+                        onclick="updateAuditCount('${employee.email}', Math.max(1, (selectedEmployees.get('${employee.email}')?.auditCount || 1) - 1))"
+                        ${!isSelected ? 'disabled' : ''}
+                        data-email="${employee.email}">−</button>
+                <input type="number" class="audit-count-input" min="1" max="10" value="${auditCount}"
+                       data-email="${employee.email}"
+                       readonly
+                       ${!isSelected ? 'disabled' : ''}>
+                <button type="button" class="counter-btn"
+                        onclick="updateAuditCount('${employee.email}', Math.min(10, (selectedEmployees.get('${employee.email}')?.auditCount || 1) + 1))"
+                        ${!isSelected ? 'disabled' : ''}
+                        data-email="${employee.email}">+</button>
+            </div>
+            </div>
+        `;
+}
+
+// ============================================================================
+// Selection & Interaction
+// ============================================================================
+function toggleGroup(groupId) {
+    const content = document.getElementById(`content-${groupId}`);
+    const expand = document.getElementById(`expand-${groupId}`);
+    
+    content.classList.toggle('expanded');
+    expand.classList.toggle('expanded');
+}
+
+function toggleGroupSelection(groupId, checked) {
+    const content = document.getElementById(`content-${groupId}`);
+    const checkboxes = content.querySelectorAll('.employee-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        const email = checkbox.dataset.email;
+        toggleEmployeeSelection(email, checked);
+        checkbox.checked = checked;
+    });
+}
+
+function toggleEmployeeSelection(email, selected) {
+    const employee = filteredEmployees.find(e => e.email === email);
+    if (!employee) return;
+    
+    if (selected) {
+        if (!selectedEmployees.has(email)) {
+            selectedEmployees.set(email, { employee, auditCount: 1 });
+        }
+        // Enable counter buttons and input
+        const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
+        const buttons = document.querySelectorAll(`button.counter-btn[data-email="${email}"]`);
+        if (input) input.disabled = false;
+        buttons.forEach(btn => btn.disabled = false);
+    } else {
+        selectedEmployees.delete(email);
+        // Disable counter buttons and input
+        const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
+        const buttons = document.querySelectorAll(`button.counter-btn[data-email="${email}"]`);
+        if (input) input.disabled = true;
+        buttons.forEach(btn => btn.disabled = true);
+    }
+    
+    updateQuickAssignButton();
+}
+
+function updateAuditCount(email, count) {
+    if (selectedEmployees.has(email)) {
+        const data = selectedEmployees.get(email);
+        data.auditCount = Math.max(1, Math.min(10, count));
+        selectedEmployees.set(email, data);
+        
+        // Update the input field
+        const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
+        if (input) {
+            input.value = data.auditCount;
+        }
+        
+        updateBulkActionsBar();
+        updateQuickAssignButton();
+    }
+}
+
+function updateBulkActionsBar() {
+    const bar = document.getElementById('bulkActionsBar');
+    const selectedCount = selectedEmployees.size;
+    const totalAudits = Array.from(selectedEmployees.values())
+        .reduce((sum, data) => sum + data.auditCount, 0);
+    
+    document.getElementById('bulkSelectedCount').textContent = 
+        `${selectedCount} employee${selectedCount !== 1 ? 's' : ''} selected`;
+    document.getElementById('bulkTotalAudits').textContent = 
+        `${totalAudits} total audit${totalAudits !== 1 ? 's' : ''}`;
+    
+    // Update quick assign button state instead
+    updateQuickAssignButton();
+}
+
+function updateQuickAssignButton() {
+    const assignButtonQuick = document.getElementById('assignButtonQuick');
+    const assignSelectQuick = document.getElementById('assignToSelectQuick');
+    const selectedCount = selectedEmployees.size;
+    const totalAudits = Array.from(selectedEmployees.values())
+        .reduce((sum, data) => sum + data.auditCount, 0);
+    
+    // Update stats (keeping for display purposes)
+    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
+    const bulkTotalAudits = document.getElementById('bulkTotalAudits');
+    if (bulkSelectedCount) bulkSelectedCount.textContent = 
+        `${selectedCount} employee${selectedCount !== 1 ? 's' : ''} selected`;
+    if (bulkTotalAudits) bulkTotalAudits.textContent = 
+        `${totalAudits} total audit${totalAudits !== 1 ? 's' : ''}`;
+    
+    // Update quick assign button state
+    if (assignButtonQuick && assignSelectQuick) {
+        assignButtonQuick.disabled = !assignSelectQuick.value || selectedCount === 0;
+    }
+}
+
+// Listen for assign dropdown changes
+document.addEventListener('DOMContentLoaded', function() {
+    const assignSelect = document.getElementById('assignToSelect');
+    const assignSelectQuick = document.getElementById('assignToSelectQuick');
+    
+    if (assignSelect) {
+        assignSelect.addEventListener('change', function() {
+            const assignButton = document.getElementById('assignButton');
+            if (assignButton) assignButton.disabled = !this.value || selectedEmployees.size === 0;
+        });
+    }
+    
+    if (assignSelectQuick) {
+        assignSelectQuick.addEventListener('change', function() {
+            updateQuickAssignButton();
+        });
+    }
+});
+
+// Quick assignment function that uses quick input fields
+async function performBulkAssignmentQuick() {
+    // Validate audit count from quick input
+    const auditCountInput = document.getElementById('bulkAuditCountQuick');
+    const auditCount = parseInt(auditCountInput?.value);
+    
+    if (!auditCountInput?.value || isNaN(auditCount) || auditCount < 1 || auditCount > 10) {
+        if (auditCountInput) auditCountInput.classList.add('error');
+        await window.confirmationDialog.show({
+            title: '⚠️ Audit Count Required',
+            message: 'Please enter the number of audits per employee (1-10) in the highlighted field above.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        if (auditCountInput) auditCountInput.focus();
+        return;
+    }
+    
+    const assignTo = document.getElementById('assignToSelectQuick')?.value;
+    
+    if (!assignTo) {
+        await window.confirmationDialog.show({
+            title: 'No Quality Analyst Selected',
+            message: 'Please select a Quality Analyst or choose to distribute evenly.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    if (selectedEmployees.size === 0) {
+        await window.confirmationDialog.show({
+            title: 'No Employees Selected',
+            message: 'Please select at least one employee to assign audits.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    // Use the same assignment logic as performBulkAssignment but with quick inputs
+    // Update the bulk inputs temporarily to reuse existing logic
+    const bulkAuditCount = document.getElementById('bulkAuditCount');
+    const assignToSelect = document.getElementById('assignToSelect');
+    
+    if (bulkAuditCount) bulkAuditCount.value = auditCount;
+    if (assignToSelect) assignToSelect.value = assignTo;
+    
+    // Call the existing function
+    await performBulkAssignment();
+}
+
+// ============================================================================
+// Quick Actions
+// ============================================================================
+function selectAllVisible() {
+    filteredEmployees.forEach(emp => {
+        if (!selectedEmployees.has(emp.email)) {
+            selectedEmployees.set(emp.email, { employee: emp, auditCount: 1 });
+        }
+    });
+    applyFiltersAndGroup();
+}
+
+function deselectAll() {
+    selectedEmployees.clear();
+    applyFiltersAndGroup();
+}
+
+function updateBulkAuditCount(count) {
+    const input = document.getElementById('bulkAuditCount');
+    const quickInput = document.getElementById('bulkAuditCountQuick');
+    
+    // If no value entered, don't update anything
+    if (!count || isNaN(count)) {
+        // Keep the field empty and add error styling
+        if (input) input.classList.add('error');
+        if (quickInput) quickInput.classList.add('error');
+        return;
+    }
+    
+    // Remove error styling
+    if (input) input.classList.remove('error');
+    if (quickInput) quickInput.classList.remove('error');
+    
+    // Ensure count is within valid range
+    const validCount = Math.max(1, Math.min(10, count));
+    
+    // Update all selected employees with the new count
+    selectedEmployees.forEach((data, email) => {
+        data.auditCount = validCount;
+    });
+    
+    // Update both input fields to show valid count
+    if (input) input.value = validCount;
+    if (quickInput) quickInput.value = validCount;
+    
+    // Update quick assign button state
+    updateQuickAssignButton();
+    
+    // Re-render to update individual audit count inputs
+    applyFiltersAndGroup();
+}
+
+function updateBulkAuditCountQuick(count) {
+    // Sync with the main updateBulkAuditCount function
+    updateBulkAuditCount(count);
+}
+
+// ============================================================================
+// Auto-Assign by Supervisor
+// ============================================================================
+async function autoAssignBySupervisor() {
+    // Automatically switch to quality_supervisor grouping if not already
+    const groupBySelect = document.getElementById('groupBySelect');
+    if (groupBySelect.value !== 'quality_supervisor') {
+        groupBySelect.value = 'quality_supervisor';
+        applyFiltersAndGroup();
+    }
+    
+    // Prompt for audit count with default of 4
+    const auditCountInput = prompt('How many audits per employee?', '4');
+    if (auditCountInput === null) return; // User cancelled
+    
+    const auditCount = parseInt(auditCountInput);
+    if (isNaN(auditCount) || auditCount < 1 || auditCount > 10) {
+        await window.confirmationDialog.show({
+            title: 'Invalid Number',
+            message: 'Please enter a valid number between 1 and 10.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    // Group employees by their quality supervisor
+    const supervisorGroups = new Map();
+    let totalEmployees = 0;
+    let totalAudits = 0;
+    let employeesWithoutSupervisor = 0;
+    let employeesWithoutScorecard = 0;
+    
+    // Use ALL employees, not just filtered ones
+    allEmployees.forEach(emp => {
+        if (!emp.quality_supervisor) {
+            employeesWithoutSupervisor++;
+            return;
+        }
+        
+        // Add ALL employees with quality supervisor (scorecard not required)
+            if (!supervisorGroups.has(emp.quality_supervisor)) {
+                supervisorGroups.set(emp.quality_supervisor, []);
+            }
+            supervisorGroups.get(emp.quality_supervisor).push(emp);
+            totalEmployees++;
+            totalAudits += auditCount;
+    });
+    
+    if (supervisorGroups.size === 0) {
+        await window.confirmationDialog.show({
+            title: 'No Valid Assignments',
+            message: 'No employees with assigned Quality Supervisors found.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+            return;
+        }
+        
+    // Calculate total assignments
+    const totalAssignments = totalEmployees * auditCount;
+    
+    // Build confirmation message
+    let message = `This will automatically create:\n\n`;
+    message += `• ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''}\n`;
+    message += `• For ${totalEmployees} employee${totalEmployees !== 1 ? 's' : ''}\n`;
+    message += `• ${auditCount} audits per employee\n`;
+    message += `• Assigned to ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}\n`;
+    
+    if (employeesWithoutSupervisor > 0) {
+        message += `\n⚠️ ${employeesWithoutSupervisor} employee${employeesWithoutSupervisor !== 1 ? 's' : ''} without Quality Supervisor will be skipped\n`;
+    }
+    
+    message += `\nNote: Auditors will select scorecards when performing audits.\n`;
+    message += `\nContinue?`;
+    
+    const confirmed = await window.confirmationDialog.show({
+        title: 'Auto Assign',
+        message: message,
+        confirmText: 'Assign Audits',
+        cancelText: 'Cancel',
+        type: 'info'
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const assignedBy = userInfo.email || 'unknown';
+        const auditsToCreate = [];
+        
+        // Create audit assignments for each employee to their supervisor
+        // Scorecard will be selected by auditor during audit
+        const currentWeek = getWeekNumber();
+        
+        supervisorGroups.forEach((employees, supervisorEmail) => {
+            employees.forEach(emp => {
+                // Get first applicable scorecard if available, otherwise null
+                const applicableScorecards = getApplicableScorecardsForEmployee(emp);
+                const scorecardId = applicableScorecards.length > 0 ? applicableScorecards[0].id : null;
+                
+                // Create exactly auditCount assignments per employee
+                for (let i = 0; i < auditCount; i++) {
+                        auditsToCreate.push({
+                            employee_email: emp.email,
+                            employee_name: emp.name,
+                            auditor_email: supervisorEmail,
+                        scorecard_id: scorecardId,
+                        week: currentWeek,
+                            status: 'pending',
+                            assigned_by: assignedBy,
+                            created_at: new Date().toISOString()
+                    });
+                }
+            });
+        });
+        
+        // Insert all audit assignments
+        const { error } = await window.supabaseClient
+            .from('audit_assignments')
+            .insert(auditsToCreate);
+        
+        if (error) throw error;
+        
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: `Successfully created ${auditsToCreate.length} audit assignment${auditsToCreate.length !== 1 ? 's' : ''} across ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}!`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Clear selections if any
+        selectedEmployees.clear();
+        applyFiltersAndGroup();
+        
+        // Refresh assigned audits view
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error auto-assigning audits:', error);
+        await window.confirmationDialog.show({
+            title: 'Assignment Failed',
+            message: 'Error assigning audits: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// ============================================================================
+// Bulk Assignment
+// ============================================================================
+async function performBulkAssignment() {
+    // Validate audit count is filled
+    const auditCountInput = document.getElementById('bulkAuditCount');
+    const auditCount = parseInt(auditCountInput.value);
+    
+    if (!auditCountInput.value || isNaN(auditCount) || auditCount < 1 || auditCount > 10) {
+        auditCountInput.classList.add('error');
+        await window.confirmationDialog.show({
+            title: '⚠️ Audit Count Required',
+            message: 'Please enter the number of audits per employee (1-10) in the highlighted field above.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        // Focus on the input field to draw attention
+        auditCountInput.focus();
+        return;
+    }
+    
+    const assignTo = document.getElementById('assignToSelect').value;
+    
+    if (!assignTo) {
+        await window.confirmationDialog.show({
+            title: 'No Quality Analyst Selected',
+            message: 'Please select a Quality Analyst or choose to distribute evenly.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    if (selectedEmployees.size === 0) {
+    await window.confirmationDialog.show({
+            title: 'No Employees Selected',
+            message: 'Please select at least one employee to assign audits.',
+        confirmText: 'OK',
+            type: 'warning'
+        });
+            return;
+        }
+        
+    // Calculate total assignments
+    let totalAssignments = 0;
+    selectedEmployees.forEach((data) => {
+        totalAssignments += data.auditCount;
+    });
+    
+    let confirmMessage;
+    if (assignTo === 'distribute') {
+        confirmMessage = `This will create ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''} for ${selectedEmployees.size} employee${selectedEmployees.size !== 1 ? 's' : ''} and distribute them evenly among ${qualityAnalysts.length} Quality Analyst${qualityAnalysts.length !== 1 ? 's' : ''}.\n\nNote: Auditors will select scorecards when performing audits.\n\nContinue?`;
+    } else {
+        const qa = qualityAnalysts.find(q => q.email === assignTo);
+        confirmMessage = `This will create ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''} for ${selectedEmployees.size} employee${selectedEmployees.size !== 1 ? 's' : ''} and assign them to ${qa.name}.\n\nNote: Auditors will select scorecards when performing audits.\n\nContinue?`;
+    }
+    
+    const confirmed = await window.confirmationDialog.show({
+        title: 'Confirm Audit Assignment',
+        message: confirmMessage,
+        confirmText: 'Assign Audits',
+        cancelText: 'Cancel',
+        type: 'info'
+    });
+    
+    if (!confirmed) return;
+    
+    // Disable button during processing
+    const assignButton = document.getElementById('assignButton');
+    assignButton.disabled = true;
+    assignButton.textContent = 'Assigning...';
+    
+    try {
+        if (assignTo === 'distribute') {
+            await distributeEvenly();
+    } else {
+            await assignToSpecificQA(assignTo);
+        }
+        
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: `Successfully created audit assignments! Check the overview section above.`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Clear selections
+        selectedEmployees.clear();
+        applyFiltersAndGroup();
+        
+        // Refresh assigned audits view
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error assigning audits:', error);
+        await window.confirmationDialog.show({
+            title: 'Assignment Failed',
+            message: 'Error assigning audits: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    } finally {
+        assignButton.disabled = false;
+        assignButton.textContent = 'Assign Audits';
+    }
+}
+
+async function assignToSpecificQA(qaEmail) {
+    const auditsToCreate = [];
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const assignedBy = userInfo.email || 'unknown';
+    const currentWeek = getWeekNumber();
+    
+    selectedEmployees.forEach((data, employeeEmail) => {
+        // Get first applicable scorecard if available, otherwise null
+        const applicableScorecards = getApplicableScorecardsForEmployee(data.employee);
+        const scorecardId = applicableScorecards.length > 0 ? applicableScorecards[0].id : null;
+        
+        // Create exactly auditCount assignments per employee
+        for (let i = 0; i < data.auditCount; i++) {
+                auditsToCreate.push({
+                    employee_email: employeeEmail,
+                    employee_name: data.employee.name,
+                    auditor_email: qaEmail,
+                scorecard_id: scorecardId,
+                week: currentWeek,
+                    status: 'pending',
+                    assigned_by: assignedBy,
+                    created_at: new Date().toISOString()
+            });
+        }
+    });
+    
+    // Insert into audit_assignments table
+    const { error } = await window.supabaseClient
+        .from('audit_assignments')
+        .insert(auditsToCreate);
+    
+    if (error) throw error;
+}
+
+async function distributeEvenly() {
+    if (qualityAnalysts.length === 0) {
+        throw new Error('No Quality Analysts available');
+    }
+    
+    const auditsToCreate = [];
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const assignedBy = userInfo.email || 'unknown';
+    const currentWeek = getWeekNumber();
+    let qaIndex = 0;
+    
+    selectedEmployees.forEach((data, employeeEmail) => {
+        // Get first applicable scorecard if available, otherwise null
+        const applicableScorecards = getApplicableScorecardsForEmployee(data.employee);
+        const scorecardId = applicableScorecards.length > 0 ? applicableScorecards[0].id : null;
+        
+        // Create exactly auditCount assignments per employee
+        for (let i = 0; i < data.auditCount; i++) {
+                auditsToCreate.push({
+                    employee_email: employeeEmail,
+                    employee_name: data.employee.name,
+                    auditor_email: qualityAnalysts[qaIndex].email,
+                scorecard_id: scorecardId,
+                week: currentWeek,
+                    status: 'pending',
+                    assigned_by: assignedBy,
+                    created_at: new Date().toISOString()
+                });
+                
+                // Round-robin distribution
+                qaIndex = (qaIndex + 1) % qualityAnalysts.length;
+        }
+    });
+    
+    // Insert into audit_assignments table
+    const { error } = await window.supabaseClient
+        .from('audit_assignments')
+        .insert(auditsToCreate);
+    
+    if (error) throw error;
+}
+
+// ============================================================================
+// Bulk Assignment Operations
+// ============================================================================
+function populateBulkEditDropdowns() {
+    const auditorSelect = document.getElementById('bulkEditAuditor');
+    const scorecardSelect = document.getElementById('bulkEditScorecard');
+    
+    // Populate auditor dropdown
+    auditorSelect.innerHTML = '<option value="">Change Auditor...</option>';
+    qualityAnalysts.forEach(qa => {
+        const option = document.createElement('option');
+        option.value = qa.email;
+        option.textContent = qa.name;
+        auditorSelect.appendChild(option);
+    });
+    
+    // Populate scorecard dropdown
+    scorecardSelect.innerHTML = '<option value="">Change Scorecard...</option>';
+    allScorecards.forEach(sc => {
+        const option = document.createElement('option');
+        option.value = sc.id;
+        option.textContent = sc.name;
+        scorecardSelect.appendChild(option);
+    });
+}
+
+function toggleAllAssignments(checked) {
+    const checkboxes = document.querySelectorAll('.assignment-checkbox');
+    checkboxes.forEach(cb => cb.checked = checked);
+    toggleAssignmentSelection();
+}
+
+function toggleAssignmentSelection() {
+    const checkboxes = document.querySelectorAll('.assignment-checkbox:checked');
+    const bulkActions = document.getElementById('bulkAssignmentActions');
+    const countSpan = document.getElementById('bulkAssignmentCount');
+    
+    if (checkboxes.length > 0) {
+        bulkActions.style.display = 'flex';
+        countSpan.textContent = `${checkboxes.length} selected`;
+    } else {
+        bulkActions.style.display = 'none';
+    }
+    
+    // Update select all checkbox state
+    const selectAllCheckbox = document.getElementById('selectAllAssignments');
+    const allCheckboxes = document.querySelectorAll('.assignment-checkbox');
+    selectAllCheckbox.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+}
+
+async function applyBulkEdit() {
+    const selectedCheckboxes = document.querySelectorAll('.assignment-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        await window.confirmationDialog.show({
+            title: 'No Assignments Selected',
+            message: 'Please select at least one assignment to edit.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    const newWeekInput = document.getElementById('bulkEditWeek').value;
+    const newAuditor = document.getElementById('bulkEditAuditor').value;
+    const newScorecard = document.getElementById('bulkEditScorecard').value;
+    
+    if (!newWeekInput && !newAuditor && !newScorecard) {
+        await window.confirmationDialog.show({
+            title: 'No Changes Selected',
+            message: 'Please enter a week number or select an auditor/scorecard to change.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    // Validate week number if provided
+    if (newWeekInput) {
+        const newWeek = parseInt(newWeekInput);
+        if (isNaN(newWeek) || newWeek < 1 || newWeek > 52) {
+            await window.confirmationDialog.show({
+                title: 'Invalid Week',
+                message: 'Week number must be between 1 and 52.',
+                confirmText: 'OK',
+                type: 'warning'
+            });
+            return;
+        }
+    }
+    
+    const assignmentIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.assignmentId);
+    
+    const confirmed = await window.confirmationDialog.show({
+        title: 'Confirm Bulk Edit',
+        message: `Are you sure you want to update ${assignmentIds.length} assignment${assignmentIds.length !== 1 ? 's' : ''}?`,
+        confirmText: 'Update',
+        cancelText: 'Cancel',
+        type: 'info'
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+        const updates = {};
+        if (newWeekInput) updates.week = parseInt(newWeekInput);
+        if (newAuditor) updates.auditor_email = newAuditor;
+        if (newScorecard) updates.scorecard_id = newScorecard;
+        
+        const { error } = await window.supabaseClient
+            .from('audit_assignments')
+            .update(updates)
+            .in('id', assignmentIds);
+        
+        if (error) throw error;
+        
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: `Successfully updated ${assignmentIds.length} assignment${assignmentIds.length !== 1 ? 's' : ''}.`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Reset selections and reload
+        document.getElementById('bulkEditWeek').value = '';
+        document.getElementById('bulkEditAuditor').value = '';
+        document.getElementById('bulkEditScorecard').value = '';
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error bulk editing assignments:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to update assignments: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+async function bulkDeleteAssignments() {
+    const selectedCheckboxes = document.querySelectorAll('.assignment-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        await window.confirmationDialog.show({
+            title: 'No Assignments Selected',
+            message: 'Please select at least one assignment to delete.',
+            confirmText: 'OK',
+            type: 'warning'
+        });
+        return;
+    }
+    
+    const assignmentIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.assignmentId);
+    
+    const confirmed = await window.confirmationDialog.show({
+        title: 'Confirm Bulk Delete',
+        message: `Are you sure you want to delete ${assignmentIds.length} assignment${assignmentIds.length !== 1 ? 's' : ''}?\n\nThis action cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'warning'
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+        const { error } = await window.supabaseClient
+            .from('audit_assignments')
+            .delete()
+            .in('id', assignmentIds);
+        
+        if (error) throw error;
+        
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: `Successfully deleted ${assignmentIds.length} assignment${assignmentIds.length !== 1 ? 's' : ''}.`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Reload assignments
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error bulk deleting assignments:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to delete assignments: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// ============================================================================
+// Update Week Number
+// ============================================================================
+async function updateWeek(assignmentId, weekNumber) {
+    try {
+        const week = parseInt(weekNumber);
+        if (isNaN(week) || week < 1 || week > 52) {
+            await window.confirmationDialog.show({
+                title: 'Invalid Week',
+                message: 'Week number must be between 1 and 52.',
+                confirmText: 'OK',
+                type: 'warning'
+            });
+            await loadAssignedAudits();
+            return;
+        }
+        
+        const { error } = await window.supabaseClient
+            .from('audit_assignments')
+            .update({ week: week })
+            .eq('id', assignmentId);
+        
+        if (error) throw error;
+        
+        // Refresh the table silently
+        await loadAssignedAudits();
+        
+    } catch (error) {
+        console.error('Error updating week:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to update week: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// ============================================================================
+// Column Filtering
+// ============================================================================
+let currentFilterDropdown = null;
+let tempFilterSelections = {};
+
+function toggleColumnFilter(column, event) {
+    // Close any existing dropdown
+    if (currentFilterDropdown) {
+        currentFilterDropdown.remove();
+        currentFilterDropdown = null;
+    }
+    
+    // Get unique values for the column from allAssignments
+    const uniqueValues = new Set();
+    
+    allAssignments.forEach(assignment => {
+        let value;
+        switch (column) {
+            case 'week':
+                value = assignment.week ? String(assignment.week) : '-';
+                break;
+            case 'employee':
+                value = assignment.employee_name || assignment.employee_email;
+                break;
+            case 'channel':
+                const user = allUsers.find(u => u.email === assignment.employee_email);
+                value = user?.channel || '-';
+                break;
+            case 'auditor':
+                const auditor = allUsers.find(u => u.email === assignment.auditor_email);
+                value = auditor?.name || assignment.auditor_email;
+                break;
+            case 'scorecard':
+                value = assignment.scorecard?.name || 'N/A';
+                break;
+            case 'status':
+                value = assignment.status;
+                break;
+        }
+        if (value) uniqueValues.add(value);
+    });
+    
+    const values = Array.from(uniqueValues).sort();
+    
+    if (values.length === 0) {
+        alert('No values available for filtering');
+        return;
+    }
+    
+    // Initialize temp selections with current filter
+    tempFilterSelections[column] = [...(columnFilters[column] || [])];
+    
+    // Get the clicked header element
+    const headerCell = event?.target?.closest('th');
+    if (!headerCell) return;
+    
+    // Create dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'filter-dropdown active';
+    
+    // Add options
+    const optionsHtml = values.map(value => {
+        const isChecked = tempFilterSelections[column].includes(value);
+        return `
+            <label class="filter-option" onclick="event.stopPropagation()">
+                <input type="checkbox" 
+                       value="${escapeHtml(String(value))}" 
+                       ${isChecked ? 'checked' : ''}
+                       onchange="updateTempFilter('${column}', this.value, this.checked)"
+                       onclick="event.stopPropagation()">
+                <span>${escapeHtml(String(value))}</span>
+            </label>
+        `;
+    }).join('');
+    
+    dropdown.innerHTML = `
+        <div style="padding: 0.5rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 0.5rem;" onclick="event.stopPropagation()">
+            <strong style="font-size: 0.8125rem; color: #374151;">Filter ${column}</strong>
+        </div>
+        ${optionsHtml}
+        <div class="filter-actions" onclick="event.stopPropagation()">
+            <button class="filter-clear" onclick="event.stopPropagation(); clearSingleFilter('${column}')">Clear</button>
+            <button class="filter-apply" onclick="event.stopPropagation(); applySingleFilter('${column}')">Apply</button>
+        </div>
+    `;
+    
+    // Stop propagation on dropdown clicks
+    dropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    
+    headerCell.appendChild(dropdown);
+    currentFilterDropdown = dropdown;
+    
+    // Close dropdown when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', closeFilterOnClickOutside);
+    }, 0);
+}
+
+function updateTempFilter(column, value, checked) {
+    if (!tempFilterSelections[column]) {
+        tempFilterSelections[column] = [];
+    }
+    
+    if (checked) {
+        if (!tempFilterSelections[column].includes(value)) {
+            tempFilterSelections[column].push(value);
+        }
+    } else {
+        tempFilterSelections[column] = tempFilterSelections[column].filter(v => v !== value);
+    }
+}
+
+function applySingleFilter(column) {
+    columnFilters[column] = tempFilterSelections[column] || [];
+    applyColumnFilters();
+    if (currentFilterDropdown) {
+        currentFilterDropdown.remove();
+        currentFilterDropdown = null;
+    }
+    document.removeEventListener('click', closeFilterOnClickOutside);
+}
+
+function clearSingleFilter(column) {
+    columnFilters[column] = [];
+    tempFilterSelections[column] = [];
+    applyColumnFilters();
+    if (currentFilterDropdown) {
+        currentFilterDropdown.remove();
+        currentFilterDropdown = null;
+    }
+    document.removeEventListener('click', closeFilterOnClickOutside);
+}
+
+function closeFilterOnClickOutside(e) {
+    if (currentFilterDropdown && !currentFilterDropdown.contains(e.target) && !e.target.closest('th')) {
+        currentFilterDropdown.remove();
+        currentFilterDropdown = null;
+        document.removeEventListener('click', closeFilterOnClickOutside);
+    }
+}
+
+function applyColumnFilters() {
+    const tbody = document.getElementById('assignedAuditsTableBody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        let shouldShow = true;
+        
+        // Check each active filter
+        Object.keys(columnFilters).forEach(column => {
+            if (columnFilters[column].length > 0) {
+                const cellIndex = {
+                    'week': 1,
+                    'employee': 2,
+                    'channel': 3,
+                    'auditor': 4,
+                    'scorecard': 5,
+                    'status': 6
+                }[column];
+                
+                const cell = row.cells[cellIndex];
+                if (cell) {
+                    const cellText = cell.textContent.trim();
+                    if (!columnFilters[column].some(filter => cellText.includes(filter))) {
+                        shouldShow = false;
+                    }
+                }
+            }
+        });
+        
+        row.style.display = shouldShow ? '' : 'none';
+    });
+    
+    // Show/hide clear filters button
+    updateClearFiltersButton();
+}
+
+function updateClearFiltersButton() {
+    const clearBtn = document.getElementById('clearFiltersBtn');
+    const hasActiveFilters = Object.values(columnFilters).some(filters => filters.length > 0);
+    
+    if (clearBtn) {
+        clearBtn.style.display = hasActiveFilters ? 'flex' : 'none';
+    }
+}
+
+function clearColumnFilters() {
+    columnFilters = {
+        week: [],
+        employee: [],
+        channel: [],
+        auditor: [],
+        scorecard: [],
+        status: []
+    };
+    applyColumnFilters();
+}
+
+// ============================================================================
+// Toggle Manual Assignment Section
+// ============================================================================
+function toggleManualSection() {
+    const content = document.getElementById('manualSectionContent');
+    const icon = document.getElementById('manualSectionIcon');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+function getWeekNumber(date = new Date()) {
+    // Get the first day of the year
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    
+    // Calculate the number of days since the start of the year
+    const daysSinceStart = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
+    
+    // Calculate the week number (starting from 1)
+    const weekNumber = Math.ceil((daysSinceStart + startOfYear.getDay() + 1) / 7);
+    
+    return weekNumber;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

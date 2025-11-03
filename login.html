@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | QMS</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            /* Login-specific font size overrides */
+            --font-xs: var(--font-xs-login);
+            --font-sm: var(--font-sm-login);
+            --font-base: var(--font-base-login);
+            --font-md: var(--font-md-login);
+            --font-lg: var(--font-lg-login);
+            --font-xl: var(--font-xl-login);
+            --font-4xl: var(--font-4xl-login);
+            --font-5xl: var(--font-5xl-login);
+        }
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            font-family: var(--font-family);
+        }
+        
+        body {
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container { 
+            display: flex; 
+            height: 100vh; 
+            min-height: 100vh;
+        }
+        
+        /* Left Panel */
+        .left-panel {
+            background-color: var(--background-dark);
+            flex: 0 0 70%;
+            display: flex;
+            flex-direction: column;
+            padding: var(--container-padding) var(--container-padding) 0 var(--container-padding);
+            position: relative;
+        }
+        
+
+        
+        .main-heading {
+            color: var(--text-light);
+            font-size: var(--font-12xl);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: clamp(-0.125rem, -0.1875vw, -0.1875rem);
+            text-align: left;
+        }
+        
+        .sub-heading {
+            color: var(--text-light);
+            font-size: var(--font-md);
+            font-weight: 400;
+            text-align: left;
+        }
+        
+        .branding {
+            position: absolute;
+            bottom: var(--spacing-xxl);
+            left: var(--container-padding);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+        
+        .logo {
+            width: var(--logo-size);
+            height: auto;
+            object-fit: contain;
+            margin-left: 0;
+        }
+        
+        .quality-control {
+            color: var(--text-light);
+            font-size: var(--font-4xl);
+            font-weight: 700;
+            text-align: left;
+            margin-left: var(--spacing-xs);
+        }
+        
+        /* Right Panel */
+        .right-panel {
+            background-color: var(--background-color);
+            flex: 0 0 30%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--container-padding);
+        }
+        
+        .login-form { 
+            width: 100%; 
+            max-width: var(--form-max-width); 
+        }
+        
+        .login-heading {
+            color: var(--text-color);
+            font-size: var(--font-5xl);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5625rem;
+        }
+        
+        
+        
+        
+        /* Google Sign-In Button Styles */
+        .google-signin-container {
+            margin-bottom: var(--spacing-lg);
+            margin-top: var(--spacing-sm);
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Ensure Google Identity Services button is centered */
+        .google-signin-container .g_id_signin {
+            margin: 0 auto;
+            display: block;
+        }
+        
+        
+        /* Reset Password Form Styles */
+        .reset-form {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            display: none;
+            pointer-events: none;
+        }
+        
+        .reset-form.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+            animation: slideInUp 0.4s ease;
+        }
+        
+        .login-form {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        .login-form.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            display: none;
+            pointer-events: none;
+            animation: slideOutUp 0.4s ease;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+        
+        /* Error message animations */
+        .password-error {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .password-error:not(:empty) {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 100px;
+            animation: fadeInDown 0.3s ease;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                max-height: 100px;
+            }
+        }
+        
+        /* Success/Error message animations */
+        .success-message,
+        .error-message {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            animation: slideInDown 0.3s ease;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        
+        .success-message {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .error-message {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Button loading state animation */
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+        }
+        
+        .btn-primary:disabled::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Form input focus animations */
+        .form-input {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+        }
+        
+        .form-input:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 115, 62, 0.15);
+        }
+        
+        /* Button hover animations */
+        .btn-primary {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 62, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        /* Link hover animations */
+        .link-primary {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .link-primary::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .link-primary:hover::after {
+            width: 100%;
+        }
+        
+        .link-primary:hover {
+            color: var(--primary-dark);
+            transform: translateX(4px);
+        }
+        
+        .reset-text {
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+            text-align: center;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+        
+        /* Override theme.css main-content styles for login page */
+        .left-panel .main-content {
+            min-height: auto;
+            margin-left: 0;
+            margin-top: 0;
+            flex: none;
+            display: block;
+            align-items: normal;
+            justify-content: normal;
+            padding: 0;
+            transition: none;
+            width: auto;
+            max-width: none;
+            margin-right: 0;
+            position: static;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="main-content">
+                <h1 class="main-heading">Every Detail<br>Matters.</h1>
+                <p class="sub-heading">The Art of Perfection Begins Here</p>
+            </div>
+            <div class="branding">
+                <img src="https://careers.recruiteecdn.com/image/upload/production/images/BpRN/wCefCTnrj5fG.png" alt="QMS Logo" class="logo">
+                <div class="quality-control">Quality Management System</div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <!-- Login Form -->
+            <form class="login-form" id="loginForm">
+                <h2 class="login-heading">Login to continue</h2>
+                
+                <!-- Google Sign-In (Primary Method) -->
+                <div class="google-signin-container">
+                    <div id="g_id_onload"
+                         data-client_id="301636443575-ksrlhnk2bo0d7ikum000tb8b9g081rpp.apps.googleusercontent.com"
+                         data-callback="handleGoogleSignIn"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-size="large"
+                         data-theme="outline"
+                         data-text="sign_in_with"
+                         data-shape="rectangular"
+                         data-logo_alignment="left">
+                    </div>
+                    <div id="googleError" class="password-error"></div>
+                </div>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <!-- Email/Password Login (Secondary Method) -->
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="email@nextventures.io" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                    <div id="passwordError" class="password-error"></div>
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+                <a href="#" class="link-primary" id="forgotPasswordLink">Forgot your password?</a>
+            </form>
+            
+            <!-- Reset Password Form -->
+            <form class="reset-form" id="resetForm">
+                <h2 class="login-heading">Reset Password</h2>
+                <p class="reset-text">Enter your email address and we'll send you a link to reset your password.</p>
+                
+                <div id="messageContainer"></div>
+                
+                <div class="form-group">
+                    <label for="resetEmail" class="form-label">Email Address</label>
+                    <input type="email" id="resetEmail" class="form-input" placeholder="Enter your email address" required>
+                </div>
+                <button type="submit" class="btn-primary" id="submitReset">Send Reset Link</button>
+                <a href="#" class="link-primary" id="backToLogin" style="margin-top: 0.9375rem;">Back to Login</a>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script>
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordError = document.getElementById('passwordError');
+        const inputs = document.querySelectorAll('.form-input');
+        
+        // Clear password error function
+        function clearPasswordError() {
+            passwordError.style.opacity = '0';
+            passwordError.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                passwordError.textContent = '';
+                passwordInput.style.borderColor = '';
+            }, 300);
+        }
+
+        // Show password error function
+        function showPasswordError(message) {
+            passwordError.textContent = message;
+            passwordInput.style.borderColor = 'var(--error-color)';
+            
+            // Trigger animation
+            setTimeout(() => {
+                passwordError.style.opacity = '1';
+                passwordError.style.transform = 'translateY(0)';
+            }, 10);
+        }
+        
+        // Hash password using SHA-256 (same as profile page)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+        
+        // Form validation and submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Clear any previous errors
+            clearPasswordError();
+            
+            if (!email || !password) {
+                showPasswordError('Please fill in all fields');
+                return;
+            }
+            
+            if (!email.endsWith('@nextventures.io')) {
+                showPasswordError('Please use a valid @nextventures.io email address');
+                return;
+            }
+            
+            try {
+                // Wait for Supabase to be initialized
+                let attempts = 0;
+                const maxAttempts = 50;
+                while (attempts < maxAttempts) {
+                    if (window.SupabaseUsers && window.supabaseClient) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.SupabaseUsers) {
+                    showPasswordError('System initialization failed. Please refresh the page.');
+                    return;
+                }
+                
+                // Get user from database
+                const user = await window.SupabaseUsers.getUserByEmail(email);
+                
+                if (!user) {
+                    showPasswordError('User not found. Please check your email address.');
+                    return;
+                }
+                
+                // Check if user is active
+                if (!user.is_active) {
+                    showPasswordError('Your account has been deactivated. Please contact your administrator.');
+                    return;
+                }
+                
+                // Verify password
+                if (!user.password_hash) {
+                    showPasswordError('No password set for this account. Please contact your administrator or use Google Sign-In.');
+                    return;
+                }
+                
+                // Check if password_hash is a SHA-256 hash (64 hex characters)
+                // If it's 64 hex characters, it's hashed; otherwise, treat as plain text
+                const isHashed = /^[a-f0-9]{64}$/i.test(user.password_hash);
+                
+                let passwordValid = false;
+                
+                if (isHashed) {
+                    // Password is stored as hash, so hash the entered password and compare
+                    const hashedPassword = await hashPassword(password);
+                    passwordValid = user.password_hash === hashedPassword;
+                } else {
+                    // Password is stored as plain text (backwards compatibility)
+                    passwordValid = user.password_hash === password;
+                    
+                    // If login succeeds with plain text, upgrade to hashed for security
+                    if (passwordValid) {
+                        try {
+                            const hashedPassword = await hashPassword(password);
+                            await window.SupabaseUsers.updateUser(user.email, {
+                                password_hash: hashedPassword
+                            });
+                        } catch (error) {
+                            console.warn('Failed to upgrade password to hash:', error);
+                        }
+                    }
+                }
+                
+                if (!passwordValid) {
+                showPasswordError('Incorrect password');
+                return;
+            }
+            
+                // Password verified - login successful
+                // Update last login
+                try {
+                    await window.SupabaseUsers.updateLastLogin(user.email);
+                } catch (error) {
+                    console.warn('Failed to update last login:', error);
+                }
+            
+            // Store user information in localStorage for use in home.html
+            const userInfo = {
+                    id: user.email,
+                    name: user.name || email.split('@')[0],
+                    email: user.email,
+                    picture: user.avatar_url || null,
+                    role: user.role,
+                    department: user.department,
+                    designation: user.designation,
+                    employee_id: user.employee_id,
+                    avatar: user.avatar_url || null,
+                    sub: user.email,
+                    provider: 'password'
+            };
+            
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            
+                // Redirect to home page
+            window.location.href = 'home.html';
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showPasswordError('An error occurred during login. Please try again.');
+            }
+        });
+        
+        // Auto-append domain to email
+        emailInput.addEventListener('blur', function() {
+            if (this.value && !this.value.includes('@')) {
+                this.value += '@nextventures.io';
+            }
+        });
+        
+        // Input focus effects and error clearing
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.style.borderColor = 'var(--border-focus)';
+            });
+            input.addEventListener('blur', () => {
+                if (!input.value) input.style.borderColor = 'var(--border-light)';
+            });
+        });
+        
+        // Clear password error when user starts typing
+        passwordInput.addEventListener('input', () => {
+            clearPasswordError();
+        });
+        
+        // Panel switching functionality
+        const loginForm = document.getElementById('loginForm');
+        const resetForm = document.getElementById('resetForm');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const backToLoginLink = document.getElementById('backToLogin');
+        const resetEmailInput = document.getElementById('resetEmail');
+        const submitResetBtn = document.getElementById('submitReset');
+        const messageContainer = document.getElementById('messageContainer');
+
+        // Switch to reset password form
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            // Add fade out animation to login form
+            loginForm.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            loginForm.style.opacity = '0';
+            loginForm.style.transform = 'translateY(-20px)';
+            
+            setTimeout(() => {
+                loginForm.classList.add('hidden');
+                resetForm.classList.add('active');
+                resetEmailInput.focus();
+            }, 300);
+        });
+
+        // Switch back to login form
+        backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            // Add fade out animation to reset form
+            resetForm.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            resetForm.style.opacity = '0';
+            resetForm.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                resetForm.classList.remove('active');
+                loginForm.classList.remove('hidden');
+                emailInput.focus();
+            }, 300);
+        });
+
+        // Clear messages function
+        function clearMessages() {
+            messageContainer.innerHTML = '';
+        }
+
+        // Show message function
+        function showMessage(message, type) {
+            clearMessages();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            messageContainer.appendChild(messageDiv);
+            
+            // Trigger animation by reflow
+            messageDiv.offsetHeight;
+            messageDiv.style.opacity = '1';
+        }
+
+        // Reset password form submission
+        resetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = resetEmailInput.value.trim();
+            
+            if (!email) {
+                showMessage('Please enter your email address.', 'error');
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+
+            // Validate @nextventures.io domain
+            if (!email.endsWith('@nextventures.io')) {
+                showMessage('Please use a valid @nextventures.io email address.', 'error');
+                return;
+            }
+
+            // Disable submit button and show loading state
+            submitResetBtn.disabled = true;
+            submitResetBtn.textContent = 'Sending...';
+
+            try {
+                // Simulate API call (replace with actual implementation)
+                await simulatePasswordReset(email);
+                
+                showMessage('Password reset link has been sent to your email address. Please check your inbox.', 'success');
+                
+                // Reset form and switch back to login after 3 seconds
+                setTimeout(() => {
+                    resetForm.reset();
+                    resetForm.classList.remove('active');
+                    loginForm.classList.remove('hidden');
+                    clearMessages();
+                }, 3000);
+                
+            } catch (error) {
+                showMessage('Failed to send reset link. Please try again later.', 'error');
+            } finally {
+                // Re-enable submit button
+                submitResetBtn.disabled = false;
+                submitResetBtn.textContent = 'Send Reset Link';
+            }
+        });
+
+        // Simulate password reset API call
+        function simulatePasswordReset(email) {
+            return new Promise((resolve, reject) => {
+                // Simulate network delay
+                setTimeout(() => {
+                    // Simulate success (in real implementation, this would be an actual API call)
+                    // Password reset requested
+                    
+                    // For demo purposes, always resolve successfully
+                    // In real implementation, handle actual API response
+                    resolve({
+                        success: true,
+                        message: 'Reset link sent successfully'
+                    });
+                }, 1500);
+            });
+        }
+        
+        // Google Sign-In callback function
+        function handleGoogleSignIn(response) {
+            // Google Sign-In response received
+            
+            // Decode the JWT token to get user information
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            
+            // Extract user information
+            const userInfo = {
+                email: payload.email,
+                name: payload.name,
+                picture: payload.picture,
+                sub: payload.sub
+            };
+            
+            // Validate email domain (optional - remove if you want to allow any Google account)
+            if (userInfo.email && userInfo.email.endsWith('@nextventures.io')) {
+                // Google Sign-In successful
+                
+                // Store user information in localStorage for use in home.html
+                localStorage.setItem('userInfo', JSON.stringify({
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture,
+                    sub: userInfo.sub
+                }));
+                
+                // Redirect to home page
+                window.location.href = 'home.html';
+            } else {
+                document.getElementById('googleError').textContent = 'Please use a valid @nextventures.io Google account';
+                // Sign out the user
+                google.accounts.id.disableAutoSelect();
+            }
+        }
+        
+        // Initialize Google Sign-In when the page loads
+        window.onload = function() {
+            google.accounts.id.initialize({
+                client_id: '301636443575-ksrlhnk2bo0d7ikum000tb8b9g081rpp.apps.googleusercontent.com',
+                callback: handleGoogleSignIn
+            });
+        };
+    </script>
+</body>
+</html>
