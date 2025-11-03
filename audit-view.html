@@ -19,6 +19,7 @@
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="search.js"></script>
+    <script src="audit-template.js"></script>
     <style>
         body {
             margin: 0;
@@ -166,6 +167,24 @@
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+    }
+
+/* Chat view scrollbar styling */
+#transcriptChatView::-webkit-scrollbar {
+    width: 0.3234rem;
+}
+
+#transcriptChatView::-webkit-scrollbar-track {
+    background: #f0f2f5;
+}
+
+#transcriptChatView::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 0.1617rem;
+}
+
+#transcriptChatView::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
     }
 </style>
 
@@ -440,10 +459,8 @@ function generateErrorDetails(audit, errorFields) {
         // Different colors for different parameter types
         let severityColor = '#3b82f6';
         let severityBg = '#eff6ff';
-        let paramIcon = '';
         
         if (field.parameter_type === 'error') {
-            paramIcon = '';
             if (field.severity === 'Critical Fail') {
                 severityColor = '#ef4444';
                 severityBg = '#fee2e2';
@@ -452,64 +469,108 @@ function generateErrorDetails(audit, errorFields) {
                 severityBg = '#fef3c7';
             }
         } else if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
-            paramIcon = '';
             severityColor = '#10b981';
             severityBg = '#d1fae5';
         }
         
         return `
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6;">
-                <div style="font-size: 0.6562rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
-                    <span style="font-weight: 700; color: ${field.parameter_type === 'error' ? '#dc2626' : '#10b981'};">${paramIcon}</span> ${field.label}
-                    <span style="font-size: 0.5156rem; color: #6b7280; font-weight: 400;"> (${field.points} pts)</span>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6;">
+                <div style="font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                    ${field.label}
+                </div>
+                <div style="display: flex; justify-content: center; font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                    ${field.points}
                 </div>
                 <div style="display: flex; justify-content: center;">
-                    <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1875rem 0.5625rem; border-radius: 0.2812rem; font-size: 0.5625rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">${field.parameter_type === 'achievement' || field.parameter_type === 'bonus' ? 'ACHIEVEMENT' : field.severity}</span>
+                    <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1617rem 0.4852rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem;">${(field.parameter_type === 'achievement' || field.parameter_type === 'bonus') && field.field_type !== 'radio' ? 'ACHIEVEMENT' : field.severity}</span>
                 </div>
-                <div style="font-size: 0.6562rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
-                <div style="font-size: 0.6562rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
+                <div style="display: flex; justify-content: center;">
+                    <div style="font-size: 0.5659rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
+                </div>
+                <div style="font-size: 0.5257rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
             </div>
         `;
     }).join('');
     
     return `
-        <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid #e5e7eb;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem;">
-                <h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
-                    <svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4852rem; flex-wrap: wrap; gap: 0.4852rem;">
+                <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                     Error Details
                 </h3>
-                <div style="display: flex; gap: 0.2812rem;">
-                    <span style="background: #dc2626; color: #ffffff; padding: 0.1875rem 0.375rem; border-radius: 351.5273rem; font-size: 0.5156rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: ${criticalFailTotal}</span>
-                    <span style="background: #f59e0b; color: #ffffff; padding: 0.1875rem 0.375rem; border-radius: 351.5273rem; font-size: 0.5156rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: ${criticalTotal}</span>
-                    <span style="background: #3b82f6; color: #ffffff; padding: 0.1875rem 0.375rem; border-radius: 351.5273rem; font-size: 0.5156rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: ${significantTotal}</span>
+                <div style="display: flex; gap: 0.2425rem;">
+                    <span style="background: #dc2626; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: ${criticalFailTotal}</span>
+                    <span style="background: #f59e0b; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: ${criticalTotal}</span>
+                    <span style="background: #3b82f6; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: ${significantTotal}</span>
                 </div>
             </div>
             
-            <div style="background: white; border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; margin-bottom: 0.75rem;">
-                <div style="background-color: #f8f9fa; padding: 0.5625rem 0.75rem; border-bottom: 0.0469rem solid #e5e7eb;">
-                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; font-weight: 700; font-size: 0.6562rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
+            <div style="background: white; border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+                <div style="background-color: #f8f9fa; padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid #e5e7eb;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
                         <div>Error Type</div>
+                        <div style="text-align: center;">Points</div>
                         <div style="text-align: center;">Severity</div>
                         <div style="text-align: center;">${statusColumnHeader}</div>
                         <div>Feedback</div>
                     </div>
                 </div>
-                <div style="padding: 0 0.75rem 0.75rem 0.75rem; box-shadow: 0 -0.0703rem 0.1406rem rgba(0, 0, 0, 0.05);">
+                <div style="padding: 0 0.6469rem 0.6469rem 0.6469rem; box-shadow: 0 -0.0606rem 0.1213rem rgba(0, 0, 0, 0.05);">
                     ${errorRows}
+                </div>
                 </div>
             </div>
             
-            <!-- Pre/Post Status -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.3281rem, 1fr)); gap: 0.5625rem;">
-                <div style="background: #f0fdf4; padding: 0.5625rem; border-radius: 0.2812rem; border: 0.0352rem solid #bbf7d0;">
-                    <p style="font-size: 0.5156rem; color: #166534; margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem; font-weight: 600;">Pre-Status</p>
-                    <p style="font-size: 0.6562rem; color: #15803d; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPreStatus || 'N/A'}</p>
+        <!-- Avg Score, Passing Status & Post-Status -->
+        <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Avg Score</p>
+                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.averageScore || '0'}%</div>
                 </div>
-                <div style="background: #f0f9ff; padding: 0.5625rem; border-radius: 0.2812rem; border: 0.0352rem solid #bae6fd;">
-                    <p style="font-size: 0.5156rem; color: #075985; margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem; font-weight: 600;">Post-Status</p>
-                    <p style="font-size: 0.6562rem; color: #0369a1; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPostStatus || 'N/A'}</p>
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
+                    <div style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.passingStatus || 'N/A'}</div>
                 </div>
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Post-Status</p>
+                    <div style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.agentPostStatus || 'N/A'}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Counts: Total Errors, Critical Fail, Critical, Significant -->
+        <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Total Errors</p>
+                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.totalErrorsCount || '0'}</div>
+                </div>
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
+                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalFailTotal}</div>
+                </div>
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical</p>
+                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalTotal}</div>
+                </div>
+                <div>
+                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
+                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${significantTotal}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pre/Post Status -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.6469rem; margin-bottom: 0.6469rem;">
+            <div style="background: #f0fdf4; padding: 0.4852rem; border-radius: 0.2425rem; border: 0.0304rem solid #bbf7d0;">
+                <p style="font-size: 0.4447rem; color: #166534; margin: 0 0 0.1617rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0122rem; font-weight: 600;">Pre-Status</p>
+                <p style="font-size: 0.5659rem; color: #15803d; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPreStatus || 'N/A'}</p>
+            </div>
+            <div style="background: #f0f9ff; padding: 0.4852rem; border-radius: 0.2425rem; border: 0.0304rem solid #bae6fd;">
+                <p style="font-size: 0.4447rem; color: #075985; margin: 0 0 0.1617rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0122rem; font-weight: 600;">Post-Status</p>
+                <p style="font-size: 0.5659rem; color: #0369a1; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPostStatus || 'N/A'}</p>
             </div>
         </div>
     `;
@@ -517,62 +578,12 @@ function generateErrorDetails(audit, errorFields) {
 
 // Render audit HTML
 function renderAudit(audit, auditScorecard, errorFields) {
-    // Date formatting helper function
-    function formatDate(dateString, includeTime = false) {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        const day = date.getDate();
-        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        const month = months[date.getMonth()];
-        const year = date.getFullYear();
-        
-        if (includeTime) {
-            let hours = date.getHours();
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
-        }
-        return `${day} ${month} ${year}`;
-    }
-
-    // Get country flag emoji
-    function getCountryFlag(countryName) {
-        if (!countryName) return '🏳️';
-        const country = countryName.toLowerCase();
-        const flagMap = {
-            'bangladesh': '🇧🇩',
-            'india': '🇮🇳',
-            'pakistan': '🇵🇰',
-            'philippines': '🇵🇭',
-            'indonesia': '🇮🇩',
-            'sri lanka': '🇱🇰',
-            'nepal': '🇳🇵',
-            'thailand': '🇹🇭',
-            'vietnam': '🇻🇳',
-            'malaysia': '🇲🇾',
-            'singapore': '🇸🇬',
-            'usa': '🇺🇸',
-            'united states': '🇺🇸',
-            'uk': '🇬🇧',
-            'united kingdom': '🇬🇧',
-            'canada': '🇨🇦',
-            'australia': '🇦🇺',
-            'new zealand': '🇳🇿',
-            'south africa': '🇿🇦',
-            'egypt': '🇪🇬',
-            'kenya': '🇰🇪',
-            'nigeria': '🇳🇬',
-            'ghana': '🇬🇭'
-        };
-        return flagMap[country] || '🏳️';
-    }
+    // Helper functions are now in audit-template.js
+    // Use them from the global scope (formatDate, getCountryFlag, escapeHtml)
 
     // Check for passing status (handle both "Passing" and "Passed", but exclude "Not Passing")
     const passingStatus = audit.passingStatus ? audit.passingStatus.toLowerCase() : '';
     const isPassing = passingStatus && passingStatus.includes('pass') && !passingStatus.includes('not');
-    const statusColor = isPassing ? '#10b981' : '#ef4444';
-    const statusIcon = isPassing ? '✓' : '✗';
 
     const errorDetailsHtml = errorFields.length > 0 ? generateErrorDetails(audit, errorFields) : '';
 
@@ -581,6 +592,43 @@ function renderAudit(audit, auditScorecard, errorFields) {
     const headerGradient = normalizedPassingStatus === 'Not Passed' 
         ? 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)' 
         : 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+    
+    // Use formatDate and getCountryFlag from audit-template.js
+    const formatDate = window.formatDate || function(dateString, includeTime) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const day = date.getDate();
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        if (includeTime) {
+            let hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+        }
+        return `${day} ${month} ${year}`;
+    };
+    const getCountryFlag = window.getCountryFlag || function(countryName) {
+        if (!countryName) return '🏳️';
+        const country = countryName.toLowerCase();
+        const flagMap = {
+            'bangladesh': '🇧🇩', 'india': '🇮🇳', 'pakistan': '🇵🇰', 'philippines': '🇵🇭',
+            'indonesia': '🇮🇩', 'sri lanka': '🇱🇰', 'nepal': '🇳🇵', 'thailand': '🇹🇭',
+            'vietnam': '🇻🇳', 'malaysia': '🇲🇾', 'singapore': '🇸🇬', 'usa': '🇺🇸',
+            'united states': '🇺🇸', 'uk': '🇬🇧', 'united kingdom': '🇬🇧', 'canada': '🇨🇦',
+            'australia': '🇦🇺', 'new zealand': '🇳🇿', 'south africa': '🇿🇦', 'egypt': '🇪🇬',
+            'kenya': '🇰🇪', 'nigeria': '🇳🇬', 'ghana': '🇬🇭'
+        };
+        return flagMap[country] || '🏳️';
+    };
+    const escapeHtml = window.escapeHtml || function(text) {
+        if (text == null) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
 
     // Build interaction ID HTML (clickable link if available)
     // Get Intercom app ID from config (generated from environment variables)
@@ -591,150 +639,33 @@ function renderAudit(audit, auditScorecard, errorFields) {
         const intercomUrl = INTERCOM_APP_ID 
             ? `https://app.intercom.com/a/inbox/${INTERCOM_APP_ID}/inbox/conversation/${interactionId}?view`
             : '#';
-        interactionIdHtml = '<a href="' + intercomUrl + '" target="_blank" rel="noopener noreferrer" style="font-size: 0.5625rem; color: #1A733E; font-family: \'Poppins\', sans-serif; font-weight: 600; text-decoration: underline; cursor: pointer; transition: color 0.2s ease;" onmouseover="this.style.color=\'#2d9a5a\'" onmouseout="this.style.color=\'#1A733E\'">' + interactionId + '</a>';
+        interactionIdHtml = '<a href="' + escapeHtml(intercomUrl) + '" target="_blank" rel="noopener noreferrer" style="font-size: 0.4852rem; color: #1A733E; font-family: \'Poppins\', sans-serif; font-weight: 600; text-decoration: underline; cursor: pointer; transition: color 0.2s ease;" onmouseover="this.style.color=\'#2d9a5a\'" onmouseout="this.style.color=\'#1A733E\'">' + escapeHtml(interactionId) + '</a>';
     } else {
-        interactionIdHtml = '<span style="font-size: 0.5625rem; color: #1f2937; font-family: \'Poppins\', sans-serif; font-weight: 600;">N/A</span>';
+        interactionIdHtml = '<span style="font-size: 0.4852rem; color: #1f2937; font-family: \'Poppins\', sans-serif; font-weight: 600;">N/A</span>';
     }
 
-    const html = `
-        <div style="background: white; width: 100%; min-height: calc(100vh - 3.75rem);">
-            <div style="background: ${headerGradient}; padding: 0.5625rem 1.125rem; color: white; box-shadow: 0 0.1406rem 0.2109rem rgba(0,0,0,0.1); position: relative;">
-                <button onclick="window.location.href='audit-reports.html'" style="position: absolute; top: 0.5625rem; right: 1.125rem; background: rgba(255,255,255,0.2); border: 0.0352rem solid rgba(255,255,255,0.3); border-radius: 0.2812rem; width: 1.5rem; height: 1.5rem; font-size: 0.9375rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; backdrop-filter: blur(0.3516rem); z-index: 10;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Close (Esc)">
-                    ×
-                </button>
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.125rem; flex-wrap: wrap; padding-right: 2.625rem;">
-                    <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem; min-width: 0;">
-                        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.2812rem;">
-                           
-                            <div style="display: flex; align-items: center; gap: 0.9375rem; flex-wrap: wrap;">
-                                <div>
-                                    <p style="font-size: 0.375rem; color: rgba(255,255,255,0.7); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; line-height: 1;">Employee</p>
-                                    <div>
-                                        <p style="font-size: 0.5625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap;">${audit.employeeName || 'N/A'}</p>
-                                        <p style="font-size: 0.375rem; color: rgba(255,255,255,0.75); margin: 0.0938rem 0 0 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 8.7891rem;" title="${audit.employeeEmail || 'N/A'}">${audit.employeeEmail || 'N/A'}</p>
+    // Generate recommendations HTML
+    const recommendationsHtml = audit.recommendations 
+        ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.5659rem; border-radius: 0.2425rem; border: 0.0304rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>`
+        : '';
+
+    // Generate action buttons HTML
+    const actionButtonsHtml = `
+        <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; padding: 0.6469rem 0.9704rem; border-top: 0.0405rem solid #e5e7eb; background-color: #f9fafb;">
+            <div style="display: flex; align-items: center; gap: 0.4852rem;">
+                <!-- Placeholder for future content -->
                                     </div>
-                                </div>
-                                <div>
-                                    <p style="font-size: 0.375rem; color: rgba(255,255,255,0.7); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; line-height: 1;">Type</p>
-                                    <p style="font-size: 0.5625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap;">${audit.employeeType || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <p style="font-size: 0.375rem; color: rgba(255,255,255,0.7); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; line-height: 1;">Department</p>
-                                    <p style="font-size: 0.5625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; white-space: nowrap;">${audit.employeeDepartment || 'N/A'}</p>
-                                </div>
-                                <div style="display: flex; align-items: center;">
-                                    <span style="font-size: 0.9375rem; line-height: 1;" title="${audit.countryOfEmployee || 'Unknown'}">${getCountryFlag(audit.countryOfEmployee)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 0.2812rem; flex-wrap: nowrap; flex-shrink: 0;">
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Status</p>
-                            <p style="font-size: 0.6094rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${statusIcon} ${audit.passingStatus || 'N/A'}</p>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Score</p>
-                            <p style="font-size: 0.6094rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.averageScore || '0'}%</p>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Errors</p>
-                            <p style="font-size: 0.6094rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.totalErrorsCount || '0'}</p>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Type</p>
-                            <p style="font-size: 0.5156rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; max-width: 4.2188rem; overflow: hidden; text-overflow: ellipsis;" title="${audit.auditType || 'N/A'}">${audit.auditType || 'N/A'}</p>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Date</p>
-                            <p style="font-size: 0.4688rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${formatDate(audit.auditTimestamp, true)}</p>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Qtr</p>
-                            <p style="font-size: 0.5625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.quarter ? (audit.quarter.toString().startsWith('Q') ? audit.quarter : 'Q' + audit.quarter) : 'N/A'}</p>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.1875rem; padding: 0.2812rem 0.4688rem; backdrop-filter: blur(0.3516rem); white-space: nowrap;">
-                            <p style="font-size: 0.375rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0938rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; line-height: 1;">Week</p>
-                            <p style="font-size: 0.5625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${audit.week || 'N/A'}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Two Column Layout -->
-            <div id="auditMainContent" style="display: flex; padding: 1.125rem; max-width: 100%; gap: 0; flex-wrap: nowrap;">
-                
-                <!-- LEFT COLUMN: Interaction Details + Transcript -->
-                <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.75rem; width: 45%; min-width: 10.5469rem; padding-right: 0.375rem;">
-                    
-                    <!-- Interaction Details -->
-                    <div style="background: #f9fafb; border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; border: 0.0352rem solid #e5e7eb;">
-                        <div style="display: flex; align-items: center; gap: 0.5625rem; flex-wrap: nowrap;">
-                            <div style="display: flex; align-items: center; gap: 0.1875rem;">
-                                <svg style="width: 0.5625rem; height: 0.5625rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                                <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">ID:</span>
-                                ${interactionIdHtml}
-                            </div>
-                            <div style="width: 0.0352rem; height: 0.75rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.1875rem;">
-                                <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">Date:</span>
-                                <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${formatDate(audit.interactionDate, false)}</span>
-                            </div>
-                            <div style="width: 0.0352rem; height: 0.75rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.1875rem;">
-                                <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">Channel:</span>
-                                <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.channel || 'N/A'}</span>
-                            </div>
-                            <div style="width: 0.0352rem; height: 0.75rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.1875rem; min-width: 0; flex: 1;">
-                                <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">Email:</span>
-                                <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${audit.clientEmail || 'N/A'}">${audit.clientEmail || 'N/A'}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Transcript -->
-                    <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0; border: 0.0352rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
-                        <div style="background: #f9fafb; padding: 0.75rem; border-bottom: 0.0352rem solid #e5e7eb; flex-shrink: 0;">
-                            <h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
-                                <svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                                Transcript
-                            </h3>
-                        </div>
-                        <div style="padding: 0.75rem; background: white; overflow-y: auto; flex: 1;">
-                            <div style="white-space: pre-wrap; font-size: 0.6094rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.transcript || '<span style="color: #9ca3af; font-style: italic;">No transcript available</span>'}</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- RESIZABLE SPLITTER -->
-                <div id="splitter" class="no-print" style="width: 0.2812rem; background: #e5e7eb; cursor: col-resize; position: relative; flex-shrink: 0; transition: background 0.2s;">
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0.1406rem; height: 1.4062rem; background: #9ca3af; border-radius: 0.0703rem;"></div>
-                </div>
-                
-                <!-- RIGHT COLUMN: Error Details & Recommendations -->
-                <div id="rightColumn" style="flex: 1; min-width: 10.5469rem; padding-left: 0.375rem;">
-                    
-                    <!-- Error Details -->
-                    ${errorDetailsHtml}
-                    
-                    <!-- Recommendations -->
-                    ${audit.recommendations ? `<div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid #e5e7eb;"><h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0 0 0.5625rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;"><svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.6562rem; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.6094rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>` : ''}
-                </div>
-            </div>
-            
-            <!-- Action Buttons (below the columns) -->
-            <div class="no-print" style="padding: 1.125rem; border-top: 0.0352rem solid #e5e7eb; background: white; display: flex; gap: 0.5625rem; justify-content: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.4852rem;">
                 <!-- Split button for Acknowledge/Reversal -->
                 <div style="position: relative; display: inline-flex;">
-                    <button id="acknowledgeBtn" onclick="acknowledgeAudit()" style="padding: 0.5625rem 1.125rem; background-color: #10b981; color: white; border: none; border-radius: 0.2812rem 0 0 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.375rem;">
-                        <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="acknowledgeBtn" onclick="acknowledgeAudit()" style="padding: 0.4852rem 1.2937rem; background-color: #10b981; color: white; border: none; border-radius: 0.2425rem 0 0 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem;">
+                        <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
                         Acknowledge
                     </button>
-                    <button onclick="toggleReversalForm()" style="padding: 0.5625rem 1.125rem; background-color: #ef4444; color: white; border: none; border-radius: 0 0.2812rem 0.2812rem 0; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.375rem; border-left: 0.0352rem solid rgba(255,255,255,0.3);">
-                        <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button onclick="toggleReversalForm()" style="padding: 0.4852rem 1.2937rem; background-color: #ef4444; color: white; border: none; border-radius: 0 0.2425rem 0.2425rem 0; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem; border-left: 0.0304rem solid rgba(255,255,255,0.3);">
+                        <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                             <line x1="12" y1="9" x2="12" y2="13"/>
                             <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -742,9 +673,8 @@ function renderAudit(audit, auditScorecard, errorFields) {
                         Submit Reversal
                     </button>
                 </div>
-                
-                <button id="editAuditBtn" onclick="editCurrentAudit()" style="padding: 0.5625rem 1.125rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.375rem;">
-                    <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button id="editAuditBtn" onclick="editCurrentAudit()" style="padding: 0.4852rem 1.2937rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem;">
+                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
@@ -753,6 +683,24 @@ function renderAudit(audit, auditScorecard, errorFields) {
             </div>
         </div>
     `;
+
+    // Generate header actions HTML
+    const headerActionsHtml = `
+        <button onclick="window.location.href='audit-reports.html'" style="background: rgba(255,255,255,0.2); border: 0.0606rem solid white; border-radius: 0.2425rem; width: 1.2937rem; height: 1.2937rem; font-size: 0.8086rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Close (Esc)">×</button>
+    `;
+
+    // Use shared template to generate HTML
+    const html = window.generateAuditFormHTML({
+        audit: audit,
+        mode: 'view',
+        headerTitle: 'Audit Details',
+        headerGradient: headerGradient,
+        headerActions: headerActionsHtml,
+        interactionIdHtml: interactionIdHtml,
+        errorDetailsHtml: errorDetailsHtml,
+        recommendationsHtml: recommendationsHtml,
+        actionButtonsHtml: actionButtonsHtml
+    });
 
     const auditContentDiv = document.getElementById('auditContent');
     auditContentDiv.innerHTML = html;
@@ -773,6 +721,51 @@ function renderAudit(audit, auditScorecard, errorFields) {
 
     // Make splitter draggable
     initializeSplitter();
+    
+    // Auto-fetch conversation from Intercom if interaction ID exists
+    // Show chat view by default (will show loading, then Intercom messages or fallback to text)
+    const transcriptChatView = document.getElementById('transcriptChatView');
+    const transcriptTextView = document.getElementById('transcriptTextView');
+    const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
+    
+    if (transcriptChatView && transcriptTextView) {
+        transcriptChatView.style.display = 'flex';
+        transcriptTextView.style.display = 'none';
+        if (toggleTranscriptViewBtn) {
+            toggleTranscriptViewBtn.textContent = 'Text View';
+            toggleTranscriptViewBtn.title = 'Switch to text view';
+        }
+        isChatViewActive = true;
+    }
+    
+    if (audit.interactionId || audit.interaction_id) {
+        const interactionId = audit.interactionId || audit.interaction_id;
+        // Show loading state immediately
+        const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+        if (chatMessagesContainer) {
+            chatMessagesContainer.innerHTML = `
+                <div style="text-align: center; padding: 1.2937rem; color: #6b7280;">
+                    <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.091rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversation from Intercom...</p>
+                </div>
+            `;
+        }
+        // Delay slightly to ensure DOM is ready, then fetch
+        setTimeout(() => {
+            loadConversationFromIntercom(interactionId);
+        }, 100);
+    } else {
+        // No interaction ID - show text view with database transcript
+        if (transcriptChatView && transcriptTextView) {
+            transcriptChatView.style.display = 'none';
+            transcriptTextView.style.display = 'flex';
+            if (toggleTranscriptViewBtn) {
+                toggleTranscriptViewBtn.textContent = 'Chat View';
+                toggleTranscriptViewBtn.title = 'Switch to chat view';
+            }
+            isChatViewActive = false;
+        }
+    }
 }
 
 // Handle reversal status UI updates
@@ -870,6 +863,816 @@ function handleReversalStatusUI(audit) {
             }
         }
     }
+}
+
+// Toggle between text view and chat view
+function toggleTranscriptView() {
+    const transcriptChatView = document.getElementById('transcriptChatView');
+    const transcriptTextView = document.getElementById('transcriptTextView');
+    const toggleBtn = document.getElementById('toggleTranscriptViewBtn');
+    const chatPanel = document.getElementById('conversationAttributesPanel');
+    const textPanel = document.getElementById('conversationAttributesPanelTextView');
+    const rightColumn = document.getElementById('rightColumn');
+    
+    if (!transcriptChatView || !transcriptTextView || !toggleBtn) return;
+    
+    const isChatView = transcriptChatView.style.display !== 'none' && window.getComputedStyle(transcriptChatView).display !== 'none';
+    
+    if (isChatView) {
+        // Switch to text view
+        transcriptChatView.style.display = 'none';
+        transcriptTextView.style.display = 'flex';
+        toggleBtn.textContent = 'Chat View';
+        toggleBtn.title = 'Switch to chat view';
+        
+        // Show text panel, hide chat panel
+        if (textPanel) {
+            textPanel.style.display = 'block';
+            if (rightColumn) {
+                setTimeout(() => {
+                    const rightHeight = rightColumn.scrollHeight;
+                    textPanel.style.height = rightHeight + 'px';
+                }, 100);
+            }
+        }
+        if (chatPanel) {
+            chatPanel.style.display = 'none';
+        }
+    } else {
+        // Switch to chat view
+        transcriptTextView.style.display = 'none';
+        transcriptChatView.style.display = 'flex';
+        toggleBtn.textContent = 'Text View';
+        toggleBtn.title = 'Switch to text view';
+        
+        // Show chat panel, hide text panel
+        if (chatPanel) {
+            chatPanel.style.display = 'block';
+            if (rightColumn) {
+                setTimeout(() => {
+                    const rightHeight = rightColumn.scrollHeight;
+                    chatPanel.style.height = rightHeight + 'px';
+                }, 100);
+            }
+        }
+        if (textPanel) {
+            textPanel.style.display = 'none';
+        }
+        
+        // If Intercom conversation not loaded, try to parse plain text transcript
+        const chatContainer = document.getElementById('chatMessagesContainer');
+        if (chatContainer && (!currentConversationData && chatContainer.children.length === 0)) {
+            const transcriptText = document.querySelector('#transcriptTextView div')?.textContent;
+            if (transcriptText) {
+                const interactionDate = currentAudit?.interaction_date || currentAudit?.interactionDate;
+                parseTranscriptToChat(transcriptText, interactionDate);
+            }
+        }
+        
+        // Scroll to bottom
+        setTimeout(() => {
+            transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
+        }, 100);
+    }
+}
+
+// Make toggleTranscriptView globally accessible
+window.toggleTranscriptView = toggleTranscriptView;
+
+// Intercom API Integration
+let currentConversationData = null;
+let isChatViewActive = false;
+
+// Get Intercom and Supabase config (use existing globals from config files if available)
+const INTERCOM_CONFIG = window.intercomConfig || {
+    baseUrl: 'https://app.intercom.com',
+    appId: ''
+};
+
+// Get Supabase config from window.SupabaseConfig (set by supabase-config.js)
+// Use local variables with different names to avoid conflicts
+const supabaseUrl = window.SupabaseConfig?.url || '';
+const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+
+// Fetch conversation from Intercom API
+async function loadConversationFromIntercom(conversationId) {
+    const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+    const transcriptChatView = document.getElementById('transcriptChatView');
+    const transcriptTextView = document.getElementById('transcriptTextView');
+    const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
+    
+    if (!chatMessagesContainer || !transcriptChatView) return;
+    
+    // Show loading state
+    chatMessagesContainer.innerHTML = `
+        <div style="text-align: center; padding: 1.2937rem; color: #6b7280;">
+            <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.091rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversation from Intercom...</p>
+        </div>
+    `;
+
+    try {
+        // Fetch conversation data from Intercom API via Supabase Edge Function (to avoid CORS)
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?conversation_id=${encodeURIComponent(conversationId)}`;
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const conversation = await response.json();
+        currentConversationData = conversation;
+
+        // Parse and display conversation messages
+        displayConversationMessages(conversation);
+
+        // Extract and display all conversation attributes
+        displayConversationAttributes(conversation);
+
+        // Auto-switch to chat view if not already active
+        if (!isChatViewActive) {
+            isChatViewActive = true;
+            transcriptChatView.style.display = 'flex';
+            if (transcriptTextView) transcriptTextView.style.display = 'none';
+            if (toggleTranscriptViewBtn) {
+                toggleTranscriptViewBtn.textContent = 'Text View';
+                toggleTranscriptViewBtn.title = 'Switch to text view';
+            }
+        }
+
+    } catch (error) {
+        console.error('Error loading conversation from Intercom:', error);
+        
+        // Fallback to text view with database transcript if Intercom fetch fails
+        const transcriptChatView = document.getElementById('transcriptChatView');
+        const transcriptTextView = document.getElementById('transcriptTextView');
+        const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
+        
+        if (transcriptChatView && transcriptTextView) {
+            // Switch to text view
+            transcriptChatView.style.display = 'none';
+            transcriptTextView.style.display = 'flex';
+            if (toggleTranscriptViewBtn) {
+                toggleTranscriptViewBtn.textContent = 'Chat View';
+                toggleTranscriptViewBtn.title = 'Switch to chat view';
+            }
+            isChatViewActive = false;
+        }
+        
+        // Show error message in chat container (for debugging, but user will see text view)
+        chatMessagesContainer.innerHTML = `
+            <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
+                <svg style="width: 1.9406rem; height: 1.9406rem; margin: 0 auto 0.6469rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p style="font-size: 0.5659rem; font-weight: 600; margin-bottom: 0.3234rem;">Failed to load conversation from Intercom</p>
+                <p style="font-size: 0.4852rem; color: #6b7280;">${escapeHtml(error.message)}</p>
+                <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">Showing database transcript instead.</p>
+            </div>
+        `;
+    }
+}
+
+// Display conversation messages in chat interface
+function displayConversationMessages(conversation) {
+    const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+    if (!chatMessagesContainer) return;
+    
+    const parts = conversation.conversation_parts?.conversation_parts || [];
+    
+    if (parts.length === 0) {
+        chatMessagesContainer.innerHTML = `
+            <div style="text-align: center; padding: 1.2937rem; color: #9ca3af;">
+                <p>No messages found in this conversation.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort parts by created_at timestamp
+    const sortedParts = [...parts].sort((a, b) => {
+        const timeA = typeof a.created_at === 'number' ? (a.created_at < 10000000000 ? a.created_at * 1000 : a.created_at) : new Date(a.created_at).getTime();
+        const timeB = typeof b.created_at === 'number' ? (b.created_at < 10000000000 ? b.created_at * 1000 : b.created_at) : new Date(b.created_at).getTime();
+        return timeA - timeB;
+    });
+
+    chatMessagesContainer.innerHTML = '';
+
+    sortedParts.forEach(part => {
+        const message = part.body || '';
+        const author = part.author || {};
+        const authorName = author.name || author.email || 'Unknown';
+        const authorType = author.type || 'unknown'; // 'user', 'admin', 'bot', etc.
+        const partType = part.part_type || 'comment'; // 'comment', 'assignment', etc.
+        
+        // Convert Unix timestamp to Date object (Intercom returns timestamps in seconds)
+        let timestamp;
+        if (typeof part.created_at === 'number') {
+            // Unix timestamp in seconds - convert to milliseconds
+            timestamp = new Date(part.created_at < 10000000000 ? part.created_at * 1000 : part.created_at);
+        } else {
+            timestamp = new Date(part.created_at);
+        }
+        const isUser = authorType === 'user' || authorType === 'contact';
+        
+        // Format the message body to check if it has content
+        const formattedMessage = formatMessageBody(message);
+        
+        // Skip empty messages or non-comment parts (like assignments, system messages, etc.)
+        // Only show parts that have actual text content
+        if (!formattedMessage || formattedMessage.trim() === '' || formattedMessage.trim() === '{}') {
+            return; // Skip this part
+        }
+        
+        // Also skip if part type is not a comment (assignment, system messages, etc.)
+        if (partType !== 'comment' && partType !== 'note') {
+            return; // Skip non-comment parts
+        }
+        
+        // Format timestamp
+        const timeStr = timestamp.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        const dateStr = timestamp.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+
+        // Create message bubble
+        // User messages on LEFT (white), Agent messages on RIGHT (green)
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.3234rem;
+            align-items: ${isUser ? 'flex-start' : 'flex-end'};
+        `;
+
+        // Switched colors: Agent = flat green, User = white
+        const bubbleStyle = isUser 
+            ? `
+                background: white;
+                color: #374151;
+                border: 0.0304rem solid #e5e7eb;
+                border-radius: 0.4852rem 0.4852rem 0.4852rem 0.1617rem;
+                max-width: 75%;
+                margin-right: auto;
+            `
+            : `
+                background: #1A733E;
+                color: white;
+                border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
+                max-width: 75%;
+                margin-left: auto;
+            `;
+
+        // Compact layout: timestamp next to sender name for both user and agent messages
+        messageDiv.innerHTML = `
+            <div style="${bubbleStyle} padding: 0.3234rem 0.4852rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08);">
+                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
+                <div style="font-size: 0.5257rem; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">${formattedMessage}</div>
+            </div>
+        `;
+
+        chatMessagesContainer.appendChild(messageDiv);
+    });
+
+    // Scroll to bottom
+    const transcriptChatView = document.getElementById('transcriptChatView');
+    if (transcriptChatView) {
+        transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
+    }
+}
+
+// Format message body (handle HTML/plain text)
+function formatMessageBody(body) {
+    if (!body) return '';
+    
+    // If body is an object, extract text
+    if (typeof body === 'object') {
+        // Handle empty objects
+        if (Object.keys(body).length === 0) return '';
+        
+        // Check for text content in various possible fields
+        if (body.plaintext) {
+            const text = String(body.plaintext).trim();
+            return text ? escapeHtml(text) : '';
+        }
+        if (body.text) {
+            const text = String(body.text).trim();
+            return text ? escapeHtml(text) : '';
+        }
+        if (body.body) {
+            const text = String(body.body).trim();
+            return text ? escapeHtml(text) : '';
+        }
+        
+        // Check for HTML content
+        if (body.html) {
+            const text = String(body.html).replace(/<[^>]*>/g, '').trim();
+            return text ? escapeHtml(text) : '';
+        }
+        
+        // If object has no text content, return empty
+        // Don't stringify as that would just show "{}"
+        return '';
+    }
+    
+    // Handle string body
+    const text = String(body).replace(/<[^>]*>/g, '').trim();
+    
+    // Return empty if text is empty or just whitespace/JSON-like structures
+    if (!text || text === '{}' || text === '[]' || text === 'null' || text === 'undefined') {
+        return '';
+    }
+    
+    return escapeHtml(text);
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Toggle conversation attributes panel (via details button)
+// Function removed - attributes are now always shown by default
+
+// Display all conversation attributes in UI-friendly format
+function displayConversationAttributes(conversation) {
+    const chatPanel = document.getElementById('conversationAttributesPanel');
+    const chatGrid = document.getElementById('conversationAttributesGrid');
+    const textPanel = document.getElementById('conversationAttributesPanelTextView');
+    const textGrid = document.getElementById('conversationAttributesGridTextView');
+    
+    if (!chatGrid || !textGrid) return;
+    
+    // Clear existing content
+    chatGrid.innerHTML = '';
+    textGrid.innerHTML = '';
+    
+    let attributeCount = 0;
+    const attributes = extractConversationAttributes(conversation);
+    
+    // Helper function to format value
+    const formatValue = (key, value) => {
+        if (value === null || value === undefined) return '<span style="color: #9ca3af; font-style: italic;">Not set</span>';
+        if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+        
+        // Handle URLs (for Web Link)
+        if (key.toLowerCase().includes('link') || key.toLowerCase().includes('url')) {
+            const url = String(value);
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color: #1A733E; text-decoration: underline; font-weight: 600;">View in Intercom →</a>`;
+            }
+        }
+        
+        if (typeof value === 'object') {
+            if (Array.isArray(value)) {
+                if (value.length === 0) return '<span style="color: #9ca3af; font-style: italic;">None</span>';
+                return value.map(item => {
+                    if (typeof item === 'object') {
+                        return Object.values(item).filter(v => v).join(' - ');
+                    }
+                    return String(item);
+                }).join(', ');
+            }
+            return JSON.stringify(value, null, 2);
+        }
+        return escapeHtml(String(value));
+    };
+    
+    // Create attribute cards for both views
+    const createAttributeCard = (key, value) => {
+        const card = document.createElement('div');
+        card.style.cssText = `
+            background: #f9fafb;
+            border: 0.0304rem solid #e5e7eb;
+            border-radius: 0.1617rem;
+            padding: 0.2425rem 0.3234rem;
+            transition: all 0.2s ease;
+        `;
+        
+        card.onmouseenter = () => {
+            card.style.borderColor = '#1A733E';
+            card.style.boxShadow = '0 0.0606rem 0.1213rem rgba(26, 115, 62, 0.1)';
+            card.style.backgroundColor = '#ffffff';
+        };
+        
+        card.onmouseleave = () => {
+            card.style.borderColor = '#e5e7eb';
+            card.style.boxShadow = 'none';
+            card.style.backgroundColor = '#f9fafb';
+        };
+        
+        const label = formatLabelForAttribute(key);
+        const formattedValue = formatValue(key, value);
+        
+        card.innerHTML = `
+            <div style="font-size: 0.3639rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.0122rem; margin-bottom: 0.0808rem; font-family: 'Poppins', sans-serif; line-height: 1.2;">${escapeHtml(label)}</div>
+            <div style="font-size: 0.4852rem; color: #1f2937; font-weight: 500; word-wrap: break-word; line-height: 1.3; font-family: 'Poppins', sans-serif;">${formattedValue}</div>
+        `;
+        
+        return card;
+    };
+    
+    Object.entries(attributes).forEach(([key, value]) => {
+        if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+            return; // Skip empty values
+        }
+        
+        attributeCount++;
+        
+        // Create cards for both views
+        const chatCard = createAttributeCard(key, value);
+        const textCard = createAttributeCard(key, value);
+        
+        chatGrid.appendChild(chatCard);
+        textGrid.appendChild(textCard);
+    });
+    
+    // Show panels by default if attributes found
+    if (attributeCount > 0) {
+        console.log('Attributes loaded:', attributeCount, 'items');
+        
+        // Check which view is currently active and show appropriate panel
+        const transcriptChatView = document.getElementById('transcriptChatView');
+        const transcriptTextView = document.getElementById('transcriptTextView');
+        const chatViewStyle = transcriptChatView ? window.getComputedStyle(transcriptChatView).display : 'none';
+        const isChatView = chatViewStyle !== 'none' && chatViewStyle !== '';
+        
+        const rightColumn = document.getElementById('rightColumn');
+        
+        if (isChatView && chatPanel) {
+            chatPanel.style.display = 'block';
+            if (rightColumn) {
+                setTimeout(() => {
+                    const rightHeight = rightColumn.scrollHeight;
+                    chatPanel.style.height = rightHeight + 'px';
+                }, 100);
+            }
+        } else if (!isChatView && textPanel) {
+            textPanel.style.display = 'block';
+            if (rightColumn) {
+                setTimeout(() => {
+                    const rightHeight = rightColumn.scrollHeight;
+                    textPanel.style.height = rightHeight + 'px';
+                }, 100);
+            }
+        }
+    } else {
+        // Hide panels if no attributes
+        if (chatPanel) {
+            chatPanel.style.display = 'none';
+        }
+        if (textPanel) {
+            textPanel.style.display = 'none';
+        }
+    }
+}
+
+// Helper function to format label (used in both functions)
+function formatLabelForAttribute(label) {
+    return label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+// Extract all relevant conversation attributes from Intercom API response
+function extractConversationAttributes(conversation) {
+    const attributes = {};
+    
+    // Helper function to convert Unix timestamp to readable date
+    const formatTimestamp = (timestamp) => {
+        if (!timestamp) return null;
+        const date = typeof timestamp === 'number' 
+            ? new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp)
+            : new Date(timestamp);
+        if (isNaN(date.getTime())) return null;
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+    
+    // Basic Information
+    if (conversation.id) attributes['Conversation ID'] = conversation.id;
+    if (conversation.type) attributes['Type'] = conversation.type;
+    if (conversation.state) attributes['State'] = conversation.state;
+    if (conversation.read !== undefined) attributes['Read'] = conversation.read;
+    if (conversation.created_at) attributes['Created At'] = formatTimestamp(conversation.created_at);
+    if (conversation.updated_at) attributes['Updated At'] = formatTimestamp(conversation.updated_at);
+    if (conversation.waiting_since) attributes['Waiting Since'] = formatTimestamp(conversation.waiting_since);
+    
+    // Source Information
+    if (conversation.source) {
+        if (conversation.source.type) attributes['Source Type'] = conversation.source.type;
+        if (conversation.source.id) attributes['Source ID'] = conversation.source.id;
+        if (conversation.source.delivered_as) attributes['Delivered As'] = conversation.source.delivered_as;
+        if (conversation.source.subject) attributes['Subject'] = conversation.source.subject;
+        
+        // Author (who initiated)
+        if (conversation.source.author) {
+            const author = conversation.source.author;
+            if (author.type) attributes['Author Type'] = author.type;
+            if (author.id) attributes['Author ID'] = author.id;
+            if (author.name) attributes['Author Name'] = author.name;
+            if (author.email) attributes['Author Email'] = author.email;
+        }
+        
+        // Owner (assigned to)
+        if (conversation.source.owner) {
+            const owner = conversation.source.owner;
+            if (owner.type) attributes['Owner Type'] = owner.type;
+            if (owner.id) attributes['Owner ID'] = owner.id;
+            if (owner.name) attributes['Assigned To'] = owner.name;
+            if (owner.email) attributes['Owner Email'] = owner.email;
+        }
+    }
+    
+    // Statistics
+    if (conversation.statistics) {
+        const stats = conversation.statistics;
+        if (stats.time_to_assignment) attributes['Time to Assignment'] = `${Math.round(stats.time_to_assignment / 60)} minutes`;
+        if (stats.time_to_admin_reply) attributes['Time to Admin Reply'] = `${Math.round(stats.time_to_admin_reply / 60)} minutes`;
+        if (stats.time_to_first_close) attributes['Time to First Close'] = `${Math.round(stats.time_to_first_close / 60)} minutes`;
+        if (stats.time_to_last_close) attributes['Time to Last Close'] = `${Math.round(stats.time_to_last_close / 60)} minutes`;
+        if (stats.median_time_to_reply) attributes['Median Time to Reply'] = `${Math.round(stats.median_time_to_reply / 60)} minutes`;
+        if (stats.first_contact_reply_at) attributes['First Contact Reply At'] = formatTimestamp(stats.first_contact_reply_at);
+        if (stats.first_admin_reply_at) attributes['First Admin Reply At'] = formatTimestamp(stats.first_admin_reply_at);
+        if (stats.last_contact_reply_at) attributes['Last Contact Reply At'] = formatTimestamp(stats.last_contact_reply_at);
+        if (stats.last_admin_reply_at) attributes['Last Admin Reply At'] = formatTimestamp(stats.last_admin_reply_at);
+        if (stats.count_reopens) attributes['Reopens Count'] = stats.count_reopens;
+        if (stats.count_assignments) attributes['Assignments Count'] = stats.count_assignments;
+    }
+    
+    // Tags
+    if (conversation.tags && conversation.tags.tags && conversation.tags.tags.length > 0) {
+        attributes['Tags'] = conversation.tags.tags.map(tag => tag.name || tag).join(', ');
+    }
+    
+    // Teammates (participating admins)
+    if (conversation.teammates && conversation.teammates.teammates && conversation.teammates.teammates.length > 0) {
+        attributes['Teammates'] = conversation.teammates.teammates.map(teammate => 
+            teammate.name || teammate.email || teammate.id
+        ).join(', ');
+    }
+    
+    // Contacts (users involved)
+    if (conversation.contacts && conversation.contacts.contacts && conversation.contacts.contacts.length > 0) {
+        const contacts = conversation.contacts.contacts.map(contact => {
+            const parts = [];
+            if (contact.name) parts.push(contact.name);
+            if (contact.email) parts.push(contact.email);
+            return parts.length > 0 ? parts.join(' - ') : contact.id;
+        });
+        attributes['Contacts'] = contacts.join(', ');
+    }
+    
+    // Conversation Parts Summary
+    if (conversation.conversation_parts && conversation.conversation_parts.conversation_parts) {
+        const parts = conversation.conversation_parts.conversation_parts;
+        attributes['Total Messages'] = parts.length;
+    }
+    
+    // Custom Attributes (if present)
+    if (conversation.source && conversation.source.custom && conversation.source.custom.length > 0) {
+        conversation.source.custom.forEach(attr => {
+            if (attr.value !== null && attr.value !== undefined && attr.value !== '') {
+                attributes[attr.name || 'Custom Attribute'] = attr.value;
+            }
+        });
+    }
+    
+    return attributes;
+}
+
+// Parse plain text transcript and render as chat bubbles (fallback if Intercom fetch fails)
+function parseTranscriptToChat(transcriptText, interactionDate) {
+    const chatContainer = document.getElementById('chatMessagesContainer');
+    if (!chatContainer) return;
+    
+    if (!transcriptText || !transcriptText.trim()) {
+        chatContainer.innerHTML = `
+            <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
+                <p>No transcript available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Clear container
+    chatContainer.innerHTML = '';
+    
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Parse transcript - try to detect user/agent messages
+    // Common patterns:
+    // - "User:" or "Customer:" at start of line
+    // - "Agent:" or employee name at start of line
+    // - Lines with timestamps
+    // - Blank lines as separators
+    
+    const lines = transcriptText.split('\n').filter(line => line.trim());
+    const messages = [];
+    let currentMessage = null;
+    
+    // Use interaction date as base for timestamps
+    const baseDate = interactionDate ? new Date(interactionDate) : new Date();
+    
+    // Build agent pattern with employee name if available
+    const employeeName = currentAudit?.employeeName || '';
+    const agentPatternStr = employeeName 
+        ? `^(?:Agent|Support|Representative|${employeeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}):\\s*(.*)`
+        : '^(?:Agent|Support|Representative):\\s*(.*)';
+    const agentPattern = new RegExp(agentPatternStr, 'i');
+    
+    lines.forEach((line, index) => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) {
+            // Empty line - end current message if exists
+            if (currentMessage) {
+                messages.push(currentMessage);
+                currentMessage = null;
+            }
+            return;
+        }
+        
+        // Try to detect message patterns
+        const userPattern = /^(?:User|Customer|Client):\s*(.*)/i;
+        const timestampPattern = /^(\d{1,2}[:\.]\d{2}(?:\s*[AP]M)?|\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/i;
+        
+        const userMatch = trimmedLine.match(userPattern);
+        const agentMatch = trimmedLine.match(agentPattern);
+        const timestampMatch = trimmedLine.match(timestampPattern);
+        
+        if (userMatch) {
+            // Start new user message
+            if (currentMessage) messages.push(currentMessage);
+            currentMessage = {
+                text: userMatch[1].trim(),
+                isUser: true,
+                author: 'User',
+                timestamp: baseDate
+            };
+        } else if (agentMatch) {
+            // Start new agent message
+            if (currentMessage) messages.push(currentMessage);
+            currentMessage = {
+                text: agentMatch[1].trim(),
+                isUser: false,
+                author: currentAudit?.employeeName || 'Agent',
+                timestamp: baseDate
+            };
+        } else if (timestampMatch && currentMessage) {
+            // Timestamp found at start of line - could be new message or continuation
+            // If timestamp is followed by text, it might be a new message
+            const afterTimestamp = trimmedLine.substring(timestampMatch[0].length).trim();
+            if (afterTimestamp && afterTimestamp.length > 5) {
+                // Has substantial content after timestamp - likely new message
+                if (currentMessage) messages.push(currentMessage);
+                const lastMessage = messages[messages.length - 1];
+                currentMessage = {
+                    text: afterTimestamp,
+                    isUser: lastMessage ? !lastMessage.isUser : true,
+                    author: lastMessage && !lastMessage.isUser ? 'User' : (currentAudit?.employeeName || 'Agent'),
+                    timestamp: baseDate
+                };
+            } else {
+                // Just timestamp, continue current message
+                currentMessage.text += ' ' + trimmedLine;
+            }
+        } else {
+            // Continue current message or start new one if none exists
+            if (currentMessage) {
+                // Check if line looks like a new speaker (common patterns)
+                const looksLikeNewSpeaker = /^[-–—]\s/.test(trimmedLine) || 
+                                           /^\[/.test(trimmedLine) ||
+                                           trimmedLine.length < 20 && /^[A-Z][a-z]+:/.test(trimmedLine);
+                
+                if (looksLikeNewSpeaker && currentMessage.text.length > 50) {
+                    // End current message and start new one
+                    messages.push(currentMessage);
+                    const lastMessage = messages[messages.length - 1];
+                    currentMessage = {
+                        text: trimmedLine.replace(/^[-–—]\s*/, '').replace(/^\[.*?\]\s*/, ''),
+                        isUser: lastMessage ? !lastMessage.isUser : true,
+                        author: lastMessage && !lastMessage.isUser ? 'User' : (currentAudit?.employeeName || 'Agent'),
+                        timestamp: baseDate
+                    };
+                } else {
+                    currentMessage.text += (currentMessage.text ? '\n' : '') + trimmedLine;
+                }
+            } else {
+                // Try to guess based on context - if previous message was user, this might be agent
+                const lastMessage = messages[messages.length - 1];
+                currentMessage = {
+                    text: trimmedLine.replace(/^[-–—]\s*/, '').replace(/^\[.*?\]\s*/, ''),
+                    isUser: lastMessage ? !lastMessage.isUser : true, // Alternate or default to user
+                    author: lastMessage && !lastMessage.isUser ? 'User' : (currentAudit?.employeeName || 'Agent'),
+                    timestamp: baseDate
+                };
+            }
+        }
+        
+        // Set timestamp for new messages
+        if (currentMessage && (!currentMessage.timestamp || currentMessage.timestamp.getTime() === baseDate.getTime())) {
+            currentMessage.timestamp = new Date(baseDate.getTime() + messages.length * 60000);
+        }
+    });
+    
+    // Add last message
+    if (currentMessage) {
+        messages.push(currentMessage);
+    }
+    
+    // If no structured messages found, treat entire transcript as single message
+    if (messages.length === 0) {
+        messages.push({
+            text: transcriptText,
+            isUser: true,
+            author: 'User',
+            timestamp: baseDate
+        });
+    }
+    
+    // Render messages as chat bubbles
+    messages.forEach((msg, index) => {
+        const timeStr = msg.timestamp.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        const dateStr = msg.timestamp.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0.3234rem;
+            align-items: ${msg.isUser ? 'flex-start' : 'flex-end'};
+        `;
+        
+        const bubbleStyle = msg.isUser 
+            ? `
+                background: white;
+                color: #374151;
+                border: 0.0304rem solid #e5e7eb;
+                border-radius: 0.4852rem 0.4852rem 0.4852rem 0.1617rem;
+                max-width: 75%;
+                margin-right: auto;
+            `
+            : `
+                background: #1A733E;
+                color: white;
+                border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
+                max-width: 75%;
+                margin-left: auto;
+            `;
+        
+        messageDiv.innerHTML = `
+            <div style="${bubbleStyle} padding: 0.3234rem 0.4852rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08);">
+                ${msg.isUser 
+                    ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` 
+                    : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(msg.author)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
+                <div style="font-size: 0.5257rem; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(msg.text)}</div>
+            </div>
+        `;
+        
+        chatContainer.appendChild(messageDiv);
+    });
+    
+    // Scroll to bottom
+    setTimeout(() => {
+        const transcriptChatView = document.getElementById('transcriptChatView');
+        if (transcriptChatView) {
+            transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
+        }
+    }, 100);
 }
 
 // Initialize resizable splitter

@@ -684,7 +684,7 @@ class SidebarLoader {
       "create-audit.html": "Create New Audit",
       "auditor-dashboard.html": "Auditor's Dashboard",
       "audit-distribution.html": "Audit Distribution",
-      "audit-reports.html": "Audit Reports",
+      "expert-audits.html": "Audit Reports",
       "expert-audits.html": "Expert Audits",
       "ai-audits.html": "AI Audits",
       "scorecards.html": "Scorecards",

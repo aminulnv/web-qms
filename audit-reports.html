@@ -22,7 +22,7 @@
     <script src="form-validation.js"></script>
     <style>
         /* Audit Reports Specific Styles */
-        .audit-reports-container {
+        .expert-audits-container {
             display: flex;
             flex-direction: column;
             gap: 1.125rem;
@@ -180,7 +180,7 @@
     <p class="page-heading">Audit Reports</p>
     <div style="margin-bottom: 1.125rem; width: 100%;"></div>
 
-    <div class="audit-reports-container">
+    <div class="expert-audits-container">
         <!-- Statistics Overview -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -1326,7 +1326,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', `audit-reports-${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `expert-audits-${new Date().toISOString().split('T')[0]}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -1524,7 +1524,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span style="font-size: 0.5156rem; color: #6b7280; font-weight: 400;"> (${field.points} pts)</span>
                         </div>
                         <div style="display: flex; justify-content: center;">
-                            <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1875rem 0.5625rem; border-radius: 0.2812rem; font-size: 0.5625rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">${field.parameter_type === 'achievement' || field.parameter_type === 'bonus' ? 'ACHIEVEMENT' : field.severity}</span>
+                            <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1875rem 0.5625rem; border-radius: 0.2812rem; font-size: 0.5625rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">${(field.parameter_type === 'achievement' || field.parameter_type === 'bonus') && field.field_type !== 'radio' ? 'ACHIEVEMENT' : field.severity}</span>
                         </div>
                         <div style="font-size: 0.6562rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
                         <div style="font-size: 0.6562rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>

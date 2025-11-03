@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Expert Audits | QMS</title>
+<title>Expert Audit Reports | QMS</title>
 <meta name="description" content="Quality Management System Dashboard">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
     <style>
-        /* Expert Audits Specific Styles */
+        /* Audit Reports Specific Styles */
         .expert-audits-container {
             display: flex;
             flex-direction: column;
@@ -97,19 +97,77 @@
             color: #ef4444;
         }
 
-        .info-message {
-            background: #f0f9ff;
-            border: 0.0469rem solid #bae6fd;
+        .controls-section {
+            background: #ffffff;
             border-radius: 0.375rem;
-            padding: 1.125rem;
-            color: #0369a1;
+            padding: 0.75rem;
+            border: 0.0469rem solid #e5e7eb;
+            margin-bottom: 0.75rem;
+            width: 100%;
+        }
+
+        .controls-header {
             font-size: 0.6562rem;
-            line-height: 1.5;
+            font-weight: 600;
+            color: #1A733E;
+            margin-bottom: 0.5625rem;
+            padding-bottom: 0.1875rem;
+            border-bottom: 0.0469rem solid #1A733E;
+            text-transform: uppercase;
+            letter-spacing: 0.0141rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(7.0312rem, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-label {
+            font-size: 0.5625rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.1875rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .control-select {
+            padding: 0.2812rem 0.375rem;
+            border: 0.0469rem solid #d1d5db;
+            border-radius: 0.1875rem;
+            font-size: 0.5625rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.5625rem center;
+            background-size: 0.75rem;
+            padding-right: 1.875rem;
+            cursor: pointer;
+        }
+
+        .control-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
         }
 
         @media (max-width: 27rem) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -119,7 +177,7 @@
 <body>
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
 <main class="main-content" role="main">
-    <p class="page-heading">Expert Audits</p>
+    <p class="page-heading">Expert Audit Reports</p>
     <div style="margin-bottom: 1.125rem; width: 100%;"></div>
 
     <div class="expert-audits-container">
@@ -127,7 +185,7 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-title">Total Expert Audits</span>
+                    <span class="stat-title">Total Audits</span>
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 12l2 2 4-4"/>
                         <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
@@ -136,8 +194,8 @@
                         <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
                     </svg>
                 </div>
-                <div class="stat-value" id="totalExpertAudits">-</div>
-                <div class="stat-change" id="totalExpertAuditsChange">
+                <div class="stat-value" id="totalAudits">-</div>
+                <div class="stat-change" id="totalAuditsChange">
                     All time
                 </div>
             </div>
@@ -150,8 +208,8 @@
                         <polyline points="8 12 12 16 16 12"/>
                     </svg>
                 </div>
-                <div class="stat-value" id="passingExpertAudits">-</div>
-                <div class="stat-change positive" id="passingExpertAuditsChange">
+                <div class="stat-value" id="passingAudits">-</div>
+                <div class="stat-change positive" id="passingAuditsChange">
                     Pass rate
                 </div>
             </div>
@@ -161,24 +219,1596 @@
                     <span class="stat-title">Not Passed</span>
                     <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 8 12 12 12 16"/>
-                        <polyline points="8 12 16 12"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                 </div>
-                <div class="stat-value" id="notPassingExpertAudits">-</div>
-                <div class="stat-change negative" id="notPassingExpertAuditsChange">
-                    Fail rate
+                <div class="stat-value" id="notPassingAudits">-</div>
+                <div class="stat-change negative" id="notPassingAuditsChange">
+                    Needs attention
                 </div>
             </div>
         </div>
 
-        <!-- Placeholder Content -->
-        <div class="info-message">
-            <strong>Expert Audits</strong><br>
-            This section will display audits performed by expert auditors. Content and functionality will be implemented here.
+        <!-- Filter Toggle Button -->
+        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.2812rem; font-weight: 600; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0469rem 0.0938rem 0 rgba(0, 0, 0, 0.05); font-family: 'Poppins', sans-serif;">
+                <svg style="width: 0.75rem; height: 0.75rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.125rem" viewBox="0 -960 960 960" width="1.125rem" fill="currentColor">
+                    <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
+                </svg>
+                Filters
+            </button>
+            <button id="exportFilters" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Export</button>
+        </div>
+
+        <!-- Filters and Search -->
+        <div id="filterPanel" class="controls-section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem;">
+                <div class="controls-header" style="margin: 0; padding: 0; border: none;">Search & Filters</div>
+                <button id="clearFilters" style="padding: 0.2812rem 0.5625rem; background-color: #f9fafb; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Clear All</button>
+            </div>
+        
+        <!-- Compact Filter Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5.2734rem, 1fr)); gap: 0.375rem; align-items: end; width: 100%;">
+            <!-- Scorecard Selector -->
+            <div>
+                <label for="scorecardSelector" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Scorecard</label>
+                <select id="scorecardSelector" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">Loading scorecards...</option>
+                </select>
+            </div>
+            
+            <!-- General Search -->
+            <div>
+                <label for="searchInput" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Search</label>
+                <input type="text" id="searchInput" placeholder="Search audits..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Auditor Name -->
+            <div>
+                <label for="auditorNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Auditor</label>
+                <input type="text" id="auditorNameFilter" placeholder="Auditor name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Employee Name -->
+            <div>
+                <label for="employeeNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Employee</label>
+                <input type="text" id="employeeNameFilter" placeholder="Employee name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Audit Type -->
+            <div>
+                <label for="auditTypeFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Type</label>
+                <select id="auditTypeFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Types</option>
+                    <option value="Routine Audit (Recorded)">Routine (Recorded)</option>
+                    <option value="Focused Audit (Recorded)">Focused (Recorded)</option>
+                    <option value="Focused Audit (Live)">Focused (Live)</option>
+                    <option value="Evaluation and Feedback">Evaluation</option>
+                </select>
+            </div>
+            
+            <!-- Status -->
+            <div>
+                <label for="statusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Status</label>
+                <select id="statusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Statuses</option>
+                    <option value="Passed">Passed</option>
+                    <option value="Not Passed">Not Passed</option>
+                </select>
+            </div>
+            
+            <!-- Quarter -->
+            <div>
+                <label for="quarterFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Quarter</label>
+                <select id="quarterFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Quarters</option>
+                    <option value="Q1">Q1</option>
+                    <option value="Q2">Q2</option>
+                    <option value="Q3">Q3</option>
+                    <option value="Q4">Q4</option>
+                </select>
+            </div>
+            
+            <!-- Channel -->
+            <div>
+                <label for="channelFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Channel</label>
+                <select id="channelFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Channels</option>
+                    <option value="FN Chat CFD">FN Chat CFD</option>
+                    <option value="FN Chat Futures">FN Chat Futures</option>
+                    <option value="FN Email">FN Email</option>
+                    <option value="Regular PSTF">Regular PSTF</option>
+                    <option value="Advance PSTF">Advance PSTF</option>
+                    <option value="PO + Ticket">PO + Ticket</option>
+                    <option value="CPM Email">CPM Email</option>
+                    <option value="B.Dev Email">B.Dev Email</option>
+                    <option value="MKT Social Media Comments">MKT Social Media</option>
+                </select>
+            </div>
+            
+            <!-- Employee Type -->
+            <div>
+                <label for="employeeTypeFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Emp Type</label>
+                <select id="employeeTypeFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Types</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Manager">Manager</option>
+                </select>
+            </div>
+            
+            <!-- Country -->
+            <div>
+                <label for="countryFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Country</label>
+                <select id="countryFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Countries</option>
+                    <option value="Bangladesh">Bangladesh</option>
+                    <option value="Sri Lanka">Sri Lanka</option>
+                </select>
+            </div>
+            
+            <!-- Interaction ID -->
+            <div>
+                <label for="interactionIdFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Interaction ID</label>
+                <input type="text" id="interactionIdFilter" placeholder="Interaction ID..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Week -->
+            <div>
+                <label for="weekFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Week</label>
+                <input type="number" id="weekFilter" min="1" max="52" placeholder="Week (1-52)..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Min Score -->
+            <div>
+                <label for="minScoreFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Min Score</label>
+                <input type="number" id="minScoreFilter" min="0" max="100" placeholder="Min %..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Max Score -->
+            <div>
+                <label for="maxScoreFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Max Score</label>
+                <input type="number" id="maxScoreFilter" min="0" max="100" placeholder="Max %..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Min Errors -->
+            <div>
+                <label for="minErrorsFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Min Errors</label>
+                <input type="number" id="minErrorsFilter" min="0" placeholder="Min errors..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Max Errors -->
+            <div>
+                <label for="maxErrorsFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Max Errors</label>
+                <input type="number" id="maxErrorsFilter" min="0" placeholder="Max errors..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- From Date -->
+            <div>
+                <label for="dateFromFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">From Date</label>
+                <input type="date" id="dateFromFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- To Date -->
+            <div>
+                <label for="dateToFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">To Date</label>
+                <input type="date" id="dateToFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+            </div>
+            
+            <!-- Validation Status -->
+            <div>
+                <label for="validationStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Validation</label>
+                <select id="validationStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Validation</option>
+                    <option value="Validated">Validated</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            
+            <!-- Employee Pre Status -->
+            <div>
+                <label for="agentPreStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Pre Status</label>
+                <select id="agentPreStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Pre Status</option>
+                    <option value="No active quality concerns">No concerns</option>
+                    <option value="Pre-Quality">Pre-Quality</option>
+                    <option value="Quality Concern">Quality Concern</option>
+                    <option value="Performance Improvement Plan (PIP)">PIP</option>
+                    <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
+                    <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
+                </select>
+            </div>
+            
+            <!-- Employee Post Status -->
+            <div>
+                <label for="agentPostStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Post Status</label>
+                <select id="agentPostStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                    <option value="">All Post Status</option>
+                    <option value="No active quality concerns">No concerns</option>
+                    <option value="Pre-Quality">Pre-Quality</option>
+                    <option value="Quality Concern">Quality Concern</option>
+                    <option value="Performance Improvement Plan (PIP)">PIP</option>
+                    <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
+                    <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
+                </select>
+            </div>
         </div>
     </div>
+
+    <!-- Audit List -->
+    <div id="auditList" style="display: flex; flex-direction: column; gap: 0.5625rem; width: 100%;">
+        <!-- Audits will be dynamically loaded here -->
+    </div>
+
+    <!-- Pagination Controls -->
+    <div id="paginationContainer" style="display: none; margin-top: 1.125rem; padding: 0.75rem; background: #ffffff; border-radius: 0.375rem; border: 0.0469rem solid #e5e7eb; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6562rem; color: #374151; font-family: 'Poppins', sans-serif;">
+                <span>Showing</span>
+                <select id="itemsPerPageSelect" style="padding: 0.1875rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; cursor: pointer;">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span>items per page</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6562rem; color: #374151; font-family: 'Poppins', sans-serif;">
+                <span id="paginationInfo">Page 1 of 1</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.375rem;">
+                <button id="firstPageBtn" onclick="goToPage(1)" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="First Page">
+                    <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="11 17 6 12 11 7"></polyline>
+                        <polyline points="18 17 13 12 18 7"></polyline>
+                    </svg>
+                </button>
+                <button id="prevPageBtn" onclick="goToPreviousPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Previous Page">
+                    <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span>Previous</span>
+                </button>
+                <div id="pageNumbers" style="display: flex; align-items: center; gap: 0.1875rem;">
+                    <!-- Page numbers will be dynamically generated here -->
+                </div>
+                <button id="nextPageBtn" onclick="goToNextPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Next Page">
+                    <span>Next</span>
+                    <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+                <button id="lastPageBtn" onclick="goToLastPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Last Page">
+                    <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="13 17 18 12 13 7"></polyline>
+                        <polyline points="6 17 11 12 6 7"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Audits Message -->
+    <div id="noAuditsMessage" style="display: none; text-align: center; padding: 1.5rem; color: #6b7280; font-family: 'Poppins', sans-serif; width: 100%;">
+        <p style="font-size: 0.75rem; margin-bottom: 0.375rem;">No audits found</p>
+        <p style="font-size: 0.6562rem;">Submit your first audit to see it here.</p>
+    </div>
+    </div>
 </main>
+
+<script>
+// Audit Reports Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const auditList = document.getElementById('auditList');
+        const noAuditsMessage = document.getElementById('noAuditsMessage');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const quarterFilter = document.getElementById('quarterFilter');
+        const clearFilters = document.getElementById('clearFilters');
+        const scorecardSelector = document.getElementById('scorecardSelector');
+        const auditsCount = document.getElementById('auditsCount');
+    
+    let allAudits = [];
+    let filteredAudits = [];
+    let currentScorecard = null;
+    let allScorecards = [];
+    
+    // Pagination state
+    let currentPage = 1;
+    let itemsPerPage = 25;
+    let totalPages = 1;
+    
+    // Load available scorecards
+    async function loadScorecards() {
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('scorecards')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            allScorecards = data || [];
+            
+            // Build dropdown with "All Scorecards" as default
+            scorecardSelector.innerHTML = '<option value="all">All Scorecards</option>';
+            
+            if (data && data.length > 0) {
+                data.forEach(scorecard => {
+                    const option = document.createElement('option');
+                    option.value = scorecard.id;
+                    option.textContent = scorecard.name + (scorecard.is_active ? '' : ' (Inactive)');
+                    option.dataset.tableName = scorecard.table_name;
+                    scorecardSelector.appendChild(option);
+                });
+            }
+            
+            // Default to "All Scorecards"
+            scorecardSelector.value = 'all';
+            currentScorecard = null;
+            await loadAudits();
+        } catch (error) {
+            console.error('Error loading scorecards:', error);
+            scorecardSelector.innerHTML = '<option value="all">All Scorecards</option><option value="">Error loading scorecards</option>';
+        }
+    }
+    
+    // Handle scorecard selection change
+    scorecardSelector.addEventListener('change', async function() {
+        const selectedId = this.value;
+        
+        // Reset pagination when changing scorecard
+        currentPage = 1;
+        
+        if (selectedId === 'all') {
+            // Show all scorecards
+            currentScorecard = null;
+            await loadAudits();
+            return;
+        }
+        
+        if (!selectedId) {
+            currentScorecard = null;
+            allAudits = [];
+            filteredAudits = [];
+            renderAudits();
+            return;
+        }
+        
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('scorecards')
+                .select('*')
+                .eq('id', selectedId)
+                .single();
+            
+            if (error) throw error;
+            
+            currentScorecard = data;
+            await loadAudits();
+        } catch (error) {
+            console.error('Error loading scorecard:', error);
+        }
+    });
+    
+    // Initialize
+    loadScorecards();
+    
+    // Load audits from Supabase
+    async function loadAudits() {
+        try {
+            console.log('===== LOADING AUDITS FROM SUPABASE =====');
+            
+            if (!window.supabaseClient) {
+                throw new Error('Supabase client not initialized');
+            }
+            
+            let combinedAudits = [];
+            
+            // If no specific scorecard is selected, load from ALL scorecard tables
+            if (!currentScorecard) {
+                console.log('Loading from ALL scorecards (including deleted ones)');
+                
+                // Step 1: Get all table names from the database that look like audit tables
+                try {
+                    const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
+                    
+                    if (tablesError) {
+                        console.warn('Could not fetch table list via RPC, falling back to scorecard-based loading:', tablesError);
+                        // Fallback: use known scorecards
+                        var tablesToQuery = allScorecards.map(s => ({
+                            table_name: s.table_name,
+                            scorecard_id: s.id,
+                            scorecard_name: s.name,
+                            scoring_type: s.scoring_type
+                        }));
+                    } else {
+                        // Match tables with scorecards where possible
+                        var tablesToQuery = allTables.map(t => {
+                            const matchingScorecard = allScorecards.find(s => s.table_name === t.table_name);
+                            return {
+                                table_name: t.table_name,
+                                scorecard_id: matchingScorecard?.id || null,
+                                scorecard_name: matchingScorecard?.name || `Deleted Scorecard (${t.table_name})`,
+                                scoring_type: matchingScorecard?.scoring_type || 'unknown'
+                            };
+                        });
+                    }
+                } catch (rpcError) {
+                    console.warn('RPC call failed, using scorecard-based loading:', rpcError);
+                    var tablesToQuery = allScorecards.map(s => ({
+                        table_name: s.table_name,
+                        scorecard_id: s.id,
+                        scorecard_name: s.name,
+                        scoring_type: s.scoring_type
+                    }));
+                }
+                
+                // Step 2: Load from all discovered tables
+                for (const tableInfo of tablesToQuery) {
+                    try {
+                        console.log(`Loading from table: ${tableInfo.table_name}`);
+                        const { data, error } = await window.supabaseClient
+                            .from(tableInfo.table_name)
+                            .select('*')
+                            .order('submitted_at', { ascending: false });
+                        
+                        if (error) {
+                            console.warn(`Error loading from ${tableInfo.table_name}:`, error);
+                            continue; // Skip this table if error (e.g., table doesn't exist)
+                        }
+                        
+                        if (data && data.length > 0) {
+                            // Add scorecard info to each audit
+                            const auditsWithScorecard = data.map(audit => ({
+                                ...audit,
+                                _scorecard_id: tableInfo.scorecard_id,
+                                _scorecard_name: tableInfo.scorecard_name,
+                                _scorecard_table: tableInfo.table_name,
+                                _scoring_type: tableInfo.scoring_type
+                            }));
+                            combinedAudits = combinedAudits.concat(auditsWithScorecard);
+                        }
+                    } catch (err) {
+                        console.warn(`Exception loading from ${tableInfo.table_name}:`, err);
+                        continue;
+                    }
+                }
+                
+                // Sort by submitted_at descending
+                combinedAudits.sort((a, b) => {
+                    const dateA = new Date(a.submitted_at);
+                    const dateB = new Date(b.submitted_at);
+                    return dateB - dateA;
+                });
+                
+                console.log(`Total audits from all tables: ${combinedAudits.length}`);
+            } else {
+                // Load from specific scorecard table
+                console.log('Loading from table:', currentScorecard.table_name);
+                
+                const { data, error } = await window.supabaseClient
+                    .from(currentScorecard.table_name)
+                    .select('*')
+                    .order('submitted_at', { ascending: false });
+                
+                if (error) {
+                    console.error('Error loading from Supabase:', error);
+                    allAudits = [];
+                    filteredAudits = [];
+                    renderAudits();
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    // Add scorecard info to each audit
+                    combinedAudits = data.map(audit => ({
+                        ...audit,
+                        _scorecard_id: currentScorecard.id,
+                        _scorecard_name: currentScorecard.name,
+                        _scorecard_table: currentScorecard.table_name,
+                        _scoring_type: currentScorecard.scoring_type
+                    }));
+                }
+                
+                console.log('Number of audits loaded:', combinedAudits.length);
+            }
+            
+            if (combinedAudits.length > 0) {
+                console.log('First audit sample:', combinedAudits[0]);
+                
+                // Convert snake_case to camelCase for common fields, but preserve all original data
+                allAudits = combinedAudits.map(audit => {
+                    const mapped = {
+                        // Keep ALL original fields (including dynamic error columns and scorecard info)
+                        ...audit,
+                        // Map common UI fields to camelCase
+                    id: audit.id,
+                    submittedAt: audit.submitted_at || audit.audit_timestamp,
+                    auditTimestamp: audit.submitted_at || audit.audit_timestamp, // Using submitted_at for backward compatibility
+                    auditDuration: audit.audit_duration,
+                    auditorEmail: audit.auditor_email,
+                    auditorName: audit.auditor_name,
+                    employeeName: audit.employee_name,
+                    employeeEmail: audit.employee_email,
+                    employeeType: audit.employee_type,
+                    interactionId: audit.interaction_id,
+                    interactionDate: audit.interaction_date,
+                    auditType: audit.audit_type,
+                    channel: audit.channel,
+                    quarter: audit.quarter,
+                    week: audit.week,
+                    countryOfEmployee: audit.country_of_employee,
+                    clientEmail: audit.client_email,
+                    agentPreStatus: audit.agent_pre_status,
+                    agentPostStatus: audit.agent_post_status,
+                    passingStatus: normalizePassingStatus(audit.passing_status),
+                    validationStatus: audit.validation_status,
+                    averageScore: audit.average_score,
+                    criticalErrors: audit.critical_errors,
+                    totalErrorsCount: audit.total_errors_count,
+                    transcript: audit.transcript,
+                    errorDescription: audit.error_description,
+                    criticalFailError: audit.critical_fail_error,
+                    criticalError: audit.critical_error,
+                    significantError: audit.significant_error,
+                    recommendations: audit.recommendations,
+                    // Reversal tracking fields
+                    reversalRequestedAt: audit.reversal_requested_at,
+                    reversalRespondedAt: audit.reversal_responded_at,
+                    slaInHours: audit.sla_in_hours,
+                    reasonForReversalResponseDelay: audit.reason_for_reversal_response_delay,
+                    reversalApproved: audit.reversal_approved,
+                    withinAuditorScope: audit.within_auditor_scope,
+                    scoreBeforeAppeal: audit.score_before_appeal,
+                    scoreAfterAppeal: audit.score_after_appeal,
+                    didResultInPass: audit.did_result_in_pass,
+                    reversalType: audit.reversal_type,
+                    reversalMetricsParameters: audit.reversal_metrics_parameters,
+                    reversalJustificationFromAgent: audit.reversal_justification_from_agent,
+                    reversalAttachments: audit.reversal_attachments,
+                    reversalApprovedBy: audit.reversal_approved_by,
+                    reversalResolvedBy: audit.reversal_resolved_by,
+                    // Acknowledgement tracking fields
+                    acknowledgementStatus: audit.acknowledgement_status,
+                    acknowledgementStatusUpdatedAt: audit.acknowledgement_status_updated_at
+                    };
+                    return mapped;
+                });
+            } else {
+                allAudits = [];
+            }
+            
+            filteredAudits = [...allAudits];
+            updateStatistics();
+            console.log('Filtered audits count:', filteredAudits.length);
+            console.log('========================');
+            
+            renderAudits();
+        } catch (error) {
+            console.error('Error loading audits:', error);
+            console.error('Stack trace:', error.stack);
+            allAudits = [];
+            filteredAudits = [];
+            renderAudits();
+        }
+    }
+    
+    // Update statistics
+    function updateStatistics() {
+        const totalAudits = document.getElementById('totalAudits');
+        const passingAudits = document.getElementById('passingAudits');
+        const notPassingAudits = document.getElementById('notPassingAudits');
+        
+        const total = filteredAudits.length;
+        const passing = filteredAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Passed').length;
+        const notPassing = filteredAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Not Passed').length;
+        
+        if (totalAudits) totalAudits.textContent = total;
+        if (passingAudits) passingAudits.textContent = passing;
+        if (notPassingAudits) notPassingAudits.textContent = notPassing;
+    }
+    
+    // Calculate pagination
+    function calculatePagination() {
+        totalPages = Math.ceil(filteredAudits.length / itemsPerPage);
+        if (currentPage > totalPages && totalPages > 0) {
+            currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+    }
+    
+    // Get paginated audits
+    function getPaginatedAudits() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredAudits.slice(startIndex, endIndex);
+    }
+    
+    // Update pagination UI
+    function updatePaginationUI() {
+        const paginationContainer = document.getElementById('paginationContainer');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const pageNumbers = document.getElementById('pageNumbers');
+        const firstPageBtn = document.getElementById('firstPageBtn');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const lastPageBtn = document.getElementById('lastPageBtn');
+        
+        if (filteredAudits.length === 0) {
+            if (paginationContainer) paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        if (paginationContainer) {
+            paginationContainer.style.display = 'flex';
+        }
+        
+        // Update pagination info
+        const startIndex = (currentPage - 1) * itemsPerPage + 1;
+        const endIndex = Math.min(currentPage * itemsPerPage, filteredAudits.length);
+        if (paginationInfo) {
+            paginationInfo.textContent = `Page ${currentPage} of ${totalPages} (Showing ${startIndex}-${endIndex} of ${filteredAudits.length})`;
+        }
+        
+        // Update button states
+        if (firstPageBtn) {
+            firstPageBtn.disabled = currentPage === 1;
+            firstPageBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            firstPageBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+        }
+        if (prevPageBtn) {
+            prevPageBtn.disabled = currentPage === 1;
+            prevPageBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            prevPageBtn.style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+        }
+        if (nextPageBtn) {
+            nextPageBtn.disabled = currentPage === totalPages;
+            nextPageBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+            nextPageBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+        }
+        if (lastPageBtn) {
+            lastPageBtn.disabled = currentPage === totalPages;
+            lastPageBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+            lastPageBtn.style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+        }
+        
+        // Generate page numbers
+        if (pageNumbers) {
+            pageNumbers.innerHTML = '';
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust start page if we're near the end
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // First page
+            if (startPage > 1) {
+                const firstBtn = document.createElement('button');
+                firstBtn.textContent = '1';
+                firstBtn.onclick = () => goToPage(1);
+                firstBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                pageNumbers.appendChild(firstBtn);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cssText = 'padding: 0.375rem 0.1875rem; color: #6b7280; font-size: 0.6562rem;';
+                    pageNumbers.appendChild(ellipsis);
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i.toString();
+                pageBtn.onclick = () => goToPage(i);
+                if (i === currentPage) {
+                    pageBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #1A733E; color: #ffffff; border: 0.0469rem solid #1A733E; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                } else {
+                    pageBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                }
+                pageBtn.onmouseover = function() {
+                    if (i !== currentPage) {
+                        this.style.backgroundColor = '#f3f4f6';
+                    }
+                };
+                pageBtn.onmouseout = function() {
+                    if (i !== currentPage) {
+                        this.style.backgroundColor = '#ffffff';
+                    }
+                };
+                pageNumbers.appendChild(pageBtn);
+            }
+            
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cssText = 'padding: 0.375rem 0.1875rem; color: #6b7280; font-size: 0.6562rem;';
+                    pageNumbers.appendChild(ellipsis);
+                }
+                
+                const lastBtn = document.createElement('button');
+                lastBtn.textContent = totalPages.toString();
+                lastBtn.onclick = () => goToPage(totalPages);
+                lastBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                pageNumbers.appendChild(lastBtn);
+            }
+        }
+    }
+    
+    // Pagination navigation functions
+    window.goToPage = function(page) {
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
+            currentPage = page;
+            renderAudits();
+            // Scroll to top of audit list
+            const auditList = document.getElementById('auditList');
+            if (auditList) {
+                auditList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    };
+    
+    window.goToPreviousPage = function() {
+        if (currentPage > 1) {
+            goToPage(currentPage - 1);
+        }
+    };
+    
+    window.goToNextPage = function() {
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1);
+        }
+    };
+    
+    window.goToLastPage = function() {
+        if (totalPages > 0) {
+            goToPage(totalPages);
+        }
+    };
+    
+    // Render audits
+    function renderAudits() {
+        console.log('Rendering audits. Total filtered:', filteredAudits.length);
+        
+        updateStatistics();
+        calculatePagination();
+        
+        // Update audits count display
+        if (auditsCount) {
+            const count = filteredAudits.length;
+            auditsCount.textContent = `${count} audit${count !== 1 ? 's' : ''}`;
+        }
+        
+        if (filteredAudits.length === 0) {
+            auditList.style.display = 'none';
+            noAuditsMessage.style.display = 'block';
+            updatePaginationUI();
+            console.log('No audits to display');
+            return;
+        }
+        
+        auditList.style.display = 'flex';
+        noAuditsMessage.style.display = 'none';
+        
+        // Get paginated audits
+        const paginatedAudits = getPaginatedAudits();
+        const auditCards = paginatedAudits.map(audit => createAuditCard(audit));
+        auditList.innerHTML = auditCards.join('');
+        
+        // Update pagination UI
+        updatePaginationUI();
+        
+        console.log(`Rendered ${paginatedAudits.length} audit cards (page ${currentPage} of ${totalPages})`);
+    }
+    
+    // Helper function to normalize passing status (handles both old and new values)
+    function normalizePassingStatus(status) {
+        if (!status) return status;
+        // Convert old values to new ones for consistency
+        if (status === 'Passing') return 'Passed';
+        if (status === 'Not Passing') return 'Not Passed';
+        return status; // Return as-is if already normalized or unknown
+    }
+    
+    // Helper function to get initials
+    function getInitials(name) {
+        if (!name) return '?';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    }
+    
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Date formatting helper
+    function formatCardDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleDateString();
+    }
+    
+    // Create audit card
+    function createAuditCard(audit) {
+        const submittedDateTime = formatCardDate(audit.submittedAt);
+        const normalizedStatus = normalizePassingStatus(audit.passingStatus);
+        const statusColor = normalizedStatus === 'Passed' ? '#10b981' : '#ef4444';
+        const statusBgColor = normalizedStatus === 'Passed' ? '#dcfce7' : '#fee2e2';
+        const statusTextColor = normalizedStatus === 'Passed' ? '#166534' : '#991b1b';
+        const statusIcon = normalizedStatus === 'Passed' ? '✓' : '✗';
+        
+        // Create card element
+        const cardHtml = `
+            <div class="audit-card" style="background: #f9fafb; border: 0.0469rem solid #e5e7eb; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer;" 
+                 onclick="viewAuditDetails('${audit.id}')"
+                 onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='#ffffff';"
+                 onmouseleave="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb';">
+                
+                <div style="flex: 1; display: flex; align-items: center; gap: 0.5625rem;">
+                    <!-- Avatar with initials -->
+                    <div style="width: 1.875rem; height: 1.875rem; border-radius: 0.1875rem; background: ${statusColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.6562rem; flex-shrink: 0;">
+                        ${getInitials(audit.employeeName || 'Unknown')}
+                    </div>
+                    
+                    <!-- Employee info -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.1875rem; flex-wrap: wrap;">
+                            <h4 style="margin: 0; font-size: 0.6562rem; font-weight: 600; color: #1f2937;">
+                                ${escapeHtml(audit.employeeName || 'Unknown Employee')}
+                            </h4>
+                            <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600;">
+                                ${statusIcon} ${normalizedStatus || 'Unknown'}
+                            </span>
+                            ${audit._scorecard_name ? `
+                                <span style="background-color: #f3f4f6; color: #374151; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600; border: 0.0469rem solid #d1d5db;">
+                                    ${escapeHtml(audit._scorecard_name)}
+                                </span>
+                            ` : ''}
+                        </div>
+                        <p style="margin: 0; font-size: 0.5625rem; color: #6b7280; display: flex; align-items: center; gap: 0.2812rem; flex-wrap: wrap;">
+                            <span>${escapeHtml(audit.interactionId || 'No ID')}</span>
+                            <span style="color: #d1d5db;">•</span>
+                            <span>${escapeHtml(audit.channel || 'No channel')}</span>
+                            <span style="color: #d1d5db;">•</span>
+                            <span style="font-weight: 500;">${audit.averageScore || '0'}%</span>
+                            <span style="color: #d1d5db;">•</span>
+                            <span>${audit.totalErrorsCount || '0'} errors</span>
+                            <span style="color: #d1d5db;">•</span>
+                            <span style="color: #374151; font-weight: 500;">${escapeHtml(audit.auditorName || 'Unknown auditor')}</span>
+                            <span style="color: #d1d5db;">•</span>
+                            <span>${submittedDateTime}</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Action buttons -->
+                <div style="display: flex; gap: 0.375rem; flex-shrink: 0;">
+                    <button 
+                        onclick="event.stopPropagation(); viewAuditDetails('${audit.id}')"
+                        style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                        onmouseover="this.style.backgroundColor='#15582E'"
+                        onmouseout="this.style.backgroundColor='#1A733E'"
+                    >
+                        View Details
+                    </button>
+                    <button 
+                        onclick="event.stopPropagation(); editAudit('${audit.id}')"
+                        style="padding: 0.375rem 0.75rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                        onmouseover="this.style.backgroundColor='#d97706'"
+                        onmouseout="this.style.backgroundColor='#f59e0b'"
+                    >
+                        Edit
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        return cardHtml;
+    }
+    
+    // Toggle filter panel
+    window.toggleFilters = function() {
+        const panel = document.getElementById('filterPanel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+        }
+    };
+    
+    // Filter audits
+    function filterAudits() {
+        // Reset to first page when filters change
+        currentPage = 1;
+        
+        const searchTerm = (searchInput?.value || '').toLowerCase();
+        const statusValue = statusFilter?.value || '';
+        const quarterValue = quarterFilter?.value || '';
+        
+        filteredAudits = allAudits.filter(audit => {
+            // General search
+            const matchesSearch = !searchTerm || 
+                (audit.employeeName && audit.employeeName.toLowerCase().includes(searchTerm)) ||
+                (audit.auditorName && audit.auditorName.toLowerCase().includes(searchTerm)) ||
+                (audit.interactionId && audit.interactionId.toLowerCase().includes(searchTerm));
+            
+            // Specific filters
+            const normalizedAuditStatus = normalizePassingStatus(audit.passingStatus);
+            const matchesStatus = !statusValue || normalizedAuditStatus === statusValue;
+            const matchesQuarter = !quarterValue || audit.quarter === quarterValue;
+            
+            // Get all other filter values
+            const auditorFilter = (document.getElementById('auditorNameFilter')?.value || '').toLowerCase();
+            const employeeFilter = (document.getElementById('employeeNameFilter')?.value || '').toLowerCase();
+            const auditTypeFilter = document.getElementById('auditTypeFilter')?.value || '';
+            const channelFilter = document.getElementById('channelFilter')?.value || '';
+            const employeeTypeFilter = document.getElementById('employeeTypeFilter')?.value || '';
+            const countryFilter = document.getElementById('countryFilter')?.value || '';
+            const interactionIdFilter = (document.getElementById('interactionIdFilter')?.value || '').toLowerCase();
+            const weekFilter = document.getElementById('weekFilter')?.value || '';
+            const validationFilter = document.getElementById('validationStatusFilter')?.value || '';
+            const preStatusFilter = document.getElementById('agentPreStatusFilter')?.value || '';
+            const postStatusFilter = document.getElementById('agentPostStatusFilter')?.value || '';
+            
+            // Apply filters
+            const matchesAuditor = !auditorFilter || (audit.auditorName && audit.auditorName.toLowerCase().includes(auditorFilter));
+            const matchesEmployee = !employeeFilter || (audit.employeeName && audit.employeeName.toLowerCase().includes(employeeFilter));
+            const matchesAuditType = !auditTypeFilter || audit.auditType === auditTypeFilter;
+            const matchesChannel = !channelFilter || audit.channel === channelFilter;
+            const matchesEmployeeType = !employeeTypeFilter || audit.employeeType === employeeTypeFilter;
+            const matchesCountry = !countryFilter || audit.countryOfEmployee === countryFilter;
+            const matchesInteractionId = !interactionIdFilter || (audit.interactionId && audit.interactionId.toLowerCase().includes(interactionIdFilter));
+            const matchesWeek = !weekFilter || audit.week === weekFilter;
+            const matchesValidation = !validationFilter || audit.validationStatus === validationFilter;
+            const matchesPreStatus = !preStatusFilter || audit.agentPreStatus === preStatusFilter;
+            const matchesPostStatus = !postStatusFilter || audit.agentPostStatus === postStatusFilter;
+            
+            // Score range filters
+            const minScoreFilter = document.getElementById('minScoreFilter')?.value || '';
+            const maxScoreFilter = document.getElementById('maxScoreFilter')?.value || '';
+            const minErrorsFilter = document.getElementById('minErrorsFilter')?.value || '';
+            const maxErrorsFilter = document.getElementById('maxErrorsFilter')?.value || '';
+            
+            const scoreValue = parseFloat(audit.averageScore) || 0;
+            const matchesMinScore = !minScoreFilter || scoreValue >= parseFloat(minScoreFilter);
+            const matchesMaxScore = !maxScoreFilter || scoreValue <= parseFloat(maxScoreFilter);
+            
+            const errorsValue = parseInt(audit.totalErrorsCount) || 0;
+            const matchesMinErrors = !minErrorsFilter || errorsValue >= parseInt(minErrorsFilter);
+            const matchesMaxErrors = !maxErrorsFilter || errorsValue <= parseInt(maxErrorsFilter);
+            
+            // Date range filters
+            const dateFromFilter = document.getElementById('dateFromFilter')?.value || '';
+            const dateToFilter = document.getElementById('dateToFilter')?.value || '';
+            
+            let matchesDateRange = true;
+            if (dateFromFilter || dateToFilter) {
+                const auditDate = new Date(audit.submittedAt);
+                if (dateFromFilter) {
+                    const fromDate = new Date(dateFromFilter);
+                    if (auditDate < fromDate) matchesDateRange = false;
+                }
+                if (dateToFilter) {
+                    const toDate = new Date(dateToFilter);
+                    toDate.setHours(23, 59, 59, 999); // Include entire end date
+                    if (auditDate > toDate) matchesDateRange = false;
+                }
+            }
+            
+            return matchesSearch && matchesStatus && matchesQuarter &&
+                   matchesAuditor && matchesEmployee && matchesAuditType &&
+                   matchesChannel && matchesEmployeeType && matchesCountry &&
+                   matchesInteractionId && matchesWeek && matchesValidation &&
+                   matchesPreStatus && matchesPostStatus && matchesMinScore &&
+                   matchesMaxScore && matchesMinErrors && matchesMaxErrors &&
+                   matchesDateRange;
+        });
+        
+        renderAudits();
+    }
+    
+    // Event listeners - simplified
+    if (searchInput) {
+        searchInput.addEventListener('input', filterAudits);
+    }
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterAudits);
+    }
+    if (quarterFilter) {
+        quarterFilter.addEventListener('change', filterAudits);
+    }
+    
+    if (clearFilters) {
+        clearFilters.addEventListener('click', function() {
+            // Clear all filter inputs and selects
+            document.querySelectorAll('input[id$="Filter"], select[id$="Filter"], #searchInput').forEach(input => {
+                input.value = '';
+            });
+            filterAudits();
+        });
+    }
+    
+    // Add event listeners for all additional filter inputs
+    const additionalFilters = [
+        'auditorNameFilter', 'employeeNameFilter', 'auditTypeFilter', 
+        'channelFilter', 'employeeTypeFilter', 'countryFilter', 
+        'interactionIdFilter', 'weekFilter', 'minScoreFilter', 
+        'maxScoreFilter', 'minErrorsFilter', 'maxErrorsFilter', 
+        'dateFromFilter', 'dateToFilter', 'validationStatusFilter', 
+        'agentPreStatusFilter', 'agentPostStatusFilter'
+    ];
+    
+    additionalFilters.forEach(filterId => {
+        const filterElement = document.getElementById(filterId);
+        if (filterElement) {
+            filterElement.addEventListener('input', filterAudits);
+            filterElement.addEventListener('change', filterAudits);
+        }
+    });
+    
+    // Items per page change handler
+    const itemsPerPageSelect = document.getElementById('itemsPerPageSelect');
+    if (itemsPerPageSelect) {
+        itemsPerPageSelect.addEventListener('change', function() {
+            itemsPerPage = parseInt(this.value);
+            currentPage = 1; // Reset to first page when changing items per page
+            renderAudits();
+        });
+    }
+    
+    // Export functionality
+    document.getElementById('exportFilters').addEventListener('click', function() {
+        if (filteredAudits.length === 0) {
+            alert('No audits to export. Please adjust your filters.');
+            return;
+        }
+        
+        // Convert audits to CSV format
+        const headers = [
+            'ID', 'Submitted At', 'Employee Name', 'Auditor Name', 'Audit Type', 
+            'Passed Status', 'Average Score', 'Total Errors', 'Quarter', 'Channel',
+            'Interaction ID', 'Week', 'Country', 'Employee Type', 'Validation Status',
+            'Employee Pre Status', 'Employee Post Status', 'Audit Duration'
+        ];
+        
+        const csvContent = [
+            headers.join(','),
+            ...filteredAudits.map(audit => [
+                audit.id || '',
+                audit.submittedAt || '',
+                audit.employeeName || '',
+                audit.auditorName || '',
+                audit.auditType || '',
+                audit.passingStatus || '',
+                audit.averageScore || '',
+                audit.totalErrorsCount || '',
+                audit.quarter || '',
+                audit.channel || '',
+                audit.interactionId || '',
+                audit.week || '',
+                audit.countryOfEmployee || '',
+                audit.employeeType || '',
+                audit.validationStatus || '',
+                audit.agentPreStatus || '',
+                audit.agentPostStatus || '',
+                audit.auditDuration || ''
+            ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `expert-audits-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+    
+    // View audit details
+    window.viewAuditDetails = function(auditId) {
+        const audit = allAudits.find(a => a.id === auditId);
+        if (audit) {
+            // Navigate to dedicated audit view page
+            const scorecardId = audit._scorecard_id || '';
+            const tableName = audit._scorecard_table || '';
+            window.location.href = `audit-view.html?id=${auditId}&scorecard=${scorecardId}&table=${tableName}`;
+        }
+    };
+    
+    // Edit audit
+    window.editAudit = async function(auditId) {
+        const audit = allAudits.find(a => a.id === auditId);
+        if (!audit) {
+            alert('Audit not found');
+            return;
+        }
+        
+        // Navigate to create-audit.html with the audit ID as a parameter
+        // The create-audit page will load this audit for editing
+        window.location.href = `create-audit.html?edit=${auditId}&scorecard=${audit._scorecard_id || ''}&table=${audit._scorecard_table || ''}`;
+    };
+    
+    // Show audit modal
+    async function showAuditModal(audit) {
+        // Load scorecard parameters dynamically
+        let errorFields = [];
+        let auditScorecard = null;
+        
+        // Determine which scorecard this audit belongs to
+        const scorecardId = audit._scorecard_id || (currentScorecard ? currentScorecard.id : null);
+        
+        if (scorecardId) {
+            try {
+                // Load scorecard info
+                const { data: scorecardData, error: scorecardError } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('*')
+                    .eq('id', scorecardId)
+                    .single();
+                
+                if (!scorecardError && scorecardData) {
+                    auditScorecard = scorecardData;
+                }
+                
+                // Load parameters
+                const { data: parameters, error } = await window.supabaseClient
+                    .from('scorecard_parameters')
+                    .select('*')
+                    .eq('scorecard_id', scorecardId)
+                    .eq('is_active', true)
+                    .order('display_order', { ascending: true });
+                
+                if (!error && parameters) {
+                    errorFields = parameters.map(param => ({
+                        key: param.field_id,
+                        label: param.error_name,
+                        feedback: `feedback_${param.field_id}`,
+                        severity: param.error_category.includes('Fail') ? 'Critical Fail' : 
+                                 param.error_category.includes('Critical') ? 'Critical' : 
+                                 'Significant',
+                        field_type: param.field_type || 'counter',
+                        parameter_type: param.parameter_type || 'error',
+                        points: param.penalty_points || 0
+                    }));
+                }
+            } catch (err) {
+                console.error('Error loading scorecard parameters for modal:', err);
+            }
+        }
+        
+        // Fallback to default fields if no parameters loaded
+        if (errorFields.length === 0) {
+            errorFields = [
+                { key: 'error_loss_business', label: 'Loss of Business', feedback: 'feedback_error_loss_business', severity: 'Critical Fail' },
+                { key: 'zero_tolerance', label: 'Zero Tolerance', feedback: 'feedback_zero_tolerance', severity: 'Critical Fail' },
+                { key: 'incorrect_info', label: 'Incorrect Information', feedback: 'feedback_incorrect_info', severity: 'Critical' },
+                { key: 'lack_professionalism', label: 'Lack of Professionalism', feedback: 'feedback_lack_professionalism', severity: 'Critical' },
+                { key: 'lack_escalation', label: 'Lack of Escalation', feedback: 'feedback_lack_escalation', severity: 'Critical' },
+                { key: 'lack_investigation', label: 'Lack of Investigation', feedback: 'feedback_lack_investigation', severity: 'Critical' },
+                { key: 'lack_empathy', label: 'Lack of Empathy', feedback: 'feedback_lack_empathy', severity: 'Significant' },
+                { key: 'lack_knowledge', label: 'Lack of Knowledge', feedback: 'feedback_lack_knowledge', severity: 'Significant' },
+                { key: 'lack_internal_comm', label: 'Lack of Internal Communication', feedback: 'feedback_lack_internal_comm', severity: 'Significant' },
+                { key: 'missing_info', label: 'Missing Information', feedback: 'feedback_missing_info', severity: 'Significant' },
+                { key: 'outdated_macro', label: 'Outdated Macro', feedback: 'feedback_outdated_macro', severity: 'Significant' },
+                { key: 'grammatical_errors', label: 'Grammatical Errors', feedback: 'feedback_grammatical_errors', severity: 'Significant' },
+                { key: 'info_overload', label: 'Information Overload', feedback: 'feedback_info_overload', severity: 'Significant' },
+                { key: 'inadequate_engagement', label: 'Inadequate Engagement', feedback: 'feedback_inadequate_engagement', severity: 'Significant' },
+                { key: 'missing_minimal_info', label: 'Missing Minimal Information', feedback: 'feedback_missing_minimal_info', severity: 'Significant' }
+            ];
+        }
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 1000; display: flex; 
+            align-items: flex-start; justify-content: center; padding: 0;
+            overflow-y: auto;
+        `;
+        
+        // Date formatting helper function
+        function formatDate(dateString, includeTime = false) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            const day = date.getDate();
+            const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            
+            if (includeTime) {
+                let hours = date.getHours();
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+            }
+            return `${day} ${month} ${year}`;
+        }
+        
+        const submittedDateTime = formatDate(audit.submittedAt, true);
+        const normalizedStatus = normalizePassingStatus(audit.passingStatus);
+        const statusColor = normalizedStatus === 'Passed' ? '#10b981' : '#ef4444';
+        const statusIcon = normalizedStatus === 'Passed' ? '✓' : '✗';
+        
+        // Generate error details HTML
+        function generateErrorDetails() {
+            
+            // Calculate actual totals from individual error counts
+            let criticalFailTotal = 0;
+            let criticalTotal = 0;
+            let significantTotal = 0;
+            
+            errorFields.forEach(field => {
+                const count = audit[field.key] ? parseInt(audit[field.key]) : 0;
+                if (count > 0) {
+                    if (field.severity === 'Critical Fail') {
+                        criticalFailTotal += count;
+                    } else if (field.severity === 'Critical') {
+                        criticalTotal += count;
+                    } else if (field.severity === 'Significant') {
+                        significantTotal += count;
+                    }
+                }
+            });
+            
+            const errorRows = errorFields.map(field => {
+                const rawValue = audit[field.key];
+                let displayValue = '';
+                let count = 0;
+                
+                if (field.field_type === 'radio') {
+                    // For radio buttons, show YES/NO
+                    const isYes = rawValue === 1 || rawValue === true || rawValue === 'true' || rawValue === '1';
+                    displayValue = isYes ? '✓ YES' : '✗ NO';
+                    count = isYes ? 1 : 0;
+                } else {
+                    // For counters, show the number
+                    count = rawValue ? parseInt(rawValue) : 0;
+                    displayValue = count.toString();
+                }
+                
+                const feedback = audit[field.feedback] && audit[field.feedback].trim() ? audit[field.feedback] : '-';
+                
+                // Different colors for different parameter types
+                let severityColor = '#3b82f6';
+                let severityBg = '#eff6ff';
+                let paramIcon = '';
+                
+                if (field.parameter_type === 'error') {
+                    paramIcon = '−';
+                    if (field.severity === 'Critical Fail') {
+                        severityColor = '#ef4444';
+                        severityBg = '#fee2e2';
+                    } else if (field.severity === 'Critical') {
+                        severityColor = '#f59e0b';
+                        severityBg = '#fef3c7';
+                    }
+                } else if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
+                    paramIcon = '+';
+                    severityColor = '#10b981';
+                    severityBg = '#d1fae5';
+                }
+                
+                return `
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6;">
+                        <div style="font-size: 0.6562rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                            <span style="font-weight: 700; color: ${field.parameter_type === 'error' ? '#dc2626' : '#10b981'};">${paramIcon}</span> ${field.label}
+                            <span style="font-size: 0.5156rem; color: #6b7280; font-weight: 400;"> (${field.points} pts)</span>
+                        </div>
+                        <div style="display: flex; justify-content: center;">
+                            <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1875rem 0.5625rem; border-radius: 0.2812rem; font-size: 0.5625rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">${(field.parameter_type === 'achievement' || field.parameter_type === 'bonus') && field.field_type !== 'radio' ? 'ACHIEVEMENT' : field.severity}</span>
+                        </div>
+                        <div style="font-size: 0.6562rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
+                        <div style="font-size: 0.6562rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            return `
+                <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem;">
+                        <h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
+                            <svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                            Error Details
+                        </h3>
+                        <div style="display: flex; gap: 0.2812rem;">
+                            <span style="background: #dc2626; color: #ffffff; padding: 0.1875rem 0.375rem; border-radius: 351.5273rem; font-size: 0.5156rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: ${criticalFailTotal}</span>
+                            <span style="background: #f59e0b; color: #ffffff; padding: 0.1875rem 0.375rem; border-radius: 351.5273rem; font-size: 0.5156rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: ${criticalTotal}</span>
+                            <span style="background: #3b82f6; color: #ffffff; padding: 0.1875rem 0.375rem; border-radius: 351.5273rem; font-size: 0.5156rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: ${significantTotal}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; margin-bottom: 0.75rem;">
+                        <div style="background-color: #f8f9fa; padding: 0.5625rem 0.75rem; border-bottom: 0.0469rem solid #e5e7eb;">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; font-weight: 700; font-size: 0.6562rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
+                                <div>Error Type</div>
+                                <div style="text-align: center;">Severity</div>
+                                <div style="text-align: center;">Status</div>
+                                <div>Feedback</div>
+                            </div>
+                        </div>
+                        <div style="padding: 0 0.75rem 0.75rem 0.75rem; box-shadow: 0 -0.0703rem 0.1406rem rgba(0, 0, 0, 0.05);">
+                            ${errorRows}
+                        </div>
+                    </div>
+                    
+                    <!-- Pre/Post Status -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.3281rem, 1fr)); gap: 0.5625rem;">
+                        <div style="background: #f0fdf4; padding: 0.5625rem; border-radius: 0.2812rem; border: 0.0352rem solid #bbf7d0;">
+                            <p style="font-size: 0.5156rem; color: #166534; margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem; font-weight: 600;">Pre-Status</p>
+                            <p style="font-size: 0.6562rem; color: #15803d; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPreStatus || 'N/A'}</p>
+                        </div>
+                        <div style="background: #f0f9ff; padding: 0.5625rem; border-radius: 0.2812rem; border: 0.0352rem solid #bae6fd;">
+                            <p style="font-size: 0.5156rem; color: #075985; margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem; font-weight: 600;">Post-Status</p>
+                            <p style="font-size: 0.6562rem; color: #0369a1; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPostStatus || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        const errorDetailsHtml = generateErrorDetails();
+        const transcriptHtml = audit.transcript ? `
+            <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid #e5e7eb;">
+                <h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0 0 0.5625rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
+                    <svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    Transcript
+                </h3>
+                <div style="background: white; padding: 0.6562rem; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.6094rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; max-height: 14.0625rem; overflow-y: auto;">${audit.transcript}</div>
+            </div>
+        ` : '';
+        
+        const headerGradient = normalizedStatus === 'Not Passed' 
+            ? 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)' 
+            : 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+        
+        modal.innerHTML = `
+            <div style="background: white; width: 100%; min-height: 100vh;">
+                <div style="background: ${headerGradient}; padding: 0.75rem 1.125rem; color: white; box-shadow: 0 0.1406rem 0.2109rem rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5625rem;">
+                        <div style="flex: 1;">
+                            <h2 style="font-size: 0.8438rem; font-weight: 700; margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif;">Audit Details</h2>
+                            <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.375rem;">
+                                <p style="font-size: 0.5625rem; color: rgba(255,255,255,0.85); margin: 0; font-family: 'Poppins', sans-serif;">${auditScorecard ? auditScorecard.name : (audit._scorecard_name || 'Default Scorecard')}</p>
+                                ${auditScorecard && auditScorecard.scoring_type ? `
+                                    <span style="background: rgba(255,255,255,0.25); padding: 0.1125rem 0.375rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600; text-transform: uppercase; border: 0.0352rem solid rgba(255,255,255,0.4);">
+                                        ${auditScorecard.scoring_type === 'deductive' ? 'Deductive' : 
+                                          auditScorecard.scoring_type === 'additive' ? 'Additive' : 
+                                          auditScorecard.scoring_type === 'hybrid' ? 'Hybrid' : 
+                                          auditScorecard.scoring_type}
+                                    </span>
+                                ` : (audit._scoring_type ? `
+                                    <span style="background: rgba(255,255,255,0.25); padding: 0.1125rem 0.375rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600; text-transform: uppercase; border: 0.0352rem solid rgba(255,255,255,0.4);">
+                                        ${audit._scoring_type === 'deductive' ? 'Deductive' : 
+                                          audit._scoring_type === 'additive' ? 'Additive' : 
+                                          audit._scoring_type === 'hybrid' ? 'Hybrid' : 
+                                          audit._scoring_type}
+                                    </span>
+                                ` : '')}
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(7.0312rem, 1fr)); gap: 0.375rem; margin-bottom: 0.5625rem;">
+                                <div>
+                                    <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Employee</p>
+                                    <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${audit.employeeName || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Email</p>
+                                    <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; word-break: break-all;">${audit.employeeEmail || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Type</p>
+                                    <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${audit.employeeType || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Country</p>
+                                    <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${audit.countryOfEmployee || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="this.closest('.modal').remove()" style="background: rgba(255,255,255,0.2); border: 0.0703rem solid white; border-radius: 0.2812rem; width: 1.5rem; height: 1.5rem; font-size: 0.9375rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 0.75rem;">×</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(4.9219rem, 1fr)); gap: 0.375rem;">
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Status</p>
+                            <p style="font-size: 0.75rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">${statusIcon} ${normalizedStatus || 'N/A'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Score</p>
+                            <p style="font-size: 0.75rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">${audit.averageScore || '0'}%</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Total Errors</p>
+                            <p style="font-size: 0.75rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">${audit.totalErrorsCount || '0'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Audit Type</p>
+                            <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${audit.auditType || 'N/A'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Audit Date</p>
+                            <p style="font-size: 0.5625rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${formatDate(audit.auditTimestamp, true)}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Quarter</p>
+                            <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${audit.quarter ? (audit.quarter.toString().startsWith('Q') ? audit.quarter : 'Q' + audit.quarter) : 'N/A'}</p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; backdrop-filter: blur(0.3516rem);">
+                            <p style="font-size: 0.4688rem; color: rgba(255,255,255,0.8); margin: 0 0 0.1875rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">Week</p>
+                            <p style="font-size: 0.6562rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif;">${audit.week || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Two Column Layout -->
+                <div id="auditContent" style="display: flex; padding: 1.125rem; max-width: 100%; gap: 0; flex-wrap: nowrap;">
+                    
+                    <!-- LEFT COLUMN: Interaction Details + Transcript -->
+                    <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.75rem; width: 45%; min-width: 10.5469rem; padding-right: 0.375rem;">
+                        
+                        <!-- Interaction Details -->
+                        <div style="background: #f9fafb; border-radius: 0.2812rem; padding: 0.375rem 0.5625rem; border: 0.0352rem solid #e5e7eb;">
+                            <div style="display: flex; align-items: center; gap: 0.5625rem; flex-wrap: nowrap;">
+                                <div style="display: flex; align-items: center; gap: 0.1875rem;">
+                                    <svg style="width: 0.5625rem; height: 0.5625rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                                    <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">ID:</span>
+                                    <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.interactionId || 'N/A'}</span>
+                                    <button onclick="navigator.clipboard.writeText('${audit.interactionId || ''}'); const btn = this; const originalHTML = btn.innerHTML; btn.innerHTML='<svg style=&quot;width: 0.6562rem; height: 0.6562rem;&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;#22c55e&quot;><path d=&quot;M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z&quot;/></svg>'; setTimeout(() => btn.innerHTML = originalHTML, 1000);" style="background: transparent; border: none; cursor: pointer; padding: 0.0938rem; display: inline-flex; align-items: center;" title="Copy Interaction ID"><svg style="width: 0.6562rem; height: 0.6562rem;" viewBox="0 0 24 24" fill="#6b7280"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                                </div>
+                                <div style="width: 0.0352rem; height: 0.75rem; background: #d1d5db;"></div>
+                                <div style="display: flex; align-items: center; gap: 0.1875rem;">
+                                    <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">Date:</span>
+                                    <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${formatDate(audit.interactionDate, false)}</span>
+                                </div>
+                                <div style="width: 0.0352rem; height: 0.75rem; background: #d1d5db;"></div>
+                                <div style="display: flex; align-items: center; gap: 0.1875rem;">
+                                    <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">Channel:</span>
+                                    <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.channel || 'N/A'}</span>
+                                </div>
+                                <div style="width: 0.0352rem; height: 0.75rem; background: #d1d5db;"></div>
+                                <div style="display: flex; align-items: center; gap: 0.1875rem; min-width: 0; flex: 1;">
+                                    <span style="font-size: 0.5156rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0106rem; white-space: nowrap;">Email:</span>
+                                    <span style="font-size: 0.5625rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${audit.clientEmail || 'N/A'}">${audit.clientEmail || 'N/A'}</span>
+                                    <button onclick="navigator.clipboard.writeText('${audit.clientEmail || ''}'); const btn = this; const originalHTML = btn.innerHTML; btn.innerHTML='<svg style=&quot;width: 0.6562rem; height: 0.6562rem;&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;#22c55e&quot;><path d=&quot;M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z&quot;/></svg>'; setTimeout(() => btn.innerHTML = originalHTML, 1000);" style="background: transparent; border: none; cursor: pointer; padding: 0.0938rem; display: inline-flex; align-items: center; flex-shrink: 0;" title="Copy Client Email"><svg style="width: 0.6562rem; height: 0.6562rem;" viewBox="0 0 24 24" fill="#6b7280"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg></button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transcript -->
+                        <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0; border: 0.0352rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
+                            <div style="background: #f9fafb; padding: 0.75rem; border-bottom: 0.0352rem solid #e5e7eb; flex-shrink: 0;">
+                                <h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
+                                    <svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                                    Transcript
+                                </h3>
+                            </div>
+                            <div style="padding: 0.75rem; background: white; overflow-y: auto; flex: 1;">
+                                <div style="white-space: pre-wrap; font-size: 0.6094rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.transcript || '<span style="color: #9ca3af; font-style: italic;">No transcript available</span>'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- RESIZABLE SPLITTER -->
+                    <div id="splitter" style="width: 0.2812rem; background: #e5e7eb; cursor: col-resize; position: relative; flex-shrink: 0; transition: background 0.2s;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0.1406rem; height: 1.4062rem; background: #9ca3af; border-radius: 0.0703rem;"></div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN: Error Details & Recommendations -->
+                    <div id="rightColumn" style="flex: 1; min-width: 10.5469rem; padding-left: 0.375rem;">
+                        
+                        <!-- Error Details -->
+                        ${errorDetailsHtml}
+                        
+                        <!-- Recommendations -->
+                        ${audit.recommendations ? `<div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid #e5e7eb;"><h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0 0 0.5625rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;"><svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.6562rem; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.6094rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>` : ''}
+                        
+                        <!-- Close Button -->
+                        <div style="display: flex; justify-content: center; margin-top: 0.75rem; padding-bottom: 0.75rem;">
+                            <button onclick="this.closest('.modal').remove()" style="background: #1A733E; color: white; border: none; border-radius: 0.375rem; padding: 0.5625rem 1.5rem; font-size: 0.75rem; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: all 0.2s; box-shadow: 0 0.1406rem 0.2109rem rgba(0,0,0,0.1);">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.className = 'modal';
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        document.body.appendChild(modal);
+        
+        // Make splitter draggable
+        const splitter = document.getElementById('splitter');
+        const leftColumn = document.getElementById('leftColumn');
+        const rightColumn = document.getElementById('rightColumn');
+        const auditContent = document.getElementById('auditContent');
+        
+        if (splitter && leftColumn && rightColumn && auditContent) {
+            let isResizing = false;
+            
+            splitter.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                splitter.style.background = '#9ca3af';
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                
+                const containerRect = auditContent.getBoundingClientRect();
+                const offsetX = e.clientX - containerRect.left;
+                const containerWidth = containerRect.width;
+                
+                // Calculate percentage (with min/max constraints)
+                let leftPercentage = (offsetX / containerWidth) * 100;
+                leftPercentage = Math.max(25, Math.min(75, leftPercentage));
+                
+                leftColumn.style.width = leftPercentage + '%';
+            });
+            
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    splitter.style.background = '#e5e7eb';
+                }
+            });
+            
+            // Hover effect
+            splitter.addEventListener('mouseenter', function() {
+                if (!isResizing) {
+                    splitter.style.background = '#d1d5db';
+                }
+            });
+            
+            splitter.addEventListener('mouseleave', function() {
+                if (!isResizing) {
+                    splitter.style.background = '#e5e7eb';
+                }
+            });
+        }
+    }
+    
+    // Load audits on page load
+    loadAudits();
+    
+    } catch (error) {
+        console.error('Error in audit reports functionality:', error);
+    }
+});
+</script>
+
 </body>
 </html>
-

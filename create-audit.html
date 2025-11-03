@@ -22,6 +22,7 @@
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
     <script src="intercom-config.js"></script>
+    <script src="audit-template.js"></script>
 </head>
 
 <body>
@@ -255,75 +256,69 @@
         </div>
     </div>
 
-    <!-- Two Column Layout (matching audit-reports.html) -->
+    <!-- Two Column Layout (matching expert-audits.html) -->
     <div id="auditContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: flex-start;">
         
         <!-- LEFT COLUMN: Interaction Details + Transcript -->
         <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 0 0 33%; min-width: 13.6451rem; max-width: 75%; padding-right: 0.6469rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
-            
             <!-- Transcript -->
-            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
-                <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4852rem;">
-                    <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
-                        <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
-                            <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                            Transcript
-                        </h3>
-                        <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                                <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
-                                <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 2.4258rem;">
-                                <button type="button" id="viewChatBtn" disabled style="padding: 0.1617rem 0.3234rem; background-color: #9ca3af; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: not-allowed; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; opacity: 0.6;" title="Open in Intercom (load conversation first)">Open</button>
+            <div style="display: flex; flex-direction: column; gap: 0.6469rem;">
+                <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
+                    <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4852rem;">
+                        <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
+                            <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                                <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                                Transcript
+                            </h3>
+                            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
+                                    <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 2.4258rem;">
+                                    <button type="button" id="viewChatBtn" disabled style="padding: 0.1617rem 0.3234rem; background-color: #9ca3af; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: not-allowed; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; opacity: 0.6;" title="Open in Intercom (load conversation first)">Open</button>
+                                </div>
+                                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                                <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
+                                    <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
+                                </div>
+                                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                                <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
+                                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
+                                    <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box;">
+                                </div>
                             </div>
-                            <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                                <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
-                                <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
-                            </div>
-                            <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
-                                <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
-                                <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box;">
+                        </div>
+                        <div style="display: flex; gap: 0.3234rem;">
+                            <button type="button" id="toggleTranscriptViewBtn" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Toggle between chat view and text view">Chat View</button>
+                        </div>
+                    </div>
+                    <!-- Chat Interface View -->
+                    <div id="transcriptChatView" style="display: none; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
+                        <!-- Chat messages will be dynamically inserted here -->
+                        <div id="chatMessagesContainer" style="display: flex; flex-direction: column;">
+                            <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
+                                <p>Enter an Interaction ID and click "Load" to fetch conversation from Intercom</p>
                             </div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 0.3234rem;">
-                        <button type="button" id="toggleConversationDetailsBtn" onclick="if(window.toggleConversationAttributes) window.toggleConversationAttributes();" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #6b7280; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; display: none; align-items: center; gap: 0.1617rem;" title="Toggle conversation details" onmouseover="this.style.borderColor='#1A733E'; this.style.color='#1A733E'" onmouseout="this.style.borderColor='#d1d5db'; this.style.color='#6b7280'">
-                            <svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                            </svg>
-                            <span id="detailsBtnText">Details</span>
-                            <span id="detailsCountBadge" style="background: #dbeafe; color: #1e40af; padding: 0.0808rem 0.2425rem; border-radius: 303.1923rem; font-size: 0.4043rem; font-weight: 700; margin-left: 0.1617rem; display: none;">0</span>
-                        </button>
-                        <button type="button" id="toggleTranscriptViewBtn" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Toggle between chat view and text view">Chat View</button>
+                    <!-- Text Area View (Default) -->
+                    <div id="transcriptTextView" style="padding: 0.6469rem; background: white; overflow-y: auto; flex: 1; display: flex; position: relative;">
+                        <textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none; transition: padding-top 0.3s ease;"></textarea>
                     </div>
                 </div>
-                <!-- Chat Interface View -->
-                <div id="transcriptChatView" style="display: none; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
-                    <!-- Conversation Attributes Panel (Hidden by default, toggled via button) -->
-                    <div id="conversationAttributesPanel" style="background: white; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.4852rem; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); position: relative; z-index: 5;">
-                        <div id="conversationAttributesContent" style="padding: 0.6469rem; max-height: 9.0967rem; overflow-y: auto; display: block;">
-                            <div id="conversationAttributesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.4852rem; min-height: 1.5162rem;">
-                                <!-- Attributes will be dynamically populated here -->
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Chat messages will be dynamically inserted here -->
-                    <div id="chatMessagesContainer" style="display: flex; flex-direction: column;">
-                        <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
-                            <p>Enter an Interaction ID and click "Load" to fetch conversation from Intercom</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Text Area View (Default) -->
-                <div id="transcriptTextView" style="padding: 0.6469rem; background: white; overflow-y: auto; flex: 1; display: flex; position: relative;">
-                    <!-- Conversation Attributes Panel for text view (Hidden by default, toggled via button) -->
-                    <div id="conversationAttributesPanelTextView" style="position: absolute; top: 0; left: 0; right: 0; background: white; border-bottom: 0.0304rem solid #e5e7eb; padding: 0.6469rem; max-height: 9.0967rem; overflow-y: auto; display: none; z-index: 10; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05);">
-                        <div id="conversationAttributesGridTextView" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.4852rem;">
+                <!-- Conversation Attributes Panel (Always visible by default) - Below transcript container -->
+                <div id="conversationAttributesPanel" style="background: white; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); overflow-y: auto;">
+                    <div id="conversationAttributesContent" style="padding: 0.3234rem; display: block;">
+                        <div id="conversationAttributesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.3234rem;">
                             <!-- Attributes will be dynamically populated here -->
                         </div>
                     </div>
-                    <textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none; transition: padding-top 0.3s ease;"></textarea>
+                </div>
+                <!-- Conversation Attributes Panel for text view (Always visible by default) - Below transcript container -->
+                <div id="conversationAttributesPanelTextView" style="background: white; border-radius: 0.3234rem; padding: 0.3234rem; border: 0.0304rem solid #e5e7eb; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); overflow-y: auto;">
+                    <div id="conversationAttributesGridTextView" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.3234rem;">
+                        <!-- Attributes will be dynamically populated here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -334,7 +329,7 @@
         </div>
         
         <!-- RIGHT COLUMN: Error Details, Post-Status & Recommendations -->
-        <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; overflow-y: auto; max-height: 85vh;">
+        <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem;">
             
             
             <!-- Error Details (Report-Style Table) -->
@@ -411,24 +406,20 @@
                 </div>
             </div>
 
-            <!-- Avg Score, Passing Status, Critical Fail & Post-Status -->
+            <!-- Avg Score, Passing Status & Post-Status -->
             <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Avg Score</p>
-                        <input type="number" id="averageScore" name="averageScore" min="0" max="100" step="0.01" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                        <input type="number" id="averageScore" name="averageScore" min="0" max="100" step="0.01" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed; text-align: center;">
                     </div>
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
-                        <input type="text" id="passingStatus" name="passingStatus" readonly style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
-                    </div>
-                    <div>
-                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
-                        <input type="number" id="criticalFailError" name="criticalFailError" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                        <input type="text" id="passingStatus" name="passingStatus" readonly style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed; text-align: center;">
                     </div>
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Post-Status</p>
-                        <select id="agentPostStatus" name="agentPostStatus" style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
+                        <select id="agentPostStatus" name="agentPostStatus" style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem; text-align: center;">
                             <option value="">Select Status</option>
                             <option value="No active quality concerns" selected>No active quality concerns</option>
                             <option value="Pre-Quality">Pre-Quality</option>
@@ -446,23 +437,19 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Total Errors</p>
-                        <input type="number" id="totalErrorsCount" name="totalErrorsCount" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                        <input type="number" id="totalErrorsCount" name="totalErrorsCount" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed; text-align: center;">
                     </div>
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
-                        <input type="number" id="criticalFailErrorDisplay" name="criticalFailErrorDisplay" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;" value="0">
-                    </div>
-                    <div>
-                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
-                        <input type="number" id="criticalFailErrorDisplay2" name="criticalFailErrorDisplay2" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;" value="0">
+                        <input type="number" id="criticalFailErrorDisplay" name="criticalFailErrorDisplay" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed; text-align: center;" value="0">
                     </div>
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical</p>
-                        <input type="number" id="criticalErrors" name="criticalErrors" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                        <input type="number" id="criticalErrors" name="criticalErrors" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed; text-align: center;">
                     </div>
                     <div>
                         <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
-                        <input type="number" id="significantError" name="significantError" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                        <input type="number" id="significantError" name="significantError" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed; text-align: center;">
                     </div>
                 </div>
             </div>
@@ -996,7 +983,7 @@ window.viewCompletedAudit = function(auditId, scorecardId, tableName) {
         });
         return;
     }
-    // Use same format as audit-reports.html for consistency
+    // Use same format as expert-audits.html for consistency
     window.location.href = `audit-view.html?id=${auditId}&scorecard=${scorecardId}&table=${tableName}`;
 };
 
@@ -2074,7 +2061,7 @@ function renderErrorParameters() {
         const paramType = param.parameter_type || 'error';
         const paramIcon = paramType === 'error' ? '−' : (paramType === 'achievement' || paramType === 'bonus' ? '+' : '');
         
-        // Different colors for different parameter types (matching audit-reports.html exactly)
+        // Different colors for different parameter types (matching expert-audits.html exactly)
         let severityColor = '#3b82f6';
         let severityBg = '#eff6ff';
         
@@ -2091,7 +2078,7 @@ function renderErrorParameters() {
             severityBg = '#d1fae5';
         }
         
-        const severityLabel = paramType === 'achievement' || paramType === 'bonus' ? 'ACHIEVEMENT' : 
+        const severityLabel = (paramType === 'achievement' || paramType === 'bonus') && param.field_type !== 'radio' ? 'ACHIEVEMENT' : 
                              (param.error_category.includes('Fail') ? 'Critical Fail' : 
                               param.error_category.includes('Critical') ? 'Critical' : 'Significant');
         
@@ -2122,7 +2109,7 @@ function renderErrorParameters() {
             `;
         }
         
-        // Create row matching audit-reports.html exactly (lines 1232-1243)
+        // Create row matching expert-audits.html exactly (lines 1232-1243)
         const rowDiv = document.createElement('div');
         rowDiv.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6;';
         
@@ -2140,7 +2127,7 @@ function renderErrorParameters() {
                 ${inputHtml}
             </div>
             <div>
-                <textarea id="feedback_${param.field_id}" name="feedback_${param.field_id}" placeholder="Enter feedback details..." rows="1" class="w-full px-2 py-1 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" style="font-family: 'Poppins', sans-serif; font-size: 0.5659rem; line-height: 1.2; min-height: 1rem; max-height: 50rem; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;"></textarea>
+                <textarea id="feedback_${param.field_id}" name="feedback_${param.field_id}" placeholder="Enter feedback details..." rows="1" class="w-full px-2 py-1 bg-white text-sm focus:outline-none resize-none" style="font-family: 'Poppins', sans-serif; font-size: 0.5659rem; line-height: 1.2; min-height: 1rem; max-height: 50rem; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; border: 1px solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.3234rem;"></textarea>
             </div>
         `;
         
@@ -2154,6 +2141,17 @@ function renderErrorParameters() {
                 feedbackTextarea.style.height = 'auto';
                 feedbackTextarea.style.height = Math.min(feedbackTextarea.scrollHeight, 800) + 'px'; // Max 50rem (800px)
             };
+            
+            // Add focus/input styles for green border
+            feedbackTextarea.addEventListener('focus', function() {
+                this.style.borderColor = '#10b981'; // Green on focus
+            });
+            feedbackTextarea.addEventListener('input', function() {
+                this.style.borderColor = '#10b981'; // Green when typing
+            });
+            feedbackTextarea.addEventListener('blur', function() {
+                this.style.borderColor = '#d1d5db'; // Grey when not focused
+            });
             
             // Hide scrollbar but keep scrolling functional
             feedbackTextarea.style.setProperty('scrollbar-width', 'none', 'important');
@@ -2644,6 +2642,7 @@ async function loadEmployees() {
             option.dataset.designation = user.designation || '';
             option.dataset.employeeId = user.employee_id || '';
             option.dataset.country = user.country || '';
+            option.dataset.channel = user.channel || '';
             employeeSelect.appendChild(option);
         });
         
@@ -3104,6 +3103,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (countryOfEmployee && country) {
                     countryOfEmployee.value = country;
                 }
+                
+                // Auto-populate channel from selected employee
+                const channel = selectedOption.dataset.channel || '';
+                const channelSelect = document.getElementById('channel');
+                if (channelSelect && channel) {
+                    // Check if the channel exists in the dropdown
+                    const channelExists = Array.from(channelSelect.options).some(
+                        opt => opt.value === channel
+                    );
+                    if (channelExists) {
+                        channelSelect.value = channel;
+                        // Trigger change event to auto-select matching scorecard
+                        channelSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
             } else {
                 // Clear fields if no employee selected
                 if (employeeEmail) {
@@ -3118,6 +3132,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (countryOfEmployee) {
                     countryOfEmployee.value = '';
+                }
+                // Clear channel field
+                const channelSelect = document.getElementById('channel');
+                if (channelSelect) {
+                    channelSelect.value = '';
+                    // Trigger change event to reload scorecards without channel filter
+                    channelSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
         });
@@ -3587,7 +3608,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Redirect to audit reports if user clicked "View Reports"
                 if (confirmed) {
-                    window.location.href = 'audit-reports.html';
+                    window.location.href = 'expert-audits.html';
                 } else {
                     // Scroll to top to show pending audits
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3804,14 +3825,12 @@ function calculateAverageScore() {
     
     // Update display fields
     const criticalFailErrorDisplay = document.getElementById('criticalFailErrorDisplay');
-    const criticalFailErrorDisplay2 = document.getElementById('criticalFailErrorDisplay2');
     
     if (criticalErrorsField) criticalErrorsField.value = criticalCount;
     if (criticalFailErrorField) criticalFailErrorField.value = criticalFailCount;
     if (significantErrorField) significantErrorField.value = significantCount;
     if (totalErrorsField) totalErrorsField.value = totalErrorsCount;
     if (criticalFailErrorDisplay) criticalFailErrorDisplay.value = criticalFailCount;
-    if (criticalFailErrorDisplay2) criticalFailErrorDisplay2.value = criticalFailCount;
     
     // Update passing status based on score and threshold
     updatePassingStatus(score);
@@ -4134,13 +4153,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle between chat view and text view
     toggleTranscriptViewBtn.addEventListener('click', function() {
-        const detailsBtn = document.getElementById('toggleConversationDetailsBtn');
         const chatPanel = document.getElementById('conversationAttributesPanel');
         const textPanel = document.getElementById('conversationAttributesPanelTextView');
-        
-        // Check if details panel is currently visible
-        const isDetailsVisible = (chatPanel && chatPanel.style.display !== 'none') || 
-                                  (textPanel && textPanel.style.display !== 'none');
+        const rightColumn = document.getElementById('rightColumn');
         
         isChatViewActive = !isChatViewActive;
         
@@ -4151,9 +4166,15 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleTranscriptViewBtn.textContent = 'Text View';
             toggleTranscriptViewBtn.title = 'Switch to text view';
             
-            // Maintain details panel visibility if it was open
-            if (isDetailsVisible && chatPanel) {
+            // Show chat panel, hide text panel
+            if (chatPanel) {
                 chatPanel.style.display = 'block';
+                if (rightColumn) {
+                    setTimeout(() => {
+                        const rightHeight = rightColumn.scrollHeight;
+                        chatPanel.style.height = rightHeight + 'px';
+                    }, 100);
+                }
             }
             if (textPanel) {
                 textPanel.style.display = 'none';
@@ -4165,27 +4186,22 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleTranscriptViewBtn.textContent = 'Chat View';
             toggleTranscriptViewBtn.title = 'Switch to chat view';
             
-            // Maintain details panel visibility if it was open
-            const transcriptTextarea = document.getElementById('transcript');
-            if (isDetailsVisible && textPanel) {
+            // Show text panel, hide chat panel
+            if (textPanel) {
                 textPanel.style.display = 'block';
-                // Add padding to textarea to account for attributes panel
-                if (transcriptTextarea) {
+                if (rightColumn) {
                     setTimeout(() => {
-                        const panelHeight = textPanel.scrollHeight || 300;
-                        transcriptTextarea.style.paddingTop = `${panelHeight + 16}px`;
-                    }, 0);
+                        const rightHeight = rightColumn.scrollHeight;
+                        textPanel.style.height = rightHeight + 'px';
+                    }, 100);
                 }
-            } else if (transcriptTextarea) {
-                transcriptTextarea.style.paddingTop = '0';
             }
             if (chatPanel) {
                 chatPanel.style.display = 'none';
             }
-            
+        }
             // Sync chat messages to textarea
             syncChatToTextarea();
-        }
     });
 
     // Auto-load conversation when Interaction ID changes
@@ -4809,89 +4825,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Make sync function globally accessible for form submission
     window.syncChatMessagesToTextarea = syncChatToTextarea;
 
-    // Toggle conversation attributes panel (via details button)
-    window.toggleConversationAttributes = function() {
-        const chatPanel = document.getElementById('conversationAttributesPanel');
-        const textPanel = document.getElementById('conversationAttributesPanelTextView');
-        const detailsBtn = document.getElementById('toggleConversationDetailsBtn');
-        const detailsBtnText = document.getElementById('detailsBtnText');
-        const transcriptChatView = document.getElementById('transcriptChatView');
-        const transcriptTextView = document.getElementById('transcriptTextView');
-        
-        // Determine which view is active - check computed styles more reliably
-        const chatViewStyle = transcriptChatView ? window.getComputedStyle(transcriptChatView).display : 'none';
-        const textViewStyle = transcriptTextView ? window.getComputedStyle(transcriptTextView).display : 'none';
-        const isChatView = chatViewStyle !== 'none' && chatViewStyle !== '';
-        
-        const activePanel = isChatView ? chatPanel : textPanel;
-        
-        if (!activePanel) {
-            console.error('Active panel not found', { isChatView, chatPanel, textPanel });
-            return;
-        }
-        
-        // Check if currently expanded - check both computed and inline styles
-        const activePanelStyle = window.getComputedStyle(activePanel).display;
-        const activePanelInlineStyle = activePanel.style.display;
-        const isExpanded = activePanelInlineStyle !== 'none' && activePanelStyle !== 'none';
-        
-        const transcriptTextarea = document.getElementById('transcript');
-        
-        console.log('Toggle attributes', { isChatView, isExpanded, activePanel, activePanelStyle, activePanelInlineStyle });
-        
-        if (isExpanded) {
-            // Hide both panels
-            if (chatPanel) {
-                chatPanel.style.display = 'none';
-            }
-            if (textPanel) {
-                textPanel.style.display = 'none';
-            }
-            if (detailsBtnText) detailsBtnText.textContent = 'Details';
-            if (detailsBtn) {
-                detailsBtn.style.backgroundColor = '#ffffff';
-                detailsBtn.style.color = '#6b7280';
-                detailsBtn.style.borderColor = '#d1d5db';
-            }
-            // Reset textarea padding
-            if (transcriptTextarea && !isChatView) {
-                transcriptTextarea.style.paddingTop = '0';
-            }
-        } else {
-            // Show the active panel
-            if (isChatView && chatPanel) {
-                chatPanel.style.display = 'block';
-                // Ensure content is visible
-                const content = chatPanel.querySelector('#conversationAttributesContent');
-                if (content) content.style.display = 'block';
-                console.log('Showing chat panel', chatPanel, 'Children:', chatPanel.querySelectorAll('#conversationAttributesGrid > div').length);
-            } else if (!isChatView && textPanel) {
-                textPanel.style.display = 'block';
-                console.log('Showing text panel', textPanel, 'Children:', textPanel.querySelectorAll('#conversationAttributesGridTextView > div').length);
-                // Add padding to textarea to account for attributes panel
-                if (transcriptTextarea) {
-                    setTimeout(() => {
-                        const panelHeight = textPanel.scrollHeight || 300;
-                        transcriptTextarea.style.paddingTop = `${panelHeight + 16}px`;
-                    }, 0);
-                }
-            }
-            if (detailsBtnText) detailsBtnText.textContent = 'Hide Details';
-            if (detailsBtn) {
-                detailsBtn.style.backgroundColor = '#1A733E';
-                detailsBtn.style.color = '#ffffff';
-                detailsBtn.style.borderColor = '#1A733E';
-            }
-        }
-    };
-
-    // Attach click handler to details button
-    document.addEventListener('DOMContentLoaded', function() {
-        const detailsBtn = document.getElementById('toggleConversationDetailsBtn');
-        if (detailsBtn) {
-            detailsBtn.addEventListener('click', toggleConversationAttributes);
-        }
-    });
+    // Function removed - attributes are now always shown by default
 
     // Display all conversation attributes in UI-friendly format
     function displayConversationAttributes(conversation) {
@@ -4899,8 +4833,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const chatGrid = document.getElementById('conversationAttributesGrid');
         const textPanel = document.getElementById('conversationAttributesPanelTextView');
         const textGrid = document.getElementById('conversationAttributesGridTextView');
-        const detailsBtn = document.getElementById('toggleConversationDetailsBtn');
-        const countBadge = document.getElementById('detailsCountBadge');
         
         if (!chatGrid || !textGrid) return;
         
@@ -4945,8 +4877,8 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.cssText = `
                 background: #f9fafb;
                 border: 0.0304rem solid #e5e7eb;
-                border-radius: 0.2425rem;
-                padding: 0.4043rem;
+                border-radius: 0.1617rem;
+                padding: 0.2425rem 0.3234rem;
                 transition: all 0.2s ease;
             `;
             
@@ -4966,8 +4898,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedValue = formatValue(key, value);
             
             card.innerHTML = `
-                <div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.0151rem; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">${escapeHtml(label)}</div>
-                <div style="font-size: 0.5257rem; color: #1f2937; font-weight: 500; word-wrap: break-word; line-height: 1.4; font-family: 'Poppins', sans-serif;">${formattedValue}</div>
+                <div style="font-size: 0.3639rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.0122rem; margin-bottom: 0.0808rem; font-family: 'Poppins', sans-serif; line-height: 1.2;">${escapeHtml(label)}</div>
+                <div style="font-size: 0.4852rem; color: #1f2937; font-weight: 500; word-wrap: break-word; line-height: 1.3; font-family: 'Poppins', sans-serif;">${formattedValue}</div>
             `;
             
             return card;
@@ -4988,41 +4920,44 @@ document.addEventListener('DOMContentLoaded', function() {
             textGrid.appendChild(textCard);
         });
         
-        // Show details button and update count badge if attributes found
+        // Show panels by default if attributes found
         if (attributeCount > 0) {
             console.log('Attributes loaded:', attributeCount, 'items');
-            console.log('Chat grid children:', chatGrid.children.length);
-            console.log('Text grid children:', textGrid.children.length);
             
-            if (detailsBtn) {
-                detailsBtn.style.display = 'flex';
-                console.log('Details button shown');
-            }
-            if (countBadge) {
-                countBadge.textContent = attributeCount;
-                countBadge.style.display = 'inline-block';
-            }
+            // Check which view is currently active and show appropriate panel
+            const transcriptChatView = document.getElementById('transcriptChatView');
+            const transcriptTextView = document.getElementById('transcriptTextView');
+            const chatViewStyle = transcriptChatView ? window.getComputedStyle(transcriptChatView).display : 'none';
+            const isChatView = chatViewStyle !== 'none' && chatViewStyle !== '';
             
-            // Verify grids have content
-            if (chatGrid.children.length === 0 || textGrid.children.length === 0) {
-                console.error('Grids populated but no children found!', {
-                    chatGridChildren: chatGrid.children.length,
-                    textGridChildren: textGrid.children.length,
-                    attributeCount
-                });
+            const rightColumn = document.getElementById('rightColumn');
+            
+            if (isChatView && chatPanel) {
+                chatPanel.style.display = 'block';
+                if (rightColumn) {
+                    setTimeout(() => {
+                        const rightHeight = rightColumn.scrollHeight;
+                        chatPanel.style.height = rightHeight + 'px';
+                    }, 100);
+                }
+            } else if (!isChatView && textPanel) {
+                textPanel.style.display = 'block';
+                if (rightColumn) {
+                    setTimeout(() => {
+                        const rightHeight = rightColumn.scrollHeight;
+                        textPanel.style.height = rightHeight + 'px';
+                    }, 100);
+                }
             }
         } else {
-            if (detailsBtn) {
-                detailsBtn.style.display = 'none';
+            // Hide panels if no attributes
+            if (chatPanel) {
+                chatPanel.style.display = 'none';
             }
-            if (countBadge) {
-                countBadge.style.display = 'none';
+            if (textPanel) {
+                textPanel.style.display = 'none';
             }
         }
-        
-        // Keep panels hidden by default (user clicks button to show)
-        console.log('Chat panel initial state:', chatPanel ? chatPanel.style.display : 'not found');
-        console.log('Text panel initial state:', textPanel ? textPanel.style.display : 'not found');
     }
     
     // Helper function to format label (used in both functions)
@@ -5171,7 +5106,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================================
-// Resizable Splitter Functionality (matching audit-reports.html)
+// Resizable Splitter Functionality (matching expert-audits.html)
 // ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
     const splitter = document.getElementById('splitter');
