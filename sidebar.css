@@ -119,7 +119,7 @@ body {
   align-items: center;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.625rem;
   transition: all 0.2s ease;
   width: 100%;
   margin: 0;
@@ -135,10 +135,10 @@ body {
 }
 
 .search-bar-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   color: rgba(255, 255, 255, 0.5);
-  margin-right: 0.5rem;
+  margin-right: 0.4375rem;
   flex-shrink: 0;
   transition: color 0.2s ease;
   stroke-width: 2;
@@ -152,7 +152,7 @@ body {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.8);
-  font-size: 0.75rem;
+  font-size: 0.5625rem;
   font-family: var(--font-family);
   width: 100%;
   padding: 0;
@@ -170,7 +170,7 @@ body {
 
 /* Collapsed sidebar search bar adjustments */
 .sidebar.collapsed .search-bar-wrapper {
-  padding: 0.5rem 0.75rem !important;
+  padding: 0.375rem 0.625rem !important;
   margin: 0 !important;
   justify-content: center !important;
   width: 100% !important;
@@ -216,19 +216,124 @@ body {
   pointer-events: auto;
 }
 
+/* Sidebar Header */
+.sidebar-header {
+  padding: 0.75rem;
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  background-color: var(--primary-color);
+}
+
+.sidebar-brand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  padding: 0.5rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.sidebar-brand-btn:hover,
+.sidebar-brand-btn:focus {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: rgba(255, 255, 255, 1);
+  outline: none;
+}
+
+.brand-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  opacity: 0.9;
+}
+
+.sidebar-brand-btn:hover .brand-icon {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+.brand-text {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              display 0s;
+}
+
+/* Collapsed sidebar header adjustments */
+.sidebar.collapsed .sidebar-header {
+  padding: 0.75rem 0.5rem;
+}
+
+.sidebar.collapsed .sidebar-brand-btn {
+  justify-content: center;
+  padding: 0.5rem 0.5rem;
+  gap: 0;
+}
+
+.sidebar.collapsed .brand-icon {
+  margin-right: 0;
+}
+
+.sidebar.collapsed .brand-text {
+  display: none;
+  opacity: 0;
+  width: 0;
+  max-width: 0;
+  transform: translateX(-0.625rem);
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar.collapsed:hover .sidebar-brand-btn {
+  justify-content: flex-start;
+  gap: 0.625rem;
+  padding: 0.5rem;
+}
+
+.sidebar.collapsed:hover .brand-icon {
+  margin-right: 0;
+}
+
+.sidebar.collapsed:hover .brand-text {
+  display: inline;
+  opacity: 1;
+  width: auto;
+  max-width: 12.5rem;
+  transform: translateX(0);
+  margin: 0;
+  padding: 0;
+}
+
 /* Menu Items Container */
 .menu-items {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
-  padding: 0.5rem 0;
+  padding: 0.375rem 0;
   margin: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 0.25rem;
+  gap: 0.125rem;
   position: relative;
   z-index: 1;
   max-height: calc(100vh - 2rem); /* Reserve space for search and user profile */
@@ -246,7 +351,7 @@ body {
 }
 
 .menu-items > li:first-child .menu-item {
-  padding-top: 0.75rem;
+  padding-top: 0.5rem;
   margin-top: 0;
 }
 
@@ -266,7 +371,7 @@ body {
 }
 
 .section-label {
-  font-size: 0.65rem;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -280,6 +385,7 @@ body {
 }
 
 .sidebar.collapsed .section-label {
+  display: none;
   opacity: 0;
   width: 0;
   max-width: 0;
@@ -289,6 +395,7 @@ body {
 }
 
 .sidebar.collapsed:hover .section-label {
+  display: inline;
   opacity: 1;
   width: auto;
   max-width: 12.5rem;
@@ -302,14 +409,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   margin: 0 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   white-space: nowrap;
-  font-size: var(--font-sm);
+  font-size: 0.6875rem;
   font-weight: 500;
   font-family: var(--font-family);
   border: none;
@@ -323,7 +430,7 @@ body {
 
 .sidebar.collapsed .menu-item {
   justify-content: center;
-  padding: 0.6875rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   margin: 0;
   width: 100%;
 }
@@ -346,7 +453,7 @@ body {
   color: rgba(255, 255, 255, 1);
   font-weight: 600;
   border-left: 3px solid rgba(255, 255, 255, 0.8);
-  padding-left: 0.75rem;
+  padding-left: 0.625rem;
 }
 
 .sidebar.collapsed .menu-item.active {
@@ -356,9 +463,9 @@ body {
 
 /* Menu Item Icons and Text */
 .menu-item svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-right: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.625rem;
   flex-shrink: 0;
   transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   opacity: 0.85;
@@ -382,7 +489,55 @@ body {
   max-width: 12.5rem;
 }
 
+.menu-item > span:not(.status-chip) {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* Status Chip Styles */
+.status-chip {
+  display: none;
+}
+
+.status-chip-coming-soon {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.menu-item:hover .status-chip,
+.menu-item.active .status-chip {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-item:hover .status-chip-coming-soon,
+.menu-item.active .status-chip-coming-soon {
+  background-color: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.4);
+}
+
+.sidebar.collapsed .status-chip {
+  opacity: 0;
+  width: 0;
+  max-width: 0;
+  transform: translateX(-0.625rem);
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar.collapsed:hover .status-chip {
+  opacity: 0.8;
+  width: auto;
+  max-width: 4rem;
+  transform: translateX(0);
+  margin-left: 0.5rem;
+  margin-right: 0;
+  padding: 0.125rem 0.5rem;
+}
+
 .sidebar.collapsed .menu-item span {
+  display: none;
   opacity: 0;
   width: 0;
   max-width: 0;
@@ -391,16 +546,17 @@ body {
 
 .sidebar.collapsed:hover .menu-item {
   justify-content: flex-start;
-  padding: 0.6875rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   margin: 0;
   width: calc(100% - 0rem);
 }
 
 .sidebar.collapsed:hover .menu-item svg {
-  margin-right: 0.75rem;
+  margin-right: 0.625rem;
 }
 
 .sidebar.collapsed:hover .menu-item span {
+  display: inline;
   opacity: 1;
   width: auto;
   max-width: 12.5rem;
@@ -417,13 +573,20 @@ body {
 }
 
 .menu-item.has-submenu .submenu-arrow {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   margin-left: auto;
   margin-right: 0;
   flex-shrink: 0;
   transition: transform 0.3s ease;
   opacity: 0.7;
+  order: 3;
+}
+
+.menu-item.has-submenu .status-chip {
+  order: 2;
+  margin-left: 0.5rem;
+  margin-right: 0;
 }
 
 .menu-item.has-submenu[aria-expanded="true"] .submenu-arrow {
@@ -456,14 +619,14 @@ body {
 .submenu-item {
   display: flex;
   align-items: center;
-  padding: 0.625rem 1rem 0.625rem 3rem;
+  padding: 0.4375rem 0.75rem 0.4375rem 2.5rem;
   margin: 0 0.5rem;
   cursor: pointer;
   transition: all 0.2s ease;
   color: rgba(255, 255, 255, 0.75);
   text-decoration: none;
   white-space: nowrap;
-  font-size: var(--font-sm);
+  font-size: 0.625rem;
   font-weight: 500;
   font-family: var(--font-family);
   border-radius: 0;
@@ -485,12 +648,54 @@ body {
   color: rgba(255, 255, 255, 1);
   font-weight: 600;
   border-left: 2px solid rgba(255, 255, 255, 0.7);
-  padding-left: 2.75rem;
+  padding-left: 2.25rem;
 }
 
 .submenu-item span {
   opacity: 1;
   transition: opacity 0.25s ease;
+}
+
+.sidebar.collapsed .submenu-item span {
+  display: none;
+}
+
+.sidebar.collapsed:hover .submenu-item span {
+  display: inline;
+}
+
+.submenu-item > span:not(.status-chip) {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.submenu-item .status-chip {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+.submenu-item:hover .status-chip,
+.submenu-item.active .status-chip {
+  opacity: 1;
+}
+
+.sidebar.collapsed .submenu-item .status-chip {
+  opacity: 0;
+  width: 0;
+  max-width: 0;
+  transform: translateX(-0.625rem);
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar.collapsed:hover .submenu-item .status-chip {
+  opacity: 0.8;
+  width: auto;
+  max-width: 4rem;
+  transform: translateX(0);
+  margin-left: 0.5rem;
+  margin-right: 0;
+  padding: 0.125rem 0.5rem;
 }
 
 .sidebar.collapsed .submenu {
@@ -507,7 +712,7 @@ body {
 }
 
 .sidebar.collapsed:hover .submenu-item {
-  padding-left: 3rem;
+  padding-left: 2.5rem;
 }
 
 
@@ -531,27 +736,31 @@ body {
 
 /* User Profile */
 .user-profile {
-  padding: 0.875rem 0.875rem;
+  padding: 0.625rem 0.75rem;
   border-top: 0.0625rem solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.625rem;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   flex-shrink: 0;
   border-radius: 0;
   margin: 0;
   width: 100%;
 }
 
-.sidebar.collapsed .user-profile {
+.sidebar.collapsed .user-profile-section .user-profile {
   justify-content: center;
   align-items: center;
   gap: 0;
-  padding: 1rem 0.5rem;
-  margin: 0;
+  padding: 0.25rem 0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  width: calc(100% + 1rem);
   border-top: none;
   border-radius: 0;
+  min-height: auto;
+  height: auto;
 }
 
 .user-profile:hover {
@@ -559,20 +768,22 @@ body {
   outline: none;
 }
 
-.sidebar.collapsed:hover .user-profile {
+.sidebar.collapsed:hover .user-profile-section .user-profile {
   justify-content: flex-start;
   align-items: center;
   gap: 0.625rem;
-  padding: 1rem;
-  margin: 0;
+  padding: 0.625rem 0.75rem;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+  width: calc(100% + 1.5rem);
   border-top: 0.0625rem solid rgba(255, 255, 255, 0.08);
   border-radius: 0;
 }
 
 /* User Avatar */
 .user-avatar {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 1.875rem;
+  height: 1.875rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   border-radius: 50%;
   display: flex;
@@ -584,8 +795,8 @@ body {
 }
 
 .user-avatar svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1rem;
+  height: 1rem;
   fill: var(--white);
   transition: all 0.25s ease;
 }
@@ -615,6 +826,7 @@ body {
 }
 
 .sidebar.collapsed .user-info {
+  display: none;
   opacity: 0;
   width: 0;
   max-width: 0;
@@ -623,6 +835,7 @@ body {
 }
 
 .sidebar.collapsed:hover .user-info {
+  display: block;
   opacity: 1;
   width: auto;
   max-width: 12.5rem;
@@ -631,7 +844,7 @@ body {
 
 .user-name {
   font-weight: 600;
-  font-size: 0.8125rem;
+  font-size: 0.625rem;
   color: var(--white);
   font-family: var(--font-family);
   margin-bottom: 0.125rem;
@@ -642,7 +855,7 @@ body {
 }
 
 .user-email {
-  font-size: 0.75rem;
+  font-size: 0.5625rem;
   opacity: 0.8;
   color: rgba(224, 255, 179, 0.9);
   font-family: var(--font-family);
@@ -656,7 +869,7 @@ body {
 /* User Profile Section */
 .user-profile-section {
   margin-top: auto;
-  padding: 1rem;
+  padding: 0.75rem 0.75rem 0 0.75rem;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -665,17 +878,28 @@ body {
   position: relative;
   z-index: 1;
   box-shadow: none;
-  min-height: 7.5rem; /* Ensure minimum height to cover any scrolling content */
+  min-height: 6.5rem; /* Ensure minimum height to cover any scrolling content */
   justify-content: flex-end;
 }
 
+.sidebar.collapsed .user-profile-section {
+  padding: 0.25rem 0.5rem 0 0.5rem;
+  min-height: auto;
+  gap: 0;
+  height: auto;
+}
+
 .user-profile-section .user-profile {
-  padding: 0.75rem;
+  padding: 0.625rem 0.75rem;
   border-radius: 0;
   margin-bottom: 0;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
+  width: calc(100% + 1.5rem);
   border-top: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
   background-color: var(--primary-color);
+  box-sizing: border-box;
 }
 
 .user-profile-section .user-profile:hover {
@@ -688,21 +912,28 @@ body {
   flex-direction: column;
   gap: 0;
   margin-top: 0;
+  margin-bottom: 0;
+  margin-left: -0.75rem;
+  margin-right: -0.75rem;
   background-color: var(--primary-color);
+  width: calc(100% + 1.5rem);
 }
 
 .profile-link {
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: 0.625rem;
   font-weight: 500;
-  padding: 0.5rem 0.75rem;
+  padding: 0.4375rem 0.75rem;
   border-radius: 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4375rem;
   background-color: var(--primary-color);
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .profile-link:hover {
@@ -713,11 +944,12 @@ body {
 .profile-link.logout-link:hover {
   background-color: #dc2626;
   color: var(--white);
+  width: 100%;
 }
 
 .profile-link svg {
-  width: 1rem;
-  height: 1rem;
+  width: 0.875rem;
+  height: 0.875rem;
   transition: transform 0.2s ease;
 }
 
@@ -725,22 +957,21 @@ body {
   transform: none;
 }
 
-/* Collapsed sidebar adjustments for new structure */
-.sidebar.collapsed .user-profile-section {
-  padding: 0.75rem 0.5rem;
-  gap: 0.5rem;
-}
+/* Collapsed sidebar adjustments for new structure - removed duplicate */
 
 .sidebar.collapsed .profile-links {
   display: flex;
 }
 
 .sidebar.collapsed .profile-link {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   justify-content: center;
+  width: 100%;
+  margin: 0;
 }
 
 .sidebar.collapsed .profile-link span {
+  display: none;
   opacity: 0;
   width: 0;
   max-width: 0;
@@ -756,6 +987,7 @@ body {
 }
 
 .sidebar.collapsed:hover .profile-link span {
+  display: inline;
   opacity: 1;
   width: auto;
   max-width: none;
@@ -780,13 +1012,12 @@ body {
 }
 
 /* Collapsed sidebar adjustments for new structure */
-.sidebar.collapsed .user-profile-section {
-  padding: 0;
-  gap: 0;
-}
 
 .sidebar.collapsed .profile-links {
   display: flex;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  width: calc(100% + 1rem);
 }
 
 

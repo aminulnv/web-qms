@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -26,23 +27,23 @@
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
  <main class="main-content" role="main">
     <p class="page-heading">Create Audit</p>
-    <div style="margin-bottom: 1.5rem; width: 100%;"></div>
+    <div style="margin-bottom: 0.9704rem; width: 100%;"></div>
 
 <!-- Audit Timer Chip -->
-<div id="auditTimer" style="position: fixed; top: 1rem; right: 5rem; background:var(--primary-color); padding: 0.2rem 0.5rem 0.2rem 0.2rem; border-radius: 3.125rem; font-size: 0.9375rem; font-weight: 600; color: #ffffff; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; letter-spacing: 0.01875rem; flex-shrink: 0; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 7.5rem; display: none; align-items: center; gap: 0.5rem; cursor: grab; user-select: none; z-index: 10001;">
-    <button id="timerControlBtn" title="Play/Pause/Reset Timer" style="width: 1.75rem; height: 1.75rem; background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; flex-shrink: 0; margin: 0; padding: 0;">
-        <svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">
+<div id="auditTimer" style="position: fixed; top: 0.6469rem; right: 3.2344rem; background:var(--primary-color); padding: 0.1294rem 0.3234rem 0.1294rem 0.1294rem; border-radius: 2.0215rem; font-size: 0.6064rem; font-weight: 600; color: #ffffff; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; letter-spacing: 0.0122rem; flex-shrink: 0; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 4.8516rem; display: none; align-items: center; gap: 0.3234rem; cursor: grab; user-select: none; z-index: 10001;">
+    <button id="timerControlBtn" title="Play/Pause/Reset Timer" style="width: 1.1321rem; height: 1.1321rem; background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; flex-shrink: 0; margin: 0; padding: 0;">
+        <svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
         </svg>
     </button>
-    <span style="flex: 1; text-align: center; font-size: 0.9375rem; font-weight: 600; font-variant-numeric: tabular-nums;">Time Keeper</span>
+    <span style="flex: 1; text-align: center; font-size: 0.6064rem; font-weight: 600; font-variant-numeric: tabular-nums;">Time Keeper</span>
 </div>
 <!-- End of Audit Timer Chip -->
 
     <!-- Your Stats Section -->
-    <div id="yourStatsSection" style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; margin-bottom: 1.5rem; width: 100%;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 0.0625rem solid #1A733E;">
-            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.01875rem; display: flex; align-items: center; gap: 0.5rem;">
+    <div id="yourStatsSection" style="background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.9704rem; width: 100%;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6469rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E;">
+            <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
                 </svg>
@@ -51,55 +52,55 @@
         </div>
         
         <!-- Stats Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-            <div style="background-color: #1A733E; color: #ffffff; padding: 0.75rem; border-radius: 0.5rem; text-align: left; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); min-height: 5rem; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem; opacity: 0.9;">Assigned</div>
-                <div id="statsAssignedCount" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.4687rem, 1fr)); gap: 0.6469rem; margin-bottom: 0.6469rem;">
+            <div style="background-color: #1A733E; color: #ffffff; padding: 0.4852rem; border-radius: 0.3234rem; text-align: left; box-shadow: 0 0.0808rem 0.1617rem rgba(0, 0, 0, 0.1); min-height: 3.2344rem; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.4852rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0808rem; opacity: 0.9;">Assigned</div>
+                <div id="statsAssignedCount" style="font-size: 1.6171rem; font-weight: 700; margin-bottom: 0.1617rem;">-</div>
             </div>
-            <div style="background-color: #1A733E; color: #ffffff; padding: 0.75rem; border-radius: 0.5rem; text-align: left; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); min-height: 5rem; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem; opacity: 0.9;">Completed</div>
-                <div id="statsCompletedCount" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                <div id="statsTargetAchieved" style="font-size: 0.6875rem; opacity: 0.9; margin-top: 0.125rem;">-</div>
+            <div style="background-color: #1A733E; color: #ffffff; padding: 0.4852rem; border-radius: 0.3234rem; text-align: left; box-shadow: 0 0.0808rem 0.1617rem rgba(0, 0, 0, 0.1); min-height: 3.2344rem; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.4852rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0808rem; opacity: 0.9;">Completed</div>
+                <div id="statsCompletedCount" style="font-size: 1.6171rem; font-weight: 700; margin-bottom: 0.1617rem;">-</div>
+                <div id="statsTargetAchieved" style="font-size: 0.4447rem; opacity: 0.9; margin-top: 0.0808rem;">-</div>
             </div>
-            <div style="background-color: #1A733E; color: #ffffff; padding: 0.75rem; border-radius: 0.5rem; text-align: left; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); min-height: 5rem; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem; opacity: 0.9;">Remaining</div>
-                <div id="statsRemainingCount" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+            <div style="background-color: #1A733E; color: #ffffff; padding: 0.4852rem; border-radius: 0.3234rem; text-align: left; box-shadow: 0 0.0808rem 0.1617rem rgba(0, 0, 0, 0.1); min-height: 3.2344rem; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.4852rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0808rem; opacity: 0.9;">Remaining</div>
+                <div id="statsRemainingCount" style="font-size: 1.6171rem; font-weight: 700; margin-bottom: 0.1617rem;">-</div>
             </div>
-            <div style="background-color: #1A733E; color: #ffffff; padding: 0.75rem; border-radius: 0.5rem; text-align: left; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); min-height: 5rem; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem; opacity: 0.9;">In Progress</div>
-                <div id="statsInProgressCount" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                <div id="statsDaysRemaining" style="font-size: 0.6875rem; opacity: 0.9; margin-top: 0.125rem;">-</div>
+            <div style="background-color: #1A733E; color: #ffffff; padding: 0.4852rem; border-radius: 0.3234rem; text-align: left; box-shadow: 0 0.0808rem 0.1617rem rgba(0, 0, 0, 0.1); min-height: 3.2344rem; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.4852rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0808rem; opacity: 0.9;">In Progress</div>
+                <div id="statsInProgressCount" style="font-size: 1.6171rem; font-weight: 700; margin-bottom: 0.1617rem;">-</div>
+                <div id="statsDaysRemaining" style="font-size: 0.4447rem; opacity: 0.9; margin-top: 0.0808rem;">-</div>
             </div>
-            <div style="background-color: #1A733E; color: #ffffff; padding: 0.75rem; border-radius: 0.5rem; text-align: left; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); min-height: 5rem; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem; opacity: 0.9;">Reversal Rate</div>
-                <div id="statsReversalCount" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+            <div style="background-color: #1A733E; color: #ffffff; padding: 0.4852rem; border-radius: 0.3234rem; text-align: left; box-shadow: 0 0.0808rem 0.1617rem rgba(0, 0, 0, 0.1); min-height: 3.2344rem; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.4852rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0808rem; opacity: 0.9;">Reversal Rate</div>
+                <div id="statsReversalCount" style="font-size: 1.6171rem; font-weight: 700; margin-bottom: 0.1617rem;">-</div>
             </div>
-            <div style="background-color: #1A733E; color: #ffffff; padding: 0.75rem; border-radius: 0.5rem; text-align: left; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); min-height: 5rem; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem; opacity: 0.9;">Avg Duration</div>
-                <div id="statsAvgDuration" style="font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                <div id="statsAvgDurationSubtitle" style="font-size: 0.6875rem; opacity: 0.9; margin-top: 0.125rem;">per audit</div>
+            <div style="background-color: #1A733E; color: #ffffff; padding: 0.4852rem; border-radius: 0.3234rem; text-align: left; box-shadow: 0 0.0808rem 0.1617rem rgba(0, 0, 0, 0.1); min-height: 3.2344rem; display: flex; flex-direction: column; justify-content: center;">
+                <div style="font-size: 0.4852rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0808rem; opacity: 0.9;">Avg Duration</div>
+                <div id="statsAvgDuration" style="font-size: 1.2937rem; font-weight: 700; margin-bottom: 0.1617rem;">-</div>
+                <div id="statsAvgDurationSubtitle" style="font-size: 0.4447rem; opacity: 0.9; margin-top: 0.0808rem;">per audit</div>
             </div>
         </div>
     </div>
 
     <!-- Pending Audits Section -->
-    <div id="pendingAuditsSection" style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; border: 0.0625rem solid #e5e7eb; margin-bottom: 1rem; width: 100%; display: block;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 0.0625rem solid #1A733E;">
-            <h3 style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.01875rem; display: flex; align-items: center; gap: 0.5rem;">
+    <div id="pendingAuditsSection" style="background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%; display: block;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4852rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E;">
+            <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 11l3 3L22 4"/>
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
                 <span id="auditsViewTitle">My Assigned Audits</span>
-                <span id="pendingCount" style="background-color: #1A733E; color: white; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; min-width: 1.5rem; text-align: center;">0</span>
+                <span id="pendingCount" style="background-color: #1A733E; color: white; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 600; min-width: 0.9704rem; text-align: center;">0</span>
                 <div style="position: relative; display: inline-block;">
-                    <button id="sortIconBtn" onclick="toggleSortMenu()" style="background: none; border: none; padding: 0.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1A733E; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Sort audits">
+                    <button id="sortIconBtn" onclick="toggleSortMenu()" style="background: none; border: none; padding: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1A733E; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Sort audits">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 6h18M7 12h10M11 18h2"/>
                         </svg>
                     </button>
-                    <div id="sortMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.25rem; background: white; border: 0.0625rem solid #e5e7eb; border-radius: 0.375rem; box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); z-index: 1000; min-width: 12rem; padding: 0.5rem 0;">
-                        <select id="auditSortBy" onchange="sortPendingAudits(); toggleSortMenu();" style="width: 100%; padding: 0.5rem 0.75rem; border: none; background: transparent; font-size: 0.75rem; font-family: 'Poppins', sans-serif; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 0.875rem; padding-right: 2rem;">
+                    <div id="sortMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.1617rem; background: white; border: 0.0405rem solid #e5e7eb; border-radius: 0.2425rem; box-shadow: 0 0.1617rem 0.3234rem rgba(0,0,0,0.1); z-index: 1000; min-width: 7.7625rem; padding: 0.3234rem 0;">
+                        <select id="auditSortBy" onchange="sortPendingAudits(); toggleSortMenu();" style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
                             <option value="name_asc">Name (A-Z)</option>
                             <option value="name_desc">Name (Z-A)</option>
                             <option value="status_asc">Status (Pending → In Progress)</option>
@@ -110,15 +111,15 @@
                     </div>
                 </div>
             </h3>
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                <button id="createManualAuditBtn" onclick="createManualAudit()" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.375rem;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
+            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                <button id="createManualAuditBtn" onclick="createManualAudit()" style="padding: 0.2425rem 0.4852rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.2425rem;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="5" x2="12" y2="19"/>
                         <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
                     <span>Create Manual Audit</span>
                 </button>
-                <button id="toggleAllAuditsBtn" onclick="toggleAllAuditsView()" style="padding: 0.375rem 0.75rem; background-color: #f9fafb; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.375rem;">
+                <button id="toggleAllAuditsBtn" onclick="toggleAllAuditsView()" style="padding: 0.2425rem 0.4852rem; background-color: #f9fafb; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.2425rem;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -129,49 +130,49 @@
                 </button>
             </div>
         </div>
-        <div id="pendingAuditsList" style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <div style="text-align: center; padding: 3rem 1.5rem; color: #6b7280;">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.4;">
+        <div id="pendingAuditsList" style="display: flex; flex-direction: column; gap: 0.3234rem;">
+            <div style="text-align: center; padding: 1.9406rem 0.9704rem; color: #6b7280;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 0.6469rem; opacity: 0.4;">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                     <line x1="12" y1="18" x2="12" y2="12"/>
                     <line x1="9" y1="15" x2="15" y2="15"/>
                 </svg>
-                <p style="font-size: 0.875rem; font-weight: 500; color: #374151; margin: 0 0 0.5rem;">No audits have been assigned to you yet.</p>
-                <p style="font-size: 0.75rem; color: #9ca3af; margin: 0;">Audits will appear here once they are assigned to you.</p>
+                <p style="font-size: 0.5659rem; font-weight: 500; color: #374151; margin: 0 0 0.3234rem;">No audits have been assigned to you yet.</p>
+                <p style="font-size: 0.4852rem; color: #9ca3af; margin: 0;">Audits will appear here once they are assigned to you.</p>
             </div>
         </div>
         
         <!-- Pagination Controls -->
-        <div id="pendingAuditsPagination" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 0.0625rem solid #e5e7eb;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #374151; font-family: 'Poppins', sans-serif;">
+        <div id="pendingAuditsPagination" style="display: none; margin-top: 0.6469rem; padding-top: 0.6469rem; border-top: 0.0405rem solid #e5e7eb;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6469rem;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem; font-size: 0.5659rem; color: #374151; font-family: 'Poppins', sans-serif;">
                     <span id="pendingPaginationInfo">Page 1 of 1</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <button id="pendingFirstPageBtn" onclick="goToPendingPage(1)" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="First Page">
-                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <button id="pendingFirstPageBtn" onclick="goToPendingPage(1)" disabled style="padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1617rem;" title="First Page">
+                        <svg style="width: 0.6469rem; height: 0.6469rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="11 17 6 12 11 7"></polyline>
                             <polyline points="18 17 13 12 18 7"></polyline>
                         </svg>
                     </button>
-                    <button id="pendingPrevPageBtn" onclick="goToPendingPreviousPage()" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="Previous Page">
-                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="pendingPrevPageBtn" onclick="goToPendingPreviousPage()" disabled style="padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1617rem;" title="Previous Page">
+                        <svg style="width: 0.6469rem; height: 0.6469rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                         <span>Previous</span>
                     </button>
-                    <div id="pendingPageNumbers" style="display: flex; align-items: center; gap: 0.25rem;">
+                    <div id="pendingPageNumbers" style="display: flex; align-items: center; gap: 0.1617rem;">
                         <!-- Page numbers will be dynamically generated here -->
                     </div>
-                    <button id="pendingNextPageBtn" onclick="goToPendingNextPage()" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="Next Page">
+                    <button id="pendingNextPageBtn" onclick="goToPendingNextPage()" disabled style="padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1617rem;" title="Next Page">
                         <span>Next</span>
-                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg style="width: 0.6469rem; height: 0.6469rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
-                    <button id="pendingLastPageBtn" onclick="goToPendingLastPage()" disabled style="padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.25rem;" title="Last Page">
-                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="pendingLastPageBtn" onclick="goToPendingLastPage()" disabled style="padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1617rem;" title="Last Page">
+                        <svg style="width: 0.6469rem; height: 0.6469rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="13 17 18 12 13 7"></polyline>
                             <polyline points="6 17 11 12 6 7"></polyline>
                         </svg>
@@ -193,93 +194,60 @@
     <input type="hidden" id="errorDescription" name="errorDescription">
 
     <!-- Beautiful Header Section (Report-Style) -->
-    <div id="auditFormHeader" style="background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); padding: 1rem 1.5rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1.5rem; transition: background 0.3s ease;">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+    <div id="auditFormHeader" style="background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); padding: 0.6469rem 0.9704rem; color: white; box-shadow: 0 0.1213rem 0.1819rem rgba(0,0,0,0.1); margin-bottom: 0.9704rem; transition: background 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.4852rem;">
             <div style="flex: 1;">
-                <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif;">Create New Audit</h2>
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <p id="formScorecardDisplay" style="font-size: 0.75rem; color: rgba(255,255,255,0.85); margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;"><svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Select a scorecard</p>
-                </div>
+                <h2 style="font-size: 0.7278rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">Create New Audit</h2>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <button type="button" onclick="autoFillTestData()" style="background: rgba(255,193,7,0.9); border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; cursor: pointer; color: #1A733E; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.375rem; white-space: nowrap;" onmouseover="this.style.background='rgba(255,193,7,1)'" onmouseout="this.style.background='rgba(255,193,7,0.9)'" title="Auto-fill form with test data">
-                    <svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
+            <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                <button type="button" onclick="autoFillTestData()" style="background: rgba(255,193,7,0.9); border: 0.0606rem solid rgba(255,255,255,0.3); border-radius: 0.2425rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; cursor: pointer; color: #1A733E; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.2425rem; white-space: nowrap;" onmouseover="this.style.background='rgba(255,193,7,1)'" onmouseout="this.style.background='rgba(255,193,7,0.9)'" title="Auto-fill form with test data">
+                    <svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
                     Fill Test Data
                 </button>
-                <button type="button" onclick="closeAuditForm()" style="background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 0.375rem; width: 2rem; height: 2rem; font-size: 1.25rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">×</button>
+                <button type="button" onclick="closeAuditForm()" style="background: rgba(255,255,255,0.2); border: 0.0606rem solid white; border-radius: 0.2425rem; width: 1.2937rem; height: 1.2937rem; font-size: 0.8086rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">×</button>
             </div>
         </div>
         <div>
             
             <!-- Employee Information in Header -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; margin-bottom: 0.75rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.3234rem; margin-bottom: 0.4852rem;">
                 <div>
-                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Employee *</p>
-                    <select id="employeeName" name="employeeName" required style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%; backdrop-filter: blur(10px);">
-                        <option value="" style="background-color: #1A733E; color: rgba(255,255,255,0.7);">Select Employee...</option>
+                    <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Employee *</p>
+                    <select id="employeeName" name="employeeName" required style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid rgba(255,255,255,0.3); border-radius: 0.1617rem; background-color: transparent; color: white; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
+                        <option value="" style="background-color: #ffffff; color: #374151;">Select Employee...</option>
                     </select>
                 </div>
                 <div>
-                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Email *</p>
-                    <input type="email" id="employeeEmail" name="employeeEmail" required readonly style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; width: 100%; word-break: break-all; backdrop-filter: blur(10px);">
+                    <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Email *</p>
+                    <input type="email" id="employeeEmail" name="employeeEmail" required readonly style="padding: 0.3234rem; border: 0.0304rem solid rgba(255,255,255,0.3); border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: transparent; color: white; width: 100%; word-break: break-all;">
                 </div>
                 <div>
-                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Type</p>
-                    <input type="text" id="employeeType" name="employeeType" readonly style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; width: 100%; backdrop-filter: blur(10px);">
+                    <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Type</p>
+                    <input type="text" id="employeeType" name="employeeType" readonly style="padding: 0.3234rem; border: 0.0304rem solid rgba(255,255,255,0.3); border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: transparent; color: white; width: 100%;">
                 </div>
                 <div>
-                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Department</p>
-                    <input type="text" id="employeeDepartment" name="employeeDepartment" readonly style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; width: 100%; backdrop-filter: blur(10px);">
+                    <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Department</p>
+                    <input type="text" id="employeeDepartment" name="employeeDepartment" readonly style="padding: 0.3234rem; border: 0.0304rem solid rgba(255,255,255,0.3); border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: transparent; color: white; width: 100%;">
                 </div>
                 <div>
-                    <p style="font-size: 0.625rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Country *</p>
-                    <select id="countryOfEmployee" name="countryOfEmployee" required style="padding: 0.5rem; border: 2px solid rgba(255,255,255,0.3); border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; background-color: rgba(255,255,255,0.15); color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%; backdrop-filter: blur(10px);">
-                        <option value="" style="background-color: #1A733E; color: rgba(255,255,255,0.7);">Select Country</option>
-                        <option value="Bangladesh" selected style="background-color: #1A733E; color: white;">Bangladesh</option>
-                        <option value="Sri Lanka" style="background-color: #1A733E; color: white;">Sri Lanka</option>
+                    <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.7); margin: 0; font-family: 'Poppins', sans-serif; text-transform: uppercase;">Country *</p>
+                    <select id="countryOfEmployee" name="countryOfEmployee" required style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid rgba(255,255,255,0.3); border-radius: 0.1617rem; background-color: transparent; color: white; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
+                        <option value="" style="background-color: #ffffff; color: #374151;">Select Country</option>
+                        <option value="Bangladesh" selected style="background-color: #ffffff; color: #374151;">Bangladesh</option>
+                        <option value="Sri Lanka" style="background-color: #ffffff; color: #374151;">Sri Lanka</option>
                     </select>
                 </div>
             </div>
         </div>
         
         <!-- Audit Metadata Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem;">
-            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
-                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Avg Score</p>
-                <input type="number" id="averageScore" name="averageScore" min="0" max="100" step="0.01" required readonly style="font-size: 1rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; cursor: not-allowed;">
-            </div>
-            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
-                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Total Errors</p>
-                <input type="number" id="totalErrorsCount" name="totalErrorsCount" min="0" required readonly style="font-size: 1rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; cursor: not-allowed;">
-            </div>
-            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
-                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Status</p>
-                <input type="text" id="passingStatus" name="passingStatus" readonly style="font-size: 0.875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; cursor: not-allowed;">
-            </div>
-            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
-                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Audit Type *</p>
-                <select id="auditType" name="auditType" required style="font-size: 0.875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0 center; background-size: 1rem; padding-right: 1.25rem; cursor: pointer;">
-                    <option value="" style="background-color: #1A733E; color: rgba(255,255,255,0.7);">Select</option>
-                    <option value="Routine Audit (Recorded)" selected style="background-color: #1A733E; color: white;">Routine (Recorded)</option>
-                    <option value="Focused Audit (Recorded)" style="background-color: #1A733E; color: white;">Focused (Recorded)</option>
-                    <option value="Focused Audit (Live)" style="background-color: #1A733E; color: white;">Focused (Live)</option>
-                    <option value="Evaluation and Feedback" style="background-color: #1A733E; color: white;">Evaluation</option>
-                </select>
-            </div>
-            <div style="background: rgba(255,255,255,0.15); border-radius: 0.375rem; padding: 0.5rem 0.75rem; backdrop-filter: blur(10px);">
-                <p style="font-size: 0.625rem; color: rgba(255,255,255,0.8); margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">Validation</p>
-                <select id="validationStatus" name="validationStatus" required style="font-size: 0.875rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: transparent; border: none; color: white; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0 center; background-size: 1rem; padding-right: 1.25rem; cursor: pointer;">
-                    <option value="Validated" selected style="background-color: #1A733E; color: white;">Validated</option>
-                    <option value="Pending" style="background-color: #1A733E; color: white;">Pending</option>
-                    <option value="Rejected" style="background-color: #1A733E; color: white;">Rejected</option>
-                </select>
-            </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(4.2451rem, 1fr)); gap: 0.3234rem;">
         </div>
     </div>
 
     <!-- Scorecard Info (moved to Error Details section, keeping scorecardInfo div here for backward compatibility) -->
     <div id="scorecardInfo" style="display: none; position: absolute; visibility: hidden;">
-        <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.6875rem; color: #6b7280;">
+        <div style="display: flex; align-items: center; gap: 0.4852rem; font-size: 0.4447rem; color: #6b7280;">
             <span><strong id="scorecardScoringType" style="color: #1A733E;">--</strong></span>
             <span style="color: #d1d5db;">•</span>
             <span><strong id="scorecardParamsCount" style="color: #1A733E;">--</strong> params</span>
@@ -287,151 +255,145 @@
     </div>
 
     <!-- Two Column Layout (matching audit-reports.html) -->
-    <div id="auditContent" style="display: flex; padding: 1.5rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: flex-start;">
+    <div id="auditContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: flex-start;">
         
         <!-- LEFT COLUMN: Interaction Details + Transcript -->
-        <div id="leftColumn" style="display: flex; flex-direction: column; gap: 1rem; flex: 0 0 50%; min-width: 450px; max-width: 50%; padding-right: 1rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
+        <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 0 0 33%; min-width: 13.6451rem; max-width: 75%; padding-right: 0.6469rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
             
             <!-- Transcript -->
-            <div style="background: #f9fafb; border-radius: 0.5rem; padding: 0; border: 1px solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
-                <div style="background: #f9fafb; padding: 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                        <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
-                            <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
+                <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4852rem;">
+                    <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
+                        <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                            <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
                             Transcript
                         </h3>
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">ID:</span>
-                                <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 80px;">
-                                <button type="button" id="loadFromIntercomBtn" style="padding: 0.25rem 0.5rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; margin-right: 0.25rem;" title="Load conversation from Intercom">Load</button>
-                                <button type="button" id="viewChatBtn" style="padding: 0.25rem 0.5rem; background-color: #6b7280; color: white; border: none; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Open in Intercom">Open</button>
+                        <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
+                                <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 2.4258rem;">
+                                <button type="button" id="viewChatBtn" disabled style="padding: 0.1617rem 0.3234rem; background-color: #9ca3af; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: not-allowed; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; opacity: 0.6;" title="Open in Intercom (load conversation first)">Open</button>
                             </div>
-                            <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;">Date:</span>
-                                <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
+                            <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
+                                <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
                             </div>
-                            <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.25rem; min-width: 0;">
-                                <span style="font-size: 0.6875rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0;">Email:</span>
-                                <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.25rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 120px; box-sizing: border-box;">
+                            <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
+                                <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
+                                <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box;">
                             </div>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="button" id="toggleConversationDetailsBtn" onclick="if(window.toggleConversationAttributes) window.toggleConversationAttributes();" style="padding: 0.25rem 0.5rem; background-color: #ffffff; color: #6b7280; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; display: none; align-items: center; gap: 0.25rem;" title="Toggle conversation details" onmouseover="this.style.borderColor='#1A733E'; this.style.color='#1A733E'" onmouseout="this.style.borderColor='#d1d5db'; this.style.color='#6b7280'">
-                            <svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">
+                    <div style="display: flex; gap: 0.3234rem;">
+                        <button type="button" id="toggleConversationDetailsBtn" onclick="if(window.toggleConversationAttributes) window.toggleConversationAttributes();" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #6b7280; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; display: none; align-items: center; gap: 0.1617rem;" title="Toggle conversation details" onmouseover="this.style.borderColor='#1A733E'; this.style.color='#1A733E'" onmouseout="this.style.borderColor='#d1d5db'; this.style.color='#6b7280'">
+                            <svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                             </svg>
                             <span id="detailsBtnText">Details</span>
-                            <span id="detailsCountBadge" style="background: #dbeafe; color: #1e40af; padding: 0.125rem 0.375rem; border-radius: 9999px; font-size: 0.625rem; font-weight: 700; margin-left: 0.25rem; display: none;">0</span>
+                            <span id="detailsCountBadge" style="background: #dbeafe; color: #1e40af; padding: 0.0808rem 0.2425rem; border-radius: 303.1923rem; font-size: 0.4043rem; font-weight: 700; margin-left: 0.1617rem; display: none;">0</span>
                         </button>
-                        <button type="button" id="toggleTranscriptViewBtn" style="padding: 0.25rem 0.5rem; background-color: #ffffff; color: #1A733E; border: 1px solid #1A733E; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Toggle between chat view and text view">Chat View</button>
+                        <button type="button" id="toggleTranscriptViewBtn" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Toggle between chat view and text view">Chat View</button>
                     </div>
                 </div>
                 <!-- Chat Interface View -->
-                <div id="transcriptChatView" style="display: none; padding: 0.75rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
+                <div id="transcriptChatView" style="display: none; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
                     <!-- Conversation Attributes Panel (Hidden by default, toggled via button) -->
-                    <div id="conversationAttributesPanel" style="background: white; border-radius: 0.5rem; padding: 0; border: 1px solid #e5e7eb; margin-bottom: 0.75rem; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; z-index: 5;">
-                        <div id="conversationAttributesContent" style="padding: 1rem; max-height: 300px; overflow-y: auto; display: block;">
-                            <div id="conversationAttributesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; min-height: 50px;">
+                    <div id="conversationAttributesPanel" style="background: white; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.4852rem; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); position: relative; z-index: 5;">
+                        <div id="conversationAttributesContent" style="padding: 0.6469rem; max-height: 9.0967rem; overflow-y: auto; display: block;">
+                            <div id="conversationAttributesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.4852rem; min-height: 1.5162rem;">
                                 <!-- Attributes will be dynamically populated here -->
                             </div>
                         </div>
                     </div>
                     <!-- Chat messages will be dynamically inserted here -->
                     <div id="chatMessagesContainer" style="display: flex; flex-direction: column;">
-                        <div style="text-align: center; padding: 2rem; color: #9ca3af; font-size: 0.875rem;">
+                        <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
                             <p>Enter an Interaction ID and click "Load" to fetch conversation from Intercom</p>
                         </div>
                     </div>
                 </div>
                 <!-- Text Area View (Default) -->
-                <div id="transcriptTextView" style="padding: 1rem; background: white; overflow-y: auto; flex: 1; display: flex; position: relative;">
+                <div id="transcriptTextView" style="padding: 0.6469rem; background: white; overflow-y: auto; flex: 1; display: flex; position: relative;">
                     <!-- Conversation Attributes Panel for text view (Hidden by default, toggled via button) -->
-                    <div id="conversationAttributesPanelTextView" style="position: absolute; top: 0; left: 0; right: 0; background: white; border-bottom: 1px solid #e5e7eb; padding: 1rem; max-height: 300px; overflow-y: auto; display: none; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div id="conversationAttributesGridTextView" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+                    <div id="conversationAttributesPanelTextView" style="position: absolute; top: 0; left: 0; right: 0; background: white; border-bottom: 0.0304rem solid #e5e7eb; padding: 0.6469rem; max-height: 9.0967rem; overflow-y: auto; display: none; z-index: 10; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05);">
+                        <div id="conversationAttributesGridTextView" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.4852rem;">
                             <!-- Attributes will be dynamically populated here -->
                         </div>
                     </div>
-                    <textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.8125rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none; transition: padding-top 0.3s ease;"></textarea>
+                    <textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none; transition: padding-top 0.3s ease;"></textarea>
                 </div>
             </div>
         </div>
         
         <!-- RESIZABLE SPLITTER -->
-        <div id="splitter" style="width: 8px; background: #e5e7eb; cursor: col-resize; position: relative; flex-shrink: 0; transition: background 0.2s; z-index: 1;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 40px; background: #9ca3af; border-radius: 2px;"></div>
+        <div id="splitter" style="width: 0.2425rem; background: #e5e7eb; cursor: col-resize; position: relative; flex-shrink: 0; transition: background 0.2s; z-index: 1;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0.1213rem; height: 1.2128rem; background: #9ca3af; border-radius: 0.0606rem;"></div>
         </div>
         
-        <!-- RIGHT COLUMN: Pre/Post Status, Error Details & Recommendations -->
-        <div id="rightColumn" style="flex: 1; min-width: 300px; padding-left: 0.5rem; overflow-y: auto; max-height: 85vh;">
+        <!-- RIGHT COLUMN: Error Details, Post-Status & Recommendations -->
+        <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; overflow-y: auto; max-height: 85vh;">
             
-            <!-- Pre/Post Status -->
-            <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e5e7eb;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
-                    <div style="background: #f0fdf4; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #bbf7d0;">
-                        <p style="font-size: 0.6875rem; color: #166534; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Pre-Status</p>
-                        <select id="agentPreStatus" name="agentPreStatus" style="padding: 0.5rem; border: 1px solid #bbf7d0; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; color: #15803d; background-color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2315803d\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
-                            <option value="">Select Status</option>
-                            <option value="No active quality concerns" selected>No active quality concerns</option>
-                            <option value="Pre-Quality">Pre-Quality</option>
-                            <option value="Quality Concern">Quality Concern</option>
-                            <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
-                            <option value="Performance Improvement Plan (PIP) - Alert">PIP - Alert</option>
-                            <option value="Performance Improvement Plan (PIP) - Priority">PIP - Priority</option>
-                        </select>
-                    </div>
-                    <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #bae6fd;">
-                        <p style="font-size: 0.6875rem; color: #075985; margin: 0 0 0.25rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Post-Status</p>
-                        <select id="agentPostStatus" name="agentPostStatus" style="padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; color: #0369a1; background-color: white; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%230369a1\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem; padding-right: 2.5rem; cursor: pointer; width: 100%;">
-                            <option value="">Select Status</option>
-                            <option value="No active quality concerns" selected>No active quality concerns</option>
-                            <option value="Pre-Quality">Pre-Quality</option>
-                            <option value="Quality Concern">Quality Concern</option>
-                            <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
-                            <option value="Performance Improvement Plan (PIP) - Alert">PIP - Alert</option>
-                            <option value="Performance Improvement Plan (PIP) - Priority">PIP - Priority</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
             
             <!-- Error Details (Report-Style Table) -->
-            <div id="errorParametersSection" style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                        <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
-                            <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            <div id="errorParametersSection" style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4852rem; flex-wrap: wrap; gap: 0.4852rem;">
+                    <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
+                        <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                            <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
                             Error Details
                         </h3>
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <label for="scorecardSelect" style="font-size: 0.75rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Scorecard:</label>
-                                <select id="scorecardSelect" required style="padding: 0.375rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; transition: all 0.2s ease; background-color: #ffffff; min-width: 150px; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 0.875rem; padding-right: 2rem; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                                <label for="scorecardSelect" style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Scorecard:</label>
+                                <select id="scorecardSelect" required style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; min-width: 4.5482rem; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
                                     <option value="">Loading scorecards...</option>
                                 </select>
                             </div>
-                            <div style="width: 1px; height: 1rem; background: #d1d5db;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                <span style="font-size: 0.75rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Channel:</span>
-                                <select id="channel" name="channel" required style="padding: 0.375rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.25rem center; background-size: 0.75rem; padding-right: 1.5rem; cursor: pointer; min-width: 120px;">
+                            <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                <span style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Channel:</span>
+                                <select id="channel" name="channel" required style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; min-width: 3.6387rem; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
                                     <option value="">Select...</option>
                                 </select>
                             </div>
                         </div>
+                        <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                        <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                <label style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Pre-Status:</label>
+                                <select id="agentPreStatus" name="agentPreStatus" style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem; min-width: 8rem;">
+                                    <option value="">Select Status</option>
+                                    <option value="No active quality concerns" selected>No active quality concerns</option>
+                                    <option value="Pre-Quality">Pre-Quality</option>
+                                    <option value="Quality Concern">Quality Concern</option>
+                                    <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
+                                    <option value="Performance Improvement Plan (PIP) - Alert">PIP - Alert</option>
+                                    <option value="Performance Improvement Plan (PIP) - Priority">PIP - Priority</option>
+                                </select>
                     </div>
-                    <div id="errorSummaryBadges" style="display: flex; gap: 0.375rem;">
-                        <!-- Error summary badges will be displayed here -->
+                            <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                                <label style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; font-family: 'Poppins', sans-serif; white-space: nowrap;">Audit Type:</label>
+                                <select id="auditType" name="auditType" required style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem; min-width: 8rem;">
+                                    <option value="">Select</option>
+                                    <option value="Routine Audit (Recorded)" selected>Routine (Recorded)</option>
+                                    <option value="Focused Audit (Recorded)">Focused (Recorded)</option>
+                                    <option value="Focused Audit (Live)">Focused (Live)</option>
+                                    <option value="Evaluation and Feedback">Evaluation</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div style="background: white; border-radius: 0.75rem; box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+                <div style="background: white; border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
                     <!-- Table Header -->
-                    <div style="background-color: #f8f9fa; padding: 0.75rem 1rem; border-bottom: 0.0625rem solid #e5e7eb;">
-                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 1rem; align-items: center; font-weight: 700; font-size: 0.875rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div style="background-color: #f8f9fa; padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid #e5e7eb;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
                             <div>Error Type</div>
+                            <div style="text-align: center;">Points</div>
                             <div style="text-align: center;">Severity</div>
                             <div class="error-details-header-status" style="text-align: center;">Status</div>
                             <div>Feedback</div>
@@ -439,35 +401,98 @@
                     </div>
                     
                     <!-- Table Body -->
-                    <div id="errorParametersContainer" style="padding: 0 1rem 1rem 1rem; box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);">
+                    <div id="errorParametersContainer" style="padding: 0 0.6469rem 0.6469rem 0.6469rem; box-shadow: 0 -0.0606rem 0.1213rem rgba(0, 0, 0, 0.05);">
                         <!-- Error parameters will be dynamically loaded based on selected scorecard -->
-                        <div style="padding: 2rem; text-align: center; color: #6b7280; font-size: 0.875rem;">
+                        <div style="padding: 1.2937rem; text-align: center; color: #6b7280; font-size: 0.5659rem;">
                             <p>Please select a scorecard above to load error parameters.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Hidden error count fields (auto-calculated) -->
-            <input type="hidden" id="criticalErrors" name="criticalErrors">
-            <input type="hidden" id="criticalFailError" name="criticalFailError">
-            <input type="hidden" id="significantError" name="significantError">
+            <!-- Avg Score, Passing Status, Critical Fail & Post-Status -->
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Avg Score</p>
+                        <input type="number" id="averageScore" name="averageScore" min="0" max="100" step="0.01" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
+                        <input type="text" id="passingStatus" name="passingStatus" readonly style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
+                        <input type="number" id="criticalFailError" name="criticalFailError" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Post-Status</p>
+                        <select id="agentPostStatus" name="agentPostStatus" style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; width: 100%; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
+                            <option value="">Select Status</option>
+                            <option value="No active quality concerns" selected>No active quality concerns</option>
+                            <option value="Pre-Quality">Pre-Quality</option>
+                            <option value="Quality Concern">Quality Concern</option>
+                            <option value="Performance Improvement Plan (PIP)">Performance Improvement Plan (PIP)</option>
+                            <option value="Performance Improvement Plan (PIP) - Alert">PIP - Alert</option>
+                            <option value="Performance Improvement Plan (PIP) - Priority">PIP - Priority</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Counts: Total Errors, Critical Fail, Critical, Significant -->
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Total Errors</p>
+                        <input type="number" id="totalErrorsCount" name="totalErrorsCount" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
+                        <input type="number" id="criticalFailErrorDisplay" name="criticalFailErrorDisplay" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;" value="0">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
+                        <input type="number" id="criticalFailErrorDisplay2" name="criticalFailErrorDisplay2" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;" value="0">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical</p>
+                        <input type="number" id="criticalErrors" name="criticalErrors" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                    </div>
+                    <div>
+                        <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
+                        <input type="number" id="significantError" name="significantError" min="0" required readonly style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; cursor: not-allowed;">
+                    </div>
+                </div>
+            </div>
 
             <!-- Recommendations & Next Steps -->
-            <div style="background: #f9fafb; border-radius: 0.5rem; padding: 1rem; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
-                <h3 style="font-size: 0.9375rem; font-weight: 600; color: #1A733E; margin: 0 0 0.75rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg style="width: 1.125rem; height: 1.125rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;">
+                <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
                     Recommendations / Next Steps
                 </h3>
-                <textarea id="recommendations" name="recommendations" rows="4" placeholder="Enter recommendations and next steps for the employee..." style="width: 100%; padding: 0.875rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; font-size: 0.8125rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: white; resize: vertical; box-sizing: border-box;"></textarea>
+                <textarea id="recommendations" name="recommendations" rows="4" placeholder="Enter recommendations and next steps for the employee..." style="width: 100%; padding: 0.5659rem; border: 0.0304rem solid #e5e7eb; border-radius: 0.2425rem; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: white; resize: vertical; box-sizing: border-box;"></textarea>
             </div>
         </div>
     </div> <!-- End Two Column Layout -->
 
     <!-- Form Actions -->
-    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 0.0625rem solid #e5e7eb; background-color: #f9fafb;">
-        <button type="button" id="cancelBtn" style="padding: 0.75rem 2rem; background-color: white; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Cancel</button>
-        <button type="submit" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(26, 115, 62, 0.2);">✓ Submit Audit</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; padding: 0.6469rem 0.9704rem; border-top: 0.0405rem solid #e5e7eb; background-color: #f9fafb;">
+        <div style="display: flex; align-items: center; gap: 0.4852rem;">
+            <div>
+                <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.1617rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Validation</p>
+                <select id="validationStatus" name="validationStatus" required style="padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem; min-width: 8rem;">
+                    <option value="Validated" selected>Validated</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.4852rem;">
+        <button type="button" id="cancelBtn" style="padding: 0.4852rem 1.2937rem; background-color: white; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Cancel</button>
+        <button type="submit" style="padding: 0.4852rem 1.2937rem; background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); color: white; border: none; border-radius: 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0606rem 0.1213rem rgba(26, 115, 62, 0.2);">✓ Submit Audit</button>
+        </div>
     </div>
     </form>
 </div> <!-- End auditFormModal -->
@@ -1052,15 +1077,15 @@ function displayPendingAudits() {
             : 'No audits have been assigned to you yet.';
         
         list.innerHTML = `
-            <div style="text-align: center; padding: 3rem 1.5rem; color: #6b7280;">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.4;">
+            <div style="text-align: center; padding: 1.9406rem 0.9704rem; color: #6b7280;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 0.6469rem; opacity: 0.4;">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                     <line x1="12" y1="18" x2="12" y2="12"/>
                     <line x1="9" y1="15" x2="15" y2="15"/>
                 </svg>
-                <p style="font-size: 0.875rem; font-weight: 500; color: #374151; margin: 0 0 0.5rem;">${emptyStateMessage}</p>
-                <p style="font-size: 0.75rem; color: #9ca3af; margin: 0;">Audits will appear here once they are assigned to you.</p>
+                <p style="font-size: 0.5659rem; font-weight: 500; color: #374151; margin: 0 0 0.3234rem;">${emptyStateMessage}</p>
+                <p style="font-size: 0.4852rem; color: #9ca3af; margin: 0;">Audits will appear here once they are assigned to you.</p>
             </div>
         `;
         if (paginationContainer) paginationContainer.style.display = 'none';
@@ -1087,14 +1112,14 @@ function displayPendingAudits() {
         const auditCard = document.createElement('div');
         auditCard.style.cssText = `
             background: #f9fafb;
-            border: 0.0625rem solid #e5e7eb;
-            border-radius: 0.25rem;
-            padding: 0.75rem;
+            border: 0.0405rem solid #e5e7eb;
+            border-radius: 0.1617rem;
+            padding: 0.4852rem;
             transition: all 0.2s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.4852rem;
         `;
         
         // Get current user info (not needed anymore since we only show logged-in user's audits)
@@ -1104,7 +1129,7 @@ function displayPendingAudits() {
         let actionButton = '';
         
         if (audit.status === 'completed') {
-            statusBadge = '<span style="background-color: #dbeafe; color: #1e40af; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">Completed</span>';
+            statusBadge = '<span style="background-color: #dbeafe; color: #1e40af; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">Completed</span>';
             // Add View button for completed audits
             // Escape values to prevent XSS and ensure proper parameter passing
             const auditId = audit.audit_id ? String(audit.audit_id).replace(/'/g, "\\'") : '';
@@ -1114,7 +1139,7 @@ function displayPendingAudits() {
             if (auditId && scorecardId && tableName) {
                 actionButton = `<button 
                     onclick="event.stopPropagation(); viewCompletedAudit('${auditId}', '${scorecardId}', '${tableName}')" 
-                    style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
                     onmouseover="this.style.backgroundColor='#15582E'"
                     onmouseout="this.style.backgroundColor='#1A733E'"
                 >
@@ -1130,20 +1155,20 @@ function displayPendingAudits() {
                 });
             }
         } else if (audit.status === 'in_progress') {
-            statusBadge = '<span style="background-color: #fef3c7; color: #92400e; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">In Progress</span>';
+            statusBadge = '<span style="background-color: #fef3c7; color: #92400e; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">In Progress</span>';
             actionButton = `<button 
                 onclick="startAssignedAudit('${audit.id}', '${audit.employee_email}', '${audit.scorecard_id}')" 
-                style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
                 onmouseover="this.style.backgroundColor='#15582E'"
                 onmouseout="this.style.backgroundColor='#1A733E'"
             >
                 Continue
             </button>`;
         } else {
-            statusBadge = '<span style="background-color: #dcfce7; color: #166534; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600;">Pending</span>';
+            statusBadge = '<span style="background-color: #dcfce7; color: #166534; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">Pending</span>';
             actionButton = `<button 
                 onclick="startAssignedAudit('${audit.id}', '${audit.employee_email}', '${audit.scorecard_id}')" 
-                style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.25rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
                 onmouseover="this.style.backgroundColor='#15582E'"
                 onmouseout="this.style.backgroundColor='#1A733E'"
             >
@@ -1152,25 +1177,25 @@ function displayPendingAudits() {
         }
         
         auditCard.innerHTML = `
-            <div style="flex: 1; display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.25rem; background: #1A733E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem; flex-shrink: 0;">
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.4852rem;">
+                <div style="width: 1.6171rem; height: 1.6171rem; border-radius: 0.1617rem; background: #1A733E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.5659rem; flex-shrink: 0;">
                     ${getInitials(audit.employee_name || 'Unknown')}
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #1f2937;">
+                    <div style="display: flex; align-items: center; gap: 0.3234rem; margin-bottom: 0.1617rem;">
+                        <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
                             ${escapeHtml(audit.employee_name || 'Unknown Employee')}
                         </h4>
                     </div>
-                    <p style="margin: 0; font-size: 0.75rem; color: #6b7280; display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
+                    <p style="margin: 0; font-size: 0.4852rem; color: #6b7280; display: flex; align-items: center; gap: 0.2425rem; flex-wrap: wrap;">
                         <span>${escapeHtml(audit.employee_email || 'No email')}</span>
                         <span style="color: #d1d5db;">•</span>
                         <span style="font-weight: 500; color: #374151;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
-                        ${audit.completed_at ? `<span style="color: #d1d5db;">•</span><span style="font-size: 0.6875rem; color: #6b7280;">Completed ${formatDate(audit.completed_at)}</span>` : ''}
+                        ${audit.completed_at ? `<span style="color: #d1d5db;">•</span><span style="font-size: 0.4447rem; color: #6b7280;">Completed ${formatDate(audit.completed_at)}</span>` : ''}
                     </p>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
                 ${statusBadge}
                 ${actionButton}
             </div>
@@ -1276,13 +1301,13 @@ function updatePendingPaginationUI() {
             const firstBtn = document.createElement('button');
             firstBtn.textContent = '1';
             firstBtn.onclick = () => goToPendingPage(1);
-            firstBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+            firstBtn.style.cssText = 'padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
             pageNumbers.appendChild(firstBtn);
             
             if (startPage > 2) {
                 const ellipsis = document.createElement('span');
                 ellipsis.textContent = '...';
-                ellipsis.style.cssText = 'padding: 0.5rem 0.25rem; color: #6b7280; font-size: 0.875rem;';
+                ellipsis.style.cssText = 'padding: 0.3234rem 0.1617rem; color: #6b7280; font-size: 0.5659rem;';
                 pageNumbers.appendChild(ellipsis);
             }
         }
@@ -1293,9 +1318,9 @@ function updatePendingPaginationUI() {
             pageBtn.textContent = i.toString();
             pageBtn.onclick = () => goToPendingPage(i);
             if (i === pendingCurrentPage) {
-                pageBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #1A733E; color: #ffffff; border: 0.0625rem solid #1A733E; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                pageBtn.style.cssText = 'padding: 0.3234rem 0.4852rem; background-color: #1A733E; color: #ffffff; border: 0.0405rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
             } else {
-                pageBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                pageBtn.style.cssText = 'padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
             }
             pageBtn.onmouseover = function() {
                 if (i !== pendingCurrentPage) {
@@ -1315,14 +1340,14 @@ function updatePendingPaginationUI() {
             if (endPage < pendingTotalPages - 1) {
                 const ellipsis = document.createElement('span');
                 ellipsis.textContent = '...';
-                ellipsis.style.cssText = 'padding: 0.5rem 0.25rem; color: #6b7280; font-size: 0.875rem;';
+                ellipsis.style.cssText = 'padding: 0.3234rem 0.1617rem; color: #6b7280; font-size: 0.5659rem;';
                 pageNumbers.appendChild(ellipsis);
             }
             
             const lastBtn = document.createElement('button');
             lastBtn.textContent = pendingTotalPages.toString();
             lastBtn.onclick = () => goToPendingPage(pendingTotalPages);
-            lastBtn.style.cssText = 'padding: 0.5rem 0.75rem; background-color: #ffffff; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+            lastBtn.style.cssText = 'padding: 0.3234rem 0.4852rem; background-color: #ffffff; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
             pageNumbers.appendChild(lastBtn);
         }
     }
@@ -1413,18 +1438,18 @@ window.loadPendingAuditIntoForm = async function(auditId) {
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
-        top: 80px;
-        right: 20px;
+        top: 2.4258rem;
+        right: 0.6064rem;
         background: #1A733E;
         color: white;
-        padding: 12px 20px;
-        border-radius: 6px;
+        padding: 0.3639rem 0.6064rem;
+        border-radius: 0.1819rem;
         font-family: 'Poppins', sans-serif;
-        font-size: 14px;
+        font-size: 0.4245rem;
         z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 0.1213rem 0.3639rem rgba(0,0,0,0.15);
     `;
-    notification.textContent = `✏️ Editing pending audit for ${audit.employee_name}`;
+    notification.textContent = `Editing pending audit for ${audit.employee_name}`;
     document.body.appendChild(notification);
     
     setTimeout(() => {
@@ -1462,7 +1487,7 @@ window.createManualAudit = async function() {
     // Reset form header title
     const scorecardDisplay = document.getElementById('formScorecardDisplay');
     if (scorecardDisplay) {
-        scorecardDisplay.innerHTML = '<svg style="width: 0.875rem; height: 0.875rem; display: inline-block; vertical-align: middle; margin-right: 0.375rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Select a scorecard';
+        scorecardDisplay.innerHTML = '<svg style="width: 0.5659rem; height: 0.5659rem; display: inline-block; vertical-align: middle; margin-right: 0.2425rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Select a scorecard';
     }
     
     // Clear scorecard parameters container
@@ -1530,19 +1555,19 @@ window.createManualAudit = async function() {
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
-        top: 80px;
-        right: 20px;
+        top: 2.4258rem;
+        right: 0.6064rem;
         background: linear-gradient(135deg, #1A733E, #15582E);
         color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 0.6469rem 0.9704rem;
+        border-radius: 0.3234rem;
+        box-shadow: 0 0.1213rem 0.3639rem rgba(0, 0, 0, 0.15);
         z-index: 10000;
-        font-size: 0.875rem;
+        font-size: 0.5659rem;
         font-weight: 600;
         animation: slideIn 0.3s ease;
     `;
-    notification.textContent = '📝 Manual audit form opened. Fill in the details to create a new audit.';
+    notification.textContent = 'Manual audit form opened. Fill in the details to create a new audit.';
     document.body.appendChild(notification);
     
     setTimeout(() => {
@@ -1566,15 +1591,15 @@ window.autoFillTestData = async function() {
         const loadingNotification = document.createElement('div');
         loadingNotification.style.cssText = `
             position: fixed;
-            top: 80px;
-            right: 20px;
+            top: 2.4258rem;
+            right: 0.6064rem;
             background: linear-gradient(135deg, #f59e0b, #d97706);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0.6469rem 0.9704rem;
+            border-radius: 0.3234rem;
+            box-shadow: 0 0.1213rem 0.3639rem rgba(0, 0, 0, 0.15);
             z-index: 10000;
-            font-size: 0.875rem;
+            font-size: 0.5659rem;
             font-weight: 600;
             animation: slideIn 0.3s ease;
         `;
@@ -1722,14 +1747,6 @@ Agent: You're very welcome! Have a great day!
                             counterInput.style.color = '#ffffff';
                             counterInput.style.borderColor = '#dc2626';
                             
-                            // Show feedback textarea
-                            const feedbackId = `feedback_${param.field_id}`;
-                            const feedbackTextarea = document.getElementById(feedbackId);
-                            if (feedbackTextarea) {
-                                feedbackTextarea.style.display = 'block';
-                                feedbackTextarea.style.visibility = 'visible';
-                                feedbackTextarea.style.opacity = '1';
-                            }
                             
                             // Trigger change event to update calculations
                             counterInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1777,19 +1794,19 @@ Agent: You're very welcome! Have a great day!
         const successNotification = document.createElement('div');
         successNotification.style.cssText = `
             position: fixed;
-            top: 80px;
-            right: 20px;
+            top: 2.4258rem;
+            right: 0.6064rem;
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0.6469rem 0.9704rem;
+            border-radius: 0.3234rem;
+            box-shadow: 0 0.1213rem 0.3639rem rgba(0, 0, 0, 0.15);
             z-index: 10000;
-            font-size: 0.875rem;
+            font-size: 0.5659rem;
             font-weight: 600;
             animation: slideIn 0.3s ease;
         `;
-        successNotification.textContent = '✅ Form auto-filled with test data!';
+        successNotification.textContent = 'Form auto-filled with test data!';
         document.body.appendChild(successNotification);
         
         setTimeout(() => {
@@ -1903,19 +1920,19 @@ window.startAssignedAudit = async function(assignmentId, employeeEmail, scorecar
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
-            top: 80px;
-            right: 20px;
+            top: 2.4258rem;
+            right: 0.6064rem;
             background: linear-gradient(135deg, #1A733E, #15582E);
             color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0.6469rem 0.9704rem;
+            border-radius: 0.3234rem;
+            box-shadow: 0 0.1213rem 0.3639rem rgba(0, 0, 0, 0.15);
             z-index: 10000;
-            font-size: 0.875rem;
+            font-size: 0.5659rem;
             font-weight: 600;
             animation: slideIn 0.3s ease;
         `;
-        notification.textContent = '✅ Audit started! Scorecard & employee info pre-filled.';
+        notification.textContent = 'Audit started! Scorecard & employee info pre-filled.';
         document.body.appendChild(notification);
         
         setTimeout(() => {
@@ -2003,12 +2020,10 @@ function setInitialAverageScore() {
 // Render error parameter fields dynamically
 function renderErrorParameters() {
     const container = document.getElementById('errorParametersContainer');
-    const summaryBadges = document.getElementById('errorSummaryBadges');
     container.innerHTML = '';
-    summaryBadges.innerHTML = '';
     
     if (currentParameters.length === 0) {
-        container.innerHTML = '<div style="padding: 2rem; text-align: center; color: #6b7280; font-size: 0.875rem;"><p>No parameters defined for this scorecard.</p></div>';
+        container.innerHTML = '<div style="padding: 1.2937rem; text-align: center; color: #6b7280; font-size: 0.5659rem;"><p>No parameters defined for this scorecard.</p></div>';
         // Reset header to default "Status"
         const headerStatusCol = document.querySelector('#errorParametersSection .error-details-header-status');
         if (headerStatusCol) {
@@ -2040,25 +2055,18 @@ function renderErrorParameters() {
         let scoringTypeIcon = '';
         let scoringTypeText = '';
         if (currentScorecard.scoring_type === 'deductive') {
-            scoringTypeIcon = '<svg style="width: 0.625rem; height: 0.625rem; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>';
+            scoringTypeIcon = '<svg style="width: 0.4043rem; height: 0.4043rem; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>';
             scoringTypeText = 'DEDUCTIVE';
         } else if (currentScorecard.scoring_type === 'additive') {
-            scoringTypeIcon = '<svg style="width: 0.625rem; height: 0.625rem; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>';
+            scoringTypeIcon = '<svg style="width: 0.4043rem; height: 0.4043rem; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>';
             scoringTypeText = 'ADDITIVE';
         } else if (currentScorecard.scoring_type === 'hybrid') {
-            scoringTypeIcon = '<svg style="width: 0.625rem; height: 0.625rem; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12h20M12 2v20"/></svg>';
+            scoringTypeIcon = '<svg style="width: 0.4043rem; height: 0.4043rem; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="currentColor"><path d="M2 12h20M12 2v20"/></svg>';
             scoringTypeText = 'HYBRID';
         }
         
-        scorecardDisplay.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem; display: inline-block; vertical-align: middle; margin-right: 0.375rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> ${currentScorecard.name}${scoringTypeText ? ' <span style="background: rgba(255,255,255,0.25); padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.4); margin-left: 0.5rem; display: inline-flex; align-items: center; gap: 0.25rem;">' + scoringTypeIcon + ' ' + scoringTypeText + '</span>' : ''}`;
+        scorecardDisplay.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem; display: inline-block; vertical-align: middle; margin-right: 0.2425rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> ${currentScorecard.name}${scoringTypeText ? ' <span style="background: rgba(255,255,255,0.25); padding: 0.0971rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4043rem; font-weight: 600; text-transform: uppercase; border: 0.0304rem solid rgba(255,255,255,0.4); margin-left: 0.3234rem; display: inline-flex; align-items: center; gap: 0.1617rem;">' + scoringTypeIcon + ' ' + scoringTypeText + '</span>' : ''}`;
     }
-    
-    // Initialize summary badges
-    summaryBadges.innerHTML = `
-        <span id="criticalFailBadge" style="background: #dc2626; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: 0</span>
-        <span id="criticalBadge" style="background: #f59e0b; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: 0</span>
-        <span id="significantBadge" style="background: #3b82f6; color: #ffffff; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: 0</span>
-    `;
     
     currentParameters.forEach(param => {
         // Determine parameter styling based on type
@@ -2091,49 +2099,73 @@ function renderErrorParameters() {
         if (param.field_type === 'radio') {
             // Radio button field (YES/NO)
             inputHtml = `
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
-                        <input type="radio" name="${param.field_id}" id="${param.field_id}_yes" value="1" required data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" onchange="calculateAverageScore()" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #10b981;">
-                        <span style="font-size: 0.75rem; font-weight: 600; color: #10b981;">✓ YES</span>
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <label style="display: flex; align-items: center; gap: 0.1617rem; cursor: pointer;">
+                        <input type="radio" name="${param.field_id}" id="${param.field_id}_yes" value="1" required data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" onchange="calculateAverageScore()" style="width: 0.6469rem; height: 0.6469rem; cursor: pointer; accent-color: #10b981;">
+                        <span style="font-size: 0.4852rem; font-weight: 600; color: #10b981;">✓ YES</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 0.25rem; cursor: pointer;">
-                        <input type="radio" name="${param.field_id}" id="${param.field_id}_no" value="0" required data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" onchange="calculateAverageScore()" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #ef4444;">
-                        <span style="font-size: 0.75rem; font-weight: 600; color: #ef4444;">✗ NO</span>
+                    <label style="display: flex; align-items: center; gap: 0.1617rem; cursor: pointer;">
+                        <input type="radio" name="${param.field_id}" id="${param.field_id}_no" value="0" required data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" onchange="calculateAverageScore()" style="width: 0.6469rem; height: 0.6469rem; cursor: pointer; accent-color: #ef4444;">
+                        <span style="font-size: 0.4852rem; font-weight: 600; color: #ef4444;">✗ NO</span>
                     </label>
                 </div>
             `;
         } else {
             // Counter field (default)
             inputHtml = `
-                <div style="display: flex; align-items: center; gap: 0.375rem;">
-                    <button type="button" class="counter-btn" data-action="decrement" data-target="${param.field_id}" style="width: 1.75rem; height: 1.75rem; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
-                    <input type="number" id="${param.field_id}" name="${param.field_id}" min="0" value="0" readonly data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" style="width: 3rem; padding: 0.375rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 700; background-color: #ffffff; color: #1f2937; cursor: default;">
-                    <button type="button" class="counter-btn" data-action="increment" data-target="${param.field_id}" style="width: 1.75rem; height: 1.75rem; display: flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.25rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                <div style="display: flex; align-items: center; gap: 0.2425rem;">
+                    <button type="button" class="counter-btn" data-action="decrement" data-target="${param.field_id}" style="width: 1.1321rem; height: 1.1321rem; display: flex; align-items: center; justify-content: center; border: 0.0304rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.1617rem; font-size: 0.6469rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
+                    <input type="number" id="${param.field_id}" name="${param.field_id}" min="0" value="0" readonly data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" style="width: 1.9406rem; padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 700; background-color: #ffffff; color: #1f2937; cursor: default;">
+                    <button type="button" class="counter-btn" data-action="increment" data-target="${param.field_id}" style="width: 1.1321rem; height: 1.1321rem; display: flex; align-items: center; justify-content: center; border: 0.0304rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.1617rem; font-size: 0.6469rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
                 </div>
             `;
         }
         
         // Create row matching audit-reports.html exactly (lines 1232-1243)
         const rowDiv = document.createElement('div');
-        rowDiv.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;';
+        rowDiv.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6;';
         
         rowDiv.innerHTML = `
-            <div style="font-size: 0.875rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+            <div style="font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
                 <span style="font-weight: 700; color: ${paramType === 'error' ? '#dc2626' : '#10b981'};">${paramIcon}</span> ${param.error_name}
-                <span style="font-size: 0.6875rem; color: #6b7280; font-weight: 400;"> (${param.penalty_points} pts)</span>
+            </div>
+            <div style="display: flex; justify-content: center; font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                ${param.penalty_points}
             </div>
             <div style="display: flex; justify-content: center;">
-                <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">${severityLabel}</span>
+                <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1617rem 0.4852rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem;">${severityLabel}</span>
             </div>
             <div style="display: flex; justify-content: center;">
                 ${inputHtml}
             </div>
             <div>
-                <textarea id="feedback_${param.field_id}" name="feedback_${param.field_id}" placeholder="Enter feedback details..." rows="2" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; resize: vertical; background-color: white; box-sizing: border-box;"></textarea>
+                <textarea id="feedback_${param.field_id}" name="feedback_${param.field_id}" placeholder="Enter feedback details..." rows="1" class="w-full px-2 py-1 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" style="font-family: 'Poppins', sans-serif; font-size: 0.5659rem; line-height: 1.2; min-height: 1rem; max-height: 50rem; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;"></textarea>
             </div>
         `;
         
         container.appendChild(rowDiv);
+        
+        // Add auto-expand functionality to feedback textarea
+        const feedbackTextarea = rowDiv.querySelector(`#feedback_${param.field_id}`);
+        if (feedbackTextarea) {
+            // Auto-expand function
+            const autoExpand = function() {
+                feedbackTextarea.style.height = 'auto';
+                feedbackTextarea.style.height = Math.min(feedbackTextarea.scrollHeight, 800) + 'px'; // Max 50rem (800px)
+            };
+            
+            // Hide scrollbar but keep scrolling functional
+            feedbackTextarea.style.setProperty('scrollbar-width', 'none', 'important');
+            feedbackTextarea.style.setProperty('-ms-overflow-style', 'none', 'important');
+            // For webkit browsers
+            const style = document.createElement('style');
+            style.textContent = `#feedback_${param.field_id}::-webkit-scrollbar { display: none; }`;
+            document.head.appendChild(style);
+            
+            feedbackTextarea.addEventListener('input', autoExpand);
+            // Trigger on initial load if there's content
+            setTimeout(autoExpand, 0);
+        }
     });
     
     // Update summary badges when scores change
@@ -2143,7 +2175,7 @@ function renderErrorParameters() {
 // Clear error parameters
 function clearErrorParameters() {
     const container = document.getElementById('errorParametersContainer');
-    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #6b7280; font-size: 0.875rem;"><p>Please select a scorecard above to load error parameters.</p></div>';
+    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 1.2937rem; color: #6b7280; font-size: 0.5659rem;"><p>Please select a scorecard above to load error parameters.</p></div>';
 }
 
 // ============================================================================
@@ -2302,7 +2334,7 @@ function clearErrorParameters() {
             isRunning = true;
             timerInterval = setInterval(updateDisplay, 1000);
             if (timerControlBtn) {
-            timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+            timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
             timerControlBtn.title = "Pause Timer";
             }
         }
@@ -2314,7 +2346,7 @@ function clearErrorParameters() {
             isRunning = false;
             clearInterval(timerInterval);
             if (timerControlBtn) {
-            timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+            timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
             timerControlBtn.title = "Resume Timer";
             }
         }
@@ -2331,7 +2363,7 @@ function clearErrorParameters() {
         timerDisplay.textContent = '00:00';
         }
         if (timerControlBtn) {
-        timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+        timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
         timerControlBtn.title = "Start Timer";
         }
         updateAuditDuration();
@@ -2429,7 +2461,7 @@ function clearErrorParameters() {
         startTime = Date.now();
         isRunning = true;
         timerInterval = setInterval(updateDisplay, 1000);
-        timerControlBtn.innerHTML = `<svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+        timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
         timerControlBtn.title = "Pause Timer";
         updateDisplay();
         
@@ -2808,7 +2840,7 @@ async function loadAuditForEditing() {
         // Update header to indicate editing mode
         const formHeader = document.getElementById('formScorecardDisplay');
         if (formHeader) {
-            formHeader.innerHTML = '✏️ Editing Audit - ' + formHeader.innerHTML;
+            formHeader.innerHTML = 'Editing Audit - ' + formHeader.innerHTML;
         }
         
         // Restore audit start timestamp if editing existing audit
@@ -2931,13 +2963,6 @@ async function populateFormWithAuditData(audit) {
                 const feedbackField = document.getElementById(`feedback_${param.field_id}`);
                 if (feedbackField) {
                     feedbackField.value = audit[`feedback_${param.field_id}`] || '';
-                    
-                    // Show feedback if there's a value
-                    if (audit[`feedback_${param.field_id}`]) {
-                        feedbackField.style.display = 'block';
-                        feedbackField.style.visibility = 'visible';
-                        feedbackField.style.opacity = '1';
-                    }
                 }
             });
         }
@@ -3770,25 +3795,22 @@ function calculateAverageScore() {
         }
     });
     
-    // Update summary badges
-    const criticalFailBadge = document.getElementById('criticalFailBadge');
-    const criticalBadge = document.getElementById('criticalBadge');
-    const significantBadge = document.getElementById('significantBadge');
-    
-    if (criticalFailBadge) criticalFailBadge.textContent = `Critical Fail: ${criticalFailCount}`;
-    if (criticalBadge) criticalBadge.textContent = `Critical: ${criticalCount}`;
-    if (significantBadge) significantBadge.textContent = `Significant: ${significantCount}`;
-    
     // Update hidden error count fields for form submission
     const criticalErrorsField = document.getElementById('criticalErrors');
     const criticalFailErrorField = document.getElementById('criticalFailError');
     const significantErrorField = document.getElementById('significantError');
     const totalErrorsField = document.getElementById('totalErrorsCount');
     
+    // Update display fields
+    const criticalFailErrorDisplay = document.getElementById('criticalFailErrorDisplay');
+    const criticalFailErrorDisplay2 = document.getElementById('criticalFailErrorDisplay2');
+    
     if (criticalErrorsField) criticalErrorsField.value = criticalCount;
     if (criticalFailErrorField) criticalFailErrorField.value = criticalFailCount;
     if (significantErrorField) significantErrorField.value = significantCount;
     if (totalErrorsField) totalErrorsField.value = totalErrorsCount;
+    if (criticalFailErrorDisplay) criticalFailErrorDisplay.value = criticalFailCount;
+    if (criticalFailErrorDisplay2) criticalFailErrorDisplay2.value = criticalFailCount;
     
     // Update passing status based on score and threshold
     updatePassingStatus(score);
@@ -4042,9 +4064,9 @@ document.addEventListener('click', function(e) {
             calculateAverageScore();
             calculateErrorsByCategory();
             
-            // Show/hide feedback textarea based on value (using new naming convention)
+            // Feedback box is always visible - no need to show/hide
             const feedbackId = `feedback_${targetId}`;
-            const feedbackTextarea = document.getElementById(feedbackId);
+            const feedbackField = document.getElementById(feedbackId);
             
             // Update input styling based on value
             if (currentValue > 0) {
@@ -4057,17 +4079,12 @@ document.addEventListener('click', function(e) {
                 targetInput.style.borderColor = '#d1d5db';
             }
             
-            if (feedbackTextarea) {
-                if (currentValue > 0) {
-                    feedbackTextarea.style.display = 'block';
-                    feedbackTextarea.style.visibility = 'visible';
-                    feedbackTextarea.style.opacity = '1';
-                } else {
-                    feedbackTextarea.style.display = 'none';
-                    feedbackTextarea.style.visibility = 'hidden';
-                    feedbackTextarea.style.opacity = '0';
-                    feedbackTextarea.value = ''; // Clear feedback when count is 0
-                }
+            // Keep feedback box always visible - don't hide it when count is 0
+            // Only clear the value if count is 0 (optional - you can remove this line if you want to preserve text)
+            if (feedbackTextarea && currentValue === 0) {
+                // Optionally clear feedback when count goes to 0
+                // Uncomment the next line if you want to clear feedback when count becomes 0
+                // feedbackTextarea.value = '';
             }
         }
     }
@@ -4084,35 +4101,7 @@ document.addEventListener('change', function(e) {
         calculateAverageScore();
         calculateErrorsByCategory();
         
-        // Show/hide feedback textarea based on selection
-        const feedbackId = `feedback_${fieldName}`;
-        const feedbackTextarea = document.getElementById(feedbackId);
-        
-        if (feedbackTextarea) {
-            const paramType = e.target.dataset.paramType || 'error';
-            
-            // Show feedback if:
-            // - Error parameter and YES selected (error occurred, need to explain)
-            // - Achievement/bonus parameter and NO selected (not achieved = error, need to explain why)
-            let shouldShowFeedback = false;
-            
-            if (paramType === 'error' && selectedValue === 1) {
-                shouldShowFeedback = true;  // Error occurred
-            } else if ((paramType === 'achievement' || paramType === 'bonus') && selectedValue === 0) {
-                shouldShowFeedback = true;  // Achievement NOT completed (counts as error)
-            }
-            
-            if (shouldShowFeedback) {
-                feedbackTextarea.style.display = 'block';
-                feedbackTextarea.style.visibility = 'visible';
-                feedbackTextarea.style.opacity = '1';
-            } else {
-                feedbackTextarea.style.display = 'none';
-                feedbackTextarea.style.visibility = 'hidden';
-                feedbackTextarea.style.opacity = '0';
-                feedbackTextarea.value = ''; // Clear feedback when not needed
-            }
-        }
+        // Feedback box is always visible - no need to show/hide
     }
 });
 
@@ -4120,9 +4109,8 @@ document.addEventListener('change', function(e) {
 // Intercom API Integration and Chat Interface
 // ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
-    const viewChatBtn = document.getElementById('viewChatBtn');
-    const loadFromIntercomBtn = document.getElementById('loadFromIntercomBtn');
     const interactionIdInput = document.getElementById('interactionId');
+    const viewChatBtn = document.getElementById('viewChatBtn');
     const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
     const transcriptChatView = document.getElementById('transcriptChatView');
     const transcriptTextView = document.getElementById('transcriptTextView');
@@ -4132,23 +4120,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let isChatViewActive = false;
     let currentConversationData = null;
 
-    // Configuration - Uses intercom-config.js (which is gitignored)
-    if (!window.intercomConfig) {
-        console.error('Intercom configuration not found. Please ensure intercom-config.js is properly configured.');
-    }
+    // Configuration - Uses intercom-config.js (generated from environment variables)
     const INTERCOM_CONFIG = window.intercomConfig || {
         appId: '',
         apiBaseUrl: 'https://api.intercom.io',
         baseUrl: 'https://app.intercom.com/a/inbox'
     };
 
-    // Get Supabase URL for Edge Function
-    // These values come from supabase-config.js (which is gitignored)
-    if (!window.SupabaseConfig?.url || !window.SupabaseConfig?.anonKey) {
-        console.error('Supabase configuration not found. Please ensure supabase-config.js is properly configured.');
-    }
-    const SUPABASE_URL = window.SupabaseConfig?.url;
-    const SUPABASE_ANON_KEY = window.SupabaseConfig?.anonKey;
+    // Get Supabase URL for Edge Function (generated from environment variables)
+    const SUPABASE_URL = window.SupabaseConfig?.url || '';
+    const SUPABASE_ANON_KEY = window.SupabaseConfig?.anonKey || '';
 
     // Toggle between chat view and text view
     toggleTranscriptViewBtn.addEventListener('click', function() {
@@ -4206,26 +4187,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Load conversation from Intercom API
-    loadFromIntercomBtn.addEventListener('click', async function() {
+    // Auto-load conversation when Interaction ID changes
+    let loadTimeout = null;
+    if (interactionIdInput) {
+        interactionIdInput.addEventListener('input', function() {
         const interactionId = interactionIdInput.value.trim();
         
-        if (!interactionId) {
-            await window.confirmationDialog.show({
-                title: 'Interaction ID Required',
-                message: 'Please enter an Interaction ID to load the conversation from Intercom.',
-                confirmText: 'OK',
-                cancelText: 'Close',
-                type: 'info'
-            });
-            interactionIdInput.focus();
-            return;
-        }
-
+            // Clear previous timeout
+            if (loadTimeout) {
+                clearTimeout(loadTimeout);
+            }
+            
+            // Disable Open button while typing
+            if (viewChatBtn) {
+                viewChatBtn.disabled = true;
+                viewChatBtn.style.backgroundColor = '#9ca3af';
+                viewChatBtn.style.cursor = 'not-allowed';
+                viewChatBtn.style.opacity = '0.6';
+                viewChatBtn.title = 'Open in Intercom (load conversation first)';
+            }
+            
+            // Debounce: wait 500ms after user stops typing before loading
+            if (interactionId) {
+                loadTimeout = setTimeout(async () => {
         await loadConversationFromIntercom(interactionId);
+                }, 500);
+            }
     });
+    }
 
     // View in Intercom button - opens in new tab
+    if (viewChatBtn) {
     viewChatBtn.addEventListener('click', async function() {
         const interactionId = interactionIdInput.value.trim();
         
@@ -4254,31 +4246,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    }
 
     // Auto-focus Interaction ID when page loads
     if (interactionIdInput) {
         interactionIdInput.focus();
-        
-        // Auto-load chat when Interaction ID is entered and Enter is pressed
-        interactionIdInput.addEventListener('keypress', async function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                await loadFromIntercomBtn.click();
-            }
-        });
     }
 
     // Fetch conversation from Intercom API
     async function loadConversationFromIntercom(conversationId) {
         // Show loading state
-        loadFromIntercomBtn.disabled = true;
-        loadFromIntercomBtn.textContent = 'Loading...';
-        loadFromIntercomBtn.style.opacity = '0.6';
+        if (viewChatBtn) {
+            viewChatBtn.disabled = true;
+            viewChatBtn.style.backgroundColor = '#9ca3af';
+            viewChatBtn.style.cursor = 'not-allowed';
+            viewChatBtn.style.opacity = '0.6';
+            viewChatBtn.textContent = 'Loading...';
+            viewChatBtn.title = 'Loading conversation...';
+        }
         
         chatMessagesContainer.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #6b7280;">
-                <div style="display: inline-block; width: 2rem; height: 2rem; border: 3px solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="margin-top: 1rem; font-size: 0.875rem;">Loading conversation from Intercom...</p>
+            <div style="text-align: center; padding: 1.2937rem; color: #6b7280;">
+                <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.091rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversation from Intercom...</p>
             </div>
         `;
 
@@ -4322,6 +4312,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 toggleTranscriptViewBtn.title = 'Switch to text view';
             }
 
+            // Enable Open button after successful load
+            if (viewChatBtn) {
+                viewChatBtn.disabled = false;
+                viewChatBtn.style.backgroundColor = '#6b7280';
+                viewChatBtn.style.cursor = 'pointer';
+                viewChatBtn.style.opacity = '1';
+                viewChatBtn.textContent = 'Open';
+                viewChatBtn.title = 'Open in Intercom';
+            }
+
             // Show success notification
             showNotification('Conversation loaded successfully!', 'success');
 
@@ -4329,17 +4329,27 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error loading conversation from Intercom:', error);
             
             chatMessagesContainer.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: #ef4444;">
-                    <svg style="width: 3rem; height: 3rem; margin: 0 auto 1rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
+                    <svg style="width: 1.9406rem; height: 1.9406rem; margin: 0 auto 0.6469rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Failed to load conversation</p>
-                    <p style="font-size: 0.75rem; color: #6b7280;">${error.message}</p>
-                    <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">Please check your Intercom API credentials and conversation ID.</p>
+                    <p style="font-size: 0.5659rem; font-weight: 600; margin-bottom: 0.3234rem;">Failed to load conversation</p>
+                    <p style="font-size: 0.4852rem; color: #6b7280;">${error.message}</p>
+                    <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">Please check your Intercom API credentials and conversation ID.</p>
                 </div>
             `;
+
+            // Keep Open button disabled on error
+            if (viewChatBtn) {
+                viewChatBtn.disabled = true;
+                viewChatBtn.style.backgroundColor = '#9ca3af';
+                viewChatBtn.style.cursor = 'not-allowed';
+                viewChatBtn.style.opacity = '0.6';
+                viewChatBtn.textContent = 'Open';
+                viewChatBtn.title = 'Open in Intercom (load conversation first)';
+            }
 
             await window.confirmationDialog.show({
                 title: 'Error Loading Conversation',
@@ -4348,11 +4358,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 cancelText: 'Close',
                 type: 'error'
             });
-        } finally {
-            // Reset button state
-            loadFromIntercomBtn.disabled = false;
-            loadFromIntercomBtn.textContent = 'Load';
-            loadFromIntercomBtn.style.opacity = '1';
         }
     }
 
@@ -4498,7 +4503,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (parts.length === 0) {
             chatMessagesContainer.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: #9ca3af;">
+                <div style="text-align: center; padding: 1.2937rem; color: #9ca3af;">
                     <p>No messages found in this conversation.</p>
                 </div>
             `;
@@ -4562,7 +4567,7 @@ document.addEventListener('DOMContentLoaded', function() {
             messageDiv.style.cssText = `
                 display: flex;
                 flex-direction: column;
-                margin-bottom: 0.5rem;
+                margin-bottom: 0.3234rem;
                 align-items: ${isUser ? 'flex-start' : 'flex-end'};
             `;
 
@@ -4571,24 +4576,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? `
                     background: white;
                     color: #374151;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 0.75rem 0.75rem 0.75rem 0.25rem;
+                    border: 0.0304rem solid #e5e7eb;
+                    border-radius: 0.4852rem 0.4852rem 0.4852rem 0.1617rem;
                     max-width: 75%;
                     margin-right: auto;
                 `
                 : `
                     background: #1A733E;
                     color: white;
-                    border-radius: 0.75rem 0.75rem 0.25rem 0.75rem;
+                    border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
                     max-width: 75%;
                     margin-left: auto;
                 `;
 
             // Compact layout: timestamp next to sender name for both user and agent messages
             messageDiv.innerHTML = `
-                <div style="${bubbleStyle} padding: 0.5rem 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
-                    ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1875rem; gap: 0.5rem;"><span style="font-size: 0.6875rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.5625rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1875rem; gap: 0.5rem;"><span style="font-size: 0.6875rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.5625rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
-                    <div style="font-size: 0.8125rem; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">${formattedMessage}</div>
+                <div style="${bubbleStyle} padding: 0.3234rem 0.4852rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08);">
+                    ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
+                    <div style="font-size: 0.5257rem; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">${formattedMessage}</div>
                 </div>
             `;
 
@@ -4655,9 +4660,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const transcriptLines = [];
         
         messages.forEach(msgDiv => {
-            const authorDiv = msgDiv.querySelector('div[style*="font-size: 0.75rem"]');
+            const authorDiv = msgDiv.querySelector('div[style*="font-size: 0.4852rem"]');
             const messageDiv = msgDiv.querySelector('div[style*="white-space: pre-wrap"]');
-            const timeDiv = msgDiv.querySelector('div[style*="font-size: 0.625rem"]');
+            const timeDiv = msgDiv.querySelector('div[style*="font-size: 0.4043rem"]');
             
             if (messageDiv) {
                 const author = authorDiv ? authorDiv.textContent.trim() : 'User';
@@ -4680,16 +4685,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         notification.style.cssText = `
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 0.6064rem;
+            right: 0.6064rem;
             background: ${bgColor};
             color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
+            padding: 0.3639rem 0.6064rem;
+            border-radius: 0.1819rem;
             font-family: 'Poppins', sans-serif;
-            font-size: 14px;
+            font-size: 0.4245rem;
             z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 0.1213rem 0.3639rem rgba(0,0,0,0.15);
             animation: slideInRight 0.3s ease-out;
         `;
         notification.textContent = message;
@@ -4743,36 +4748,36 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             /* Custom scrollbar for chat interface */
             #transcriptChatView::-webkit-scrollbar {
-                width: 6px;
+                width: 0.1819rem;
             }
             #transcriptChatView::-webkit-scrollbar-track {
                 background: #f0f2f5;
-                border-radius: 3px;
+                border-radius: 0.091rem;
             }
             #transcriptChatView::-webkit-scrollbar-thumb {
                 background: #9ca3af;
-                border-radius: 3px;
+                border-radius: 0.091rem;
             }
             #transcriptChatView::-webkit-scrollbar-thumb:hover {
                 background: #6b7280;
             }
             /* Ensure Interaction Details Bar doesn't get cut off */
             #leftColumn {
-                min-width: 450px !important;
+                min-width: 13.6451rem !important;
             }
             #leftColumn > div:first-child {
                 overflow-x: auto !important;
             }
             #leftColumn > div:first-child::-webkit-scrollbar {
-                height: 6px;
+                height: 0.1819rem;
             }
             #leftColumn > div:first-child::-webkit-scrollbar-track {
                 background: #f9fafb;
-                border-radius: 3px;
+                border-radius: 0.091rem;
             }
             #leftColumn > div:first-child::-webkit-scrollbar-thumb {
                 background: #9ca3af;
-                border-radius: 3px;
+                border-radius: 0.091rem;
             }
             #leftColumn > div:first-child::-webkit-scrollbar-thumb:hover {
                 background: #6b7280;
@@ -4780,17 +4785,17 @@ document.addEventListener('DOMContentLoaded', function() {
             /* Custom scrollbar for conversation attributes panels */
             #conversationAttributesContent::-webkit-scrollbar,
             #conversationAttributesPanelTextView::-webkit-scrollbar {
-                width: 6px;
+                width: 0.1819rem;
             }
             #conversationAttributesContent::-webkit-scrollbar-track,
             #conversationAttributesPanelTextView::-webkit-scrollbar-track {
                 background: #f9fafb;
-                border-radius: 3px;
+                border-radius: 0.091rem;
             }
             #conversationAttributesContent::-webkit-scrollbar-thumb,
             #conversationAttributesPanelTextView::-webkit-scrollbar-thumb {
                 background: #9ca3af;
-                border-radius: 3px;
+                border-radius: 0.091rem;
             }
             #conversationAttributesContent::-webkit-scrollbar-thumb:hover,
             #conversationAttributesPanelTextView::-webkit-scrollbar-thumb:hover {
@@ -4938,15 +4943,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = document.createElement('div');
             card.style.cssText = `
                 background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 0.375rem;
-                padding: 0.625rem;
+                border: 0.0304rem solid #e5e7eb;
+                border-radius: 0.2425rem;
+                padding: 0.4043rem;
                 transition: all 0.2s ease;
             `;
             
             card.onmouseenter = () => {
                 card.style.borderColor = '#1A733E';
-                card.style.boxShadow = '0 2px 4px rgba(26, 115, 62, 0.1)';
+                card.style.boxShadow = '0 0.0606rem 0.1213rem rgba(26, 115, 62, 0.1)';
                 card.style.backgroundColor = '#ffffff';
             };
             
@@ -4960,8 +4965,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedValue = formatValue(key, value);
             
             card.innerHTML = `
-                <div style="font-size: 0.625rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem; font-family: 'Poppins', sans-serif;">${escapeHtml(label)}</div>
-                <div style="font-size: 0.8125rem; color: #1f2937; font-weight: 500; word-wrap: break-word; line-height: 1.4; font-family: 'Poppins', sans-serif;">${formattedValue}</div>
+                <div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.0151rem; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">${escapeHtml(label)}</div>
+                <div style="font-size: 0.5257rem; color: #1f2937; font-weight: 500; word-wrap: break-word; line-height: 1.4; font-family: 'Poppins', sans-serif;">${formattedValue}</div>
             `;
             
             return card;
@@ -5191,10 +5196,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const containerWidth = containerRect.width;
             
             // Calculate percentage (with min/max constraints)
-            // Ensure minimum width of 450px is respected
-            const minWidthPercent = (450 / containerWidth) * 100;
+            // Min width: 13.6451rem (~218px at 16px base) - convert to percentage
+            // Max width: 75% of container
+            const minWidthPx = 13.6451 * 16; // Convert rem to pixels (assuming 16px base)
+            const minWidthPercent = Math.max(15, (minWidthPx / containerWidth) * 100); // At least 15%
+            const maxWidthPercent = 75; // Maximum 75% of container
+            
             let leftPercentage = (offsetX / containerWidth) * 100;
-            leftPercentage = Math.max(minWidthPercent, Math.min(75, leftPercentage));
+            leftPercentage = Math.max(minWidthPercent, Math.min(maxWidthPercent, leftPercentage));
             
             leftColumn.style.width = leftPercentage + '%';
             leftColumn.style.flex = '0 0 ' + leftPercentage + '%';
@@ -5363,7 +5372,7 @@ Agent: You're welcome! Have a great day!`;
         if (errorParametersContainer) {
             const counterInputs = errorParametersContainer.querySelectorAll('input[type="number"]');
             const radioGroups = errorParametersContainer.querySelectorAll('input[type="radio"]');
-            const feedbackTextareas = errorParametersContainer.querySelectorAll('textarea');
+            const feedbackInputs = errorParametersContainer.querySelectorAll('input[id^="feedback_"]');
             
             // Fill first 3 counters with random values (1-2)
             counterInputs.forEach((input, index) => {
@@ -5387,11 +5396,11 @@ Agent: You're welcome! Have a great day!`;
             });
             
             // Fill feedback fields
-            feedbackTextareas.forEach((textarea, index) => {
-                if (index < 3 && (!textarea.value || textarea.value.trim() === '')) {
-                    textarea.value = `Sample feedback for error parameter ${index + 1}. This is dummy data for testing purposes. Agent demonstrated good communication skills but needs improvement in handling customer requests.`;
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                    console.log(`✓ Filled feedback ${textarea.id || textarea.name}`);
+            feedbackInputs.forEach((input, index) => {
+                if (index < 3 && (!input.value || input.value.trim() === '')) {
+                    input.value = `Sample feedback for error parameter ${index + 1}. This is dummy data for testing purposes. Agent demonstrated good communication skills but needs improvement in handling customer requests.`;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log(`✓ Filled feedback ${input.id || input.name}`);
                 }
             });
         }

@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Grading Guide | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Grading Guide</p>
+    <div style="margin-bottom: 1.125rem;"></div>
+
+
+    <!-- Search Bar -->
+    <div class="mb-6 px-4">
+        <div class="relative max-w-2xl mx-auto">
+            <input 
+                type="text" 
+                id="faqSearch" 
+                placeholder="Search grading guidelines, parameters, or scorecards..."
+                class="w-full px-4 py-3 pl-12 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a733e] focus:border-[#1a733e] outline-none transition-all duration-200 text-sm"
+            />
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- FAQ Content Container -->
+    <div class="px-4 pb-8 max-w-6xl mx-auto">
+        
+        <!-- Quick Navigation -->
+        <div class="mb-6 flex flex-wrap gap-2">
+            <button onclick="scrollToSection('general-articles')" class="px-4 py-2 bg-[#1a733e] text-white rounded-lg text-sm font-medium hover:bg-[#124f2a] transition-colors">
+                General Articles
+            </button>
+            <button onclick="scrollToSection('scorecard-guidelines')" class="px-4 py-2 bg-[#1a733e] text-white rounded-lg text-sm font-medium hover:bg-[#124f2a] transition-colors">
+                Scorecard Guidelines
+            </button>
+            <button onclick="scrollToSection('error-parameters')" class="px-4 py-2 bg-[#1a733e] text-white rounded-lg text-sm font-medium hover:bg-[#124f2a] transition-colors">
+                Parameter Guidelines
+            </button>
+        </div>
+
+        <!-- General Articles Section - Gallery Cards -->
+        <div id="general-articles" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-[#1a733e]">General Articles</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Scoring Types Card -->
+                <a href="article-scoring-types.html" class="article-card bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block">
+                    <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Understanding Scorecard Types</h3>
+                        <p class="text-gray-600 text-sm mb-4">Learn about Deductive, Additive, and Hybrid scorecards and how they work differently.</p>
+                        <span class="text-[#1a733e] text-sm font-medium">Read more →</span>
+                    </div>
+                </a>
+
+                <!-- Scoring Basics Card -->
+                <a href="article-scoring-basics.html" class="article-card bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block">
+                    <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Scoring Basics</h3>
+                        <p class="text-gray-600 text-sm mb-4">Essential knowledge about score calculation, passing thresholds, and field types.</p>
+                        <span class="text-[#1a733e] text-sm font-medium">Read more →</span>
+                    </div>
+                </a>
+
+                <!-- Common Scenarios Card -->
+                <a href="article-common-scenarios.html" class="article-card bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block">
+                    <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+                        <svg class="w-20 h-20 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Common Scenarios</h3>
+                        <p class="text-gray-600 text-sm mb-4">Learn how to handle edge cases, borderline situations, and tricky scenarios.</p>
+                        <span class="text-[#1a733e] text-sm font-medium">Read more →</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Scorecard-Specific Guidelines Section -->
+        <div id="scorecard-guidelines" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b-2 border-[#1a733e]">Scorecard-Specific Guidelines</h2>
+            <div id="scorecardsContainer" class="space-y-6">
+                <div class="text-center py-12 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <p>Loading scorecards...</p>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Error Parameters Section -->
+        <div id="error-parameters" class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-[#1a733e]">Error Parameters - Detailed Guidelines</h2>
+            
+            <!-- Critical Fail Errors (50 points) -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-red-700 mb-3 bg-red-50 px-4 py-2 rounded-lg">Critical Fail Errors (50 points - Auto-Fail)</h3>
+                
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Error Leading to a Loss of Business</span>
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">-50 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Error that directly results in customer leaving or cancelling service.</p>
+                            <div class="bg-red-50 p-3 rounded-lg">
+                                <p class="font-semibold text-red-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-red-800 text-sm">
+                                    <li>Customer explicitly states they are cancelling due to the agent's error</li>
+                                    <li>Customer threatens to leave and follows through</li>
+                                    <li>Agent provides information that causes customer to cancel subscription/service</li>
+                                    <li>Critical data breach or privacy violation that leads to customer churn</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">Examples:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Agent incorrectly tells customer their account will be charged incorrectly, leading to cancellation</li>
+                                    <li>Agent accidentally deletes customer data that results in customer leaving</li>
+                                    <li>Agent is rude/disrespectful to a point where customer cancels</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-semibold text-gray-900 mb-2">Important Notes:</p>
+                                <p class="text-gray-700 text-sm">This is an auto-fail error. If this error occurs, the audit fails immediately regardless of other scores.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Zero Tolerance</span>
+                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded">-50 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Violation of zero tolerance policy or major compliance breach.</p>
+                            <div class="bg-red-50 p-3 rounded-lg">
+                                <p class="font-semibold text-red-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-red-800 text-sm">
+                                    <li>Violation of company's zero tolerance policies (check your organization's specific policies)</li>
+                                    <li>Major compliance violations (GDPR, HIPAA, PCI-DSS, etc.)</li>
+                                    <li>Discriminatory language or behavior</li>
+                                    <li>Sharing confidential customer information inappropriately</li>
+                                    <li>Fraudulent activity or intentional misrepresentation</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">Examples:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Agent shares customer payment information with unauthorized party</li>
+                                    <li>Agent uses discriminatory language based on race, gender, religion, etc.</li>
+                                    <li>Agent intentionally misleads customer for personal gain</li>
+                                    <li>Violation of regulatory requirements that could result in legal action</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-semibold text-gray-900 mb-2">Important Notes:</p>
+                                <p class="text-gray-700 text-sm">This is an auto-fail error. Review your organization's zero tolerance policy document for specific violations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Critical Errors (10 points) -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-orange-700 mb-3 bg-orange-50 px-4 py-2 rounded-lg">Critical Errors (10 points)</h3>
+                
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Incorrect Information</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Providing wrong information to customer that could cause confusion or issues.</p>
+                            <div class="bg-orange-50 p-3 rounded-lg">
+                                <p class="font-semibold text-orange-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-orange-800 text-sm">
+                                    <li>Agent provides factually incorrect information about products/services</li>
+                                    <li>Agent gives wrong pricing, dates, or deadlines</li>
+                                    <li>Agent misinforms customer about policies or procedures</li>
+                                    <li>Information provided could lead to customer taking incorrect action</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">Examples:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Agent says product costs $99 when it actually costs $149</li>
+                                    <li>Agent tells customer refund will process in 3 days when it takes 7-10 days</li>
+                                    <li>Agent provides incorrect account information</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <p class="font-semibold text-blue-900 mb-2">Count Multiple Instances:</p>
+                                <p class="text-blue-800 text-sm">If agent provides multiple incorrect pieces of information, count each instance separately.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Lack of Professionalism</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Unprofessional behavior, language, or tone during interaction.</p>
+                            <div class="bg-orange-50 p-3 rounded-lg">
+                                <p class="font-semibold text-orange-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-orange-800 text-sm">
+                                    <li>Using inappropriate language (profanity, slang, overly casual)</li>
+                                    <li>Sarcastic, condescending, or dismissive tone</li>
+                                    <li>Interrupting customer repeatedly</li>
+                                    <li>Making personal comments unrelated to the issue</li>
+                                    <li>Arguing with customer instead of de-escalating</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">Examples:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>"Well, you should have read the terms..." (condescending)</li>
+                                    <li>Using profanity or inappropriate language</li>
+                                    <li>Rolling eyes or making dismissive gestures (in video calls)</li>
+                                    <li>Talking over the customer</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Lack of Escalation/Unnecessary Escalation</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Failed to escalate when needed, or escalated unnecessarily.</p>
+                            <div class="bg-orange-50 p-3 rounded-lg">
+                                <p class="font-semibold text-orange-900 mb-2">When to Apply - Lack of Escalation:</p>
+                                <ul class="list-disc list-inside space-y-1 text-orange-800 text-sm">
+                                    <li>Customer requests supervisor/manager and agent refuses</li>
+                                    <li>Issue clearly requires higher authority (refunds over limit, policy exceptions)</li>
+                                    <li>Customer is extremely upset and escalation protocol requires it</li>
+                                    <li>Technical issue beyond agent's scope</li>
+                                </ul>
+                            </div>
+                            <div class="bg-orange-50 p-3 rounded-lg">
+                                <p class="font-semibold text-orange-900 mb-2">When to Apply - Unnecessary Escalation:</p>
+                                <ul class="list-disc list-inside space-y-1 text-orange-800 text-sm">
+                                    <li>Agent escalates simple issues they could handle themselves</li>
+                                    <li>Escalating without attempting to resolve first</li>
+                                    <li>Escalating issues that are clearly within agent's authority</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Lack of Investigation</span>
+                        <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Insufficient investigation into customer issue or concern.</p>
+                            <div class="bg-orange-50 p-3 rounded-lg">
+                                <p class="font-semibold text-orange-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-orange-800 text-sm">
+                                    <li>Agent makes assumptions without checking account details</li>
+                                    <li>Doesn't review customer history before responding</li>
+                                    <li>Gives generic response without understanding specific issue</li>
+                                    <li>Doesn't ask clarifying questions when issue is unclear</li>
+                                    <li>Fails to check multiple systems/tools that might contain relevant information</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">Examples:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Customer says "I was charged twice" - agent doesn't check transaction history</li>
+                                    <li>Agent provides solution without understanding the root cause</li>
+                                    <li>Agent doesn't review notes from previous interactions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Significant Errors (10 points) -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-amber-700 mb-3 bg-amber-50 px-4 py-2 rounded-lg">Significant Errors (10 points)</h3>
+                
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Lack of Empathy</span>
+                        <span class="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Not showing appropriate understanding or concern for customer situation.</p>
+                            <div class="bg-amber-50 p-3 rounded-lg">
+                                <p class="font-semibold text-amber-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-amber-800 text-sm">
+                                    <li>Customer expresses frustration/upset and agent responds mechanically</li>
+                                    <li>No acknowledgment of customer's emotional state</li>
+                                    <li>Using scripted responses without personalization</li>
+                                    <li>Minimizing customer's concerns</li>
+                                    <li>Not apologizing when company/agent error is evident</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">Examples:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Customer: "I've been waiting 3 hours!" Agent: "I understand. How can I help?" (too mechanical)</li>
+                                    <li>Customer: "This ruined my day" - Agent doesn't acknowledge the impact</li>
+                                    <li>Agent says "I understand" but tone and words don't show genuine concern</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Lack of Knowledge</span>
+                        <span class="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Lacking necessary product or service knowledge to assist customer.</p>
+                            <div class="bg-amber-50 p-3 rounded-lg">
+                                <p class="font-semibold text-amber-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-amber-800 text-sm">
+                                    <li>Agent doesn't know basic product/service features</li>
+                                    <li>Unable to answer common questions about offerings</li>
+                                    <li>Doesn't use available resources (knowledge base, documentation) to find answers</li>
+                                    <li>Provides "I don't know" without offering to find out</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <p class="font-semibold text-blue-900 mb-2">Note:</p>
+                                <p class="text-blue-800 text-sm">This is different from "Incorrect Information" - here the agent admits they don't know, while "Incorrect Information" means they gave wrong information.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Lack of Information about Internal Communications</span>
+                        <span class="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded">-10 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Not properly communicating or following up internally as required.</p>
+                            <div class="bg-amber-50 p-3 rounded-lg">
+                                <p class="font-semibold text-amber-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-amber-800 text-sm">
+                                    <li>Fails to document interaction in required systems</li>
+                                    <li>Doesn't follow up with other departments as promised</li>
+                                    <li>Doesn't create internal tickets when required</li>
+                                    <li>Fails to notify supervisor/team about important issues</li>
+                                    <li>Doesn't update customer records with relevant information</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Major Errors (5 points) -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-yellow-700 mb-3 bg-yellow-50 px-4 py-2 rounded-lg">Major Errors (5 points)</h3>
+                
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Missing Information</span>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">-5 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Important information missing from interaction or documentation.</p>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Agent doesn't collect required customer information</li>
+                                    <li>Missing details in case notes that would be needed for follow-up</li>
+                                    <li>Doesn't confirm important details (account number, order ID, etc.)</li>
+                                    <li>Fails to document resolution steps taken</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Outdated Macro Usage</span>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">-5 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Using outdated templates, macros, or scripts.</p>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Using templates that reference old policies or procedures</li>
+                                    <li>Macros containing outdated information</li>
+                                    <li>Using retired scripts or processes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Information Overload</span>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">-5 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Providing too much information at once, overwhelming the customer.</p>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Agent provides lengthy explanations when simple answer would suffice</li>
+                                    <li>Dumps too much technical information on customer</li>
+                                    <li>Provides multiple solutions without allowing customer to process</li>
+                                    <li>Information delivery is confusing or hard to follow</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Grammatical Errors</span>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">-5 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Spelling or grammar mistakes in written communication.</p>
+                            <div class="bg-yellow-50 p-3 rounded-lg">
+                                <p class="font-semibold text-yellow-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-yellow-800 text-sm">
+                                    <li>Spelling mistakes in emails, chats, or documentation</li>
+                                    <li>Grammar errors that affect clarity</li>
+                                    <li>Poor sentence structure</li>
+                                    <li>Multiple errors in a single message</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <p class="font-semibold text-blue-900 mb-2">Count Multiple Instances:</p>
+                                <p class="text-blue-800 text-sm">Count each instance separately. For example, if an email has 3 spelling mistakes, that's 3 instances of this error.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Minor Errors (2.5 points) -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-700 mb-3 bg-gray-50 px-4 py-2 rounded-lg">Minor Errors (2.5 points)</h3>
+                
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Inadequate engagement/excessive engagement</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded">-2.5 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Too little or too much customer engagement during interaction.</p>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-semibold text-gray-900 mb-2">Inadequate Engagement:</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                                    <li>Too brief responses without elaboration</li>
+                                    <li>Not asking follow-up questions when needed</li>
+                                    <li>Being too quiet or unresponsive</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-semibold text-gray-900 mb-2">Excessive Engagement:</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                                    <li>Over-sharing personal information</li>
+                                    <li>Too chatty when customer wants quick resolution</li>
+                                    <li>Asking too many unnecessary questions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-3">
+                    <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                        <span class="font-semibold text-gray-800">Missing Minimal information</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded">-2.5 pts</span>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-4">
+                        <div class="text-gray-700 space-y-3">
+                            <p><strong>Description:</strong> Minor information gaps that do not significantly impact service delivery.</p>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="font-semibold text-gray-900 mb-2">When to Apply:</p>
+                                <ul class="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                                    <li>Minor details missing that don't affect resolution</li>
+                                    <li>Small gaps in documentation that can be easily inferred</li>
+                                    <li>Optional information not collected</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <p class="font-semibold text-blue-900 mb-2">Note:</p>
+                                <p class="text-blue-800 text-sm">This is for minor gaps. For significant missing information, use "Missing Information" (5 points) instead.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoring Basics Article Content (Hidden) -->
+        <div id="scoring-basics-article" class="hidden">
+            <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-[#1a733e]">Scoring Basics</h2>
+            
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">How do I calculate the final score?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>The calculation depends on the scorecard type:</p>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="font-semibold text-blue-900 mb-2">Deductive:</p>
+                            <p class="text-blue-800">Final Score = 100 - (Sum of all error point deductions)</p>
+                            <p class="text-blue-700 text-sm mt-2">Example: 100 - (5 + 5 + 10) = 80%</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-semibold text-green-900 mb-2">Additive:</p>
+                            <p class="text-green-800">Final Score = Sum of all achievement points</p>
+                            <p class="text-green-700 text-sm mt-2">Example: 10 + 10 + 5 = 25%</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="font-semibold text-purple-900 mb-2">Hybrid:</p>
+                            <p class="text-purple-800">Final Score = Starting Score - Errors + Achievements + Bonuses</p>
+                            <p class="text-purple-700 text-sm mt-2">Example: 100 - 5 + 10 + 10 = 115% (if over-100 allowed)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">What is the passing threshold?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>The passing threshold is set per scorecard. An audit must meet or exceed this threshold to pass.</p>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <p class="font-semibold text-yellow-900 mb-2">Auto-Fail Rules:</p>
+                            <p class="text-yellow-800">Even if the final score is above the threshold, any "Critical Fail Error" (50 points, auto-fail flag) will cause the audit to fail automatically.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">How do Counter fields work vs Radio fields?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="font-semibold text-blue-900 mb-2">Counter Field (for Errors):</p>
+                            <ul class="list-disc list-inside space-y-1 text-blue-800">
+                                <li>Used for errors that can occur multiple times</li>
+                                <li>You enter the number of times the error occurred</li>
+                                <li>Points are multiplied by the count</li>
+                                <li>Example: 3 instances of "Grammatical Errors" (5 points each) = -15 points total</li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-semibold text-green-900 mb-2">Radio Field (for Achievements):</p>
+                            <ul class="list-disc list-inside space-y-1 text-green-800">
+                                <li>Used for achievements that are binary (Yes/No)</li>
+                                <li>Either the achievement was demonstrated or it wasn't</li>
+                                <li>Points are awarded once if "Yes" is selected</li>
+                                <li>Example: "Excellent Empathy" = Yes = +10 points (one time only)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Scenarios Article Content (Hidden) -->
+        <div id="common-scenarios-article" class="hidden">
+            <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-[#1a733e]">Common Scenarios</h2>
+            
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">What if an error could fall into multiple categories?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>Use the most severe category. For example, if an agent provides incorrect information that leads to a loss of business, use "Error Leading to a Loss of Business" (50 points) rather than "Incorrect Information" (10 points).</p>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <p class="font-semibold text-yellow-900 mb-2">General Rule:</p>
+                            <p class="text-yellow-800">Always apply the highest severity error that fits the situation. Do not double-penalize by applying multiple error categories for the same mistake.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">How do I handle borderline cases?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>When in doubt, consider the impact on the customer experience and the likelihood of negative consequences.</p>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="font-semibold text-blue-900 mb-2">Guidelines:</p>
+                            <ul class="list-disc list-inside space-y-1 text-blue-800">
+                                <li>Consider customer impact: Did this affect their ability to resolve their issue?</li>
+                                <li>Consider severity: Could this lead to complaints or escalations?</li>
+                                <li>When uncertain between two categories, choose the lower severity</li>
+                                <li>Document your reasoning in the feedback section</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">What if the agent makes a mistake but corrects it?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>If the error is caught and corrected during the same interaction, you may reduce the penalty or not apply it, depending on the severity and whether the customer noticed.</p>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-semibold text-green-900 mb-2">Recommendation:</p>
+                            <ul class="list-disc list-inside space-y-1 text-green-800">
+                                <li>If self-corrected before customer impact: Consider reducing penalty by 50% or not applying it</li>
+                                <li>If customer noticed but agent corrected: Apply full penalty but note the correction in feedback</li>
+                                <li>Critical Fail Errors: Even if corrected, these should still be marked due to their severity</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for FAQ functionality -->
+    <script>
+        // Load scorecards on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadScorecards();
+            initializeAccessibility();
+        });
+
+        // Load scorecards from database
+        async function loadScorecards() {
+            try {
+                const { data: scorecards, error } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('scorecardsContainer');
+                
+                if (!scorecards || scorecards.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-gray-500">
+                            <svg class="mx-auto h-12 w-12 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p>No active scorecards found.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Load parameters for each scorecard
+                const scorecardsWithParams = await Promise.all(
+                    scorecards.map(async (scorecard) => {
+                        const { data: parameters } = await window.supabaseClient
+                            .from('scorecard_parameters')
+                            .select('*')
+                            .eq('scorecard_id', scorecard.id)
+                            .eq('is_active', true)
+                            .order('display_order', { ascending: true });
+                        
+                        return { ...scorecard, parameters: parameters || [] };
+                    })
+                );
+                
+                container.innerHTML = scorecardsWithParams.map(scorecard => 
+                    createScorecardGuidelineCard(scorecard)
+                ).join('');
+                
+                // Re-initialize accessibility after loading scorecards
+                initializeAccessibility();
+                
+            } catch (error) {
+                console.error('Error loading scorecards:', error);
+                document.getElementById('scorecardsContainer').innerHTML = `
+                    <div class="text-center py-12 text-red-500">
+                        <p>Error loading scorecards: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Create scorecard guideline card
+        function createScorecardGuidelineCard(scorecard) {
+            const scoringTypeColors = {
+                'deductive': 'bg-red-100 text-red-800',
+                'additive': 'bg-green-100 text-green-800',
+                'hybrid': 'bg-purple-100 text-purple-800'
+            };
+            
+            const scoringTypeLabel = scorecard.scoring_type 
+                ? scorecard.scoring_type.charAt(0).toUpperCase() + scorecard.scoring_type.slice(1)
+                : 'Deductive';
+            
+            const typeColor = scoringTypeColors[scorecard.scoring_type] || scoringTypeColors.deductive;
+            
+            // Group parameters by type and category
+            const errorParams = scorecard.parameters.filter(p => p.parameter_type === 'error');
+            const achievementParams = scorecard.parameters.filter(p => p.parameter_type === 'achievement');
+            const bonusParams = scorecard.parameters.filter(p => p.parameter_type === 'bonus');
+            
+            const errorParamsByCategory = {};
+            errorParams.forEach(param => {
+                const category = param.error_category || 'Other';
+                if (!errorParamsByCategory[category]) {
+                    errorParamsByCategory[category] = [];
+                }
+                errorParamsByCategory[category].push(param);
+            });
+            
+            return `
+                <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200">
+                    <button 
+                        class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" 
+                        onclick="toggleFaq(this)"
+                    >
+                        <div class="flex items-center gap-3">
+                            <span class="font-semibold text-gray-800">${escapeHtml(scorecard.name)}</span>
+                            <span class="px-2 py-1 ${typeColor} text-xs font-semibold rounded">${scoringTypeLabel}</span>
+                            <span class="text-xs text-gray-500">(${scorecard.parameters.length} parameters)</span>
+                        </div>
+                        <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6">
+                        <div class="text-gray-700 space-y-6">
+                            ${scorecard.description ? `<p class="text-gray-600">${escapeHtml(scorecard.description)}</p>` : ''}
+                            
+                            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                                <div class="bg-blue-50 p-4 rounded-lg">
+                                    <div class="font-semibold text-blue-900 mb-1">Scoring Type</div>
+                                    <div class="text-blue-800">${scoringTypeLabel}</div>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg">
+                                    <div class="font-semibold text-green-900 mb-1">Passing Threshold</div>
+                                    <div class="text-green-800">${scorecard.passing_threshold || 'Not Set'}%</div>
+                                </div>
+                                <div class="bg-purple-50 p-4 rounded-lg">
+                                    <div class="font-semibold text-purple-900 mb-1">Channels</div>
+                                    <div class="text-purple-800 text-sm">${scorecard.channels || 'All'}</div>
+                                </div>
+                            </div>
+                            
+                            ${scorecard.scoring_type === 'hybrid' ? `
+                                <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+                                    <div class="font-semibold text-yellow-900 mb-2">Hybrid Configuration</div>
+                                    <div class="text-yellow-800 text-sm space-y-1">
+                                        <div>Max Bonus Points: ${scorecard.max_bonus_points || 0}</div>
+                                        <div>Allow Over 100%: ${scorecard.allow_over_100 ? 'Yes' : 'No'}</div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${Object.keys(errorParamsByCategory).length > 0 ? `
+                                <div class="border-t pt-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3">Error Parameters</h4>
+                                    ${Object.entries(errorParamsByCategory).map(([category, params]) => `
+                                        <div class="mb-4">
+                                            <h5 class="text-sm font-semibold text-gray-700 mb-2">${escapeHtml(category)}</h5>
+                                            <div class="space-y-2">
+                                                ${params.map(param => `
+                                                    <div class="bg-gray-50 p-3 rounded border-l-4 ${
+                                                        param.is_fail_all ? 'border-red-500' : 
+                                                        param.penalty_points >= 10 ? 'border-orange-500' : 
+                                                        param.penalty_points >= 5 ? 'border-yellow-500' : 
+                                                        'border-gray-300'
+                                                    }">
+                                                        <div class="flex items-start justify-between mb-1">
+                                                            <span class="font-medium text-gray-800">${escapeHtml(param.error_name)}</span>
+                                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded">
+                                                                -${param.penalty_points} pts
+                                                            </span>
+                                                        </div>
+                                                        ${param.description ? `
+                                                            <p class="text-sm text-gray-600 mb-1">${escapeHtml(param.description)}</p>
+                                                        ` : ''}
+                                                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                                                            <span>Field: ${param.field_type}</span>
+                                                            ${param.is_fail_all ? '<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded font-semibold">Auto-Fail</span>' : ''}
+                                                        </div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${achievementParams.length > 0 ? `
+                                <div class="border-t pt-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3">Achievement Parameters</h4>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        ${achievementParams.map(param => `
+                                            <div class="bg-green-50 p-3 rounded border-l-4 border-green-500">
+                                                <div class="flex items-start justify-between mb-1">
+                                                    <span class="font-medium text-gray-800">${escapeHtml(param.error_name)}</span>
+                                                    <span class="px-2 py-1 bg-green-200 text-green-800 text-xs font-semibold rounded">
+                                                        +${param.penalty_points} pts
+                                                    </span>
+                                                </div>
+                                                ${param.description ? `
+                                                    <p class="text-sm text-gray-600">${escapeHtml(param.description)}</p>
+                                                ` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${bonusParams.length > 0 ? `
+                                <div class="border-t pt-4">
+                                    <h4 class="font-semibold text-gray-800 mb-3">Bonus Parameters</h4>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        ${bonusParams.map(param => `
+                                            <div class="bg-purple-50 p-3 rounded border-l-4 border-purple-500">
+                                                <div class="flex items-start justify-between mb-1">
+                                                    <span class="font-medium text-gray-800">${escapeHtml(param.error_name)}</span>
+                                                    <span class="px-2 py-1 bg-purple-200 text-purple-800 text-xs font-semibold rounded">
+                                                        +${param.penalty_points} pts
+                                                    </span>
+                                                </div>
+                                                ${param.description ? `
+                                                    <p class="text-sm text-gray-600">${escapeHtml(param.description)}</p>
+                                                ` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${scorecard.parameters.length === 0 ? `
+                                <div class="text-center py-8 text-gray-500">
+                                    <p>No parameters configured for this scorecard.</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+
+        // Accordion toggle functionality
+        function toggleFaq(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('.faq-icon');
+            const isHidden = answer.classList.contains('hidden');
+            
+            // Close all other FAQ items in the same category (optional - remove if you want multiple open)
+            // const category = button.closest('.faq-category');
+            // if (category) {
+            //     const allAnswers = category.querySelectorAll('.faq-answer');
+            //     const allIcons = category.querySelectorAll('.faq-icon');
+            //     allAnswers.forEach(a => a.classList.add('hidden'));
+            //     allIcons.forEach(i => i.classList.remove('rotate-180'));
+            // }
+            
+            if (isHidden) {
+                answer.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                answer.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        // Search functionality
+        function initializeSearch() {
+            const searchInput = document.getElementById('faqSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+                    const faqItems = document.querySelectorAll('.faq-item');
+                    const articleCards = document.querySelectorAll('.article-card');
+                    let visibleCount = 0;
+                    
+                    // Search FAQ items (parameter guidelines and scorecard guidelines)
+                    faqItems.forEach(item => {
+                        const question = item.querySelector('.faq-question');
+                        const answer = item.querySelector('.faq-answer');
+                        const questionText = question ? question.textContent.toLowerCase() : '';
+                        const answerText = answer ? answer.textContent.toLowerCase() : '';
+                        const fullText = questionText + ' ' + answerText;
+                        
+                        // Check if search term matches
+                        if (searchTerm === '' || fullText.includes(searchTerm)) {
+                            item.style.display = '';
+                            visibleCount++;
+                            
+                            // Highlight matching text if search term exists
+                            if (searchTerm !== '' && answer) {
+                                highlightText(answer, searchTerm);
+                            } else if (answer) {
+                                removeHighlights(answer);
+                            }
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    // Search article cards (general articles)
+                    articleCards.forEach(card => {
+                        const cardText = card.textContent.toLowerCase();
+                        if (searchTerm === '' || cardText.includes(searchTerm)) {
+                            card.style.display = '';
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    // Show/hide sections based on visible items
+                    const sections = document.querySelectorAll('#general-articles, #scorecard-guidelines, #error-parameters');
+                    sections.forEach(section => {
+                        const visibleItems = section.querySelectorAll('.faq-item[style=""], .faq-item:not([style*="display: none"]), .article-card[style=""], .article-card:not([style*="display: none"])');
+                        if (visibleItems.length === 0 && searchTerm !== '') {
+                            section.style.display = 'none';
+                        } else {
+                            section.style.display = '';
+                        }
+                    });
+                    
+                    // Show "No results" message if needed
+                    showNoResultsMessage(searchTerm, visibleCount);
+                });
+            }
+        }
+        
+        // Initialize search on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSearch();
+        });
+
+        // Highlight matching text in search results
+        function highlightText(element, searchTerm) {
+            const walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            const textNodes = [];
+            let node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+            
+            textNodes.forEach(textNode => {
+                const parent = textNode.parentNode;
+                if (parent.classList.contains('highlight')) {
+                    return; // Already highlighted
+                }
+                
+                const text = textNode.textContent;
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                if (regex.test(text)) {
+                    const highlighted = text.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+                    const wrapper = document.createElement('span');
+                    wrapper.innerHTML = highlighted;
+                    parent.replaceChild(wrapper, textNode);
+                }
+            });
+        }
+
+        // Remove highlights
+        function removeHighlights(element) {
+            const highlights = element.querySelectorAll('mark');
+            highlights.forEach(mark => {
+                const parent = mark.parentNode;
+                parent.replaceChild(document.createTextNode(mark.textContent), mark);
+                parent.normalize();
+            });
+        }
+
+        // Show/hide "No results" message
+        function showNoResultsMessage(searchTerm, visibleCount) {
+            let noResultsMsg = document.getElementById('noResultsMessage');
+            
+            if (searchTerm !== '' && visibleCount === 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.id = 'noResultsMessage';
+                    noResultsMsg.className = 'text-center py-12 px-4';
+                    noResultsMsg.innerHTML = `
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-600 font-medium">No results found</p>
+                        <p class="text-gray-500 text-sm mt-2">Try different keywords or check your spelling</p>
+                    `;
+                    const container = document.querySelector('.max-w-6xl');
+                    if (container) {
+                        container.appendChild(noResultsMsg);
+                    }
+                }
+                noResultsMsg.style.display = 'block';
+            } else if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
+            }
+        }
+
+        // Smooth scroll to section
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                const offsetTop = section.offsetTop - 80; // Account for fixed header
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Initialize accessibility
+        function initializeAccessibility() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            faqQuestions.forEach(question => {
+                question.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleFaq(this);
+                    }
+                });
+                // Make buttons accessible
+                question.setAttribute('role', 'button');
+                question.setAttribute('tabindex', '0');
+                question.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+    </script>
+
+
+</main>
+</body>
+</html>
+

@@ -9,9 +9,26 @@ const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
-// Configuration - Update these with your Supabase details
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_KEY';
+// Configuration - Uses environment variables from .env file
+// Load .env file if available
+try {
+    const envFile = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+    envFile.split('\n').forEach(line => {
+        const [key, ...valueParts] = line.split('=');
+        if (key && valueParts.length > 0) {
+            const value = valueParts.join('=').trim();
+            const cleanValue = value.replace(/^["']|["']$/g, '');
+            if (!process.env[key.trim()]) {
+                process.env[key.trim()] = cleanValue;
+            }
+        }
+    });
+} catch (error) {
+    // .env file not found, use environment variables set in system
+}
+
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 const TABLE_NAME = 'fn_chat_cfd';
 const CSV_FILE_PATH = path.join(__dirname, 'Unified Data of QC - CEx FN Chat.csv');
 
@@ -296,12 +313,12 @@ async function main() {
     }
     
     // Check Supabase configuration
-    if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_KEY === 'YOUR_SUPABASE_KEY') {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
         console.error('❌ Supabase credentials not configured');
-        console.log('\nPlease set the following environment variables:');
-        console.log('  - VITE_SUPABASE_URL');
-        console.log('  - VITE_SUPABASE_ANON_KEY');
-        console.log('\nOr update the script with your Supabase credentials.');
+        console.log('\nPlease set the following environment variables in your .env file:');
+        console.log('  - SUPABASE_URL');
+        console.log('  - SUPABASE_ANON_KEY');
+        console.log('\nOr set them as system environment variables.');
         process.exit(1);
     }
     

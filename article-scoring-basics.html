@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Scoring Basics | QMS</title>
+<meta name="description" content="Quality Management System Dashboard">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+ <main class="main-content" role="main">
+    <p class="page-heading">Scoring Basics</p>
+    <div style="margin-bottom: 1.125rem;"></div>
+
+    <div class="px-4 pb-8 max-w-6xl mx-auto">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-[#1a733e]">Scoring Basics</h2>
+            
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">How do I calculate the final score?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>The calculation depends on the scorecard type:</p>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="font-semibold text-blue-900 mb-2">Deductive:</p>
+                            <p class="text-blue-800">Final Score = 100 - (Sum of all error point deductions)</p>
+                            <p class="text-blue-700 text-sm mt-2">Example: 100 - (5 + 5 + 10) = 80%</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-semibold text-green-900 mb-2">Additive:</p>
+                            <p class="text-green-800">Final Score = Sum of all achievement points</p>
+                            <p class="text-green-700 text-sm mt-2">Example: 10 + 10 + 5 = 25%</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <p class="font-semibold text-purple-900 mb-2">Hybrid:</p>
+                            <p class="text-purple-800">Final Score = Starting Score - Errors + Achievements + Bonuses</p>
+                            <p class="text-purple-700 text-sm mt-2">Example: 100 - 5 + 10 + 10 = 115% (if over-100 allowed)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">What is the passing threshold?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <p>The passing threshold is set per scorecard. An audit must meet or exceed this threshold to pass.</p>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <p class="font-semibold text-yellow-900 mb-2">Auto-Fail Rules:</p>
+                            <p class="text-yellow-800">Even if the final score is above the threshold, any "Critical Fail Error" (50 points, auto-fail flag) will cause the audit to fail automatically.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item bg-white rounded-lg shadow-md border border-gray-200 mb-4">
+                <button class="faq-question w-full text-left px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg" onclick="toggleFaq(this)">
+                    <span class="font-semibold text-gray-800">How do Counter fields work vs Radio fields?</span>
+                    <svg class="faq-icon w-5 h-5 text-[#1a733e] transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="faq-answer hidden px-6 pb-4">
+                    <div class="text-gray-700 space-y-3">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="font-semibold text-blue-900 mb-2">Counter Field (for Errors):</p>
+                            <ul class="list-disc list-inside space-y-1 text-blue-800">
+                                <li>Used for errors that can occur multiple times</li>
+                                <li>You enter the number of times the error occurred</li>
+                                <li>Points are multiplied by the count</li>
+                                <li>Example: 3 instances of "Grammatical Errors" (5 points each) = -15 points total</li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-semibold text-green-900 mb-2">Radio Field (for Achievements):</p>
+                            <ul class="list-disc list-inside space-y-1 text-green-800">
+                                <li>Used for achievements that are binary (Yes/No)</li>
+                                <li>Either the achievement was demonstrated or it wasn't</li>
+                                <li>Points are awarded once if "Yes" is selected</li>
+                                <li>Example: "Excellent Empathy" = Yes = +10 points (one time only)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Accordion toggle functionality
+        function toggleFaq(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('.faq-icon');
+            const isHidden = answer.classList.contains('hidden');
+            
+            if (isHidden) {
+                answer.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                answer.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+    </script>
+
+</main>
+</body>
+</html>
+

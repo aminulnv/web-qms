@@ -26,55 +26,55 @@
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
  <main class="main-content" role="main">
     <p class="page-heading">Auditor's Dashboard</p>
-    <div style="margin-bottom: 1.5rem;"></div>
+    <div style="margin-bottom: 1.125rem;"></div>
 
 
 <!-- page content here -->
 
         
             <!-- Tab Navigation -->
-            <div style="position: relative; display: flex; background-color: var(--dark-forest); border-radius: 0.625rem; overflow: hidden; width: 100%; max-width: 20rem; margin: 1.25rem auto; padding: 0.3125rem;">
-                <div style="position: absolute; top: 0.3125rem; height: calc(100% - 0.625rem); background-color: var(--primary-color); border-radius: 0.3125rem; transition: all 0.3s ease; left: 0.3125rem; width: calc(50% - 0.3125rem);"></div>
-                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" class="active" onclick="switchTab(this, 0)">Team Stats</button>
-                <button style="flex: 1; padding: 0.5rem 1rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .75rem;" onclick="switchTab(this, 1)">Standup View</button>
+            <div style="position: relative; display: flex; background-color: var(--dark-forest); border-radius: 0.4688rem; overflow: hidden; width: 100%; max-width: 15rem; margin: 0.9375rem auto; padding: 0.2344rem;">
+                <div style="position: absolute; top: 0.2344rem; height: calc(100% - 0.4688rem); background-color: var(--primary-color); border-radius: 0.2344rem; transition: all 0.3s ease; left: 0.2344rem; width: calc(50% - 0.2344rem);"></div>
+                <button style="flex: 1; padding: 0.375rem 0.75rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .6rem;" class="active" onclick="switchTab(this, 0)">Team Stats</button>
+                <button style="flex: 1; padding: 0.375rem 0.75rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .6rem;" onclick="switchTab(this, 1)">Standup View</button>
             </div>
 
             <!-- stat Cards -->
-            <div id="statsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1.5rem; margin-bottom: 2rem; width: 100%;">
-                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
-                    <div id="stat1Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Assigned</div>
-                    <div id="stat1Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+            <div id="statsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1.125rem; margin-bottom: 1.5rem; width: 100%;">
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 0.75rem; border-radius: 0.5625rem; text-align: left; box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1); min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat1Label" style="font-size: 0.6562rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0938rem;">Assigned</div>
+                    <div id="stat1Count" style="font-size: 2.625rem; font-weight: 700; margin-bottom: 0.1875rem;">-</div>
                 </div>
-                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
-                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Completed</div>
-                    <div id="completedCount" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                    <div id="targetAchieved" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 0.75rem; border-radius: 0.5625rem; text-align: left; box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1); min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.6562rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0938rem;">Completed</div>
+                    <div id="completedCount" style="font-size: 2.625rem; font-weight: 700; margin-bottom: 0.1875rem;">-</div>
+                    <div id="targetAchieved" style="font-size: 0.5625rem; opacity: 0.9; margin-top: 0.1875rem;">-</div>
                 </div>
-                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
-                    <div style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Remaining</div>
-                    <div id="remainingCount" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 0.75rem; border-radius: 0.5625rem; text-align: left; box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1); min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 0.6562rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0938rem;">Remaining</div>
+                    <div id="remainingCount" style="font-size: 2.625rem; font-weight: 700; margin-bottom: 0.1875rem;">-</div>
                 </div>
-                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
-                    <div id="stat4Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">In Progress</div>
-                    <div id="stat4Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                    <div id="stat4Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 0.75rem; border-radius: 0.5625rem; text-align: left; box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1); min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat4Label" style="font-size: 0.6562rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0938rem;">In Progress</div>
+                    <div id="stat4Count" style="font-size: 2.625rem; font-weight: 700; margin-bottom: 0.1875rem;">-</div>
+                    <div id="stat4Subtitle" style="font-size: 0.5625rem; opacity: 0.9; margin-top: 0.1875rem;">-</div>
                 </div>
-                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
-                    <div id="stat5Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Reversal Rate</div>
-                    <div id="stat5Count" style="font-size: 3.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                    <div id="stat5Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;"></div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 0.75rem; border-radius: 0.5625rem; text-align: left; box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1); min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat5Label" style="font-size: 0.6562rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0938rem;">Reversal Rate</div>
+                    <div id="stat5Count" style="font-size: 2.625rem; font-weight: 700; margin-bottom: 0.1875rem;">-</div>
+                    <div id="stat5Subtitle" style="font-size: 0.5625rem; opacity: 0.9; margin-top: 0.1875rem;"></div>
                 </div>
-                <div style="background-color: var(--dark-forest); color: var(--white); padding: 1rem; border-radius: 0.75rem; text-align: left; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1); min-height: 6rem; display: flex; flex-direction: column; justify-content: center;">
-                    <div id="stat6Label" style="font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.125rem;">Avg Duration</div>
-                    <div id="stat6Count" style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.25rem;">-</div>
-                    <div id="stat6Subtitle" style="font-size: 0.75rem; opacity: 0.9; margin-top: 0.25rem;">-</div>
+                <div style="background-color: var(--dark-forest); color: var(--white); padding: 0.75rem; border-radius: 0.5625rem; text-align: left; box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1); min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <div id="stat6Label" style="font-size: 0.6562rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.0938rem;">Avg Duration</div>
+                    <div id="stat6Count" style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.1875rem;">-</div>
+                    <div id="stat6Subtitle" style="font-size: 0.5625rem; opacity: 0.9; margin-top: 0.1875rem;">-</div>
                 </div>
             </div>
 
             <!-- Filters Section -->
-            <div style="margin-bottom: 2rem; text-align: left;">
-                <button id="filterToggleBtn" onclick="toggleFilters()" onmouseover="this.style.backgroundColor='var(--dark-forest)'" onmouseout="this.style.backgroundColor='var(--primary-color)'" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: 0.0625rem solid var(--primary-color); border-radius: 0.375rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0625rem 0.125rem 0 rgba(0, 0, 0, 0.05);">
-                    <svg style="width: 1rem; height: 1rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.5rem" viewBox="0 -960 960 960" width="1.5rem" fill="currentColor">
+            <div style="margin-bottom: 1.5rem; text-align: left;">
+                <button id="filterToggleBtn" onclick="toggleFilters()" onmouseover="this.style.backgroundColor='var(--dark-forest)'" onmouseout="this.style.backgroundColor='var(--primary-color)'" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.2812rem 0.5625rem; background-color: var(--primary-color); color: var(--white); border: 0.0469rem solid var(--primary-color); border-radius: 0.2812rem; font-weight: 500; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0469rem 0.0938rem 0 rgba(0, 0, 0, 0.05);">
+                    <svg style="width: 0.75rem; height: 0.75rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.125rem" viewBox="0 -960 960 960" width="1.125rem" fill="currentColor">
                         <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
                     </svg>
                     Filters
@@ -82,11 +82,11 @@
             </div>
 
             <!-- Filter Panel -->
-            <div id="filterPanel" style="display: none; background: #f9fafb; border: 0.0625rem solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 2rem;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+            <div id="filterPanel" style="display: none; background: #f9fafb; border: 0.0469rem solid #e5e7eb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1.5rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(7.0312rem, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
                     <div id="statusFilterContainer" style="display: flex; flex-direction: column;">
-                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Status</label>
-                        <select id="statusFilter" onchange="applyFilters()" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.1875rem;">Status</label>
+                        <select id="statusFilter" onchange="applyFilters()" style="padding: 0.2812rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif;">
                             <option value="">All Statuses</option>
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
@@ -94,30 +94,30 @@
                         </select>
                     </div>
                     <div id="channelFilterContainer" style="display: flex; flex-direction: column;">
-                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Channel</label>
-                        <select id="channelFilter" onchange="applyFilters()" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.1875rem;">Channel</label>
+                        <select id="channelFilter" onchange="applyFilters()" style="padding: 0.2812rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif;">
                             <option value="">All Channels</option>
                         </select>
                     </div>
                     <div id="weekFilterContainer" style="display: flex; flex-direction: column;">
-                        <label style="font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Week</label>
-                        <input type="number" id="weekFilter" min="1" max="52" placeholder="Filter by week" onchange="applyFilters()" style="padding: 0.375rem 0.5rem; border: 0.0625rem solid #d1d5db; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif;">
+                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.1875rem;">Week</label>
+                        <input type="number" id="weekFilter" min="1" max="52" placeholder="Filter by week" onchange="applyFilters()" style="padding: 0.2812rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif;">
                     </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button onclick="clearFilters()" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'" style="padding: 0.375rem 0.75rem; background: #6b7280; color: white; border: none; border-radius: 0.25rem; font-size: 0.8125rem; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.2s;">
+                <div style="display: flex; gap: 0.375rem;">
+                    <button onclick="clearFilters()" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'" style="padding: 0.2812rem 0.5625rem; background: #6b7280; color: white; border: none; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.2s;">
                         Clear Filters
                     </button>
                 </div>
             </div>
 
             <!-- Data Table -->
-            <div id="performanceTable" style="background-color: var(--white); border-radius: 0.75rem; box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 80%; width: fit-content; min-width: 100%;">
-                <div style="background-color: #f8f9fa; padding: 0.75rem 1rem; border-bottom: 0.0625rem solid #e5e7eb;">
-                    <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-color);">Performance Overview</h3>
+            <div id="performanceTable" style="background-color: var(--white); border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 80%; width: fit-content; min-width: 100%;">
+                <div style="background-color: #f8f9fa; padding: 0.5625rem 0.75rem; border-bottom: 0.0469rem solid #e5e7eb;">
+                    <h3 style="font-size: 0.8438rem; font-weight: 600; color: var(--text-color);">Performance Overview</h3>
                 </div>
-                <div style="padding: 1rem; overflow-x: auto;">
-                    <div id="tableHeader" style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0 0.75rem 0; font-weight: 700; font-size: 0.875rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; min-width: fit-content;">
+                <div style="padding: 0.75rem; overflow-x: auto;">
+                    <div id="tableHeader" style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0 0.5625rem 0; font-weight: 700; font-size: 0.6562rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; min-width: fit-content;">
                         <div>Name</div>
                         <div>Assigned</div>
                         <div>Completed</div>
@@ -125,7 +125,7 @@
                         <div>Progress Meter</div>
                     </div>
                     <div id="performanceTableBody" style="min-width: fit-content;">
-                        <div style="text-align: center; padding: 2rem; color: #6b7280;">Loading...</div>
+                        <div style="text-align: center; padding: 1.5rem; color: #6b7280;">Loading...</div>
                     </div>
                 </div>
             </div>
@@ -261,7 +261,7 @@ async function updateTeamStats() {
     if (qualityAnalysts.length === 0) {
         const tableBody = document.getElementById('performanceTableBody');
         tableBody.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+            <div style="text-align: center; padding: 1.5rem; color: #6b7280;">
                 No Quality Analysts found in the system.
             </div>
         `;
@@ -425,7 +425,7 @@ async function updateTeamStats() {
         // Reset 3rd card label to REMAINING and remove progress bar
         const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
         if (remainingCard) {
-            const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
+            const label = remainingCard.querySelector('div[style*="font-size: 0.6562rem"]');
             if (label) label.textContent = 'REMAINING';
             
             // Remove progress bar if it exists
@@ -440,12 +440,12 @@ async function updateTeamStats() {
         document.getElementById('targetAchieved').textContent = `${percentage}% Team Target Achieved`;
         
         const remainingCount = document.getElementById('remainingCount');
-        remainingCount.style.fontSize = '3.5rem';
+        remainingCount.style.fontSize = '2.625rem';
         remainingCount.textContent = remaining;
         
         document.getElementById('stat4Label').textContent = 'IN PROGRESS';
         const stat4Count = document.getElementById('stat4Count');
-        stat4Count.style.fontSize = '3.5rem';
+        stat4Count.style.fontSize = '2.625rem';
         stat4Count.textContent = inProgress;
         document.getElementById('stat4Subtitle').textContent = `${qualityAnalysts.length} auditor${qualityAnalysts.length !== 1 ? 's' : ''}`;
         document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
@@ -457,9 +457,9 @@ async function updateTeamStats() {
         
         // Update table header
         const tableHeader = document.getElementById('tableHeader');
-        tableHeader.style.gridTemplateColumns = 'minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr)';
+        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr)';
         tableHeader.style.display = 'grid';
-        tableHeader.style.gap = '1rem';
+        tableHeader.style.gap = '0.75rem';
         tableHeader.style.alignItems = 'center';
         tableHeader.innerHTML = `
             <div>Name</div>
@@ -501,18 +501,18 @@ async function updateTeamStats() {
         // Update table with all Quality Analysts
         const tableBody = document.getElementById('performanceTableBody');
         tableBody.innerHTML = auditorStats.map(stats => `
-            <div style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
-                <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600;" data-label="Name">
-                    ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.75rem;">(You)</span>' : ''}
+            <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
+                <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Name">
+                    ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.5625rem;">(You)</span>' : ''}
                 </div>
-                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
-                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
-                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
-                <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Progress">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color); min-width: 2.5rem;">${stats.percentage}%</span>
-                        <div style="flex: 1; height: 0.75rem; background-color: var(--dark-forest); border-radius: 0.375rem; overflow: hidden; position: relative;">
-                            <div style="height: 100%; background: var(--success-color); border-radius: 0.375rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
+                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
+                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
+                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage}%</span>
+                        <div style="flex: 1; height: 0.5625rem; background-color: var(--dark-forest); border-radius: 0.2812rem; overflow: hidden; position: relative;">
+                            <div style="height: 100%; background: var(--success-color); border-radius: 0.2812rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
                         </div>
                     </div>
                 </div>
@@ -679,11 +679,11 @@ async function updateStandupView() {
         // Update 3rd card to COVERAGE with progress bar
         const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
         if (remainingCard) {
-            const label = remainingCard.querySelector('div[style*="font-size: 0.875rem"]');
+            const label = remainingCard.querySelector('div[style*="font-size: 0.6562rem"]');
             if (label) label.textContent = 'COVERAGE';
             
             const countDiv = remainingCard.querySelector('#remainingCount');
-            countDiv.style.fontSize = '3.5rem';
+            countDiv.style.fontSize = '2.625rem';
             countDiv.textContent = coveragePercent + '%';
             
             // Add/update progress bar
@@ -691,10 +691,10 @@ async function updateStandupView() {
             if (!progressContainer) {
                 progressContainer = document.createElement('div');
                 progressContainer.className = 'progress-bar-container';
-                progressContainer.style.cssText = 'width: 100%; height: 0.5rem; background-color: rgba(255,255,255,0.2); border-radius: 0.25rem; overflow: hidden; margin-top: 0.5rem;';
+                progressContainer.style.cssText = 'width: 100%; height: 0.375rem; background-color: rgba(255,255,255,0.2); border-radius: 0.1875rem; overflow: hidden; margin-top: 0.375rem;';
                 countDiv.parentElement.appendChild(progressContainer);
             }
-            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.25rem; transition: width 0.3s ease; width: ${coveragePercent}%;"></div>`;
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.1875rem; transition: width 0.3s ease; width: ${coveragePercent}%;"></div>`;
         }
         
         // Update 4th card to PASSING RATE with progress bar
@@ -706,7 +706,7 @@ async function updateStandupView() {
             if (label) label.textContent = 'PASSING RATE';
             
             const countDiv = stat4Card.querySelector('#stat4Count');
-            countDiv.style.fontSize = '3.5rem';
+            countDiv.style.fontSize = '2.625rem';
             countDiv.textContent = passingRate + '%';
             
             const subtitle = stat4Card.querySelector('#stat4Subtitle');
@@ -717,10 +717,10 @@ async function updateStandupView() {
             if (!progressContainer) {
                 progressContainer = document.createElement('div');
                 progressContainer.className = 'progress-bar-container';
-                progressContainer.style.cssText = 'width: 100%; height: 0.5rem; background-color: rgba(255,255,255,0.2); border-radius: 0.25rem; overflow: hidden; margin-top: 0.5rem;';
+                progressContainer.style.cssText = 'width: 100%; height: 0.375rem; background-color: rgba(255,255,255,0.2); border-radius: 0.1875rem; overflow: hidden; margin-top: 0.375rem;';
                 countDiv.parentElement.appendChild(progressContainer);
             }
-            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.25rem; transition: width 0.3s ease; width: ${passingRate}%;"></div>`;
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.1875rem; transition: width 0.3s ease; width: ${passingRate}%;"></div>`;
         }
         
         // Update 5th card to REVERSALS
@@ -773,9 +773,9 @@ async function updateStandupView() {
         
         // Update table header for standup view
         const tableHeader = document.getElementById('tableHeader');
-        tableHeader.style.gridTemplateColumns = 'minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr)';
+        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr)';
         tableHeader.style.display = 'grid';
-        tableHeader.style.gap = '1rem';
+        tableHeader.style.gap = '0.75rem';
         tableHeader.style.alignItems = 'center';
         tableHeader.innerHTML = `
             <div>Channel</div>
@@ -791,22 +791,22 @@ async function updateStandupView() {
         // Update table with channel statistics
         const tableBody = document.getElementById('performanceTableBody');
         if (sortedChannels.length === 0) {
-            tableBody.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6b7280;">No channel data available</div>';
+            tableBody.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #6b7280;">No channel data available</div>';
         } else {
         tableBody.innerHTML = sortedChannels.map(channel => {
             const stats = channelStats[channel];
             
             return `
-                    <div style="display: grid; grid-template-columns: minmax(150px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(200px, 2fr); gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 0.0625rem solid #f3f4f6;">
-                    <div style="font-size: 0.875rem; color: var(--text-color); font-weight: 600;" data-label="Channel">${escapeHtml(channel)}</div>
-                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
-                    <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
-                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
-                        <div style="font-size: 0.875rem; color: var(--text-color);" data-label="Progress">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-color); min-width: 2.5rem;">${stats.percentage}%</span>
-                                <div style="flex: 1; height: 0.75rem; background-color: var(--dark-forest); border-radius: 0.375rem; overflow: hidden; position: relative;">
-                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.375rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
+                    <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6;">
+                    <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Channel">${escapeHtml(channel)}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
+                    <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage}%</span>
+                                <div style="flex: 1; height: 0.5625rem; background-color: var(--dark-forest); border-radius: 0.2812rem; overflow: hidden; position: relative;">
+                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.2812rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
                                 </div>
                             </div>
                         </div>
@@ -836,7 +836,7 @@ async function updateStandupView() {
         tabElement.classList.add('active');
         
         // Calculate position based on tab index and container width
-        const containerPadding = 5; // 0.3125rem = 5px
+        const containerPadding = 5; // 0.2344rem = 0.1758rem
         const tabWidth = (tabBar.offsetWidth - (containerPadding * 2)) / 2; // 2 tabs
         const sliderLeft = containerPadding + (index * tabWidth);
         
@@ -859,7 +859,7 @@ function initializeSlider() {
             slider.style.transition = 'none';
             
             // Calculate position for first tab (index 0)
-            const containerPadding = 5; // 0.3125rem = 5px
+            const containerPadding = 5; // 0.2344rem = 0.1758rem
             const tabWidth = (tabBar.offsetWidth - (containerPadding * 2)) / 2; // 2 tabs
             const sliderLeft = containerPadding + (0 * tabWidth); // First tab
             
