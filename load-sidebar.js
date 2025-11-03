@@ -138,7 +138,6 @@ class SidebarLoader {
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
                 <span>Search</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -148,7 +147,6 @@ class SidebarLoader {
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 </svg>
                 <span>Home</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -158,7 +156,6 @@ class SidebarLoader {
                     <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
                 </svg>
                 <span>Auditors' Dashboard</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -168,7 +165,6 @@ class SidebarLoader {
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                 </svg>
                 <span>Audit Distribution</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -179,7 +175,6 @@ class SidebarLoader {
                     <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                 </svg>
                 <span>Create Audit</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -189,7 +184,6 @@ class SidebarLoader {
                     <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
                 <span>Reports</span>
-                <span class="status-chip">100%</span>
                 <svg class="submenu-arrow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
                 </svg>
@@ -198,13 +192,11 @@ class SidebarLoader {
                 <li role="none">
                     <a class="submenu-item" href="expert-audits.html" role="menuitem" tabindex="-1">
                         <span>Expert Audits</span>
-                        <span class="status-chip">100%</span>
                     </a>
                 </li>
                 <li role="none">
                     <a class="submenu-item" href="ai-audits.html" role="menuitem" tabindex="-1">
                         <span>AI Audits</span>
-                        <span class="status-chip">100%</span>
                     </a>
                 </li>
             </ul>
@@ -216,7 +208,6 @@ class SidebarLoader {
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
                 <span>Performance</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -226,7 +217,6 @@ class SidebarLoader {
                     <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
                 </svg>
                 <span>Reversal</span>
-                <span class="status-chip">100%</span>
             </button>
         </li>
 
@@ -236,7 +226,6 @@ class SidebarLoader {
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
                 </svg>
                 <span>Improvement Corner</span>
-                <span class="status-chip">20%</span>
                 <svg class="submenu-arrow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
                 </svg>
@@ -245,19 +234,16 @@ class SidebarLoader {
                 <li role="none">
                     <a class="submenu-item" href="calibration.html" role="menuitem" tabindex="-1">
                         <span>Calibration</span>
-                        <span class="status-chip status-chip-coming-soon">Coming Soon</span>
                     </a>
                 </li>
                 <li role="none">
                     <a class="submenu-item" href="ata.html" role="menuitem" tabindex="-1">
                         <span>ATA</span>
-                        <span class="status-chip status-chip-coming-soon">Coming Soon</span>
                     </a>
                 </li>
                 <li role="none">
                     <a class="submenu-item" href="grading-guide.html" role="menuitem" tabindex="-1">
                         <span>Grading Guide</span>
-                        <span class="status-chip status-chip-coming-soon">Coming Soon</span>
                     </a>
                 </li>
             </ul>
@@ -269,7 +255,6 @@ class SidebarLoader {
                     <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
                 </svg>
                 <span>Settings</span>
-                <span class="status-chip">100%</span>
                 <svg class="submenu-arrow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
                 </svg>
@@ -278,19 +263,16 @@ class SidebarLoader {
                 <li role="none">
                     <a class="submenu-item" href="scorecards.html" role="menuitem" tabindex="-1">
                         <span>Scorecards</span>
-                        <span class="status-chip">100%</span>
                     </a>
                 </li>
                 <li role="none">
                     <a class="submenu-item" href="user-management.html" role="menuitem" tabindex="-1">
                         <span>User Management</span>
-                        <span class="status-chip">100%</span>
                     </a>
                 </li>
                 <li role="none">
                     <a class="submenu-item" href="profile.html" role="menuitem" tabindex="-1">
                         <span>Profile</span>
-                        <span class="status-chip">100%</span>
                     </a>
                 </li>
             </ul>
