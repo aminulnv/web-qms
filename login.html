@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | QMS</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -294,36 +293,7 @@
         
         /* Button hover animations */
         .btn-primary {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn-primary:hover::before {
-            width: 10.5469rem;
-            height: 10.5469rem;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-0.0703rem);
-            box-shadow: 0 0.1406rem 0.4219rem rgba(26, 115, 62, 0.3);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
+            /* Animations removed */
         }
         
         /* Link hover animations */
@@ -422,7 +392,7 @@
                 <!-- Email/Password Login (Secondary Method) -->
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-input" placeholder="email@nextventures.io" required>
+                    <input type="email" id="email" class="form-input" placeholder="Enter your email address" required>
                 </div>
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
@@ -497,7 +467,7 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = emailInput.value.trim();
-            const password = passwordInput.value;
+            const password = passwordInput.value.trim(); // Trim password to remove whitespace
             
             // Clear any previous errors
             clearPasswordError();
@@ -507,12 +477,10 @@
                 return;
             }
             
-            if (!email.endsWith('@nextventures.io')) {
-                showPasswordError('Please use a valid @nextventures.io email address');
-                return;
-            }
-            
             try {
+                // Normalize email to lowercase for case-insensitive matching
+                const normalizedEmail = email.toLowerCase().trim();
+                
                 // Wait for Supabase to be initialized
                 let attempts = 0;
                 const maxAttempts = 50;
@@ -525,63 +493,84 @@
                 }
                 
                 if (!window.SupabaseUsers) {
+                    console.error('SupabaseUsers not initialized');
                     showPasswordError('System initialization failed. Please refresh the page.');
                     return;
                 }
                 
-                // Get user from database
-                const user = await window.SupabaseUsers.getUserByEmail(email);
+                // Get user from database (using normalized email)
+                const user = await window.SupabaseUsers.getUserByEmail(normalizedEmail);
+                
+                console.log('Login attempt:', { email: normalizedEmail, userFound: !!user });
                 
                 if (!user) {
+                    console.log('User not found in database for email:', normalizedEmail);
                     showPasswordError('User not found. Please check your email address.');
                     return;
                 }
                 
+                console.log('User found:', { email: user.email, is_active: user.is_active, hasPassword: !!user.password_hash });
+                
                 // Check if user is active
                 if (!user.is_active) {
+                    console.log('User account is deactivated');
                     showPasswordError('Your account has been deactivated. Please contact your administrator.');
                     return;
                 }
                 
                 // Verify password
                 if (!user.password_hash) {
+                    console.log('No password_hash set for user');
                     showPasswordError('No password set for this account. Please contact your administrator or use Google Sign-In.');
                     return;
                 }
                 
                 // Check if password_hash is a SHA-256 hash (64 hex characters)
-                // If it's 64 hex characters, it's hashed; otherwise, treat as plain text
-                const isHashed = /^[a-f0-9]{64}$/i.test(user.password_hash);
+                // Trim whitespace first to handle any accidental spaces
+                const trimmedHash = user.password_hash ? user.password_hash.trim() : '';
+                const isHashed = /^[a-f0-9]{64}$/i.test(trimmedHash);
+                
+                console.log('Password validation:', { 
+                    isHashed, 
+                    passwordHashLength: trimmedHash?.length,
+                    hashPreview: trimmedHash ? trimmedHash.substring(0, 8) + '...' : 'empty'
+                });
                 
                 let passwordValid = false;
                 
                 if (isHashed) {
                     // Password is stored as hash, so hash the entered password and compare
                     const hashedPassword = await hashPassword(password);
-                    passwordValid = user.password_hash === hashedPassword;
+                    // Use trimmed hash for comparison
+                    passwordValid = trimmedHash.toLowerCase() === hashedPassword.toLowerCase();
+                    console.log('Hashed password comparison:', { 
+                        storedHash: trimmedHash.substring(0, 8) + '...',
+                        enteredHash: hashedPassword.substring(0, 8) + '...',
+                        storedLength: trimmedHash.length,
+                        enteredLength: hashedPassword.length,
+                        match: passwordValid
+                    });
+                    // IMPORTANT: Do NOT update the hash if it's already hashed - this prevents re-hashing
                 } else {
                     // Password is stored as plain text (backwards compatibility)
-                    passwordValid = user.password_hash === password;
-                    
-                    // If login succeeds with plain text, upgrade to hashed for security
-                    if (passwordValid) {
-                        try {
-                            const hashedPassword = await hashPassword(password);
-                            await window.SupabaseUsers.updateUser(user.email, {
-                                password_hash: hashedPassword
-                            });
-                        } catch (error) {
-                            console.warn('Failed to upgrade password to hash:', error);
-                        }
-                    }
+                    passwordValid = trimmedHash === password;
+                    console.log('Plain text password comparison:', { 
+                        match: passwordValid,
+                        storedLength: trimmedHash.length,
+                        enteredLength: password.length
+                    });
+                    // Note: Password is NOT automatically upgraded - it remains as stored
                 }
                 
                 if (!passwordValid) {
-                showPasswordError('Incorrect password');
-                return;
-            }
+                    console.log('Password validation failed');
+                    showPasswordError('Incorrect password');
+                    return;
+                }
             
                 // Password verified - login successful
+                console.log('Login successful for user:', user.email);
+                
                 // Update last login
                 try {
                     await window.SupabaseUsers.updateLastLogin(user.email);
@@ -589,10 +578,10 @@
                     console.warn('Failed to update last login:', error);
                 }
             
-            // Store user information in localStorage for use in home.html
-            const userInfo = {
+                // Store user information in localStorage for use in home.html
+                const userInfo = {
                     id: user.email,
-                    name: user.name || email.split('@')[0],
+                    name: user.name || normalizedEmail.split('@')[0],
                     email: user.email,
                     picture: user.avatar_url || null,
                     role: user.role,
@@ -602,25 +591,24 @@
                     avatar: user.avatar_url || null,
                     sub: user.email,
                     provider: 'password'
-            };
-            
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
-            
+                };
+                
+                localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                
                 // Redirect to home page
-            window.location.href = 'home.html';
+                window.location.href = 'home.html';
                 
             } catch (error) {
                 console.error('Login error:', error);
-                showPasswordError('An error occurred during login. Please try again.');
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    email: email
+                });
+                showPasswordError('An error occurred during login. Please check the console for details.');
             }
         });
         
-        // Auto-append domain to email
-        emailInput.addEventListener('blur', function() {
-            if (this.value && !this.value.includes('@')) {
-                this.value += '@nextventures.io';
-            }
-        });
         
         // Input focus effects and error clearing
         inputs.forEach(input => {
@@ -716,12 +704,6 @@
                 return;
             }
 
-            // Validate @nextventures.io domain
-            if (!email.endsWith('@nextventures.io')) {
-                showMessage('Please use a valid @nextventures.io email address.', 'error');
-                return;
-            }
-
             // Disable submit button and show loading state
             submitResetBtn.disabled = true;
             submitResetBtn.textContent = 'Sending...';
@@ -768,8 +750,12 @@
         }
         
         // Google Sign-In callback function
-        function handleGoogleSignIn(response) {
+        async function handleGoogleSignIn(response) {
             // Google Sign-In response received
+            
+            // Clear any previous errors
+            const googleError = document.getElementById('googleError');
+            googleError.textContent = '';
             
             // Decode the JWT token to get user information
             const payload = JSON.parse(atob(response.credential.split('.')[1]));
@@ -782,23 +768,67 @@
                 sub: payload.sub
             };
             
-            // Validate email domain (optional - remove if you want to allow any Google account)
-            if (userInfo.email && userInfo.email.endsWith('@nextventures.io')) {
-                // Google Sign-In successful
+            try {
+                // Wait for Supabase to be initialized
+                let attempts = 0;
+                const maxAttempts = 50;
+                while (attempts < maxAttempts) {
+                    if (window.SupabaseUsers && window.supabaseClient) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.SupabaseUsers) {
+                    googleError.textContent = 'System initialization failed. Please refresh the page.';
+                    google.accounts.id.disableAutoSelect();
+                    return;
+                }
+                
+                // Check if user exists in Supabase database
+                const user = await window.SupabaseUsers.getUserByEmail(userInfo.email);
+                
+                if (!user) {
+                    googleError.textContent = 'User not found. Please check if your account exists in the system.';
+                    google.accounts.id.disableAutoSelect();
+                    return;
+                }
+                
+                // Check if user is active
+                if (!user.is_active) {
+                    googleError.textContent = 'Your account has been deactivated. Please contact your administrator.';
+                    google.accounts.id.disableAutoSelect();
+                    return;
+                }
+                
+                // Update last login
+                try {
+                    await window.SupabaseUsers.updateLastLogin(user.email);
+                } catch (error) {
+                    console.warn('Failed to update last login:', error);
+                }
                 
                 // Store user information in localStorage for use in home.html
                 localStorage.setItem('userInfo', JSON.stringify({
-                    name: userInfo.name,
-                    email: userInfo.email,
-                    picture: userInfo.picture,
-                    sub: userInfo.sub
+                    id: user.email,
+                    name: user.name || userInfo.name,
+                    email: user.email,
+                    picture: user.avatar_url || userInfo.picture,
+                    role: user.role,
+                    department: user.department,
+                    designation: user.designation,
+                    employee_id: user.employee_id,
+                    avatar: user.avatar_url || userInfo.picture,
+                    sub: userInfo.sub,
+                    provider: 'google'
                 }));
                 
                 // Redirect to home page
                 window.location.href = 'home.html';
-            } else {
-                document.getElementById('googleError').textContent = 'Please use a valid @nextventures.io Google account';
-                // Sign out the user
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                googleError.textContent = 'An error occurred during sign-in. Please try again.';
                 google.accounts.id.disableAutoSelect();
             }
         }

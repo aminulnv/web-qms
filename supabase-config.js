@@ -195,10 +195,29 @@ async insert(tableName, data) {
 
 /**
  * Generic function to update data in any table
+ * IMPORTANT: For 'users' table, password_hash should NEVER be updated unless explicitly intended
  */
 async update(tableName, data, filter) {
   if (!supabaseClient) {
     throw new Error('Supabase client not initialized')
+  }
+  
+  // Safety check: If password_hash is being updated in users table, log heavily
+  if (tableName === 'users' && data.password_hash !== undefined) {
+    const stackTrace = new Error().stack;
+    console.error(`[CRITICAL WARNING] password_hash is being updated in users table!`, {
+      filter: filter,
+      userEmail: filter?.value || 'unknown',
+      hashPreview: typeof data.password_hash === 'string' 
+        ? data.password_hash.substring(0, 8) + '...' 
+        : data.password_hash,
+      hashLength: typeof data.password_hash === 'string' ? data.password_hash.length : 'N/A',
+      caller: stackTrace.split('\n')[2]?.trim() || 'unknown',
+      fullStack: stackTrace
+    });
+    
+    // Log the full stack trace to identify the source
+    console.error('Full stack trace:', stackTrace);
   }
   
   let query = supabaseClient.from(tableName).update(data)
@@ -245,21 +264,35 @@ async delete(tableName, filter) {
 
 // User Management functions
 window.SupabaseUsers = {
-/**
- * Get user by email from the users table
- */
-async getUserByEmail(email) {
-  try {
-    const users = await window.SupabaseDB.fetch('users', {
-      filter: { column: 'email', value: email },
-      limit: 1
-    })
-    return users.length > 0 ? users[0] : null
-  } catch (error) {
-    console.error('Error fetching user by email:', error)
-    return null
-  }
-},
+  /**
+   * Get user by email from the users table
+   * Email comparison is case-insensitive
+   */
+  async getUserByEmail(email) {
+    try {
+      // Normalize email to lowercase for case-insensitive matching
+      const normalizedEmail = email ? email.toLowerCase().trim() : email;
+      
+      const users = await window.SupabaseDB.fetch('users', {
+        filter: { column: 'email', value: normalizedEmail },
+        limit: 1
+      })
+      
+      // If no user found with exact match, try case-insensitive search
+      if (users.length === 0 && normalizedEmail) {
+        // Try to find user with case-insensitive comparison
+        // This handles cases where email might be stored in different case
+        const allUsers = await window.SupabaseDB.fetch('users', { limit: 1000 })
+        const foundUser = allUsers.find(u => u.email && u.email.toLowerCase() === normalizedEmail)
+        return foundUser || null
+      }
+      
+      return users.length > 0 ? users[0] : null
+    } catch (error) {
+      console.error('Error fetching user by email:', error)
+      return null
+    }
+  },
 
 /**
  * Get user by ID from the users table (now uses email as primary key)
@@ -291,9 +324,25 @@ async getAllUsers(options = {}) {
 
 /**
  * Update user information
+ * IMPORTANT: password_hash should only be updated explicitly via profile page or admin action
  */
 async updateUser(userEmail, userData) {
   try {
+    // Safety check: If password_hash is being updated, log it with full stack trace
+    if (userData.password_hash !== undefined) {
+      const stackTrace = new Error().stack;
+      console.warn(`[CRITICAL] password_hash update attempted for user: ${userEmail}`, {
+        caller: stackTrace.split('\n')[2]?.trim() || 'unknown',
+        fullStack: stackTrace,
+        hashPreview: typeof userData.password_hash === 'string' 
+          ? userData.password_hash.substring(0, 8) + '...' 
+          : userData.password_hash
+      });
+      
+      // Only allow password_hash updates - don't block, but log heavily
+      // This helps identify if something is accidentally updating passwords
+    }
+    
     return await window.SupabaseDB.update('users', userData, { column: 'email', value: userEmail })
   } catch (error) {
     console.error('Error updating user:', error)

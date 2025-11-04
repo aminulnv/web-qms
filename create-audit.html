@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Create Audit | QMS</title>
 <meta name="description" content="Quality Management System Dashboard">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
@@ -676,7 +675,9 @@ async function updateYourStats() {
     try {
         // Get current user info
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const currentUserEmail = userInfo.email;
+        const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
+        const currentUserRole = userInfo.role || '';
+        const isAgent = currentUserRole === 'Employee';
         
         if (!currentUserEmail) {
             console.log('No user email found for stats');
@@ -684,18 +685,26 @@ async function updateYourStats() {
         }
         
         // Load assignments for current user
+        // Filter by employee_email if agent, otherwise by auditor_email
+        const filterField = isAgent ? 'employee_email' : 'auditor_email';
         const { data: assignments, error: assignmentsError } = await window.supabaseClient
             .from('audit_assignments')
             .select('*')
-            .eq('auditor_email', currentUserEmail)
+            .eq(filterField, currentUserEmail)
             .order('created_at', { ascending: false });
+        
+        // Additional client-side filtering to ensure exact match (case-insensitive)
+        const filteredAssignments = (assignments || []).filter(assignment => {
+            const emailToCheck = isAgent ? assignment.employee_email : assignment.auditor_email;
+            return emailToCheck && emailToCheck.toLowerCase().trim() === currentUserEmail;
+        });
         
         if (assignmentsError) {
             console.error('Error loading assignments for stats:', assignmentsError);
             return;
         }
         
-        const allAssignments = assignments || [];
+        const allAssignments = filteredAssignments;
         const totalAssigned = allAssignments.length;
         const completed = allAssignments.filter(a => a.status === 'completed').length;
         const inProgress = allAssignments.filter(a => a.status === 'in_progress').length;
@@ -727,16 +736,23 @@ async function updateYourStats() {
                 let auditCount = 0;
                 
                 // Query each scorecard table for audits by this user
+                // Filter by employee_email if agent, otherwise by auditor_email
+                const auditFilterField = isAgent ? 'employee_email' : 'auditor_email';
                 for (const scorecard of scorecards) {
                     try {
                         const { data: audits, error } = await window.supabaseClient
                             .from(scorecard.table_name)
-                            .select('audit_duration')
-                            .eq('auditor_email', currentUserEmail)
+                            .select('audit_duration, ' + auditFilterField)
                             .not('audit_duration', 'is', null);
                         
                         if (!error && audits) {
-                            audits.forEach(audit => {
+                            // Filter by email (case-insensitive) on client side
+                            const filteredAudits = audits.filter(audit => {
+                                const emailToCheck = audit[auditFilterField];
+                                return emailToCheck && emailToCheck.toLowerCase().trim() === currentUserEmail;
+                            });
+                            
+                            filteredAudits.forEach(audit => {
                                 // Handle duration conversion (new format: seconds, legacy format: minutes)
                                 let durationInMinutes = 0;
                                 if (typeof audit.audit_duration === 'number') {
@@ -812,16 +828,22 @@ async function updateYourStats() {
                 .eq('is_active', true);
             
             if (!scError && scorecards) {
+                // Filter by employee_email if agent, otherwise by auditor_email
+                const reversalFilterField = isAgent ? 'employee_email' : 'auditor_email';
                 for (const scorecard of scorecards) {
                     try {
                         const { data, error } = await window.supabaseClient
                             .from(scorecard.table_name)
-                            .select('id')
-                            .eq('auditor_email', currentUserEmail)
+                            .select('id, ' + reversalFilterField)
                             .not('reversal_requested_at', 'is', null);
                         
                         if (!error && data) {
-                            reversalCount += data.length;
+                            // Filter by email (case-insensitive) on client side
+                            const filteredReversals = data.filter(reversal => {
+                                const emailToCheck = reversal[reversalFilterField];
+                                return emailToCheck && emailToCheck.toLowerCase().trim() === currentUserEmail;
+                            });
+                            reversalCount += filteredReversals.length;
                         }
                     } catch (err) {
                         console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
@@ -992,15 +1014,21 @@ async function loadPendingAudits() {
     try {
         // Get current user info
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const currentUserEmail = userInfo.email;
+        const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
+        const currentUserRole = userInfo.role || '';
+        const isAgent = currentUserRole === 'Employee';
         
         if (!currentUserEmail) {
             console.log('No user email found');
             return;
         }
         
+        console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole);
+        
         // Load assigned audits from audit_assignments table with scorecard info
-        // Always filter by current user - showAllAudits controls whether to show completed or pending/in_progress
+        // Filter by employee_email if agent, otherwise by auditor_email
+        // showAllAudits controls whether to show completed or pending/in_progress
+        const filterField = isAgent ? 'employee_email' : 'auditor_email';
         let query = window.supabaseClient
             .from('audit_assignments')
             .select(`
@@ -1011,8 +1039,10 @@ async function loadPendingAudits() {
                     table_name
                 )
             `)
-            .eq('auditor_email', currentUserEmail)
+            .eq(filterField, currentUserEmail)
             .order('created_at', { ascending: false });
+        
+        console.log('Filtering by:', filterField, '=', currentUserEmail);
         
         // If showing completed audits, filter by completed status; otherwise show pending/in_progress
         if (showAllAudits) {
@@ -1023,9 +1053,19 @@ async function loadPendingAudits() {
         
         const { data, error } = await query;
         
-        if (error) throw error;
+        if (error) {
+            console.error('Error loading audits:', error);
+            throw error;
+        }
         
-        pendingAudits = data || [];
+        // Additional client-side filtering to ensure exact match (case-insensitive)
+        const filteredData = (data || []).filter(assignment => {
+            const emailToCheck = isAgent ? assignment.employee_email : assignment.auditor_email;
+            return emailToCheck && emailToCheck.toLowerCase().trim() === currentUserEmail;
+        });
+        
+        console.log('Loaded audits:', filteredData.length, 'out of', (data || []).length);
+        pendingAudits = filteredData;
         
         // Apply sorting
         sortPendingAudits();
@@ -1096,6 +1136,11 @@ function displayPendingAudits() {
     
     list.innerHTML = '';
     
+    // Get current user info to check if agent
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userRole = userInfo.role || '';
+    const isAgent = userRole === 'Employee';
+    
     paginatedAudits.forEach(audit => {
         const auditCard = document.createElement('div');
         auditCard.style.cssText = `
@@ -1110,11 +1155,16 @@ function displayPendingAudits() {
             gap: 0.4852rem;
         `;
         
-        // Get current user info (not needed anymore since we only show logged-in user's audits)
+        // For agents, show auditor name; for auditors, show employee name
+        const displayName = isAgent ? (audit.auditor_email || 'Unknown Auditor') : (audit.employee_name || 'Unknown Employee');
+        const displayEmail = isAgent ? (audit.auditor_email || 'No email') : (audit.employee_email || 'No email');
         
         // Status badge - different for completed audits
         let statusBadge = '';
         let actionButton = '';
+        
+        // Agents can only view completed audits, not start/continue them
+        const canEdit = !isAgent;
         
         if (audit.status === 'completed') {
             statusBadge = '<span style="background-color: #dbeafe; color: #1e40af; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">Completed</span>';
@@ -1144,39 +1194,47 @@ function displayPendingAudits() {
             }
         } else if (audit.status === 'in_progress') {
             statusBadge = '<span style="background-color: #fef3c7; color: #92400e; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">In Progress</span>';
-            actionButton = `<button 
-                onclick="startAssignedAudit('${audit.id}', '${audit.employee_email}', '${audit.scorecard_id}')" 
-                style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
-                onmouseover="this.style.backgroundColor='#15582E'"
-                onmouseout="this.style.backgroundColor='#1A733E'"
-            >
-                Continue
-            </button>`;
+            if (canEdit) {
+                actionButton = `<button 
+                    onclick="event.stopPropagation(); navigateToAssignment('${audit.id}')" 
+                    style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    onmouseover="this.style.backgroundColor='#15582E'"
+                    onmouseout="this.style.backgroundColor='#1A733E'"
+                >
+                    Continue
+                </button>`;
+            }
         } else {
             statusBadge = '<span style="background-color: #dcfce7; color: #166534; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">Pending</span>';
-            actionButton = `<button 
-                onclick="startAssignedAudit('${audit.id}', '${audit.employee_email}', '${audit.scorecard_id}')" 
-                style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
-                onmouseover="this.style.backgroundColor='#15582E'"
-                onmouseout="this.style.backgroundColor='#1A733E'"
-            >
-                Start Audit
-            </button>`;
+            if (canEdit) {
+                actionButton = `<button 
+                    onclick="event.stopPropagation(); navigateToAssignment('${audit.id}')" 
+                    style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    onmouseover="this.style.backgroundColor='#15582E'"
+                    onmouseout="this.style.backgroundColor='#1A733E'"
+                >
+                    Start Audit
+                </button>`;
+            }
         }
         
+        const clickHandler = audit.status === 'completed' && audit.audit_id 
+            ? `onclick="event.stopPropagation(); viewCompletedAudit('${audit.audit_id}', '${audit.scorecard_id}', '${audit.scorecards?.table_name || ''}')"`
+            : canEdit ? `onclick="navigateToAssignment('${audit.id}')"` : '';
+        
         auditCard.innerHTML = `
-            <div style="flex: 1; display: flex; align-items: center; gap: 0.4852rem;">
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.4852rem; ${clickHandler ? 'cursor: pointer;' : ''}" ${clickHandler}>
                 <div style="width: 1.6171rem; height: 1.6171rem; border-radius: 0.1617rem; background: #1A733E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.5659rem; flex-shrink: 0;">
-                    ${getInitials(audit.employee_name || 'Unknown')}
+                    ${getInitials(displayName)}
                 </div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="display: flex; align-items: center; gap: 0.3234rem; margin-bottom: 0.1617rem;">
                         <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
-                            ${escapeHtml(audit.employee_name || 'Unknown Employee')}
+                            ${escapeHtml(displayName)}
                         </h4>
                     </div>
                     <p style="margin: 0; font-size: 0.4852rem; color: #6b7280; display: flex; align-items: center; gap: 0.2425rem; flex-wrap: wrap;">
-                        <span>${escapeHtml(audit.employee_email || 'No email')}</span>
+                        <span>${escapeHtml(displayEmail)}</span>
                         <span style="color: #d1d5db;">•</span>
                         <span style="font-weight: 500; color: #374151;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
                         ${audit.completed_at ? `<span style="color: #d1d5db;">•</span><span style="font-size: 0.4447rem; color: #6b7280;">Completed ${formatDate(audit.completed_at)}</span>` : ''}
@@ -1723,29 +1781,35 @@ Agent: You're very welcome! Have a great day!
                         }
                     }
                 } else {
-                    // For counters, set a small test value
+                    // For counters, set a small test value (capped at 10)
                     const counterInput = document.getElementById(param.field_id);
                     if (counterInput) {
                         const testValue = Math.min(index % 3, 2); // 0, 1, or 2
                         if (testValue > 0) {
                             counterInput.value = testValue;
                             
-                            // Update styling based on value (matching counter button behavior)
-                            counterInput.style.backgroundColor = '#ef4444';
-                            counterInput.style.color = '#ffffff';
-                            counterInput.style.borderColor = '#dc2626';
-                            
+                            // Update plain text display
+                            const displayElement = document.getElementById(`${param.field_id}_display`);
+                            if (displayElement) {
+                                displayElement.textContent = testValue;
+                                displayElement.style.color = '#ef4444';
+                                displayElement.style.fontWeight = '700';
+                            }
                             
                             // Trigger change event to update calculations
                             counterInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            
+                            // Fill feedback textarea (only for first 3 parameters, and only if error count > 0)
+                            if (index < 3) {
+                                // Update feedback boxes, then fill the first one
+                                updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', param.parameter_type || 'error');
+                                const firstFeedback = document.getElementById(`feedback_${param.field_id}_0`);
+                                if (firstFeedback) {
+                                    firstFeedback.value = `Test feedback for ${param.error_name}. This is auto-filled test data.`;
+                                }
+                            }
                         }
                     }
-                }
-                
-                // Fill feedback textarea
-                const feedbackField = document.getElementById(`feedback_${param.field_id}`);
-                if (feedbackField && index < 3) { // Fill feedback for first 3 parameters
-                    feedbackField.value = `Test feedback for ${param.error_name}. This is auto-filled test data.`;
                 }
             });
             
@@ -1822,6 +1886,16 @@ Agent: You're very welcome! Have a great day!
 // ============================================================================
 
 // Start an assigned audit - update status and pre-fill form
+// Navigate to assignment URL (creates unique URL for each audit)
+window.navigateToAssignment = function(assignmentId) {
+    // Update URL with assignment parameter
+    const newUrl = `${window.location.pathname}?assignment=${assignmentId}`;
+    window.history.pushState({ assignment: assignmentId }, '', newUrl);
+    
+    // Load the assignment from URL (this will trigger loadAssignmentFromURL)
+    loadAssignmentFromURL(assignmentId);
+};
+
 window.startAssignedAudit = async function(assignmentId, employeeEmail, scorecardId) {
     try {
         // Update assignment status to 'in_progress'
@@ -2005,6 +2079,125 @@ function setInitialAverageScore() {
     updatePassingStatus(initialScore);
 }
 
+// Update feedback boxes for a parameter based on error count (max 10)
+function updateFeedbackBoxesForParameter(fieldId, fieldType, paramType) {
+    const feedbackContainer = document.getElementById(`feedback_container_${fieldId}`);
+    if (!feedbackContainer) return;
+    
+    // Get current error count
+    let errorCount = 0;
+    if (fieldType === 'radio') {
+        const selectedRadio = document.querySelector(`input[name="${fieldId}"]:checked`);
+        if (selectedRadio) {
+            const value = parseInt(selectedRadio.value) || 0;
+            // For additive/achievement: NO (0) = not achieved = error
+            // For error parameters: YES (1) = error occurred = error
+            if (paramType === 'achievement' || paramType === 'bonus') {
+                errorCount = value === 0 ? 1 : 0;
+            } else {
+                errorCount = value;
+            }
+        }
+    } else {
+        const field = document.getElementById(fieldId);
+        errorCount = field ? (parseInt(field.value) || 0) : 0;
+    }
+    
+    // Always show at least 1 feedback box, but limit to max 10 based on error count
+    // If errorCount is 0, show 1 box (optional)
+    // If errorCount > 0, show up to errorCount boxes (max 10), all required
+    const feedbackCount = errorCount === 0 ? 1 : Math.min(errorCount, 10);
+    const isRequired = errorCount > 0;
+    
+    // Get existing feedback values (if loading from saved audit)
+    const existingFeedbacks = [];
+    const existingTextareas = feedbackContainer.querySelectorAll(`textarea[id^="feedback_${fieldId}_"]`);
+    existingTextareas.forEach(textarea => {
+        const index = parseInt(textarea.id.split('_').pop()) || 0;
+        existingFeedbacks[index] = textarea.value;
+    });
+    
+    // Clear container
+    feedbackContainer.innerHTML = '';
+    
+    // Create feedback boxes
+    for (let i = 0; i < feedbackCount; i++) {
+        const feedbackDiv = document.createElement('div');
+        const feedbackId = `feedback_${fieldId}_${i}`;
+        // Make required if errorCount > 0, otherwise optional
+        const requiredAttr = isRequired ? 'required' : '';
+        const placeholder = errorCount === 0 
+            ? 'Enter feedback (optional)...' 
+            : (feedbackCount === 1 
+                ? 'Enter feedback (required)...' 
+                : `Feedback ${i + 1} of ${feedbackCount} (required)...`);
+        
+        feedbackDiv.innerHTML = `
+            <textarea 
+                id="${feedbackId}" 
+                name="${feedbackId}" 
+                ${requiredAttr}
+                placeholder="${placeholder}" 
+                rows="1" 
+                class="w-full px-2 py-1 bg-white text-sm focus:outline-none resize-none" 
+                style="font-family: 'Poppins', sans-serif; font-size: 0.5659rem; line-height: 1.2; min-height: 1rem; max-height: 50rem; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; border: 0.0625rem solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.3234rem;"
+            >${existingFeedbacks[i] || ''}</textarea>
+        `;
+        feedbackContainer.appendChild(feedbackDiv);
+        
+        // Setup auto-expand for this textarea
+        const textarea = feedbackDiv.querySelector('textarea');
+        if (textarea) {
+            setupFeedbackTextareaAutoExpand(feedbackId, textarea);
+        }
+    }
+}
+
+// Setup auto-expand functionality for feedback textarea
+function setupFeedbackTextareaAutoExpand(fieldId, textareaElement = null) {
+    const textarea = textareaElement || document.getElementById(fieldId);
+    if (!textarea) return;
+    
+    // Auto-expand function
+    const autoExpand = function() {
+        textarea.style.height = 'auto';
+        const scrollHeightRem = textarea.scrollHeight / 16;
+        textarea.style.height = Math.min(scrollHeightRem, 50.0) + 'rem';
+    };
+    
+    // Add focus/input styles for green border
+    textarea.addEventListener('focus', function() {
+        this.style.borderColor = '#10b981';
+    });
+    textarea.addEventListener('input', function() {
+        // Clear validation error styling when user starts typing
+        if (this.value && this.value.trim()) {
+            this.style.borderColor = '#10b981';
+        }
+        autoExpand();
+    });
+    textarea.addEventListener('blur', function() {
+        // Keep green border if there's content, otherwise default gray
+        if (this.value && this.value.trim()) {
+            this.style.borderColor = '#10b981';
+        } else {
+            this.style.borderColor = '#d1d5db';
+        }
+    });
+    
+    // Hide scrollbar but keep scrolling functional
+    textarea.style.setProperty('scrollbar-width', 'none', 'important');
+    textarea.style.setProperty('-ms-overflow-style', 'none', 'important');
+    
+    // For webkit browsers
+    const style = document.createElement('style');
+    style.textContent = `#${fieldId}::-webkit-scrollbar { display: none; }`;
+    document.head.appendChild(style);
+    
+    // Trigger on initial load if there's content
+    setTimeout(autoExpand, 0);
+}
+
 // Render error parameter fields dynamically
 function renderErrorParameters() {
     const container = document.getElementById('errorParametersContainer');
@@ -2099,12 +2292,13 @@ function renderErrorParameters() {
                 </div>
             `;
         } else {
-            // Counter field (default)
+            // Counter field (default) - plain text display for counter value (no container)
             inputHtml = `
                 <div style="display: flex; align-items: center; gap: 0.2425rem;">
                     <button type="button" class="counter-btn" data-action="decrement" data-target="${param.field_id}" style="width: 1.1321rem; height: 1.1321rem; display: flex; align-items: center; justify-content: center; border: 0.0304rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.1617rem; font-size: 0.6469rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">−</button>
-                    <input type="number" id="${param.field_id}" name="${param.field_id}" min="0" value="0" readonly data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" style="width: 1.9406rem; padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 700; background-color: #ffffff; color: #1f2937; cursor: default;">
+                    <span id="${param.field_id}_display" style="font-size: 0.5659rem; font-weight: 700; font-family: 'Poppins', sans-serif; color: #1f2937; min-width: 0.8086rem; text-align: center;">0</span>
                     <button type="button" class="counter-btn" data-action="increment" data-target="${param.field_id}" style="width: 1.1321rem; height: 1.1321rem; display: flex; align-items: center; justify-content: center; border: 0.0304rem solid #d1d5db; background-color: #ffffff; color: #4b5563; border-radius: 0.1617rem; font-size: 0.6469rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif; padding: 0; line-height: 1;">+</button>
+                    <input type="number" id="${param.field_id}" name="${param.field_id}" min="0" max="10" value="0" readonly data-penalty="${param.penalty_points}" data-category="${param.error_category}" data-param-type="${paramType}" style="display: none;">
                 </div>
             `;
         }
@@ -2126,45 +2320,18 @@ function renderErrorParameters() {
             <div style="display: flex; justify-content: center;">
                 ${inputHtml}
             </div>
-            <div>
-                <textarea id="feedback_${param.field_id}" name="feedback_${param.field_id}" placeholder="Enter feedback details..." rows="1" class="w-full px-2 py-1 bg-white text-sm focus:outline-none resize-none" style="font-family: 'Poppins', sans-serif; font-size: 0.5659rem; line-height: 1.2; min-height: 1rem; max-height: 50rem; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; border: 1px solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.3234rem;"></textarea>
+            <div id="feedback_container_${param.field_id}" style="display: flex; flex-direction: column; gap: 0.3234rem;">
+                <!-- Feedback boxes will be dynamically added here based on error count -->
             </div>
         `;
         
         container.appendChild(rowDiv);
         
-        // Add auto-expand functionality to feedback textarea
-        const feedbackTextarea = rowDiv.querySelector(`#feedback_${param.field_id}`);
-        if (feedbackTextarea) {
-            // Auto-expand function
-            const autoExpand = function() {
-                feedbackTextarea.style.height = 'auto';
-                feedbackTextarea.style.height = Math.min(feedbackTextarea.scrollHeight, 800) + 'px'; // Max 50rem (800px)
-            };
-            
-            // Add focus/input styles for green border
-            feedbackTextarea.addEventListener('focus', function() {
-                this.style.borderColor = '#10b981'; // Green on focus
-            });
-            feedbackTextarea.addEventListener('input', function() {
-                this.style.borderColor = '#10b981'; // Green when typing
-            });
-            feedbackTextarea.addEventListener('blur', function() {
-                this.style.borderColor = '#d1d5db'; // Grey when not focused
-            });
-            
-            // Hide scrollbar but keep scrolling functional
-            feedbackTextarea.style.setProperty('scrollbar-width', 'none', 'important');
-            feedbackTextarea.style.setProperty('-ms-overflow-style', 'none', 'important');
-            // For webkit browsers
-            const style = document.createElement('style');
-            style.textContent = `#feedback_${param.field_id}::-webkit-scrollbar { display: none; }`;
-            document.head.appendChild(style);
-            
-            feedbackTextarea.addEventListener('input', autoExpand);
-            // Trigger on initial load if there's content
-            setTimeout(autoExpand, 0);
-        }
+        // Initialize feedback boxes based on current error count (initially 0, so no boxes shown)
+        updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', param.parameter_type || 'error');
+        
+        // Setup auto-expand functionality helper
+        setupFeedbackTextareaAutoExpand(param.field_id);
     });
     
     // Update summary badges when scores change
@@ -2779,11 +2946,51 @@ window.closeAuditForm = async function() {
 // ============================================================================
 // Load Audit for Editing from URL Parameters
 // ============================================================================
+// Calibration mode detection
+let isCalibrationMode = false;
+let calibrationSessionId = null;
+let calibrationSampleAuditId = null;
+let calibrationInteractionId = null;
+let calibrationScorecardId = null;
+let calibrationTableName = null;
+
+// Check if we're in calibration mode
+function checkCalibrationMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const calibration = urlParams.get('calibration');
+    
+    if (calibration === 'true') {
+        isCalibrationMode = true;
+        calibrationSessionId = urlParams.get('sessionId');
+        calibrationSampleAuditId = urlParams.get('auditId');
+        calibrationInteractionId = urlParams.get('interactionId');
+        calibrationScorecardId = urlParams.get('scorecardId');
+        calibrationTableName = urlParams.get('tableName');
+        
+        console.log('Calibration mode detected:', {
+            sessionId: calibrationSessionId,
+            auditId: calibrationSampleAuditId,
+            interactionId: calibrationInteractionId,
+            scorecardId: calibrationScorecardId,
+            tableName: calibrationTableName
+        });
+        
+        return true;
+    }
+    return false;
+}
+
 async function loadAuditForEditing() {
     const urlParams = new URLSearchParams(window.location.search);
     const auditId = urlParams.get('edit');
     const scorecardId = urlParams.get('scorecard');
     const tableName = urlParams.get('table');
+    
+    // Check for calibration mode first
+    if (checkCalibrationMode()) {
+        await loadCalibrationSampleAudit();
+        return;
+    }
     
     if (!auditId || !tableName) {
         return; // No edit parameters, normal create mode
@@ -2947,22 +3154,69 @@ async function populateFormWithAuditData(audit) {
                 } else {
                     // Set counter value
                     const field = document.getElementById(param.field_id);
+                    const counterValue = fieldValue || 0;
                     if (field) {
-                        field.value = fieldValue || 0;
-                        
-                        // Update styling based on value
-                        if (fieldValue > 0) {
-                            field.style.backgroundColor = '#ef4444';
-                            field.style.color = '#ffffff';
-                            field.style.borderColor = '#dc2626';
+                        field.value = counterValue;
+                    }
+                    
+                    // Update plain text display
+                    const displayElement = document.getElementById(`${param.field_id}_display`);
+                    if (displayElement) {
+                        displayElement.textContent = counterValue;
+                        // Update color based on value
+                        if (counterValue > 0) {
+                            displayElement.style.color = '#ef4444';
+                            displayElement.style.fontWeight = '700';
+                        } else {
+                            displayElement.style.color = '#1f2937';
+                            displayElement.style.fontWeight = '700';
                         }
                     }
                 }
                 
-                // Populate feedback
-                const feedbackField = document.getElementById(`feedback_${param.field_id}`);
-                if (feedbackField) {
-                    feedbackField.value = audit[`feedback_${param.field_id}`] || '';
+                // Populate feedback - handle both old format (string) and new format (JSON array)
+                const feedbackData = audit[`feedback_${param.field_id}`];
+                let feedbackArray = [];
+                
+                if (feedbackData) {
+                    if (typeof feedbackData === 'string') {
+                        // Try to parse as JSON array, fallback to single string
+                        try {
+                            const parsed = JSON.parse(feedbackData);
+                            feedbackArray = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+                        } catch (e) {
+                            // If not valid JSON, treat as single string (backward compatibility)
+                            feedbackArray = feedbackData.trim() ? [feedbackData] : [];
+                        }
+                    } else if (Array.isArray(feedbackData)) {
+                        feedbackArray = feedbackData;
+                    } else {
+                        feedbackArray = feedbackData ? [feedbackData] : [];
+                    }
+                }
+                
+                // Update feedback boxes based on error count first, then populate values
+                const paramType = param.parameter_type || 'error';
+                updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', paramType);
+                
+                // Populate feedback values into the boxes
+                if (feedbackArray.length > 0) {
+                    const feedbackContainer = document.getElementById(`feedback_container_${param.field_id}`);
+                    if (feedbackContainer) {
+                        feedbackArray.forEach((feedbackText, index) => {
+                            const feedbackId = `feedback_${param.field_id}_${index}`;
+                            const textarea = document.getElementById(feedbackId);
+                            if (textarea && feedbackText) {
+                                textarea.value = feedbackText;
+                                // Trigger auto-expand
+                                setTimeout(() => {
+                                    textarea.style.height = 'auto';
+                                    const scrollHeightRem = textarea.scrollHeight / 16;
+                                    textarea.style.height = Math.min(scrollHeightRem, 50.0) + 'rem';
+                                }, 100);
+                            }
+                        });
+                    }
                 }
             });
         }
@@ -2977,14 +3231,521 @@ async function populateFormWithAuditData(audit) {
     }
 }
 
+// ============================================================================
+// Save Calibration Result
+// ============================================================================
+async function saveCalibrationResult(auditPayload, auditData) {
+    try {
+        // Get current user info
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const participantEmail = userInfo.email || '';
+        const participantName = userInfo.name || '';
+
+        // Build error parameters JSONB
+        const errorParameters = {};
+        const feedbackParameters = {};
+        
+        currentParameters.forEach(param => {
+            const fieldValue = auditData[param.field_id];
+            errorParameters[param.field_id] = fieldValue ? parseInt(fieldValue) : 0;
+            
+            const feedbackKey = `feedback_${param.field_id}`;
+            if (auditData[feedbackKey]) {
+                feedbackParameters[param.field_id] = auditData[feedbackKey];
+            }
+        });
+
+        const calibrationResult = {
+            calibration_session_id: calibrationSessionId,
+            participant_email: participantEmail,
+            participant_name: participantName,
+            scorecard_id: calibrationScorecardId,
+            sample_audit_id: calibrationSampleAuditId,
+            
+            // Audit timing
+            audit_start_time: auditPayload.audit_start_time,
+            audit_end_time: auditPayload.audit_end_time,
+            audit_duration: auditPayload.audit_duration,
+            
+            // Employee info (from sample)
+            employee_name: auditPayload.employee_name,
+            employee_email: auditPayload.employee_email,
+            employee_type: auditPayload.employee_type,
+            employee_department: auditPayload.employee_department,
+            country_of_employee: auditPayload.country_of_employee,
+            
+            // Interaction details (from sample)
+            interaction_id: auditPayload.interaction_id,
+            interaction_date: auditPayload.interaction_date,
+            channel: auditPayload.channel,
+            client_email: auditPayload.client_email,
+            
+            // Audit metadata
+            audit_type: auditPayload.audit_type,
+            agent_pre_status: auditPayload.agent_pre_status,
+            agent_post_status: auditPayload.agent_post_status,
+            passing_status: auditPayload.passing_status,
+            validation_status: 'Validated',
+            
+            // Scores
+            average_score: auditPayload.average_score,
+            critical_errors: auditPayload.critical_errors || 0,
+            critical_fail_error: auditPayload.critical_fail_error || 0,
+            significant_error: auditPayload.significant_error || 0,
+            total_errors_count: auditPayload.total_errors_count || 0,
+            
+            // Content
+            transcript: auditPayload.transcript,
+            recommendations: auditPayload.recommendations,
+            
+            // Dynamic parameters
+            error_parameters: errorParameters,
+            feedback_parameters: feedbackParameters,
+            
+            status: 'submitted'
+        };
+
+        console.log('Saving calibration result:', calibrationResult);
+
+        const { data, error } = await window.supabaseClient
+            .from('calibration_results')
+            .insert([calibrationResult])
+            .select();
+
+        if (error) throw error;
+
+        console.log('Calibration result saved successfully:', data);
+
+        await window.confirmationDialog.show({
+            title: 'Calibration Submitted!',
+            message: 'Your calibration audit has been submitted successfully.',
+            confirmText: 'OK',
+            type: 'success'
+        });
+
+        // Close the form
+        closeAuditForm();
+
+        // If opened from calibration page, notify parent window
+        if (window.opener) {
+            window.opener.postMessage({ type: 'calibration_submitted', sessionId: calibrationSessionId }, '*');
+            window.close();
+        }
+
+    } catch (error) {
+        console.error('Error saving calibration result:', error);
+        await window.confirmationDialog.show({
+            title: 'Submission Error',
+            message: 'Failed to submit calibration audit: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// Load calibration sample audit and populate form
+async function loadCalibrationSampleAudit() {
+    try {
+        if (!isCalibrationMode || !calibrationScorecardId) {
+            console.error('Missing calibration parameters');
+            return;
+        }
+
+        // Check if we have audit_id or interaction_id
+        if (!calibrationSampleAuditId && !calibrationInteractionId) {
+            console.error('Missing audit ID or interaction ID');
+            return;
+        }
+
+        console.log('Loading calibration sample audit...');
+
+        let sampleAudit = null;
+        
+        if (calibrationSampleAuditId && calibrationTableName) {
+            // Load the sample audit from database
+            const { data, error: auditError } = await window.supabaseClient
+                .from(calibrationTableName)
+                .select('*')
+                .eq('id', calibrationSampleAuditId)
+                .single();
+
+            if (auditError || !data) {
+                alert('Error loading sample audit: ' + (auditError?.message || 'Audit not found'));
+                return;
+            }
+            sampleAudit = data;
+        } else if (calibrationInteractionId) {
+            // Create minimal audit object from interaction_id
+            // The interaction details will be loaded from Intercom
+            sampleAudit = {
+                interaction_id: calibrationInteractionId,
+                scorecard_id: calibrationScorecardId,
+                // Other fields will be populated from Intercom if available
+            };
+        }
+        
+        if (!sampleAudit) {
+            alert('Error: Could not load sample audit or interaction');
+            return;
+        }
+
+        // Load scorecard and parameters
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect) {
+            scorecardSelect.value = calibrationScorecardId;
+            await loadScorecardParameters(calibrationScorecardId);
+        }
+
+        // Wait a bit for parameters to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Show the audit form modal
+        const auditFormModal = document.getElementById('auditFormModal');
+        if (auditFormModal) {
+            auditFormModal.style.display = 'flex';
+        }
+
+        // Hide pending audits section
+        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
+        if (pendingAuditsSection) {
+            pendingAuditsSection.style.display = 'none';
+        }
+
+        // Update header to indicate calibration mode
+        const formHeader = document.getElementById('auditFormHeader');
+        const scorecardDisplay = document.getElementById('formScorecardDisplay');
+        if (formHeader && scorecardDisplay) {
+            const h2 = formHeader.querySelector('h2');
+            if (h2) h2.textContent = 'Calibration Audit';
+            scorecardDisplay.innerHTML = '<svg style="width: 0.5659rem; height: 0.5659rem; display: inline-block; vertical-align: middle; margin-right: 0.2425rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg> Calibration Mode';
+        }
+
+        // Populate form with sample audit data (read-only for some fields)
+        await populateFormWithCalibrationSample(sampleAudit);
+
+        // Start timer
+        if (window.resetTimer && window.startTimer) {
+            window.resetTimer();
+            window.startTimer();
+        }
+
+        // Show timer
+        const auditTimer = document.getElementById('auditTimer');
+        if (auditTimer) {
+            auditTimer.style.display = 'flex';
+        }
+
+    } catch (error) {
+        console.error('Error loading calibration sample audit:', error);
+        alert('Error loading calibration sample audit: ' + error.message);
+    }
+}
+
+// Populate form with calibration sample audit (make certain fields read-only)
+async function populateFormWithCalibrationSample(sampleAudit) {
+    try {
+        // First, ensure employees are loaded
+        await loadEmployees();
+        
+        // Employee name dropdown (read-only - select from sample)
+        const employeeSelect = document.getElementById('employeeName');
+        if (employeeSelect && sampleAudit.employee_email) {
+            // Find and select the employee in dropdown
+            for (let i = 0; i < employeeSelect.options.length; i++) {
+                if (employeeSelect.options[i].dataset.email === sampleAudit.employee_email) {
+                    employeeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            employeeSelect.disabled = true;
+            employeeSelect.style.backgroundColor = 'transparent';
+            employeeSelect.style.color = 'white';
+            employeeSelect.style.cursor = 'not-allowed';
+            employeeSelect.style.opacity = '0.9';
+        }
+
+        // Employee information (read-only - from sample)
+        const employeeEmail = document.getElementById('employeeEmail');
+        const employeeType = document.getElementById('employeeType');
+        const employeeDepartment = document.getElementById('employeeDepartment');
+        const countryOfEmployee = document.getElementById('countryOfEmployee');
+
+        // Set employee info from sample (read-only) - WHITE TEXT ON GREEN BACKGROUND
+        if (employeeEmail) {
+            employeeEmail.value = sampleAudit.employee_email || '';
+            employeeEmail.readOnly = true;
+            employeeEmail.style.backgroundColor = 'transparent';
+            employeeEmail.style.color = 'white';
+            employeeEmail.style.cursor = 'not-allowed';
+            employeeEmail.style.opacity = '0.9';
+        }
+
+        if (employeeType) {
+            employeeType.value = sampleAudit.employee_type || '';
+            employeeType.readOnly = true;
+            employeeType.style.backgroundColor = 'transparent';
+            employeeType.style.color = 'white';
+            employeeType.style.cursor = 'not-allowed';
+            employeeType.style.opacity = '0.9';
+        }
+
+        if (employeeDepartment) {
+            employeeDepartment.value = sampleAudit.employee_department || '';
+            employeeDepartment.readOnly = true;
+            employeeDepartment.style.backgroundColor = 'transparent';
+            employeeDepartment.style.color = 'white';
+            employeeDepartment.style.cursor = 'not-allowed';
+            employeeDepartment.style.opacity = '0.9';
+        }
+
+        if (countryOfEmployee) {
+            countryOfEmployee.value = sampleAudit.country_of_employee || '';
+            countryOfEmployee.disabled = true;
+            countryOfEmployee.style.backgroundColor = 'transparent';
+            countryOfEmployee.style.color = 'white';
+            countryOfEmployee.style.cursor = 'not-allowed';
+            countryOfEmployee.style.opacity = '0.9';
+        }
+
+        // Interaction details (read-only - from sample) - NOT in header, so gray background
+        // These fields should NOT be editable during calibration
+        const interactionId = document.getElementById('interactionId');
+        const interactionDate = document.getElementById('interactionDate');
+        const channel = document.getElementById('channel');
+        const clientEmail = document.getElementById('clientEmail');
+        const viewChatBtn = document.getElementById('viewChatBtn');
+
+        if (interactionId) {
+            interactionId.value = sampleAudit.interaction_id || '';
+            interactionId.readOnly = true;
+            interactionId.disabled = true; // Disable to prevent editing
+            interactionId.style.backgroundColor = '#f3f4f6';
+            interactionId.style.cursor = 'not-allowed';
+        }
+
+        if (interactionDate) {
+            interactionDate.value = sampleAudit.interaction_date || '';
+            interactionDate.readOnly = true;
+            interactionDate.disabled = true; // Disable to prevent editing
+            interactionDate.style.backgroundColor = '#f3f4f6';
+            interactionDate.style.cursor = 'not-allowed';
+        }
+
+        if (channel) {
+            channel.value = sampleAudit.channel || '';
+            channel.disabled = true;
+            channel.style.backgroundColor = '#f3f4f6';
+            channel.style.cursor = 'not-allowed';
+        }
+
+        if (clientEmail) {
+            clientEmail.value = sampleAudit.client_email || '';
+            clientEmail.readOnly = true;
+            clientEmail.disabled = true; // Disable to prevent editing
+            clientEmail.style.backgroundColor = '#f3f4f6';
+            clientEmail.style.cursor = 'not-allowed';
+        }
+
+        // Disable "Open" button for interaction ID - interaction is read-only
+        if (viewChatBtn) {
+            viewChatBtn.disabled = true;
+            viewChatBtn.style.opacity = '0.5';
+            viewChatBtn.style.cursor = 'not-allowed';
+        }
+
+        // Show chat view by default for calibration (like audit-view.html)
+        const transcriptChatView = document.getElementById('transcriptChatView');
+        const transcriptTextView = document.getElementById('transcriptTextView');
+        const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
+        const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+        
+        if (transcriptChatView && transcriptTextView) {
+            // Show chat view by default
+            transcriptChatView.style.display = 'flex';
+            transcriptTextView.style.display = 'none';
+            if (toggleTranscriptViewBtn) {
+                toggleTranscriptViewBtn.textContent = 'Text View';
+                toggleTranscriptViewBtn.title = 'Switch to text view';
+            }
+            // Set global flag if available
+            if (typeof window !== 'undefined') {
+                window.isChatViewActive = true;
+            }
+        }
+
+        // Load conversation from Intercom if interaction ID exists
+        if (sampleAudit.interaction_id) {
+            // Show loading state immediately
+            if (chatMessagesContainer) {
+                chatMessagesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 1.2937rem; color: #6b7280;">
+                        <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.091rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversation from Intercom...</p>
+                    </div>
+                `;
+            }
+            // Wait for the function to be available (it's defined in DOMContentLoaded)
+            // Try multiple times to ensure DOMContentLoaded has fired
+            let attempts = 0;
+            const maxAttempts = 20;
+            const checkAndLoad = setInterval(() => {
+                attempts++;
+                if (window.loadConversationFromIntercom && typeof window.loadConversationFromIntercom === 'function') {
+                    clearInterval(checkAndLoad);
+                    window.loadConversationFromIntercom(sampleAudit.interaction_id);
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkAndLoad);
+                    console.error('loadConversationFromIntercom function not available after waiting');
+                    if (chatMessagesContainer) {
+                        chatMessagesContainer.innerHTML = `
+                            <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
+                                <p style="font-size: 0.5659rem;">Error: Could not load conversation function. Please refresh the page.</p>
+                            </div>
+                        `;
+                    }
+                }
+            }, 100);
+        } else {
+            // No interaction ID - show text view with database transcript
+            if (transcriptChatView && transcriptTextView) {
+                transcriptChatView.style.display = 'none';
+                transcriptTextView.style.display = 'flex';
+                if (toggleTranscriptViewBtn) {
+                    toggleTranscriptViewBtn.textContent = 'Chat View';
+                    toggleTranscriptViewBtn.title = 'Switch to chat view';
+                }
+                if (typeof window !== 'undefined') {
+                    window.isChatViewActive = false;
+                }
+            }
+        }
+
+        // Transcript (read-only - from sample)
+        const transcript = document.getElementById('transcript');
+        if (transcript) {
+            transcript.value = sampleAudit.transcript || '';
+            transcript.readOnly = true;
+            transcript.style.backgroundColor = '#f3f4f6';
+            transcript.style.cursor = 'not-allowed';
+        }
+
+        // Pre-status (from sample - read-only)
+        const agentPreStatus = document.getElementById('agentPreStatus');
+        if (agentPreStatus) {
+            agentPreStatus.value = sampleAudit.agent_pre_status || '';
+            agentPreStatus.disabled = true;
+            agentPreStatus.style.backgroundColor = '#f3f4f6';
+            agentPreStatus.style.cursor = 'not-allowed';
+        }
+
+        // Audit type (from sample - read-only)
+        const auditType = document.getElementById('auditType');
+        if (auditType) {
+            auditType.value = sampleAudit.audit_type || '';
+            auditType.disabled = true;
+            auditType.style.backgroundColor = '#f3f4f6';
+            auditType.style.cursor = 'not-allowed';
+        }
+
+        // Validation status (read-only - always Validated for calibration)
+        const validationStatus = document.getElementById('validationStatus');
+        if (validationStatus) {
+            validationStatus.value = 'Validated';
+            validationStatus.disabled = true;
+            validationStatus.style.backgroundColor = '#f3f4f6';
+            validationStatus.style.cursor = 'not-allowed';
+        }
+
+        // Scorecard select (read-only - already selected) - check if it's in header
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect) {
+            scorecardSelect.disabled = true;
+            // Check if scorecard is in header (green background section)
+            const headerElement = document.getElementById('auditFormHeader');
+            if (headerElement && headerElement.contains(scorecardSelect)) {
+                scorecardSelect.style.backgroundColor = 'transparent';
+                scorecardSelect.style.color = 'white';
+                scorecardSelect.style.opacity = '0.9';
+            } else {
+                scorecardSelect.style.backgroundColor = '#f3f4f6';
+            }
+            scorecardSelect.style.cursor = 'not-allowed';
+        }
+
+        // Populate error parameters (these are editable - participant scores them)
+        // Don't pre-populate - let participant score fresh
+        if (currentParameters && currentParameters.length > 0) {
+            currentParameters.forEach(param => {
+                if (param.field_type === 'radio') {
+                    const radioYes = document.getElementById(`${param.field_id}_yes`);
+                    const radioNo = document.getElementById(`${param.field_id}_no`);
+                    if (radioYes) radioYes.checked = false;
+                    if (radioNo) radioNo.checked = false;
+                } else {
+                    const field = document.getElementById(param.field_id);
+                    if (field) {
+                        field.value = 0;
+                    }
+                }
+                
+                // Clear feedback (participant provides their own)
+                const feedbackField = document.getElementById(`feedback_${param.field_id}`);
+                if (feedbackField) {
+                    feedbackField.value = '';
+                }
+            });
+        }
+
+        // Initialize score calculation
+        if (typeof calculateAverageScore === 'function') {
+            calculateAverageScore();
+        }
+
+        console.log('Calibration form populated with sample audit data');
+
+    } catch (error) {
+        console.error('Error populating calibration form:', error);
+    }
+}
+
 // Audit Form Submission Handler
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded fired');
+    
+    // Check if user is an Employee - Employees should not be able to access create-audit page
+    try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userRole = userInfo.role || '';
+        
+        if (userRole === 'Employee') {
+            // Redirect Employee users to home page
+            alert('You do not have permission to access this page.');
+            window.location.href = 'home.html';
+            return;
+        }
+    } catch (error) {
+        console.error('Error checking user role:', error);
+    }
     
     // Initialize form immediately - the submit handler will wait for Supabase
     initializeForm();
     
     function initializeForm() {
+        // Check if user is an Employee and hide create manual audit button
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const userRole = userInfo.role || '';
+            
+            if (userRole === 'Employee') {
+                const createManualAuditBtn = document.getElementById('createManualAuditBtn');
+                if (createManualAuditBtn) {
+                    createManualAuditBtn.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('Error checking user role for button visibility:', error);
+        }
+        
         const auditForm = document.getElementById('auditForm');
         const cancelBtn = document.getElementById('cancelBtn');
         const employeeSelect = document.getElementById('employeeName');
@@ -3250,10 +4011,72 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('Form validation completed');
             
+            // Validate interaction ID is provided
+            const interactionIdField = document.getElementById('interactionId');
+            if (!interactionIdField || !interactionIdField.value || !interactionIdField.value.trim()) {
+                await window.confirmationDialog.show({
+                    title: 'Validation Error',
+                    message: 'Interaction ID is required. Please enter an Interaction ID before submitting.',
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+                if (interactionIdField) {
+                    interactionIdField.focus();
+                }
+                return;
+            }
+            
+            // Validate feedback fields when error count > 0
+            let validationErrors = [];
+            currentParameters.forEach(param => {
+                // Get error count for this parameter
+                let errorCount = 0;
+                if (param.field_type === 'radio') {
+                    const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
+                    if (selectedRadio) {
+                        const value = parseInt(selectedRadio.value) || 0;
+                        const paramType = param.parameter_type || 'error';
+                        if (paramType === 'achievement' || paramType === 'bonus') {
+                            errorCount = value === 0 ? 1 : 0;
+                        } else {
+                            errorCount = value;
+                        }
+                    }
+                } else {
+                    const field = document.getElementById(param.field_id);
+                    errorCount = field ? (parseInt(field.value) || 0) : 0;
+                }
+                
+                // If error count > 0, validate that all feedback boxes are filled
+                if (errorCount > 0) {
+                    const feedbackCount = Math.min(errorCount, 10);
+                    for (let i = 0; i < feedbackCount; i++) {
+                        const feedbackId = `feedback_${param.field_id}_${i}`;
+                        const feedbackField = document.getElementById(feedbackId);
+                        if (!feedbackField || !feedbackField.value || !feedbackField.value.trim()) {
+                            validationErrors.push(`Feedback is required for "${param.error_name}" (Feedback ${i + 1} of ${feedbackCount})`);
+                            if (feedbackField) {
+                                feedbackField.style.borderColor = '#ef4444';
+                                feedbackField.focus();
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // If there are validation errors, show them and stop submission
+            if (validationErrors.length > 0) {
+                await window.confirmationDialog.show({
+                    title: 'Validation Error',
+                    message: 'Please fill in all required feedback fields:\n\n' + validationErrors.slice(0, 5).join('\n') + (validationErrors.length > 5 ? `\n... and ${validationErrors.length - 5} more` : ''),
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+                return;
+            }
+            
             // Explicitly handle dynamic parameter fields (counters and radio buttons)
             currentParameters.forEach(param => {
-                const feedbackField = document.getElementById(`feedback_${param.field_id}`);
-                
                 if (param.field_type === 'radio') {
                     // For radio buttons, get the selected value
                     const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
@@ -3264,9 +4087,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     auditData[param.field_id] = field ? (parseInt(field.value) || 0) : 0;
                 }
                 
-                if (feedbackField && feedbackField.value) {
-                    auditData[`feedback_${param.field_id}`] = feedbackField.value;
+                // Collect all feedback boxes for this parameter as an array
+                const feedbacks = [];
+                const feedbackContainer = document.getElementById(`feedback_container_${param.field_id}`);
+                if (feedbackContainer) {
+                    const feedbackTextareas = feedbackContainer.querySelectorAll(`textarea[id^="feedback_${param.field_id}_"]`);
+                    feedbackTextareas.forEach(textarea => {
+                        if (textarea.value && textarea.value.trim()) {
+                            feedbacks.push(textarea.value.trim());
+                        }
+                    });
                 }
+                auditData[`feedback_${param.field_id}`] = feedbacks.length > 0 ? feedbacks : null;
             });
             
             // Update employeeName with the actual name from the selected option
@@ -3402,15 +4234,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     const fieldValue = auditData[param.field_id];
                     auditPayload[param.field_id] = fieldValue ? parseInt(fieldValue) : 0;
                     
-                    // Add feedback field
+                    // Add feedback field as JSONB array (send array directly, Supabase will handle JSONB conversion)
                     const feedbackKey = `feedback_${param.field_id}`;
-                    auditPayload[feedbackKey] = auditData[feedbackKey] || null;
+                    const feedbackValue = auditData[feedbackKey];
+                    // Send array directly if non-empty, null otherwise
+                    // Supabase will automatically convert JavaScript arrays to JSONB
+                    auditPayload[feedbackKey] = Array.isArray(feedbackValue) && feedbackValue.length > 0 
+                        ? feedbackValue 
+                        : null;
                 });
                 
                 console.log('Payload to save:', auditPayload);
                 console.log('Target table:', currentScorecard.table_name);
                 console.log('Is editing pending audit:', isEditingPendingAudit);
                 console.log('Current editing audit ID:', currentEditingAuditId);
+                console.log('Is calibration mode:', isCalibrationMode);
+                
+                // If in calibration mode, save to calibration_results instead
+                if (isCalibrationMode) {
+                    await saveCalibrationResult(auditPayload, auditData);
+                    return;
+                }
                 
                 let data, error;
                 const wasEditingExistingAudit = isEditingExistingAudit; // Store before resetting
@@ -3687,7 +4531,114 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     } // End of initializeForm()
+    // Check for assignment parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const assignmentId = urlParams.get('assignment');
+    
+    if (assignmentId) {
+        // Load the assignment and start the audit
+        loadAssignmentFromURL(assignmentId);
+    }
 }); // End of DOMContentLoaded
+
+// Load assignment from URL parameter and start audit
+async function loadAssignmentFromURL(assignmentId) {
+    try {
+        console.log('Loading assignment from URL:', assignmentId);
+        
+        // Wait for Supabase to be ready
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!window.supabaseClient) {
+            console.error('Supabase client not initialized');
+            alert('Error: Database connection not ready. Please refresh the page.');
+            return;
+        }
+        
+        // Load the assignment from database
+        const { data: assignment, error } = await window.supabaseClient
+            .from('audit_assignments')
+            .select('*')
+            .eq('id', assignmentId)
+            .single();
+        
+        if (error) {
+            console.error('Error loading assignment:', error);
+            alert('Error: Assignment not found. It may have been deleted or you may not have access.');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
+        
+        if (!assignment) {
+            alert('Assignment not found');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
+        
+        // Check if assignment belongs to current user
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userRole = userInfo.role || '';
+        const isAgent = userRole === 'Employee';
+        
+        // For agents, check if they are the employee being audited
+        // For auditors, check if they are the auditor
+        const hasPermission = isAgent 
+            ? assignment.employee_email === userInfo.email
+            : assignment.auditor_email === userInfo.email;
+        
+        if (!hasPermission) {
+            alert('You do not have permission to access this assignment.');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
+        
+        // Check if assignment is already completed
+        if (assignment.status === 'completed') {
+            // If there's an audit_id, redirect to view the completed audit
+            if (assignment.audit_id && assignment.scorecard_id) {
+                // Get scorecard to find table name
+                const { data: scorecard } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('table_name')
+                    .eq('id', assignment.scorecard_id)
+                    .single();
+                
+                if (scorecard) {
+                    window.location.href = `audit-view.html?id=${assignment.audit_id}&scorecard=${assignment.scorecard_id}&table=${scorecard.table_name}`;
+                    return;
+                }
+            }
+            alert('This assignment has already been completed.');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
+        
+        // Start the assigned audit
+        console.log('Starting audit from assignment:', assignment);
+        await window.startAssignedAudit(
+            assignment.id,
+            assignment.employee_email,
+            assignment.scorecard_id
+        );
+        
+        // Clean URL after starting (optional - keeps the assignment ID for reference)
+        // window.history.replaceState({}, document.title, window.location.pathname);
+        
+    } catch (error) {
+        console.error('Error loading assignment from URL:', error);
+        alert('Error loading assignment: ' + error.message);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+}
 
 // Calculate errors by category (Dynamic)
 function calculateErrorsByCategory() {
@@ -4072,39 +5023,48 @@ document.addEventListener('click', function(e) {
             let currentValue = parseInt(targetInput.value) || 0;
             
             if (action === 'increment') {
-                currentValue++;
+                // Cap at maximum of 10
+                currentValue = Math.min(currentValue + 1, 10);
             } else if (action === 'decrement') {
                 currentValue = Math.max(0, currentValue - 1);
             }
             
             targetInput.value = currentValue;
             
+            // Update plain text display
+            const displayElement = document.getElementById(`${targetId}_display`);
+            if (displayElement) {
+                displayElement.textContent = currentValue;
+                // Update color based on value
+                if (currentValue > 0) {
+                    displayElement.style.color = '#ef4444';
+                    displayElement.style.fontWeight = '700';
+                } else {
+                    displayElement.style.color = '#1f2937';
+                    displayElement.style.fontWeight = '700';
+                }
+            }
+            
             // Calculate total errors count and average score whenever any error count changes
             calculateTotalErrorsCount();
             calculateAverageScore();
             calculateErrorsByCategory();
             
-            // Feedback box is always visible - no need to show/hide
-            const feedbackId = `feedback_${targetId}`;
-            const feedbackField = document.getElementById(feedbackId);
-            
-            // Update input styling based on value
-            if (currentValue > 0) {
-                targetInput.style.backgroundColor = '#ef4444';
-                targetInput.style.color = '#ffffff';
-                targetInput.style.borderColor = '#dc2626';
-            } else {
-                targetInput.style.backgroundColor = '#ffffff';
-                targetInput.style.color = '#374151';
-                targetInput.style.borderColor = '#d1d5db';
-            }
-            
-            // Keep feedback box always visible - don't hide it when count is 0
-            // Only clear the value if count is 0 (optional - you can remove this line if you want to preserve text)
-            if (feedbackTextarea && currentValue === 0) {
-                // Optionally clear feedback when count goes to 0
-                // Uncomment the next line if you want to clear feedback when count becomes 0
-                // feedbackTextarea.value = '';
+            // Update feedback boxes based on error count
+            const param = currentParameters.find(p => p.field_id === targetId);
+            if (param) {
+                updateFeedbackBoxesForParameter(targetId, param.field_type || 'counter', param.parameter_type || 'error');
+                
+                // Clear any validation error styling when value changes
+                const feedbackContainer = document.getElementById(`feedback_container_${targetId}`);
+                if (feedbackContainer) {
+                    const feedbackFields = feedbackContainer.querySelectorAll('textarea');
+                    feedbackFields.forEach(field => {
+                        if (field.value && field.value.trim()) {
+                            field.style.borderColor = '#d1d5db';
+                        }
+                    });
+                }
             }
         }
     }
@@ -4121,7 +5081,22 @@ document.addEventListener('change', function(e) {
         calculateAverageScore();
         calculateErrorsByCategory();
         
-        // Feedback box is always visible - no need to show/hide
+        // Update feedback boxes based on error count
+        const param = currentParameters.find(p => p.field_id === fieldName);
+        if (param) {
+            updateFeedbackBoxesForParameter(fieldName, param.field_type || 'radio', param.parameter_type || 'error');
+            
+            // Clear any validation error styling when value changes
+            const feedbackContainer = document.getElementById(`feedback_container_${fieldName}`);
+            if (feedbackContainer) {
+                const feedbackFields = feedbackContainer.querySelectorAll('textarea');
+                feedbackFields.forEach(field => {
+                    if (field.value && field.value.trim()) {
+                        field.style.borderColor = '#d1d5db';
+                    }
+                });
+            }
+        }
     }
 });
 
@@ -4271,7 +5246,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Fetch conversation from Intercom API
-    async function loadConversationFromIntercom(conversationId) {
+    // Make it globally available for calibration mode
+    window.loadConversationFromIntercom = async function(conversationId) {
         // Show loading state
         if (viewChatBtn) {
             viewChatBtn.disabled = true;
@@ -4311,8 +5287,10 @@ document.addEventListener('DOMContentLoaded', function() {
             currentConversationData = conversation;
 
 
-            // Autofill email and date from conversation data
-            autofillConversationFields(conversation);
+            // Autofill email and date from conversation data (only if not in calibration mode)
+            if (!isCalibrationMode) {
+                autofillConversationFields(conversation);
+            }
 
             // Parse and display conversation messages
             displayConversationMessages(conversation);
@@ -4376,7 +5354,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 type: 'error'
             });
         }
-    }
+    };
+    // Also create a local reference for backward compatibility
+    const loadConversationFromIntercom = window.loadConversationFromIntercom;
 
     // Autofill email and date from conversation data
     function autofillConversationFields(conversation) {
@@ -5132,9 +6112,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const containerWidth = containerRect.width;
             
             // Calculate percentage (with min/max constraints)
-            // Min width: 13.6451rem (~218px at 16px base) - convert to percentage
+            // Min width: 13.6451rem (~13.625rem at 1.0rem base) - convert to percentage
             // Max width: 75% of container
-            const minWidthPx = 13.6451 * 16; // Convert rem to pixels (assuming 16px base)
+            const minWidthPx = 13.6451 * 16; // Convert rem to pixels (assuming 1.0rem base)
             const minWidthPercent = Math.max(15, (minWidthPx / containerWidth) * 100); // At least 15%
             const maxWidthPercent = 75; // Maximum 75% of container
             

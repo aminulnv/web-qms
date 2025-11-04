@@ -103,11 +103,7 @@ class AuthChecker {
         return null
       }
 
-      // Check if email is from allowed domain
-      if (!user.email.endsWith("@nextventures.io")) {
-        return null
-      }
-
+      // Email domain check removed - all emails allowed
       return user
     } catch (error) {
       console.error('Error checking authentication:', error)

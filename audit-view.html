@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Audit Details | QMS</title>
 <meta name="description" content="Quality Management System Dashboard">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
@@ -52,7 +51,7 @@
         </div>
         
         <p style="font-size: 0.6094rem; color: #92400e; margin-bottom: 0.75rem; line-height: 1.5; font-family: 'Poppins', sans-serif;">
-            If you believe this audit contains errors or inaccuracies, please provide detailed information below.
+            If you believe this audit contains errors or inaccuracies, please add comments to the parameters using the comment icon next to each parameter's feedback, then select the affected parameters below.
         </p>
         
         <form id="reversalForm" style="display: grid; gap: 0.5625rem;">
@@ -87,37 +86,24 @@
                 </div>
             </div>
             
-            <!-- Detailed Justification -->
+            <!-- Affected Parameters with Comments (Auto-populated) -->
             <div>
-                <label for="reversalJustification" style="display: block; font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif;">
-                    Detailed Justification <span style="color: #ef4444;">*</span>
+                <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif;">
+                    Parameter Justifications
                 </label>
-                <textarea id="reversalJustification" required placeholder="Please provide a detailed explanation of why you believe this audit should be reviewed..." rows="3" style="width: 100%; padding: 0.375rem; border: 0.0352rem solid #d1d5db; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; resize: vertical;"></textarea>
+                <div id="parametersWithCommentsContainer" style="background: #f9fafb; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; padding: 0.5625rem; max-height: 18.75rem; overflow-y: auto;">
+                    <p style="margin: 0; font-size: 0.5625rem; color: #6b7280; font-family: 'Poppins', sans-serif;">Loading parameters with comments...</p>
             </div>
-            
-            <!-- Reversal Metrics (affected parameters) -->
-            <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2812rem;">
-                    <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; font-family: 'Poppins', sans-serif;">
-                        Affected Error Parameters
-                    </label>
-                    <div style="display: flex; gap: 0.375rem;">
-                        <button type="button" onclick="selectAllParameters()" style="font-size: 0.5156rem; color: #1A733E; background: none; border: none; cursor: pointer; padding: 0; font-family: 'Poppins', sans-serif; text-decoration: underline;">
-                            Select All
-                        </button>
-                        <button type="button" onclick="clearAllParameters()" style="font-size: 0.5156rem; color: #ef4444; background: none; border: none; cursor: pointer; padding: 0; font-family: 'Poppins', sans-serif; text-decoration: underline;">
-                            Clear All
-                        </button>
-                    </div>
-                </div>
-                <div id="reversalMetricsContainer" style="max-height: 7.0312rem; overflow-y: auto; border: 0.0352rem solid #d1d5db; border-radius: 0.2812rem; padding: 0.375rem; background-color: white;">
-                    <p style="margin: 0; font-size: 0.5625rem; color: #6b7280; font-family: 'Poppins', sans-serif;">Loading parameters...</p>
+                <div id="noCommentsMessage" style="display: none; margin-top: 0.5625rem; padding: 0.75rem; background: #fef2f2; border: 0.0352rem solid #fecaca; border-radius: 0.2812rem;">
+                    <p style="margin: 0; font-size: 0.6094rem; color: #dc2626; font-family: 'Poppins', sans-serif;">
+                        ⚠ No parameter comments found. Please add comments using the comment icon next to each parameter's feedback before submitting a reversal request.
+                    </p>
                 </div>
             </div>
             
             <!-- Within Auditor Scope -->
             <div style="display: flex; align-items: center; gap: 0.375rem;">
-                <input type="checkbox" id="withinAuditorScope" style="width: 0.75rem; height: 0.75rem; cursor: pointer;">
+                <input type="checkbox" id="withinAuditorScope" checked style="width: 0.75rem; height: 0.75rem; cursor: pointer;">
                 <label for="withinAuditorScope" style="font-size: 0.6094rem; color: #374151; font-family: 'Poppins', sans-serif; cursor: pointer;">
                     I believe this can be resolved by the original auditor
                 </label>
@@ -169,6 +155,38 @@
         100% { transform: rotate(360deg); }
     }
 
+    @keyframes pulse-attention {
+        0%, 100% { 
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% { 
+            opacity: 0.8;
+            transform: scale(1.02);
+        }
+    }
+
+    @keyframes spin-slow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes flash-text {
+        0%, 100% { 
+            opacity: 1;
+        }
+        50% { 
+            opacity: 0.6;
+        }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+        20%, 40%, 60%, 80% { transform: translateX(2px); }
+    }
+
+
 /* Chat view scrollbar styling */
 #transcriptChatView::-webkit-scrollbar {
     width: 0.3234rem;
@@ -194,16 +212,363 @@ let currentAudit = null;
 let currentScorecardId = null;
 let currentTableName = null;
 let currentErrorFields = [];
+let currentUserEmail = null;
+
+// Get current logged-in user email
+function getCurrentUserEmail() {
+    try {
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+            const user = JSON.parse(userInfo);
+            return user?.email || null;
+        }
+    } catch (error) {
+        console.error('Error getting current user email:', error);
+    }
+    return null;
+}
+
+// Get current logged-in user info
+function getCurrentUserInfo() {
+    try {
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+            return JSON.parse(userInfo);
+        }
+    } catch (error) {
+        console.error('Error getting current user info:', error);
+    }
+    return null;
+}
+
+// Check if current user is the audited employee
+function isCurrentUserAuditedEmployee() {
+    if (!currentUserEmail || !currentAudit) {
+        return false;
+    }
+    
+    // Compare emails (case-insensitive)
+    const auditEmployeeEmail = currentAudit.employeeEmail || currentAudit.employee_email || '';
+    return auditEmployeeEmail.toLowerCase() === currentUserEmail.toLowerCase();
+}
+
+// Check if current user is a Quality Analyst
+function isCurrentUserQualityAnalyst() {
+    const userInfo = getCurrentUserInfo();
+    if (!userInfo) {
+        return false;
+    }
+    
+    const role = userInfo.role || '';
+    return role === 'Quality Analyst';
+}
+
+// Check if there's a pending reversal request
+function hasPendingReversalRequest() {
+    if (!currentAudit) {
+        return false;
+    }
+    
+    // The schema doesn't have reversal_status column
+    // Status is determined by reversal_approved and reversal_responded_at
+    const reversalRequestedAt = currentAudit.reversal_requested_at || currentAudit.reversalRequestedAt;
+    const reversalRespondedAt = currentAudit.reversal_responded_at || currentAudit.reversalRespondedAt;
+    const reversalApproved = currentAudit.reversal_approved || currentAudit.reversalApproved;
+    
+    // Pending if reversal was requested but not yet responded to
+    if (reversalRequestedAt && !reversalRespondedAt) {
+        return true;
+    }
+    
+    // Also check if reversal_approved is null (which means pending)
+    if (reversalRequestedAt && reversalApproved === null || reversalApproved === undefined) {
+        return true;
+    }
+    
+    return false;
+}
+
+// Check if edit button should be shown (only for Quality Analysts when reversal is pending)
+function shouldShowEditButton() {
+    return hasPendingReversalRequest() && isCurrentUserQualityAnalyst();
+}
+
+// Check if reversal button should be shown (hide after 48 hours from audit submission)
+function checkIfReversalButtonShouldShow(auditSubmissionTime) {
+    if (!auditSubmissionTime) {
+        return true; // If no timestamp, show button (fallback)
+    }
+    
+    const submissionDate = new Date(auditSubmissionTime);
+    const now = new Date();
+    const diffMs = now - submissionDate;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    // Hide after 48 hours
+    return diffHours < 48;
+}
+
+// Get time remaining until 48 hours expires (in seconds)
+function getTimeRemainingUntil48Hours(auditSubmissionTime) {
+    if (!auditSubmissionTime) {
+        return null;
+    }
+    
+    const submissionDate = new Date(auditSubmissionTime);
+    const now = new Date();
+    const expirationTime = new Date(submissionDate.getTime() + (48 * 60 * 60 * 1000)); // 48 hours
+    const remainingMs = expirationTime - now;
+    
+    if (remainingMs <= 0) {
+        return 0; // Already expired
+    }
+    
+    return Math.floor(remainingMs / 1000); // Return seconds
+}
+
+// Format time remaining for display (always show seconds)
+function formatTimeRemaining(seconds) {
+    if (seconds <= 0) {
+        return 'Expired';
+    }
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs.toString().padStart(2, '0')}s`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${secs.toString().padStart(2, '0')}s`;
+    } else {
+        return `${secs}s`;
+    }
+}
+
+// Handle closing/navigating away - check if acknowledgement is pending or comments without reversal
+async function handleCloseAuditView() {
+    // Check if user is the audited employee
+    if (isCurrentUserAuditedEmployee() && currentAudit) {
+        // Check if user has comments but hasn't submitted a reversal
+        const parameterComments = currentAudit?.parameterComments || currentAudit?.parameter_comments || {};
+        const hasComments = Object.keys(parameterComments).some(key => {
+            const comment = parameterComments[key];
+            return comment && comment.comment && comment.comment.trim();
+        });
+        
+        // Check if reversal has been submitted (check both camelCase and snake_case)
+        const reversalRequestedAt = currentAudit.reversalRequestedAt || currentAudit.reversal_requested_at;
+        const hasSubmittedReversal = !!reversalRequestedAt;
+        
+        // If user has comments but hasn't submitted reversal, prevent navigation
+        // Only check if reversal hasn't been submitted yet
+        if (hasComments && !hasSubmittedReversal) {
+            // Wait for confirmation dialog to be available
+            if (!window.confirmationDialog) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                if (!window.confirmationDialog) {
+                    alert('Warning: You have unsaved parameter comments. If you leave now, your comments will be lost. Please submit a reversal request to save them.');
+                    return false; // Prevent navigation
+                }
+            }
+            
+            const result = await window.confirmationDialog.show({
+                title: '⚠ Unsaved Comments',
+                message: 'You have added parameter comments but haven\'t submitted a reversal request yet. If you leave now, your comments will be erased.\n\nPlease submit a reversal request to save your comments before leaving.',
+                confirmText: 'Submit Reversal',
+                cancelText: 'Leave Anyway (Comments will be lost)'
+            });
+            
+            if (result) {
+                // User wants to submit reversal - open the reversal form
+                toggleReversalForm();
+                return false; // Prevent navigation
+            } else {
+                // User chose to leave anyway - they understand comments will be lost
+                // Allow navigation but warn them one more time
+                const confirmLeave = confirm('Are you sure you want to leave? Your parameter comments will be permanently erased from the database.');
+                if (!confirmLeave) {
+                    return false; // User changed their mind
+                }
+                
+                // Delete comments from database before allowing navigation
+                try {
+                    if (currentAudit && currentTableName) {
+                        await window.supabaseClient
+                            .from(currentTableName)
+                            .update({
+                                parameter_comments: null
+                            })
+                            .eq('id', currentAudit.id);
+                        
+                        // Clear from local object
+                        if (currentAudit) {
+                            currentAudit.parameterComments = {};
+                            currentAudit.parameter_comments = {};
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error deleting comments:', error);
+                    // Continue anyway - user already confirmed they want to leave
+                }
+                
+                return true; // Allow navigation
+            }
+        }
+        
+        const acknowledgementStatus = currentAudit.acknowledgementStatus || currentAudit.acknowledgement_status || '';
+        const acknowledgementStatusLower = acknowledgementStatus.toLowerCase();
+        
+        // Determine reversal status
+        const reversalRespondedAt = currentAudit.reversalRespondedAt || currentAudit.reversal_responded_at;
+        const reversalStatus = reversalRequestedAt && !reversalRespondedAt ? 'Pending' : 
+                              (currentAudit.reversalApproved === true || currentAudit.reversal_approved === true) ? 'Approved' :
+                              (currentAudit.reversalApproved === false || currentAudit.reversal_approved === false) ? 'Rejected' : null;
+        
+        // If a reversal is pending, user cannot acknowledge - allow navigation without showing modal
+        if (reversalStatus === 'Pending') {
+            return true; // Allow navigation
+        }
+        
+        // If acknowledgement is pending (not acknowledged) and no reversal is pending, show the same confirmation as acknowledge button
+        if (acknowledgementStatusLower !== 'acknowledged') {
+            // Use the same confirmation dialog that appears when clicking acknowledge button
+            // Create a wrapper that tracks success and shows the same confirmation
+            const acknowledgeWithNavigation = async () => {
+                try {
+                    // Verify that current user is the audited employee
+                    if (!isCurrentUserAuditedEmployee()) {
+                        return false;
+                    }
+                    
+                    // Wait for confirmation dialog to be available
+                    if (!window.confirmationDialog) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        if (!window.confirmationDialog) {
+                            alert('Error: Confirmation dialog not available. Please refresh the page.');
+                            return false;
+                        }
+                    }
+                    
+                    // Show the same confirmation dialog as the acknowledge button
+                    const result = await window.confirmationDialog.show({
+                        title: 'Acknowledge Audit',
+                        message: 'By acknowledging this audit, you confirm that you have reviewed the results and do not wish to submit a reversal request. Continue?',
+                        confirmText: 'Acknowledge',
+                        cancelText: 'Cancel'
+                    });
+                    
+                    if (!result) {
+                        return false; // User cancelled
+                    }
+                    
+                    if (!currentAudit || !currentTableName) {
+                        alert('Error: Audit data not available');
+                        return false;
+                    }
+                    
+                    // Record acknowledgment in the database
+                    const acknowledgementTime = new Date().toISOString();
+                    const { data, error } = await window.supabaseClient
+                        .from(currentTableName)
+                        .update({
+                            acknowledgement_status: 'Acknowledged',
+                            acknowledgement_status_updated_at: acknowledgementTime
+                        })
+                        .eq('id', currentAudit.id)
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    // Show success message
+                    if (window.confirmationDialog) {
+                        await window.confirmationDialog.show({
+                            title: 'Success',
+                            message: '✓ Audit acknowledged. Thank you for your confirmation.',
+                            confirmText: 'OK',
+                            type: 'success'
+                        });
+                    } else {
+                        alert('✓ Audit acknowledged. Thank you for your confirmation.');
+                    }
+                    
+                    // Update currentAudit to reflect acknowledgement
+                    if (currentAudit) {
+                        currentAudit.acknowledgementStatus = 'Acknowledged';
+                        currentAudit.acknowledgement_status = 'Acknowledged';
+                        currentAudit.acknowledgementStatusUpdatedAt = acknowledgementTime;
+                        currentAudit.acknowledgement_status_updated_at = acknowledgementTime;
+                    }
+                    
+                    return true; // Success
+                    
+                } catch (error) {
+                    console.error('Error acknowledging audit:', error);
+                    if (window.confirmationDialog) {
+                        await window.confirmationDialog.show({
+                            title: 'Error',
+                            message: 'Failed to record acknowledgment. Please try again.',
+                            confirmText: 'OK',
+                            type: 'error'
+                        });
+                    } else {
+                        alert('Failed to record acknowledgment. Please try again.');
+                    }
+                    return false;
+                }
+            };
+            
+            // Call the acknowledge function
+            acknowledgementSuccessful = await acknowledgeWithNavigation();
+            
+            // If acknowledgement was successful, allow navigation
+            // If user cancelled, prevent navigation
+            return acknowledgementSuccessful;
+        }
+    }
+    
+    // If no acknowledgement pending or not the audited employee, allow navigation
+    return true;
+}
 
 // Load audit on page load
 document.addEventListener('DOMContentLoaded', async function() {
     try {
+        // Get current user email first
+        currentUserEmail = getCurrentUserEmail();
+        
         await loadAuditFromURL();
         
-        // Add escape key listener to go back to audit reports
-        document.addEventListener('keydown', function(event) {
+        // Add escape key listener - check acknowledgement before closing
+        document.addEventListener('keydown', async function(event) {
             if (event.key === 'Escape') {
-                window.location.href = 'audit-reports.html';
+                event.preventDefault(); // Prevent default escape behavior
+                const canNavigate = await handleCloseAuditView();
+                if (canNavigate) {
+                    window.location.href = 'expert-audits.html';
+                }
+            }
+        });
+        
+        // Prevent browser close/refresh when user has unsaved comments
+        window.addEventListener('beforeunload', function(event) {
+            if (isCurrentUserAuditedEmployee() && currentAudit) {
+                const parameterComments = currentAudit?.parameterComments || currentAudit?.parameter_comments || {};
+                const hasComments = Object.keys(parameterComments).some(key => {
+                    const comment = parameterComments[key];
+                    return comment && comment.comment && comment.comment.trim();
+                });
+                
+                const reversalRequestedAt = currentAudit.reversalRequestedAt || currentAudit.reversal_requested_at;
+                const hasSubmittedReversal = !!reversalRequestedAt;
+                
+                // If user has comments but hasn't submitted reversal, prevent page unload
+                if (hasComments && !hasSubmittedReversal) {
+                    // Modern browsers ignore custom messages, but we still need to set returnValue
+                    event.preventDefault();
+                    event.returnValue = 'You have unsaved parameter comments. If you leave now, your comments will be erased. Please submit a reversal request to save them.';
+                    return event.returnValue;
+                }
             }
         });
     } catch (error) {
@@ -224,7 +589,6 @@ async function loadAuditFromURL() {
         return;
     }
 
-    currentScorecardId = scorecardId;
     currentTableName = tableName;
 
     try {
@@ -273,6 +637,33 @@ async function loadAuditFromURL() {
         if (!data) throw new Error('Audit not found');
 
         currentAudit = data;
+        
+        // Get scorecard ID from URL parameter, or try to get it from audit data or table name
+        let finalScorecardId = scorecardId;
+        
+        // If not in URL, try to get from audit data
+        if (!finalScorecardId && data.scorecard_id) {
+            finalScorecardId = data.scorecard_id;
+        }
+        
+        // If still not found, try to find scorecard by matching table name
+        if (!finalScorecardId && tableName) {
+            try {
+                const { data: scorecards, error: scorecardError } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('id')
+                    .eq('table_name', tableName)
+                    .limit(1);
+                
+                if (!scorecardError && scorecards && scorecards.length > 0) {
+                    finalScorecardId = scorecards[0].id;
+                }
+            } catch (err) {
+                console.warn('Could not find scorecard by table name:', err);
+            }
+        }
+        
+        currentScorecardId = finalScorecardId;
 
         // Map snake_case to camelCase
         const audit = {
@@ -311,6 +702,7 @@ async function loadAuditFromURL() {
             // Reversal tracking fields
             reversalRequestedAt: data.reversal_requested_at,
             reversalRespondedAt: data.reversal_responded_at,
+            reversalStatus: data.reversal_status, // Map reversal_status
             slaInHours: data.sla_in_hours,
             reasonForReversalResponseDelay: data.reason_for_reversal_response_delay,
             reversalApproved: data.reversal_approved,
@@ -327,7 +719,12 @@ async function loadAuditFromURL() {
             // Acknowledgement tracking fields
             acknowledgementStatus: data.acknowledgement_status,
             acknowledgementStatusUpdatedAt: data.acknowledgement_status_updated_at,
-            _scorecard_id: scorecardId,
+            // Parameter comments
+            parameterComments: data.parameter_comments || {},
+            parameter_comments: data.parameter_comments || {},
+            _scorecard_id: finalScorecardId,
+            scorecardId: finalScorecardId,
+            scorecard_id: finalScorecardId,
             _scorecard_table: tableName
         };
 
@@ -335,13 +732,13 @@ async function loadAuditFromURL() {
         let errorFields = [];
         let auditScorecard = null;
 
-        if (scorecardId) {
+        if (finalScorecardId) {
             try {
                 // Load scorecard info
                 const { data: scorecardData, error: scorecardError } = await window.supabaseClient
                     .from('scorecards')
                     .select('*')
-                    .eq('id', scorecardId)
+                    .eq('id', finalScorecardId)
                     .single();
 
                 if (!scorecardError && scorecardData) {
@@ -352,7 +749,7 @@ async function loadAuditFromURL() {
                 const { data: parameters, error: paramsError } = await window.supabaseClient
                     .from('scorecard_parameters')
                     .select('*')
-                    .eq('scorecard_id', scorecardId)
+                    .eq('scorecard_id', finalScorecardId)
                     .eq('is_active', true)
                     .order('display_order', { ascending: true });
 
@@ -398,6 +795,12 @@ function showError(message) {
 
 // Edit current audit
 function editCurrentAudit() {
+    // Verify that current user is a Quality Analyst and there's a pending reversal
+    if (!shouldShowEditButton()) {
+        alert('Error: You can only edit audits with pending reversal requests.');
+        return;
+    }
+    
     if (!currentAudit || !currentScorecardId || !currentTableName) {
         alert('Cannot edit audit: missing required data');
         return;
@@ -438,6 +841,30 @@ function generateErrorDetails(audit, errorFields) {
         }
     }
     
+    // Check if current user is the audited employee (for showing comment boxes)
+    const isAuditedEmployee = isCurrentUserAuditedEmployee();
+    
+    // Load parameter comments from audit data
+    const parameterComments = audit.parameterComments || audit.parameter_comments || {};
+    
+    // Check if any parameter has a comment
+    const hasAnyComments = errorFields.some(field => {
+        const comment = parameterComments[field.key];
+        return comment && comment.comment && comment.comment.trim();
+    });
+    
+    // Get employee name and extract first name
+    const employeeName = audit.employeeName || audit.employee_name || 'Employee';
+    const firstName = employeeName.split(' ')[0] || employeeName;
+    const commentColumnHeader = `${firstName}'s Comment`;
+    
+    // Show comments column if comments exist OR if audited employee clicked the button
+    // Use a global variable to track if comment column should be shown
+    if (typeof window.showCommentsColumn === 'undefined') {
+        window.showCommentsColumn = hasAnyComments;
+    }
+    const showCommentsColumn = window.showCommentsColumn;
+    
     const errorRows = errorFields.map(field => {
         const rawValue = audit[field.key];
         let displayValue = '';
@@ -454,7 +881,31 @@ function generateErrorDetails(audit, errorFields) {
             displayValue = count.toString();
         }
         
-        const feedback = audit[field.feedback] && audit[field.feedback].trim() ? audit[field.feedback] : '-';
+        // Handle feedback - support both old format (string) and new format (JSON array)
+        const feedbackData = audit[field.feedback];
+        let feedbackArray = [];
+        
+        if (feedbackData) {
+            if (typeof feedbackData === 'string') {
+                // Try to parse as JSON array, fallback to single string
+                try {
+                    const parsed = JSON.parse(feedbackData);
+                    feedbackArray = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+                } catch (e) {
+                    // If not valid JSON, treat as single string (backward compatibility)
+                    feedbackArray = feedbackData.trim() ? [feedbackData] : [];
+                }
+            } else if (Array.isArray(feedbackData)) {
+                feedbackArray = feedbackData;
+            } else {
+                feedbackArray = feedbackData ? [feedbackData] : [];
+            }
+        }
+        
+        // Filter out empty feedbacks
+        feedbackArray = feedbackArray.filter(f => f && f.trim());
+        const hasFeedback = feedbackArray.length > 0;
+        const combinedFeedback = feedbackArray.join('\n\n---\n\n'); // Combine with separator
         
         // Different colors for different parameter types
         let severityColor = '#3b82f6';
@@ -473,21 +924,71 @@ function generateErrorDetails(audit, errorFields) {
             severityBg = '#d1fae5';
         }
         
+        // Get existing comments for this parameter (can have multiple comments for multiple feedbacks)
+        const existingComments = parameterComments[field.key] || {};
+        const commentsArray = existingComments.comments || (existingComments.comment ? [existingComments.comment] : []);
+        
+        // Generate comment HTML - simple input boxes for each feedback
+        let commentHtml = '';
+        if (showCommentsColumn && hasFeedback) {
+            // Create input boxes for each feedback
+            commentHtml = feedbackArray.map((feedbackText, index) => {
+                const existingComment = commentsArray[index] || '';
+                const commentInputId = `comment_${field.key}_${index}`;
+                return `
+                    <div style="margin-bottom: ${index < feedbackArray.length - 1 ? '0.6469rem' : '0'};">
+                        ${feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Comment ${index + 1}:</div>` : ''}
+                        ${existingComment && !isAuditedEmployee ? 
+                            `<div style="font-size: 0.5257rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(existingComment)}</div>` :
+                            `<input type="text" id="${commentInputId}" data-param-key="${field.key}" data-feedback-index="${index}" value="${escapeHtml(existingComment)}" placeholder="Enter your comment..." style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0625rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5257rem; font-family: 'Poppins', sans-serif; ${!isAuditedEmployee ? 'background: #f3f4f6; cursor: not-allowed;' : ''}" ${!isAuditedEmployee ? 'readonly' : ''} onchange="saveParameterComment('${field.key}', ${index}, this.value)">`
+                        }
+                    </div>
+                `;
+            }).join('');
+        } else if (showCommentsColumn) {
+            // Column exists but no feedback for this parameter - show dash
+            commentHtml = '<span style="color: #9ca3af; font-style: italic;">-</span>';
+        }
+        
+        // Generate feedback HTML - display all feedbacks (plain, no containers)
+        let feedbackHtml = '-';
+        if (hasFeedback) {
+            // Plain display - multiple feedbacks separated by line breaks
+            feedbackHtml = feedbackArray.map((feedbackText, index) => {
+                const label = feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Feedback ${index + 1}:</div>` : '';
+                return `${label}<div style="font-size: 0.5257rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; margin-bottom: ${index < feedbackArray.length - 1 ? '0.6469rem' : '0'};">${escapeHtml(feedbackText)}</div>`;
+            }).join('');
+        }
+        
+        // Build grid columns - must match header columns for proper alignment
+        // When comments are hidden but user is audited employee, header has 6 columns (with + Comment button)
+        // So data rows must also have 6 columns (empty 6th column) to align properly
+        const gridColumns = showCommentsColumn 
+            ? '2fr 1fr 1fr 1fr 2fr 2.5fr' 
+            : (isAuditedEmployee ? '2fr 1fr 1fr 1fr 2fr 2fr' : '2fr 1fr 1fr 1fr 2fr');
+        
         return `
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6;">
-                <div style="font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+            <div style="display: grid; grid-template-columns: ${gridColumns}; gap: 0.6469rem; align-items: start; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6; width: 100%; min-width: 0;">
+                <div style="font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif; min-width: 0; overflow: hidden;">
                     ${field.label}
                 </div>
-                <div style="display: flex; justify-content: center; font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                <div style="display: flex; justify-content: center; font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif; min-width: 0;">
                     ${field.points}
                 </div>
-                <div style="display: flex; justify-content: center;">
-                    <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1617rem 0.4852rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem;">${(field.parameter_type === 'achievement' || field.parameter_type === 'bonus') && field.field_type !== 'radio' ? 'ACHIEVEMENT' : field.severity}</span>
+                <div style="display: flex; justify-content: center; min-width: 0;">
+                    <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1617rem 0.4852rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; white-space: nowrap;">${(field.parameter_type === 'achievement' || field.parameter_type === 'bonus') && field.field_type !== 'radio' ? 'ACHIEVEMENT' : field.severity}</span>
                 </div>
-                <div style="display: flex; justify-content: center;">
+                <div style="display: flex; justify-content: center; min-width: 0;">
                     <div style="font-size: 0.5659rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
                 </div>
-                <div style="font-size: 0.5257rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
+                <div style="font-size: 0.5257rem; color: #4b5563; font-family: 'Poppins', sans-serif; min-width: 0; word-wrap: break-word; overflow-wrap: break-word;">
+                    ${feedbackHtml}
+                </div>
+                ${showCommentsColumn ? `
+                    <div style="font-size: 0.5257rem; color: #4b5563; font-family: 'Poppins', sans-serif; min-width: 0; overflow: hidden;">
+                        ${commentHtml || '<span style="color: #9ca3af; font-style: italic;">-</span>'}
+                    </div>
+                ` : (isAuditedEmployee ? '<div style="min-width: 0;"></div>' : '')}
             </div>
         `;
     }).join('');
@@ -508,12 +1009,16 @@ function generateErrorDetails(audit, errorFields) {
             
             <div style="background: white; border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
                 <div style="background-color: #f8f9fa; padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid #e5e7eb;">
-                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
-                        <div>Error Type</div>
-                        <div style="text-align: center;">Points</div>
-                        <div style="text-align: center;">Severity</div>
-                        <div style="text-align: center;">${statusColumnHeader}</div>
-                        <div>Feedback</div>
+                    <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : (isAuditedEmployee ? '2fr 1fr 1fr 1fr 2fr 2fr' : '2fr 1fr 1fr 1fr 2fr')}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
+                        <div style="min-width: 0;">Error Type</div>
+                        <div style="text-align: center; min-width: 0;">Points</div>
+                        <div style="text-align: center; min-width: 0;">Severity</div>
+                        <div style="text-align: center; min-width: 0;">${statusColumnHeader}</div>
+                        <div style="min-width: 0;">Feedback</div>
+                        ${showCommentsColumn ? 
+                            `<div style="min-width: 0;">${escapeHtml(commentColumnHeader)}</div>` : 
+                            (isAuditedEmployee ? `<div style="cursor: pointer; color: #1A733E; text-decoration: underline; min-width: 0; white-space: nowrap;" onclick="toggleCommentsColumn()" title="Click to add comments">+ Comment</div>` : '')
+                        }
                     </div>
                 </div>
                 <div style="padding: 0 0.6469rem 0.6469rem 0.6469rem; box-shadow: 0 -0.0606rem 0.1213rem rgba(0, 0, 0, 0.05);">
@@ -649,22 +1154,47 @@ function renderAudit(audit, auditScorecard, errorFields) {
         ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.5659rem; border-radius: 0.2425rem; border: 0.0304rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>`
         : '';
 
+    // Check if current user is the audited employee (for showing acknowledge button)
+    const showAcknowledgeButton = isCurrentUserAuditedEmployee();
+    
+    // Check if edit button should be shown (only for Quality Analysts when reversal is pending)
+    const showEditButton = shouldShowEditButton();
+    
+    // Check if reversal button should be shown (hide after 48 hours from audit submission)
+    const auditSubmissionTime = audit.submittedAt || audit.auditTimestamp || audit.submitted_at || audit.audit_timestamp;
+    const showReversalButton = checkIfReversalButtonShouldShow(auditSubmissionTime);
+    
+    // Get reversal and acknowledgement status for footer styling
+    // Note: reversal_status column doesn't exist - status is determined by reversal_approved
+    const reversalRequestedAt = audit.reversal_requested_at || audit.reversalRequestedAt;
+    const reversalRespondedAt = audit.reversal_responded_at || audit.reversalRespondedAt;
+    const reversalApproved = audit.reversal_approved || audit.reversalApproved;
+    // Determine status: null/undefined = pending, 'true' = approved, 'false' = rejected
+    let reversalStatus = null;
+    if (reversalRequestedAt && !reversalRespondedAt) {
+        reversalStatus = 'Pending';
+    } else if (reversalApproved === 'true' || reversalApproved === true) {
+        reversalStatus = 'Approved';
+    } else if (reversalApproved === 'false' || reversalApproved === false) {
+        reversalStatus = 'Rejected';
+    }
+    
+    const acknowledgementStatus = audit.acknowledgementStatus || audit.acknowledgement_status || '';
+
     // Generate action buttons HTML
-    const actionButtonsHtml = `
-        <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; padding: 0.6469rem 0.9704rem; border-top: 0.0405rem solid #e5e7eb; background-color: #f9fafb;">
-            <div style="display: flex; align-items: center; gap: 0.4852rem;">
-                <!-- Placeholder for future content -->
-                                    </div>
-            <div style="display: flex; gap: 0.4852rem;">
-                <!-- Split button for Acknowledge/Reversal -->
-                <div style="position: relative; display: inline-flex;">
-                    <button id="acknowledgeBtn" onclick="acknowledgeAudit()" style="padding: 0.4852rem 1.2937rem; background-color: #10b981; color: white; border: none; border-radius: 0.2425rem 0 0 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem;">
-                        <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        Acknowledge
-                    </button>
-                    <button onclick="toggleReversalForm()" style="padding: 0.4852rem 1.2937rem; background-color: #ef4444; color: white; border: none; border-radius: 0 0.2425rem 0.2425rem 0; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem; border-left: 0.0304rem solid rgba(255,255,255,0.3);">
+    // Only show acknowledge/reversal buttons if current user is the audited employee
+    let employeeButtonsHtml = '';
+    if (showAcknowledgeButton) {
+        // Check if reversal is pending (disables acknowledge button and reversal button)
+        const isReversalPending = reversalStatus === 'Pending';
+        
+        // Generate reversal button HTML (always show if within 48 hours, regardless of acknowledgement status)
+        // But disable if reversal is already pending
+        let reversalButtonHtml = '';
+        if (showReversalButton) {
+            const reversalDisabled = isReversalPending;
+            reversalButtonHtml = `
+                <button id="reversalBtn" onclick="toggleReversalForm()" ${reversalDisabled ? 'disabled' : ''} style="padding: 0.4852rem 1.2937rem; background-color: #dc2626; color: white; border: none; border-radius: ${acknowledgementStatus === 'Acknowledged' ? '0.2425rem' : '0 0.2425rem 0.2425rem 0'}; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: ${reversalDisabled ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem; opacity: ${reversalDisabled ? '0.5' : '1'}; ${acknowledgementStatus !== 'Acknowledged' ? 'border-left: 0.0304rem solid rgba(255,255,255,0.3);' : ''}">
                         <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                             <line x1="12" y1="9" x2="12" y2="13"/>
@@ -672,7 +1202,37 @@ function renderAudit(audit, auditScorecard, errorFields) {
                         </svg>
                         Submit Reversal
                     </button>
+            `;
+        }
+        
+        // If not acknowledged, show acknowledge button + reversal button
+        if (acknowledgementStatus !== 'Acknowledged') {
+            // Disable acknowledge button if reversal is pending
+            const acknowledgeDisabled = isReversalPending;
+            employeeButtonsHtml = `
+                <!-- Split button for Acknowledge/Reversal -->
+                <div style="position: relative; display: inline-flex;">
+                    <button id="acknowledgeBtn" onclick="acknowledgeAudit()" ${acknowledgeDisabled ? 'disabled' : ''} style="padding: 0.4852rem 1.2937rem; background-color: #1A733E; color: white; border: none; border-radius: ${reversalButtonHtml ? '0.2425rem 0 0 0.2425rem' : '0.2425rem'}; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: ${acknowledgeDisabled ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem; opacity: ${acknowledgeDisabled ? '0.5' : '1'};">
+                        <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Acknowledge
+                    </button>
+                    ${reversalButtonHtml}
                 </div>
+            `;
+        } else {
+            // If acknowledged, only show reversal button (if within 48 hours)
+            if (reversalButtonHtml) {
+                employeeButtonsHtml = reversalButtonHtml;
+            }
+        }
+    }
+    
+    // Generate edit button HTML (only if pending reversal and user is Quality Analyst)
+    let editButtonHtml = '';
+    if (showEditButton) {
+        editButtonHtml = `
                 <button id="editAuditBtn" onclick="editCurrentAudit()" style="padding: 0.4852rem 1.2937rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem;">
                     <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -680,13 +1240,99 @@ function renderAudit(audit, auditScorecard, errorFields) {
                     </svg>
                     Edit Audit
                 </button>
+        `;
+    }
+    
+    // Determine footer background color based on acknowledgement status
+    // Green: Acknowledged | Gray: Default (not acknowledged)
+    let footerBackgroundColor = '#f9fafb'; // Default gray
+    let footerTextColor = '#6b7280'; // Default gray text
+    
+    // Normalize acknowledgement status (case-insensitive)
+    const acknowledgementStatusLower = acknowledgementStatus.toLowerCase();
+    
+    if (acknowledgementStatusLower === 'acknowledged') {
+        footerBackgroundColor = '#065f46'; // Deep green
+        footerTextColor = 'white';
+    }
+    
+    // Generate timer HTML for footer (if reversal button is visible and within 48 hours)
+    // Don't show timer if reversal is already pending
+    let timerHtml = '';
+    if (showAcknowledgeButton && showReversalButton && auditSubmissionTime && reversalStatus !== 'Pending') {
+        const timeRemaining = getTimeRemainingUntil48Hours(auditSubmissionTime);
+        if (timeRemaining && timeRemaining > 0) {
+            // Check if time is running low (less than 2 hours remaining)
+            const isLowTime = timeRemaining < 7200; // 2 hours in seconds
+            // Use white for green footer, default gray text for gray footer
+            const acknowledgementStatusLower = (acknowledgementStatus || '').toLowerCase();
+            const timerTextColor = acknowledgementStatusLower === 'acknowledged' ? 'white' : footerTextColor;
+            timerHtml = `
+                <div id="reversalTimer" style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; color: ${timerTextColor}; ${isLowTime ? 'animation: pulse-attention 2s ease-in-out infinite;' : ''}">
+                    <svg id="reversalTimerIcon" style="width: 0.75rem; height: 0.75rem; opacity: 0.6; ${isLowTime ? 'animation: spin-slow 2s linear infinite;' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                    </svg>
+                    <span id="reversalTimerText">Reversal window: <span id="reversalTimerValue" style="font-weight: 600; color: ${isLowTime ? '#ef4444' : timerTextColor}; ${isLowTime ? 'animation: flash-text 1s ease-in-out infinite;' : ''}">${formatTimeRemaining(timeRemaining)}</span></span>
+            </div>
+            `;
+        }
+    }
+    
+    // Generate acknowledgement status HTML for footer (shown in body of footer)
+    let acknowledgementStatusHtml = '';
+    if (acknowledgementStatus === 'Acknowledged') {
+        // Format acknowledgement timestamp
+        let timestampText = '';
+        const ackTimestamp = audit.acknowledgementStatusUpdatedAt || audit.acknowledgement_status_updated_at;
+        if (ackTimestamp) {
+            const ackDate = new Date(ackTimestamp);
+            const now = new Date();
+            const diffMs = now - ackDate;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffHours < 1) {
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                timestampText = diffMins <= 1 ? 'just now' : `${diffMins} minutes ago`;
+            } else if (diffHours < 24) {
+                timestampText = diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+            } else if (diffDays === 1) {
+                timestampText = '1 day ago';
+            } else {
+                timestampText = formatDate(ackTimestamp, true);
+            }
+        }
+        
+        acknowledgementStatusHtml = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 1.25rem; height: 1.25rem; border-radius: 50%; background-color: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <span style="font-size: 0.75rem; font-weight: 600; color: white; font-family: 'Poppins', sans-serif;">Acknowledged</span>
+                <span style="font-size: 0.6562rem; color: rgba(255, 255, 255, 0.9); font-family: 'Poppins', sans-serif;">${timestampText}</span>
+            </div>
+        `;
+    }
+    
+    const actionButtonsHtml = `
+        <div id="footerBar" class="no-print" style="display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; padding: 0.6469rem 0.9704rem; border-top: 0.0405rem solid ${acknowledgementStatus === 'Acknowledged' ? 'rgba(255,255,255,0.2)' : '#e5e7eb'}; background-color: ${footerBackgroundColor}; color: ${footerTextColor};">
+            <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1;">
+                ${acknowledgementStatusHtml}
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4852rem; margin-left: auto;">
+                ${timerHtml}
+                ${employeeButtonsHtml}
+                ${editButtonHtml}
             </div>
         </div>
     `;
 
     // Generate header actions HTML
     const headerActionsHtml = `
-        <button onclick="window.location.href='audit-reports.html'" style="background: rgba(255,255,255,0.2); border: 0.0606rem solid white; border-radius: 0.2425rem; width: 1.2937rem; height: 1.2937rem; font-size: 0.8086rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Close (Esc)">×</button>
+        <button onclick="handleCloseButtonClick()" style="background: rgba(255,255,255,0.2); border: 0.0606rem solid white; border-radius: 0.2425rem; width: 1.2937rem; height: 1.2937rem; font-size: 0.8086rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Close (Esc)">×</button>
     `;
 
     // Use shared template to generate HTML
@@ -703,21 +1349,51 @@ function renderAudit(audit, auditScorecard, errorFields) {
     });
 
     const auditContentDiv = document.getElementById('auditContent');
+
+    // Preserve reversal form container state before re-rendering
+    const reversalFormContainer = document.getElementById('reversalFormContainer');
+    const wasFormVisible = reversalFormContainer && reversalFormContainer.style.display !== 'none';
+    
+    // Temporarily remove form container from DOM to preserve it during innerHTML replacement
+    let formContainerParent = null;
+    let formContainerNextSibling = null;
+    if (reversalFormContainer && reversalFormContainer.parentElement) {
+        formContainerParent = reversalFormContainer.parentElement;
+        formContainerNextSibling = reversalFormContainer.nextSibling;
+        reversalFormContainer.remove();
+    }
+    
     auditContentDiv.innerHTML = html;
 
-    // Move reversal form container into audit content (after buttons)
-    const reversalFormContainer = document.getElementById('reversalFormContainer');
+    // Re-insert reversal form container after rendering
     if (reversalFormContainer && auditContentDiv) {
         const buttonsSection = auditContentDiv.querySelector('.no-print[style*="border-top"]');
-        if (buttonsSection) {
+        if (buttonsSection && buttonsSection.parentElement) {
             buttonsSection.parentElement.insertBefore(reversalFormContainer, buttonsSection.nextSibling);
         } else {
             auditContentDiv.appendChild(reversalFormContainer);
+        }
+        
+        // Restore visibility state
+        if (wasFormVisible) {
+            reversalFormContainer.style.display = 'block';
+        } else {
+            reversalFormContainer.style.display = 'none';
         }
     }
 
     // Handle reversal status UI updates
     handleReversalStatusUI(audit);
+    
+    // Display submitted reversal form if reversal is pending
+    if (reversalStatus === 'Pending') {
+        displaySubmittedReversalForm(audit);
+    }
+    
+    // Start timer countdown if reversal button is visible and reversal is not pending
+    if (showAcknowledgeButton && showReversalButton && auditSubmissionTime && reversalStatus !== 'Pending') {
+        startReversalTimer(auditSubmissionTime);
+    }
 
     // Make splitter draggable
     initializeSplitter();
@@ -755,7 +1431,25 @@ function renderAudit(audit, auditScorecard, errorFields) {
             loadConversationFromIntercom(interactionId);
         }, 100);
     } else {
-        // No interaction ID - show text view with database transcript
+        // No interaction ID - try to parse database transcript and show in chat view
+        const transcriptText = currentAudit?.transcript || currentAudit?.transcript_text || '';
+        if (transcriptText && transcriptText.trim() && !transcriptText.includes('No transcript available')) {
+            // Parse database transcript and show in chat view
+            const interactionDate = currentAudit?.interaction_date || currentAudit?.interactionDate;
+            parseTranscriptToChat(transcriptText, interactionDate);
+            
+            // Keep chat view active
+            if (transcriptChatView && transcriptTextView) {
+                transcriptChatView.style.display = 'flex';
+                transcriptTextView.style.display = 'none';
+                if (toggleTranscriptViewBtn) {
+                    toggleTranscriptViewBtn.textContent = 'Text View';
+                    toggleTranscriptViewBtn.title = 'Switch to text view';
+                }
+                isChatViewActive = true;
+            }
+        } else {
+            // No database transcript available - show text view
         if (transcriptChatView && transcriptTextView) {
             transcriptChatView.style.display = 'none';
             transcriptTextView.style.display = 'flex';
@@ -764,6 +1458,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
                 toggleTranscriptViewBtn.title = 'Switch to chat view';
             }
             isChatViewActive = false;
+            }
         }
     }
 }
@@ -773,8 +1468,54 @@ function handleReversalStatusUI(audit) {
     const acknowledgeBtn = document.getElementById('acknowledgeBtn');
     const reversalFormContainer = document.getElementById('reversalFormContainer');
     
+    // Check if acknowledge button should be visible (only for audited employee)
+    if (acknowledgeBtn && !isCurrentUserAuditedEmployee()) {
+        // Hide acknowledge button if user is not the audited employee
+        acknowledgeBtn.style.display = 'none';
+        // Also hide the reversal button if both buttons are in a split button container
+        const reversalBtn = acknowledgeBtn?.parentElement?.querySelector('button[onclick="toggleReversalForm()"]');
+        if (reversalBtn) {
+            reversalBtn.style.display = 'none';
+        }
+    }
+    
     // Get the reversal status from audit data
-    const reversalStatus = currentAudit?.reversal_status;
+    // Note: reversal_status column doesn't exist - derive from reversal_approved
+    const reversalRequestedAt = currentAudit?.reversal_requested_at || currentAudit?.reversalRequestedAt;
+    const reversalRespondedAt = currentAudit?.reversal_responded_at || currentAudit?.reversalRespondedAt;
+    const reversalApproved = currentAudit?.reversal_approved || currentAudit?.reversalApproved;
+    let reversalStatus = null;
+    if (reversalRequestedAt && !reversalRespondedAt) {
+        reversalStatus = 'Pending';
+    } else if (reversalApproved === 'true' || reversalApproved === true) {
+        reversalStatus = 'Approved';
+    } else if (reversalApproved === 'false' || reversalApproved === false) {
+        reversalStatus = 'Rejected';
+    }
+    
+    // Get the acknowledgement status from audit data
+    const acknowledgementStatus = currentAudit?.acknowledgementStatus || currentAudit?.acknowledgement_status;
+    
+    // Ensure button is enabled by default (will be disabled if needed below)
+    if (acknowledgeBtn) {
+        acknowledgeBtn.disabled = false;
+        acknowledgeBtn.style.opacity = '1';
+        acknowledgeBtn.style.cursor = 'pointer';
+    }
+    
+    // If audit is already acknowledged, disable the acknowledge button
+    if (acknowledgementStatus === 'Acknowledged' && acknowledgeBtn) {
+        acknowledgeBtn.disabled = true;
+        acknowledgeBtn.style.opacity = '0.5';
+        acknowledgeBtn.style.cursor = 'not-allowed';
+    }
+    
+    // If reversal is pending, disable acknowledge button (can't acknowledge while reversal is pending)
+    if (reversalStatus === 'Pending' && acknowledgeBtn && acknowledgementStatus !== 'Acknowledged') {
+        acknowledgeBtn.disabled = true;
+        acknowledgeBtn.style.opacity = '0.5';
+        acknowledgeBtn.style.cursor = 'not-allowed';
+    }
     
     if (reversalStatus) {
         // Create status banner
@@ -799,12 +1540,15 @@ function handleReversalStatusUI(audit) {
                 <svg style="width: 0.9375rem; height: 0.9375rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
-                <span>Reversal request is pending review by the quality team.</span>
+                <span>Reversal request is pending review by the quality team. You cannot acknowledge until the reversal is processed.</span>
             `;
-            // Disable the buttons
-            if (acknowledgeBtn) acknowledgeBtn.disabled = true;
+            // Disable the reversal button (user can't submit another reversal while one is pending)
             const reversalBtn = acknowledgeBtn?.parentElement?.querySelector('button[onclick="toggleReversalForm()"]');
-            if (reversalBtn) reversalBtn.disabled = true;
+            if (reversalBtn) {
+                reversalBtn.disabled = true;
+                reversalBtn.style.opacity = '0.5';
+                reversalBtn.style.cursor = 'not-allowed';
+            }
         } else if (reversalStatus === 'Approved') {
             statusBanner.style.background = '#d1fae5';
             statusBanner.style.color = '#065f46';
@@ -813,12 +1557,20 @@ function handleReversalStatusUI(audit) {
                 <svg style="width: 0.9375rem; height: 0.9375rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                <span>✓ Reversal request has been approved. Score updated to ${currentAudit?.score_after_appeal || 'N/A'}%</span>
+                <span>✓ Reversal request has been approved. Score updated to ${currentAudit?.score_after_appeal || 'N/A'}%. Please review the updated audit and acknowledge or submit a new reversal if needed.</span>
             `;
-            // Hide the button container (parent div with border-top style)
-            const buttonsContainer = acknowledgeBtn?.closest('.no-print[style*="border-top"]');
-            if (buttonsContainer) {
-                buttonsContainer.style.display = 'none';
+            // After reversal is processed, enable both buttons again (new review cycle)
+            // Don't hide buttons - allow user to acknowledge or submit new reversal
+            if (acknowledgeBtn && acknowledgementStatus !== 'Acknowledged') {
+                acknowledgeBtn.disabled = false;
+                acknowledgeBtn.style.opacity = '1';
+                acknowledgeBtn.style.cursor = 'pointer';
+            }
+            const reversalBtn = acknowledgeBtn?.parentElement?.querySelector('button[onclick="toggleReversalForm()"]');
+            if (reversalBtn) {
+                reversalBtn.disabled = false;
+                reversalBtn.style.opacity = '1';
+                reversalBtn.style.cursor = 'pointer';
             }
         } else if (reversalStatus === 'Rejected') {
             statusBanner.style.background = '#fee2e2';
@@ -828,12 +1580,20 @@ function handleReversalStatusUI(audit) {
                 <svg style="width: 0.9375rem; height: 0.9375rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
-                <span>Reversal request has been rejected.</span>
+                <span>Reversal request has been rejected. Please review the audit and acknowledge or submit a new reversal if needed.</span>
             `;
-            // Hide the button container (parent div with border-top style)
-            const buttonsContainer = acknowledgeBtn?.closest('.no-print[style*="border-top"]');
-            if (buttonsContainer) {
-                buttonsContainer.style.display = 'none';
+            // After reversal is processed, enable both buttons again (new review cycle)
+            // Don't hide buttons - allow user to acknowledge or submit new reversal
+            if (acknowledgeBtn && acknowledgementStatus !== 'Acknowledged') {
+                acknowledgeBtn.disabled = false;
+                acknowledgeBtn.style.opacity = '1';
+                acknowledgeBtn.style.cursor = 'pointer';
+            }
+            const reversalBtn = acknowledgeBtn?.parentElement?.querySelector('button[onclick="toggleReversalForm()"]');
+            if (reversalBtn) {
+                reversalBtn.disabled = false;
+                reversalBtn.style.opacity = '1';
+                reversalBtn.style.cursor = 'pointer';
             }
         } else if (reversalStatus === 'Acknowledged') {
             statusBanner.style.background = '#dbeafe';
@@ -852,7 +1612,8 @@ function handleReversalStatusUI(audit) {
             }
         }
         
-        // Insert banner in the audit content, above the action buttons
+        // Insert reversal status banner into the DOM
+        if (statusBanner) {
         const auditContentDiv = document.getElementById('auditContent');
         if (auditContentDiv) {
             const buttonsSection = auditContentDiv.querySelector('.no-print[style*="border-top"]');
@@ -863,6 +1624,342 @@ function handleReversalStatusUI(audit) {
             }
         }
     }
+    }
+    
+    // Handle acknowledgement status separately
+    // Note: Acknowledgement status is now shown in the footer, not as a separate banner
+    if (acknowledgementStatus === 'Acknowledged' && acknowledgeBtn) {
+        acknowledgeBtn.disabled = true;
+        acknowledgeBtn.style.opacity = '0.5';
+        acknowledgeBtn.style.cursor = 'not-allowed';
+    }
+}
+
+// Display submitted reversal form details (read-only)
+function displaySubmittedReversalForm(audit) {
+    const auditContentDiv = document.getElementById('auditContent');
+    if (!auditContentDiv) return;
+    
+    // Get reversal data from audit
+    const reversalType = audit.reversalType || audit.reversal_type || 'N/A';
+    const reversalJustification = audit.reversalJustificationFromAgent || audit.reversal_justification_from_agent || '';
+    const reversalMetrics = audit.reversalMetricsParameters || audit.reversal_metrics_parameters || '';
+    const withinAuditorScope = audit.withinAuditorScope || audit.within_auditor_scope;
+    const reversalRequestedAt = audit.reversalRequestedAt || audit.reversal_requested_at;
+    
+    // Parse reversal justification (may contain reason and justification combined)
+    let reversalReason = '';
+    let detailedJustification = reversalJustification;
+    if (reversalJustification && reversalJustification.includes(':')) {
+        const parts = reversalJustification.split(':');
+        if (parts.length >= 2) {
+            reversalReason = parts[0].trim();
+            detailedJustification = parts.slice(1).join(':').trim();
+        }
+    }
+    
+    // Format reversal requested date
+    let requestedDateText = '';
+    if (reversalRequestedAt) {
+        const date = new Date(reversalRequestedAt);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) {
+            requestedDateText = 'just now';
+        } else if (diffMins < 60) {
+            requestedDateText = `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+        } else if (diffHours < 24) {
+            requestedDateText = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+        } else if (diffDays === 1) {
+            requestedDateText = '1 day ago';
+        } else {
+            requestedDateText = date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    }
+    
+    // Parse metrics parameters
+    const selectedParameters = reversalMetrics ? reversalMetrics.split(',').map(p => p.trim()).filter(p => p) : [];
+    
+    // Create read-only reversal form display
+    const submittedFormHtml = `
+        <div id="submittedReversalForm" class="no-print" style="background: #fef3c7; border: 0.0703rem solid #fbbf24; border-radius: 0.375rem; padding: 0.75rem; margin: 1.125rem; box-shadow: 0 0.0703rem 0.2812rem rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5625rem;">
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <svg style="width: 0.9375rem; height: 0.9375rem; color: #f59e0b;" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <h3 style="margin: 0; font-size: 0.75rem; font-weight: 700; color: #b45309; font-family: 'Poppins', sans-serif;">Submitted Reversal Request</h3>
+                </div>
+                <span style="font-size: 0.5625rem; color: #92400e; font-family: 'Poppins', sans-serif;">Submitted ${requestedDateText}</span>
+            </div>
+            
+            <div style="display: grid; gap: 0.5625rem; background: white; border-radius: 0.2812rem; padding: 0.75rem; border: 0.0352rem solid #e5e7eb;">
+                <!-- Two-column grid for compact layout -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5625rem;">
+                    <!-- Reversal Type -->
+                    <div>
+                        <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Reversal Type
+                        </label>
+                        <div style="padding: 0.375rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151;">
+                            ${escapeHtml(reversalType)}
+                        </div>
+                    </div>
+                    
+                    <!-- Reversal Reason -->
+                    ${reversalReason ? `
+                        <div>
+                            <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Reversal Reason
+                            </label>
+                            <div style="padding: 0.375rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151;">
+                                ${escapeHtml(reversalReason)}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Affected Error Parameters with Justifications -->
+                ${selectedParameters.length > 0 ? `
+                    <div>
+                        <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Parameter Justifications
+                        </label>
+                        <div style="padding: 0.5625rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151; max-height: 18.75rem; overflow-y: auto;">
+                            ${selectedParameters.map(param => {
+                                // Try to find matching comment from parameter comments
+                                // Use currentAudit which has the latest data, or fall back to audit parameter
+                                const auditData = currentAudit || audit;
+                                const parameterComments = auditData.parameterComments || auditData.parameter_comments || {};
+                                let paramComment = '';
+                                
+                                // Find the field key that matches this parameter label
+                                // currentErrorFields should be available, but if not, try to find from audit data
+                                let matchingField = null;
+                                if (currentErrorFields && currentErrorFields.length > 0) {
+                                    matchingField = currentErrorFields.find(f => f.label === param);
+                                }
+                                
+                                // If found matching field, get comment from parameter_comments using field key
+                                if (matchingField) {
+                                    const comment = parameterComments[matchingField.key];
+                                    if (comment && comment.comment) {
+                                        paramComment = comment.comment;
+                                    }
+                                }
+                                
+                                // If no comment found from parameter_comments, try to extract from detailedJustification
+                                if (!paramComment && detailedJustification) {
+                                    const lines = detailedJustification.split('\n\n');
+                                    for (const line of lines) {
+                                        if (line.trim().startsWith(param + ':')) {
+                                            paramComment = line.substring(param.length + 1).trim();
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                // If still no comment found, try searching all parameter_comments for any comment that might match
+                                if (!paramComment && Object.keys(parameterComments).length > 0) {
+                                    // Try to find by matching parameter label with any comment
+                                    for (const [key, commentData] of Object.entries(parameterComments)) {
+                                        if (commentData && commentData.comment) {
+                                            // Check if this field's label matches the param
+                                            const field = currentErrorFields?.find(f => f.key === key);
+                                            if (field && field.label === param) {
+                                                paramComment = commentData.comment;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                return `
+                                    <div style="margin-bottom: 0.5625rem; padding: 0.5625rem; background: white; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb;">
+                                        <div style="font-size: 0.6562rem; font-weight: 600; color: #1f2937; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
+                                            <svg style="width: 0.75rem; height: 0.75rem; color: #10b981; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            </svg>
+                                            ${escapeHtml(param)}
+                                        </div>
+                                        ${paramComment ? `
+                                            <div style="font-size: 0.5625rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; padding-left: 1.125rem;">
+                                                ${escapeHtml(paramComment)}
+                                            </div>
+                                        ` : '<div style="font-size: 0.5625rem; color: #9ca3af; font-family: \'Poppins\', sans-serif; padding-left: 1.125rem; font-style: italic;">No justification provided</div>'}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Within Auditor Scope -->
+                <div>
+                    <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Within Auditor Scope
+                    </label>
+                    <div style="padding: 0.375rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151; display: flex; align-items: center; gap: 0.375rem;">
+                        ${withinAuditorScope === 'true' || withinAuditorScope === true ? `
+                            <svg style="width: 0.75rem; height: 0.75rem; color: #10b981;" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                            <span>Yes - I believe this can be resolved by the original auditor</span>
+                        ` : `
+                            <svg style="width: 0.75rem; height: 0.75rem; color: #6b7280;" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                            <span>No</span>
+                        `}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Insert submitted form after the footer bar
+    const footerBar = document.getElementById('footerBar');
+    if (footerBar && footerBar.parentElement) {
+        // Check if already exists, remove it first
+        const existingForm = document.getElementById('submittedReversalForm');
+        if (existingForm) {
+            existingForm.remove();
+        }
+        
+        // Insert after footer bar
+        footerBar.parentElement.insertAdjacentHTML('afterend', submittedFormHtml);
+    } else {
+        // Fallback: append to audit content
+        auditContentDiv.insertAdjacentHTML('beforeend', submittedFormHtml);
+    }
+}
+
+// Start reversal timer countdown
+function startReversalTimer(auditSubmissionTime) {
+    const timerElement = document.getElementById('reversalTimer');
+    const timerTextElement = document.getElementById('reversalTimerText');
+    const timerValueElement = document.getElementById('reversalTimerValue');
+    const timerIconElement = document.getElementById('reversalTimerIcon');
+    
+    if (!timerElement || !timerTextElement) {
+        return;
+    }
+    
+    // Update timer every second
+    const updateTimer = () => {
+        const timeRemaining = getTimeRemainingUntil48Hours(auditSubmissionTime);
+        
+        if (timeRemaining <= 0) {
+            // Timer expired - hide reversal button
+            timerElement.style.display = 'none';
+            const reversalBtn = document.getElementById('reversalBtn');
+            if (reversalBtn) {
+                reversalBtn.style.display = 'none';
+                // Adjust acknowledge button border radius if reversal button is hidden
+                const acknowledgeBtn = document.getElementById('acknowledgeBtn');
+                if (acknowledgeBtn) {
+                    acknowledgeBtn.style.borderRadius = '0.2425rem';
+                }
+            }
+            return;
+        }
+        
+        // Check if time is running low (less than 2 hours)
+        const isLowTime = timeRemaining < 7200; // 2 hours in seconds
+        const isVeryLowTime = timeRemaining < 3600; // 1 hour in seconds
+        const isCriticalTime = timeRemaining < 600; // 10 minutes in seconds
+        
+        // Determine color and animation based on time remaining
+        let timerColor = '#374151';
+        let timerAnimation = 'none';
+        let elementAnimation = 'none';
+        let elementColor = '#6b7280';
+        let elementFontWeight = '500';
+        let iconColor = '';
+        let iconAnimation = 'none';
+        let iconOpacity = '0.6';
+        
+        if (isCriticalTime) {
+            // Critical: Red color, flash animation, shake effect
+            timerColor = '#ef4444';
+            timerAnimation = 'flash-text 0.5s ease-in-out infinite';
+            elementAnimation = 'pulse-attention 1s ease-in-out infinite, shake 0.5s ease-in-out infinite';
+            elementColor = '#ef4444';
+            elementFontWeight = '700';
+            iconColor = '#ef4444';
+            iconAnimation = 'spin-slow 2s linear infinite';
+            iconOpacity = '1';
+        } else if (isVeryLowTime) {
+            // Very low: Orange color, pulse animation
+            timerColor = '#f59e0b';
+            timerAnimation = 'flash-text 1s ease-in-out infinite';
+            elementAnimation = 'pulse-attention 1.5s ease-in-out infinite';
+            elementColor = '#f59e0b';
+            elementFontWeight = '600';
+            iconColor = '#f59e0b';
+            iconAnimation = 'spin-slow 2s linear infinite';
+            iconOpacity = '1';
+        } else if (isLowTime) {
+            // Low: Red color, subtle pulse
+            timerColor = '#ef4444';
+            timerAnimation = 'flash-text 1.5s ease-in-out infinite';
+            elementAnimation = 'pulse-attention 2s ease-in-out infinite';
+            elementColor = '#ef4444';
+            elementFontWeight = '600';
+            iconColor = '#ef4444';
+            iconAnimation = 'spin-slow 2s linear infinite';
+            iconOpacity = '1';
+        }
+        
+        // Get current footer to determine text color
+        const footerBar = document.getElementById('footerBar');
+        let defaultTimerColor = '#374151';
+        let defaultTextColor = '#6b7280';
+        
+        if (footerBar) {
+            const bgColor = footerBar.style.backgroundColor || window.getComputedStyle(footerBar).backgroundColor;
+            const isFooterGreen = bgColor.includes('rgb(6, 95, 70)') || bgColor.includes('#065f46');
+            
+            if (isFooterGreen) {
+                defaultTimerColor = 'white';
+                defaultTextColor = 'white';
+            }
+        }
+        
+        // For critical time, use red; otherwise use the footer-appropriate color (white for green, gray for default)
+        const finalTimerColor = isCriticalTime ? '#ef4444' : defaultTimerColor;
+        
+        timerTextElement.innerHTML = `Reversal window: <span id="reversalTimerValue" style="font-weight: 600; color: ${finalTimerColor}; animation: ${timerAnimation};">${formatTimeRemaining(timeRemaining)}</span>`;
+        
+        // Apply styles to timer element
+        timerElement.style.animation = elementAnimation;
+        timerElement.style.color = defaultTextColor;
+        timerElement.style.fontWeight = elementFontWeight;
+        
+        // Update icon animation
+        const currentIconElement = document.getElementById('reversalTimerIcon');
+        if (currentIconElement) {
+            currentIconElement.style.color = iconColor;
+            currentIconElement.style.animation = iconAnimation;
+            currentIconElement.style.opacity = iconOpacity;
+        }
+        
+        // Continue updating
+        setTimeout(updateTimer, 1000);
+    };
+    
+    // Start the timer
+    updateTimer();
 }
 
 // Toggle between text view and chat view
@@ -888,10 +1985,15 @@ function toggleTranscriptView() {
         // Show text panel, hide chat panel
         if (textPanel) {
             textPanel.style.display = 'block';
-            if (rightColumn) {
+            // Match height to transcript container (left column details)
+            const transcriptContainer = transcriptTextView?.parentElement;
+            if (transcriptContainer) {
                 setTimeout(() => {
-                    const rightHeight = rightColumn.scrollHeight;
-                    textPanel.style.height = rightHeight + 'px';
+                    const transcriptHeight = transcriptContainer.offsetHeight || transcriptContainer.clientHeight;
+                    if (transcriptHeight > 0) {
+                        textPanel.style.maxHeight = transcriptHeight + 'px';
+                        textPanel.style.height = 'auto';
+                    }
                 }, 100);
             }
         }
@@ -908,10 +2010,15 @@ function toggleTranscriptView() {
         // Show chat panel, hide text panel
         if (chatPanel) {
             chatPanel.style.display = 'block';
-            if (rightColumn) {
+            // Match height to transcript container (left column details)
+            const transcriptContainer = transcriptChatView?.parentElement;
+            if (transcriptContainer) {
                 setTimeout(() => {
-                    const rightHeight = rightColumn.scrollHeight;
-                    chatPanel.style.height = rightHeight + 'px';
+                    const transcriptHeight = transcriptContainer.offsetHeight || transcriptContainer.clientHeight;
+                    if (transcriptHeight > 0) {
+                        chatPanel.style.maxHeight = transcriptHeight + 'px';
+                        chatPanel.style.height = 'auto';
+                    }
                 }, 100);
             }
         }
@@ -922,8 +2029,10 @@ function toggleTranscriptView() {
         // If Intercom conversation not loaded, try to parse plain text transcript
         const chatContainer = document.getElementById('chatMessagesContainer');
         if (chatContainer && (!currentConversationData && chatContainer.children.length === 0)) {
-            const transcriptText = document.querySelector('#transcriptTextView div')?.textContent;
-            if (transcriptText) {
+            // Read transcript directly from audit data instead of DOM
+            const transcriptText = currentAudit?.transcript || currentAudit?.transcript_text || '';
+            // Check if transcript exists and is not the "No transcript available" message
+            if (transcriptText && transcriptText.trim() && !transcriptText.includes('No transcript available')) {
                 const interactionDate = currentAudit?.interaction_date || currentAudit?.interactionDate;
                 parseTranscriptToChat(transcriptText, interactionDate);
             }
@@ -1012,7 +2121,25 @@ async function loadConversationFromIntercom(conversationId) {
     } catch (error) {
         console.error('Error loading conversation from Intercom:', error);
         
-        // Fallback to text view with database transcript if Intercom fetch fails
+        // Try to parse database transcript as fallback
+        const transcriptText = currentAudit?.transcript || currentAudit?.transcript_text || '';
+        if (transcriptText && transcriptText.trim() && !transcriptText.includes('No transcript available')) {
+            // Parse database transcript and show in chat view
+            const interactionDate = currentAudit?.interaction_date || currentAudit?.interactionDate;
+            parseTranscriptToChat(transcriptText, interactionDate);
+            
+            // Keep chat view active
+            if (transcriptChatView && transcriptTextView) {
+                transcriptChatView.style.display = 'flex';
+                transcriptTextView.style.display = 'none';
+                if (toggleTranscriptViewBtn) {
+                    toggleTranscriptViewBtn.textContent = 'Text View';
+                    toggleTranscriptViewBtn.title = 'Switch to text view';
+                }
+                isChatViewActive = true;
+            }
+        } else {
+            // No database transcript available - fallback to text view
         const transcriptChatView = document.getElementById('transcriptChatView');
         const transcriptTextView = document.getElementById('transcriptTextView');
         const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
@@ -1038,9 +2165,10 @@ async function loadConversationFromIntercom(conversationId) {
                 </svg>
                 <p style="font-size: 0.5659rem; font-weight: 600; margin-bottom: 0.3234rem;">Failed to load conversation from Intercom</p>
                 <p style="font-size: 0.4852rem; color: #6b7280;">${escapeHtml(error.message)}</p>
-                <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">Showing database transcript instead.</p>
+                    <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">No database transcript available.</p>
             </div>
         `;
+        }
     }
 }
 
@@ -1315,24 +2443,29 @@ function displayConversationAttributes(conversation) {
         const chatViewStyle = transcriptChatView ? window.getComputedStyle(transcriptChatView).display : 'none';
         const isChatView = chatViewStyle !== 'none' && chatViewStyle !== '';
         
-        const rightColumn = document.getElementById('rightColumn');
+            // Get the transcript container to match its height (left column details section)
+            const transcriptContainer = transcriptChatView?.parentElement || transcriptTextView?.parentElement;
         
-        if (isChatView && chatPanel) {
+            if (isChatView && chatPanel && transcriptContainer) {
             chatPanel.style.display = 'block';
-            if (rightColumn) {
+                // Match height to transcript container (left column details)
                 setTimeout(() => {
-                    const rightHeight = rightColumn.scrollHeight;
-                    chatPanel.style.height = rightHeight + 'px';
+                    const transcriptHeight = transcriptContainer.offsetHeight || transcriptContainer.clientHeight;
+                    if (transcriptHeight > 0) {
+                        chatPanel.style.maxHeight = transcriptHeight + 'px';
+                        chatPanel.style.height = 'auto';
+                    }
                 }, 100);
-            }
-        } else if (!isChatView && textPanel) {
+            } else if (!isChatView && textPanel && transcriptContainer) {
             textPanel.style.display = 'block';
-            if (rightColumn) {
+                // Match height to transcript container (left column details)
                 setTimeout(() => {
-                    const rightHeight = rightColumn.scrollHeight;
-                    textPanel.style.height = rightHeight + 'px';
+                    const transcriptHeight = transcriptContainer.offsetHeight || transcriptContainer.clientHeight;
+                    if (transcriptHeight > 0) {
+                        textPanel.style.maxHeight = transcriptHeight + 'px';
+                        textPanel.style.height = 'auto';
+                    }
                 }, 100);
-            }
         }
     } else {
         // Hide panels if no attributes
@@ -1684,26 +2817,43 @@ function initializeSplitter() {
     
     if (splitter && leftColumn && rightColumn && auditContent) {
         let isResizing = false;
+        let startX = 0;
+        let startLeftWidth = 0;
         
         splitter.addEventListener('mousedown', function(e) {
             isResizing = true;
+            startX = e.clientX;
+            startLeftWidth = leftColumn.offsetWidth;
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
             splitter.style.background = '#9ca3af';
+            e.preventDefault();
         });
         
         document.addEventListener('mousemove', function(e) {
             if (!isResizing) return;
             
             const containerRect = auditContent.getBoundingClientRect();
-            const offsetX = e.clientX - containerRect.left;
+            const deltaX = e.clientX - startX;
             const containerWidth = containerRect.width;
             
-            // Calculate percentage (with min/max constraints)
-            let leftPercentage = (offsetX / containerWidth) * 100;
+            // Calculate new width based on delta
+            let newLeftWidth = startLeftWidth + deltaX;
+            
+            // Convert to percentage with constraints
+            let leftPercentage = (newLeftWidth / containerWidth) * 100;
             leftPercentage = Math.max(25, Math.min(75, leftPercentage));
             
+            // Apply width and update right column
             leftColumn.style.width = leftPercentage + '%';
+            leftColumn.style.flex = '0 0 ' + leftPercentage + '%';
+            
+            // Store in localStorage for persistence
+            try {
+                localStorage.setItem('auditViewSplitterPosition', leftPercentage.toString());
+            } catch (err) {
+                // Ignore localStorage errors
+            }
         });
         
         document.addEventListener('mouseup', function() {
@@ -1727,13 +2877,53 @@ function initializeSplitter() {
                 splitter.style.background = '#e5e7eb';
             }
         });
+        
+        // Restore saved position from localStorage
+        try {
+            const savedPosition = localStorage.getItem('auditViewSplitterPosition');
+            if (savedPosition) {
+                const percentage = parseFloat(savedPosition);
+                if (!isNaN(percentage) && percentage >= 25 && percentage <= 75) {
+                    leftColumn.style.width = percentage + '%';
+                    leftColumn.style.flex = '0 0 ' + percentage + '%';
+                }
+            }
+        } catch (err) {
+            // Ignore localStorage errors
+        }
     }
 }
 
 // Toggle reversal form visibility
 function toggleReversalForm() {
+    // Verify that current user is the audited employee
+    if (!isCurrentUserAuditedEmployee()) {
+        alert('Error: You can only submit reversal requests for audits assigned to you.');
+        return;
+    }
+    
     const formContainer = document.getElementById('reversalFormContainer');
     const auditContentDiv = document.getElementById('auditContent');
+    
+    if (!formContainer) {
+        console.error('Reversal form container not found');
+        return;
+    }
+    
+    if (!auditContentDiv) {
+        console.error('Audit content div not found');
+        return;
+    }
+    
+    // Ensure form container is in the DOM (might have been removed during re-render)
+    if (!formContainer.parentElement) {
+        const buttonsSection = auditContentDiv.querySelector('.no-print[style*="border-top"]');
+        if (buttonsSection) {
+            buttonsSection.parentElement.insertBefore(formContainer, buttonsSection.nextSibling);
+        } else {
+            auditContentDiv.appendChild(formContainer);
+        }
+    }
     
     if (formContainer.style.display === 'none' || !formContainer.style.display) {
         formContainer.style.display = 'block';
@@ -1748,8 +2938,8 @@ function toggleReversalForm() {
             }
         }
         
-        // Populate error parameters checkboxes
-        populateErrorParametersCheckboxes();
+        // Populate parameters with comments
+        populateParametersWithComments();
         
         formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } else {
@@ -1757,9 +2947,13 @@ function toggleReversalForm() {
     }
 }
 
-// Populate error parameters checkboxes
-function populateErrorParametersCheckboxes() {
-    const container = document.getElementById('reversalMetricsContainer');
+// Make toggleReversalForm globally accessible
+window.toggleReversalForm = toggleReversalForm;
+
+// Populate parameters with comments (compact display)
+function populateParametersWithComments() {
+    const container = document.getElementById('parametersWithCommentsContainer');
+    const noCommentsMsg = document.getElementById('noCommentsMessage');
     
     if (!container) return;
     
@@ -1768,47 +2962,569 @@ function populateErrorParametersCheckboxes() {
         return;
     }
     
-    // Create checkbox list
-    const checkboxesHtml = currentErrorFields.map(field => `
-        <div style="display: flex; align-items: center; gap: 0.375rem; padding: 0.1875rem 0;">
-            <input type="checkbox" 
-                   id="param_${field.key}" 
-                   name="errorParameter" 
-                   value="${field.label}"
-                   style="width: 0.75rem; height: 0.75rem; cursor: pointer; flex-shrink: 0;">
-            <label for="param_${field.key}" 
-                   style="font-size: 0.6094rem; color: #374151; font-family: 'Poppins', sans-serif; cursor: pointer; line-height: 1.4;">
-                ${field.label}
-                <span style="font-size: 0.5156rem; color: #6b7280;"> (${field.points} pts)</span>
-            </label>
-        </div>
-    `).join('');
+    // Get parameter comments
+    const parameterComments = currentAudit?.parameterComments || currentAudit?.parameter_comments || {};
     
-    container.innerHTML = checkboxesHtml;
+    // Filter only parameters that have comments
+    const parametersWithComments = currentErrorFields.filter(field => {
+        const fieldComment = parameterComments[field.key];
+        return fieldComment && fieldComment.comment && fieldComment.comment.trim();
+    });
+    
+    if (parametersWithComments.length === 0) {
+        container.style.display = 'none';
+        if (noCommentsMsg) {
+            noCommentsMsg.style.display = 'block';
+        }
+        return;
+    }
+    
+    if (noCommentsMsg) {
+        noCommentsMsg.style.display = 'none';
+    }
+    container.style.display = 'block';
+    
+    // Create compact list of parameters with comments
+    const commentsHtml = parametersWithComments.map(field => {
+        const fieldComment = parameterComments[field.key];
+        const comment = fieldComment.comment.trim();
+        
+        return `
+            <div style="margin-bottom: 0.5625rem; padding: 0.5625rem; background: white; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb;">
+                <div style="font-size: 0.6094rem; font-weight: 600; color: #1f2937; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                    ${escapeHtml(field.label)}
+        </div>
+                <div style="font-size: 0.5625rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">
+                    ${escapeHtml(comment)}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = commentsHtml;
 }
 
-// Select all parameters
+// Select all parameters (kept for backward compatibility, but not used)
 function selectAllParameters() {
-    document.querySelectorAll('input[name="errorParameter"]').forEach(checkbox => {
-        checkbox.checked = true;
+    // Not used anymore - parameters are auto-selected based on comments
+}
+
+// Clear all parameters (kept for backward compatibility, but not used)
+function clearAllParameters() {
+    // Not used anymore - parameters are auto-selected based on comments
+}
+
+// Handle close button click - check acknowledgement before closing
+async function handleCloseButtonClick() {
+    const canNavigate = await handleCloseAuditView();
+    if (canNavigate) {
+        window.location.href = 'expert-audits.html';
+    }
+}
+
+// Make handleCloseButtonClick globally accessible
+window.handleCloseButtonClick = handleCloseButtonClick;
+
+// Show parameter comment modal
+function showParameterCommentModal(fieldId, fieldLabel, auditorFeedback) {
+    if (!isCurrentUserAuditedEmployee()) {
+        alert('Only the audited employee can add comments.');
+        return;
+    }
+    
+    // Get existing comment for this parameter
+    const parameterComments = currentAudit?.parameterComments || currentAudit?.parameter_comments || {};
+    const existingComment = parameterComments[fieldId] || null;
+    const hasComment = existingComment && existingComment.comment && existingComment.comment.trim();
+    
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.id = 'parameterCommentModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 1.125rem;';
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 0.375rem; padding: 1.125rem; max-width: 37.5rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.25rem 0.375rem rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h3 style="font-size: 0.8438rem; font-weight: 700; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif;">
+                    Add Your Comment - ${escapeHtml(fieldLabel)}
+                </h3>
+                <button onclick="closeParameterCommentModal()" style="background: none; border: none; font-size: 1.5rem; color: #6b7280; cursor: pointer; padding: 0; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
+            </div>
+            
+            <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb;">
+                <div style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Auditor Feedback
+                </div>
+                <div style="font-size: 0.6562rem; color: #374151; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">
+                    ${escapeHtml(auditorFeedback)}
+                </div>
+            </div>
+            
+            ${hasComment ? `
+                <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: #f0f9ff; border-radius: 0.2812rem; border: 0.0352rem solid #bae6fd;">
+                    <div style="font-size: 0.5625rem; font-weight: 600; color: #0369a1; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Your Previous Comment
+                    </div>
+                    <div style="font-size: 0.6562rem; color: #075985; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; margin-bottom: 0.375rem;">
+                        ${escapeHtml(existingComment.comment)}
+                    </div>
+                    <div style="font-size: 0.5625rem; color: #0284c7; font-family: 'Poppins', sans-serif;">
+                        ${existingComment.commented_at ? new Date(existingComment.commented_at).toLocaleString() : ''}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; font-size: 0.6562rem; font-weight: 600; color: #374151; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
+                    Your Comment / Justification
+                </label>
+                <textarea 
+                    id="modalCommentInput_${fieldId}" 
+                    placeholder="Provide your justification or response to the auditor's feedback..." 
+                    rows="6"
+                    style="width: 100%; padding: 0.75rem; border: 0.0352rem solid #d1d5db; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; resize: vertical; background: white; box-sizing: border-box;"
+                >${hasComment ? escapeHtml(existingComment.comment) : ''}</textarea>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button 
+                    onclick="closeParameterCommentModal()" 
+                    style="padding: 0.5625rem 1.125rem; background: #f3f4f6; color: #374151; border: 0.0352rem solid #d1d5db; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
+                >
+                    Cancel
+                </button>
+                <button 
+                    onclick="saveParameterCommentFromModal('${fieldId}')" 
+                    style="padding: 0.5625rem 1.125rem; background: #1A733E; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;"
+                >
+                    ${hasComment ? 'Update' : 'Save'} Comment
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Focus the textarea
+    setTimeout(() => {
+        const textarea = document.getElementById(`modalCommentInput_${fieldId}`);
+        if (textarea) {
+            textarea.focus();
+        }
+    }, 100);
+    
+    // Close on overlay click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeParameterCommentModal();
+        }
     });
 }
 
-// Clear all parameters
-function clearAllParameters() {
-    document.querySelectorAll('input[name="errorParameter"]').forEach(checkbox => {
-        checkbox.checked = false;
-    });
+// Close parameter comment modal
+function closeParameterCommentModal() {
+    const modal = document.getElementById('parameterCommentModal');
+    if (modal) {
+        modal.remove();
+    }
 }
+
+// Save parameter comment from modal
+async function saveParameterCommentFromModal(fieldId) {
+    try {
+        if (!isCurrentUserAuditedEmployee()) {
+            alert('Only the audited employee can add comments.');
+            return;
+        }
+        
+        if (!currentAudit || !currentTableName) {
+            alert('Error: Audit data not available');
+            return;
+        }
+        
+        const commentInput = document.getElementById(`modalCommentInput_${fieldId}`);
+        if (!commentInput) {
+            alert('Error: Comment input not found');
+            return;
+        }
+        
+        const commentText = commentInput.value.trim();
+        if (!commentText) {
+            alert('Please enter a comment before saving.');
+            return;
+        }
+        
+        // Get current parameter comments
+        const currentComments = currentAudit.parameterComments || currentAudit.parameter_comments || {};
+        
+        // Update comment for this parameter
+        const updatedComments = {
+            ...currentComments,
+            [fieldId]: {
+                comment: commentText,
+                commented_at: new Date().toISOString(),
+                commented_by: currentUserEmail
+            }
+        };
+        
+        // Save to database
+        const { data, error } = await window.supabaseClient
+            .from(currentTableName)
+            .update({
+                parameter_comments: updatedComments
+            })
+            .eq('id', currentAudit.id)
+            .select();
+        
+        if (error) throw error;
+        
+        // Update local audit object
+        if (currentAudit) {
+            currentAudit.parameterComments = updatedComments;
+            currentAudit.parameter_comments = updatedComments;
+        }
+        
+        // Close modal
+        closeParameterCommentModal();
+        
+        // Reload audit to refresh the error details table with comments column
+        await loadAuditFromURL();
+        
+        // Update reversal form if it's open (after reload)
+        const reversalFormContainer = document.getElementById('reversalFormContainer');
+        if (reversalFormContainer && reversalFormContainer.style.display !== 'none') {
+            populateParametersWithComments();
+        }
+        
+    } catch (error) {
+        console.error('Error saving parameter comment:', error);
+        alert('Failed to save comment. Please try again.');
+    }
+}
+
+// Toggle comments column visibility
+function toggleCommentsColumn() {
+    if (typeof window.showCommentsColumn === 'undefined') {
+        window.showCommentsColumn = false;
+    }
+    window.showCommentsColumn = !window.showCommentsColumn;
+    
+    // Update the existing table header and rows without recreating the container
+    if (currentAudit && currentErrorFields) {
+        // Find the table header row within the Error Details section
+        const errorDetailsSection = Array.from(document.querySelectorAll('div')).find(div => {
+            const h3 = div.querySelector('h3');
+            return h3 && h3.textContent && h3.textContent.includes('Error Details');
+        });
+        
+        if (!errorDetailsSection) return;
+        
+        // Find header row within the error details section
+        const headerRows = Array.from(errorDetailsSection.querySelectorAll('div[style*="grid-template-columns"]')).filter(div => {
+            const text = div.textContent || '';
+            return text.includes('Error Type') && text.includes('Points') && text.includes('Severity');
+        });
+        
+        if (headerRows.length === 0) return;
+        
+        const header = headerRows[0];
+        const showComments = window.showCommentsColumn;
+        
+        // Get employee first name for column header
+        const employeeName = currentAudit.employeeName || currentAudit.employee_name || 'Employee';
+        const firstName = employeeName.split(' ')[0] || employeeName;
+        const commentColumnHeader = `${firstName}'s Comment`;
+        
+        // Check if user is audited employee
+        const isAuditedEmployee = isCurrentUserAuditedEmployee();
+        
+        // Update grid columns
+        if (showComments) {
+            header.style.gridTemplateColumns = '2fr 1fr 1fr 1fr 2fr 2.5fr';
+            // Find the "+ Comment" header cell (last child) and replace with actual column header
+            const lastHeader = header.lastElementChild;
+            if (lastHeader) {
+                lastHeader.innerHTML = escapeHtml(commentColumnHeader);
+                lastHeader.style.cursor = 'default';
+                lastHeader.style.color = '#1f2937';
+                lastHeader.style.textDecoration = 'none';
+                lastHeader.removeAttribute('onclick');
+            } else if (header.children.length === 5) {
+                // Add new header cell if it doesn't exist
+                const commentHeaderCell = document.createElement('div');
+                commentHeaderCell.textContent = commentColumnHeader;
+                commentHeaderCell.style.cssText = 'font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;';
+                header.appendChild(commentHeaderCell);
+            }
+        } else {
+            // When hiding comments, keep 6 columns if audited employee (to show + Comment button)
+            if (isAuditedEmployee) {
+                header.style.gridTemplateColumns = '2fr 1fr 1fr 1fr 2fr 2fr';
+                // Find the comment column header and replace with "+ Comment" button
+                const lastHeader = header.lastElementChild;
+                if (lastHeader && (lastHeader.textContent.includes("'s Comment") || lastHeader.textContent.includes("Comment"))) {
+                    lastHeader.innerHTML = '<span style="cursor: pointer; color: #1A733E; text-decoration: underline;" onclick="toggleCommentsColumn()" title="Click to add comments">+ Comment</span>';
+                    lastHeader.style.cursor = 'pointer';
+                } else if (header.children.length === 5) {
+                    // Add "+ Comment" button if it doesn't exist
+                    const commentButtonCell = document.createElement('div');
+                    commentButtonCell.innerHTML = '<span style="cursor: pointer; color: #1A733E; text-decoration: underline;" onclick="toggleCommentsColumn()" title="Click to add comments">+ Comment</span>';
+                    commentButtonCell.style.cssText = 'font-weight: 700; font-size: 0.5659rem; color: #1A733E; text-transform: uppercase; letter-spacing: 0.05em;';
+                    header.appendChild(commentButtonCell);
+                }
+            } else {
+                header.style.gridTemplateColumns = '2fr 1fr 1fr 1fr 2fr';
+                // Remove comment column if not audited employee
+                if (header.children.length === 6) {
+                    const lastHeader = header.lastElementChild;
+                    if (lastHeader && (lastHeader.textContent.includes("'s Comment") || lastHeader.textContent.includes("Comment") || lastHeader.textContent.includes("+ Comment"))) {
+                        lastHeader.remove();
+                    }
+                }
+            }
+        }
+        
+        // Update all data rows within the error details section
+        const dataRows = Array.from(errorDetailsSection.querySelectorAll('div[style*="grid-template-columns"]')).filter(div => {
+            return div !== header && div.style.display === 'grid' && !div.textContent.includes('Error Type');
+        });
+        
+        dataRows.forEach(row => {
+            if (showComments) {
+                // Add comment column if not present
+                if (row.children.length === 5 || row.children.length === 6) {
+                    row.style.gridTemplateColumns = '2fr 1fr 1fr 1fr 2fr 2.5fr';
+                    // Remove existing comment column if present (to refresh it)
+                    if (row.children.length === 6) {
+                        const lastCell = row.lastElementChild;
+                        if (lastCell && (lastCell.querySelector('input[data-param-key]') || lastCell.textContent.includes('Comment'))) {
+                            lastCell.remove();
+                        }
+                    }
+                    
+                    // Get the field key from the row (first child text)
+                    const firstCell = row.children[0];
+                    const fieldLabel = firstCell.textContent.trim();
+                    
+                    // Find matching field
+                    const field = currentErrorFields.find(f => f.label === fieldLabel);
+                    if (field) {
+                        // Get feedback data
+                        const feedbackData = currentAudit[field.feedback];
+                        let feedbackArray = [];
+                        
+                        if (feedbackData) {
+                            if (typeof feedbackData === 'string') {
+                                try {
+                                    const parsed = JSON.parse(feedbackData);
+                                    feedbackArray = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+                                } catch (e) {
+                                    feedbackArray = feedbackData.trim() ? [feedbackData] : [];
+                                }
+                            } else if (Array.isArray(feedbackData)) {
+                                feedbackArray = feedbackData;
+                            }
+                        }
+                        feedbackArray = feedbackArray.filter(f => f && f.trim());
+                        
+                        // Get existing comments
+                        const parameterComments = currentAudit.parameterComments || currentAudit.parameter_comments || {};
+                        const existingComments = parameterComments[field.key] || {};
+                        const commentsArray = existingComments.comments || (existingComments.comment ? [existingComments.comment] : []);
+                        const isAuditedEmployee = isCurrentUserAuditedEmployee();
+                        
+                        // Create comment column
+                        const commentCell = document.createElement('div');
+                        commentCell.style.cssText = 'font-size: 0.5257rem; color: #4b5563; font-family: Poppins, sans-serif; min-width: 0; overflow: hidden;';
+                        
+                        if (feedbackArray.length > 0) {
+                            feedbackArray.forEach((feedbackText, index) => {
+                                const existingComment = commentsArray[index] || '';
+                                const commentInputId = `comment_${field.key}_${index}`;
+                                const commentDiv = document.createElement('div');
+                                commentDiv.style.marginBottom = index < feedbackArray.length - 1 ? '0.6469rem' : '0';
+                                
+                                if (feedbackArray.length > 1) {
+                                    const label = document.createElement('div');
+                                    label.textContent = `Comment ${index + 1}:`;
+                                    label.style.cssText = 'font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: Poppins, sans-serif;';
+                                    commentDiv.appendChild(label);
+                                }
+                                
+                                if (existingComment && !isAuditedEmployee) {
+                                    const textDiv = document.createElement('div');
+                                    textDiv.textContent = existingComment;
+                                    textDiv.style.cssText = 'font-size: 0.5257rem; color: #4b5563; font-family: Poppins, sans-serif; white-space: pre-wrap; line-height: 1.6;';
+                                    commentDiv.appendChild(textDiv);
+                                } else {
+                                    const input = document.createElement('input');
+                                    input.type = 'text';
+                                    input.id = commentInputId;
+                                    input.setAttribute('data-param-key', field.key);
+                                    input.setAttribute('data-feedback-index', index);
+                                    input.value = existingComment;
+                                    input.placeholder = 'Enter your comment...';
+                                    input.style.cssText = 'width: 100%; max-width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0625rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5257rem; font-family: Poppins, sans-serif; box-sizing: border-box;';
+                                    if (!isAuditedEmployee) {
+                                        input.style.background = '#f3f4f6';
+                                        input.style.cursor = 'not-allowed';
+                                        input.readOnly = true;
+                                    }
+                                    input.addEventListener('change', function() {
+                                        saveParameterComment(field.key, index, this.value);
+                                    });
+                                    commentDiv.appendChild(input);
+                                }
+                                
+                                commentCell.appendChild(commentDiv);
+                            });
+                        } else {
+                            const dash = document.createElement('span');
+                            dash.textContent = '-';
+                            dash.style.cssText = 'color: #9ca3af; font-style: italic;';
+                            commentCell.appendChild(dash);
+                        }
+                        
+                        row.appendChild(commentCell);
+                    }
+                }
+            } else {
+                // When hiding comments, keep 6 columns if audited employee (to match header with + Comment button)
+                // Remove comment inputs but keep empty 6th column for alignment
+                if (isAuditedEmployee) {
+                    row.style.gridTemplateColumns = '2fr 1fr 1fr 1fr 2fr 2fr';
+                    if (row.children.length === 6) {
+                        const lastCell = row.lastElementChild;
+                        if (lastCell && (lastCell.querySelector('input[data-param-key]') || lastCell.textContent.includes('Comment'))) {
+                            lastCell.innerHTML = '';
+                        }
+                    } else if (row.children.length === 5) {
+                        // Add empty column for alignment with header
+                        const emptyCell = document.createElement('div');
+                        row.appendChild(emptyCell);
+                    }
+                } else {
+                    // Remove comment column if not audited employee
+                    if (row.children.length === 6) {
+                        row.style.gridTemplateColumns = '2fr 1fr 1fr 1fr 2fr';
+                        const lastCell = row.lastElementChild;
+                        if (lastCell) {
+                            lastCell.remove();
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Save parameter comment from input box
+async function saveParameterComment(paramKey, feedbackIndex, commentText) {
+    try {
+        // Ensure currentUserEmail is available
+        if (!currentUserEmail) {
+            currentUserEmail = getCurrentUserEmail();
+        }
+        
+        if (!isCurrentUserAuditedEmployee()) {
+            alert('Only the audited employee can add comments.');
+            return;
+        }
+        
+        if (!currentAudit || !currentTableName) {
+            alert('Error: Audit data not available');
+            return;
+        }
+        
+        if (!currentUserEmail) {
+            alert('Error: User email not available. Please refresh the page.');
+            return;
+        }
+        
+        // Get current parameter comments
+        const currentComments = currentAudit.parameterComments || currentAudit.parameter_comments || {};
+        
+        // Get existing comments array for this parameter or create new structure
+        const paramComments = currentComments[paramKey] || {};
+        const commentsArray = paramComments.comments || (paramComments.comment ? [paramComments.comment] : []);
+        
+        // Ensure array is large enough
+        while (commentsArray.length <= feedbackIndex) {
+            commentsArray.push('');
+        }
+        
+        // Update the comment at the specific index
+        commentsArray[feedbackIndex] = commentText.trim();
+        
+        // Update comment for this parameter
+        const updatedComments = {
+            ...currentComments,
+            [paramKey]: {
+                comments: commentsArray,
+                commented_at: new Date().toISOString(),
+                commented_by: currentUserEmail
+            }
+        };
+        
+        // Save to database
+        const { data, error } = await window.supabaseClient
+            .from(currentTableName)
+            .update({
+                parameter_comments: updatedComments
+            })
+            .eq('id', currentAudit.id)
+            .select();
+        
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+        
+        // Update local audit object
+        if (currentAudit) {
+            currentAudit.parameterComments = updatedComments;
+            currentAudit.parameter_comments = updatedComments;
+        }
+        
+        console.log('Comment saved successfully');
+        
+    } catch (error) {
+        console.error('Error saving parameter comment:', error);
+        alert('Failed to save comment: ' + (error.message || 'Unknown error. Please try again.'));
+    }
+}
+
+// Make functions globally accessible
+window.showParameterCommentModal = showParameterCommentModal;
+window.closeParameterCommentModal = closeParameterCommentModal;
+window.saveParameterCommentFromModal = saveParameterCommentFromModal;
+window.toggleCommentsColumn = toggleCommentsColumn;
+window.saveParameterComment = saveParameterComment;
 
 // Acknowledge audit
 async function acknowledgeAudit() {
-    const result = await showConfirmDialog(
-        'Acknowledge Audit',
-        'By acknowledging this audit, you confirm that you have reviewed the results and do not wish to submit a reversal request. Continue?',
-        'Acknowledge',
-        'Cancel'
-    );
+    // Verify that current user is the audited employee
+    if (!isCurrentUserAuditedEmployee()) {
+        alert('Error: You can only acknowledge audits assigned to you.');
+        return;
+    }
+    
+    // Wait for confirmation dialog to be available
+    if (!window.confirmationDialog) {
+        // Wait a bit for it to initialize
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (!window.confirmationDialog) {
+            alert('Error: Confirmation dialog not available. Please refresh the page.');
+            return;
+        }
+    }
+    
+    const result = await window.confirmationDialog.show({
+        title: 'Acknowledge Audit',
+        message: 'By acknowledging this audit, you confirm that you have reviewed the results and do not wish to submit a reversal request. Continue?',
+        confirmText: 'Acknowledge',
+        cancelText: 'Cancel'
+    });
     
     if (result) {
         if (!currentAudit || !currentTableName) {
@@ -1817,26 +3533,46 @@ async function acknowledgeAudit() {
         }
         
         try {
-            // Record acknowledgment in the database
+            // Record acknowledgment in the database with correct fields
+            const acknowledgementTime = new Date().toISOString();
             const { data, error } = await window.supabaseClient
                 .from(currentTableName)
                 .update({
-                    reversal_status: 'Acknowledged',
-                    reversal_requested_at: new Date().toISOString()
+                    acknowledgement_status: 'Acknowledged',
+                    acknowledgement_status_updated_at: acknowledgementTime
                 })
                 .eq('id', currentAudit.id)
                 .select();
             
             if (error) throw error;
             
+            // Show success message
+            if (window.confirmationDialog) {
+                await window.confirmationDialog.show({
+                    title: 'Success',
+                    message: '✓ Audit acknowledged. Thank you for your confirmation.',
+                    confirmText: 'OK',
+                    type: 'success'
+                });
+            } else {
             alert('✓ Audit acknowledged. Thank you for your confirmation.');
+            }
             
             // Reload audit data to reflect changes
             loadAuditFromURL();
             
         } catch (error) {
             console.error('Error acknowledging audit:', error);
+            if (window.confirmationDialog) {
+                await window.confirmationDialog.show({
+                    title: 'Error',
+                    message: 'Failed to record acknowledgment. Please try again.',
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+            } else {
             alert('Failed to record acknowledgment. Please try again.');
+            }
         }
     }
 }
@@ -1847,6 +3583,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (reversalForm) {
         reversalForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Verify that current user is the audited employee
+            if (!isCurrentUserAuditedEmployee()) {
+                alert('Error: You can only submit reversal requests for audits assigned to you.');
+                return;
+            }
             
             if (!currentAudit || !currentTableName) {
                 alert('Error: Audit data not available');
@@ -1862,32 +3604,57 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate required fields
             const reversalType = document.getElementById('reversalType').value;
             const reversalReason = document.getElementById('reversalReasonDropdown').value;
-            const reversalJustification = document.getElementById('reversalJustification').value;
             
-            if (!reversalType || !reversalReason || !reversalJustification.trim()) {
+            if (!reversalType || !reversalReason) {
                 alert('Please fill in all required fields (marked with *)');
                 return;
             }
             
-            // Gather selected error parameters
-            const selectedParameters = Array.from(document.querySelectorAll('input[name="errorParameter"]:checked'))
-                .map(checkbox => checkbox.value)
-                .join(', ');
+            // Get all parameters with comments (automatically included)
+            const parameterComments = currentAudit?.parameterComments || currentAudit?.parameter_comments || {};
             
-            // Gather form data
+            // Find all parameters that have comments
+            const parametersWithComments = currentErrorFields.filter(field => {
+                const fieldComment = parameterComments[field.key];
+                return fieldComment && fieldComment.comment && fieldComment.comment.trim();
+            });
+            
+            if (parametersWithComments.length === 0) {
+                alert('Please add comments to parameters using the comment icon next to each parameter\'s feedback before submitting a reversal request.');
+                return;
+            }
+            
+            // Build justification from parameter comments
+            const selectedParameters = [];
+            const justificationParts = [];
+            
+            parametersWithComments.forEach(field => {
+                const fieldComment = parameterComments[field.key];
+                const comment = fieldComment.comment.trim();
+                selectedParameters.push(field.label);
+                justificationParts.push(`${field.label}: ${comment}`);
+            });
+            
+            const detailedJustification = justificationParts.join('\n\n');
+            
+            // Gather form data - use column names that match the database schema
+            // Based on actual schema: fnchat_cfd table does NOT have reversal_status column
+            // Status is tracked via reversal_approved and reversal_responded_at fields
             const reversalData = {
                 reversal_requested_at: new Date().toISOString(),
                 reversal_type: reversalType,
-                reversal_reason: reversalReason,
-                reversal_justification: reversalJustification,
-                reversal_metrics: selectedParameters || null,
-                within_auditor_scope: document.getElementById('withinAuditorScope').checked,
-                score_before_appeal: currentAudit.average_score,
-                reversal_status: 'Pending',
-                // reversal_approved and other fields will be null until reviewed
-                reversal_approved: null,
-                reversal_responded_at: null
+                // Combine reversal reason and detailed justification from parameter comments
+                reversal_justification_from_agent: `${reversalReason}: ${detailedJustification}`,
+                reversal_metrics_parameters: selectedParameters.join(', ') || null,
+                within_auditor_scope: document.getElementById('withinAuditorScope').checked ? 'true' : 'false',
+                score_before_appeal: currentAudit.average_score || currentAudit.averageScore || null
+                // Note: reversal_status column doesn't exist in the schema
+                // Status is determined by reversal_approved (null = pending, 'true' = approved, 'false' = rejected)
+                // reversal_responded_at is null until reviewed
             };
+            
+            // Don't set reversal_approved and reversal_responded_at to null explicitly
+            // They will remain null by default if not set
             
             console.log('Submitting reversal request with data:', reversalData);
             console.log('Table name:', currentTableName);
@@ -1903,7 +3670,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (error) throw error;
                 
+                // Update currentAudit object immediately to reflect reversal submission
+                if (currentAudit && data && data.length > 0) {
+                    const updatedAudit = data[0];
+                    currentAudit.reversalRequestedAt = updatedAudit.reversal_requested_at;
+                    currentAudit.reversal_requested_at = updatedAudit.reversal_requested_at;
+                    currentAudit.reversalType = updatedAudit.reversal_type;
+                    currentAudit.reversal_type = updatedAudit.reversal_type;
+                    currentAudit.reversalJustificationFromAgent = updatedAudit.reversal_justification_from_agent;
+                    currentAudit.reversal_justification_from_agent = updatedAudit.reversal_justification_from_agent;
+                    currentAudit.reversalMetricsParameters = updatedAudit.reversal_metrics_parameters;
+                    currentAudit.reversal_metrics_parameters = updatedAudit.reversal_metrics_parameters;
+                    currentAudit.withinAuditorScope = updatedAudit.within_auditor_scope;
+                    currentAudit.within_auditor_scope = updatedAudit.within_auditor_scope;
+                }
+                
+                // Show success dialog
+                if (window.confirmationDialog) {
+                    await window.confirmationDialog.show({
+                        title: 'Success',
+                        message: '✓ Reversal request submitted successfully!\n\nYour request will be reviewed by the quality team. You will be notified once a decision has been made.',
+                        confirmText: 'OK',
+                        type: 'success'
+                    });
+                } else {
                 alert('✓ Reversal request submitted successfully!\n\nYour request will be reviewed by the quality team. You will be notified once a decision has been made.');
+                }
                 
                 // Hide form and reload audit data
                 toggleReversalForm();

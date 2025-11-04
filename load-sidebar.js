@@ -107,6 +107,9 @@ class SidebarLoader {
 
       // Initialize sidebar functionality after loading
       this.initializeSidebarFunctionality()
+      
+      // Hide menu items for employees
+      this.hideEmployeeMenuItems()
     } catch (error) {
       // Error loading sidebar
       // Fallback: show a message or use existing sidebar
@@ -752,6 +755,70 @@ class SidebarLoader {
    */
   showSidebarError() {
     // Sidebar failed to load, using fallback
+  }
+
+  /**
+   * Hide menu items for employees based on their role
+   */
+  hideEmployeeMenuItems() {
+    try {
+      const userInfo = this.getUserInfo()
+      if (!userInfo) return
+
+      const userRole = userInfo.role || ''
+      const isEmployee = userRole === 'Employee'
+
+      if (!isEmployee) return
+
+      // Hide Auditor's Dashboard (check both possible aria-label variations)
+      let auditorsDashboard = document.querySelector('[aria-label="Auditor\'s Dashboard"]')
+      if (!auditorsDashboard) {
+        auditorsDashboard = document.querySelector('[aria-label="Auditors\' Dashboard"]')
+      }
+      if (auditorsDashboard) {
+        const parentLi = auditorsDashboard.closest('li[role="none"]')
+        if (parentLi) {
+          parentLi.style.display = 'none'
+        }
+      }
+
+      // Hide Create Audit
+      const createAudit = document.querySelector('[aria-label="Create New Audit"]')
+      if (createAudit) {
+        const parentLi = createAudit.closest('li[role="none"]')
+        if (parentLi) {
+          parentLi.style.display = 'none'
+        }
+      }
+
+      // Hide Improvement Corner
+      const improvementCorner = document.querySelector('[aria-label="Improvement Corner"]')
+      if (improvementCorner) {
+        const parentLi = improvementCorner.closest('li[role="none"]')
+        if (parentLi) {
+          parentLi.style.display = 'none'
+        }
+      }
+
+      // Hide Scorecards and User Management from Settings submenu, but keep Profile
+      const scorecardsLink = document.querySelector('.submenu-item[href="scorecards.html"]')
+      if (scorecardsLink) {
+        const parentLi = scorecardsLink.closest('li[role="none"]')
+        if (parentLi) {
+          parentLi.style.display = 'none'
+        }
+      }
+
+      const userManagementLink = document.querySelector('.submenu-item[href="user-management.html"]')
+      if (userManagementLink) {
+        const parentLi = userManagementLink.closest('li[role="none"]')
+        if (parentLi) {
+          parentLi.style.display = 'none'
+        }
+      }
+    } catch (error) {
+      console.error('Error hiding employee menu items:', error)
+    }
   }
 }
 

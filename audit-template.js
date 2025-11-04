@@ -328,7 +328,7 @@ window.generateTranscriptSection = function(options = {}) {
                 </div>
             </div>
             <!-- Conversation Attributes Panel (Always visible by default) - Below transcript container -->
-            <div id="conversationAttributesPanel" style="background: white; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); overflow-y: auto;">
+            <div id="conversationAttributesPanel" style="background: white; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); overflow-y: auto; max-height: 80vh; flex-shrink: 0;">
                 <div id="conversationAttributesContent" style="padding: 0.3234rem; display: block;">
                     <div id="conversationAttributesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.3234rem;">
                         <!-- Attributes will be dynamically populated here -->
@@ -336,7 +336,7 @@ window.generateTranscriptSection = function(options = {}) {
                 </div>
             </div>
             <!-- Conversation Attributes Panel for text view (Always visible by default) - Below transcript container -->
-            <div id="conversationAttributesPanelTextView" style="background: white; border-radius: 0.3234rem; padding: 0.3234rem; border: 0.0304rem solid #e5e7eb; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); overflow-y: auto;">
+            <div id="conversationAttributesPanelTextView" style="background: white; border-radius: 0.3234rem; padding: 0.3234rem; border: 0.0304rem solid #e5e7eb; display: none; box-shadow: 0 0.0606rem 0.1213rem rgba(0,0,0,0.05); overflow-y: auto; max-height: 80vh; flex-shrink: 0;">
                 <div id="conversationAttributesGridTextView" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.3234rem;">
                     <!-- Attributes will be dynamically populated here -->
                 </div>

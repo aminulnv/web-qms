@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Calibration | QMS</title>
-<meta name="description" content="Quality Management System Dashboard">
+<meta name="description" content="Quality Management System - Calibration Management">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,23 +19,1822 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <style>
+        .calibration-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.125rem;
+            padding: 0;
+            width: 100%;
+        }
 
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.125rem;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            border: 0.0469rem solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1);
+            transform: translateY(-0.0938rem);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.375rem;
+        }
+
+        .stat-title {
+            font-size: 0.5625rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-icon {
+            width: 0.9375rem;
+            height: 0.9375rem;
+            color: var(--primary-color);
+        }
+
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.1875rem;
+        }
+
+        .stat-subtitle {
+            font-size: 0.4688rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .section-card {
+            background: #ffffff;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            border: 0.0469rem solid #e5e7eb;
+            margin-bottom: 1.125rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5625rem;
+            border-bottom: 0.0469rem solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 0.6562rem;
+            font-weight: 600;
+            color: #1A733E;
+            text-transform: uppercase;
+            letter-spacing: 0.0141rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 0.1875rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.5625rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.1875rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #f9fafb;
+            color: #374151;
+            border: 0.0469rem solid #d1d5db;
+            border-radius: 0.1875rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.5625rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
+        }
+
+        .calibration-session-card {
+            background: #ffffff;
+            border: 0.0469rem solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .calibration-session-card:hover {
+            box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5625rem;
+        }
+
+        .session-info {
+            flex: 1;
+        }
+
+        .session-title {
+            font-size: 0.6562rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.1875rem;
+        }
+
+        .session-meta {
+            font-size: 0.5625rem;
+            color: #6b7280;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.1875rem;
+        }
+
+        .session-status {
+            padding: 0.1875rem 0.375rem;
+            border-radius: 0.1875rem;
+            font-size: 0.5156rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-completed {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .session-participants {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-top: 0.5625rem;
+        }
+
+        .participant-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.1875rem;
+            padding: 0.1875rem 0.375rem;
+            background-color: #f3f4f6;
+            border-radius: 0.1875rem;
+            font-size: 0.5156rem;
+            color: #374151;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 0.375rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 0.1875rem 0.375rem;
+            font-size: 0.5156rem;
+            border-radius: 0.1875rem;
+        }
+
+        .filter-panel {
+            display: none;
+            background: #f9fafb;
+            border: 0.0469rem solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 1.125rem;
+        }
+
+        .filter-panel.active {
+            display: block;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(7.0312rem, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 0.5625rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.1875rem;
+        }
+
+        .filter-select, .filter-input {
+            padding: 0.2812rem 0.375rem;
+            border: 0.0469rem solid #d1d5db;
+            border-radius: 0.1875rem;
+            font-size: 0.5625rem;
+            font-family: 'Poppins', sans-serif;
+            background-color: white;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5625rem;
+            width: 100%;
+            max-width: 28.125rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 0.0469rem solid #e5e7eb;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 0.8438rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.125rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 0.75rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.375rem;
+            padding: 0.75rem;
+            border-top: 0.0469rem solid #e5e7eb;
+        }
+
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.5625rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.1875rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.375rem;
+            border: 0.0469rem solid #d1d5db;
+            border-radius: 0.1875rem;
+            font-size: 0.5625rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .participant-list {
+            max-height: 9.375rem;
+            overflow-y: auto;
+            border: 0.0469rem solid #e5e7eb;
+            border-radius: 0.1875rem;
+            padding: 0.375rem;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem;
+            border-bottom: 0.0469rem solid #f3f4f6;
+        }
+
+        .participant-item:last-child {
+            border-bottom: none;
+        }
+
+        .participant-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 1.5rem;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2.25rem 0.75rem;
+            color: #6b7280;
+        }
+
+        .empty-state svg {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 0.75rem;
+            opacity: 0.3;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.5625rem;
+            margin-top: 0.75rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.375rem;
+            text-align: left;
+            border-bottom: 0.0469rem solid #e5e7eb;
+        }
+
+        .comparison-table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .score-variance {
+            padding: 0.1875rem 0.375rem;
+            border-radius: 0.1875rem;
+            font-weight: 600;
+            font-size: 0.5156rem;
+        }
+
+        .variance-low {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .variance-medium {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .variance-high {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
 </head>
 
 <body>
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
- <main class="main-content" role="main">
+<main class="main-content" role="main">
     <p class="page-heading">Calibration</p>
     <div style="margin-bottom: 1.125rem;"></div>
 
+    <div class="calibration-container">
+        <!-- Statistics Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Total Sessions</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="totalSessions">-</div>
+                <div class="stat-subtitle">All calibration sessions</div>
+            </div>
 
-<!-- page content here -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Active Sessions</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12,6 12,12 16,14"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="activeSessions">-</div>
+                <div class="stat-subtitle">Currently in progress</div>
+            </div>
 
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Avg. Agreement</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4"/>
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="avgAgreement">-</div>
+                <div class="stat-subtitle">Average score alignment</div>
+            </div>
 
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Participants</span>
+                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="totalParticipants">-</div>
+                <div class="stat-subtitle">Total auditors involved</div>
+            </div>
+        </div>
 
+        <!-- Controls Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Filter & Search
+                </div>
+                <button class="btn-primary" onclick="openCreateSessionModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Create Session
+                </button>
+            </div>
 
+            <div class="filter-panel" id="filterPanel">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Search</label>
+                        <input type="text" id="searchInput" placeholder="Search sessions..." class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Scorecard</label>
+                        <select id="scorecardFilter" class="filter-select">
+                            <option value="">All Scorecards</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Date Range</label>
+                        <input type="date" id="dateFromFilter" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">To Date</label>
+                        <input type="date" id="dateToFilter" class="filter-input">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.375rem;">
+                    <button class="btn-secondary" onclick="applyFilters()">Apply Filters</button>
+                    <button class="btn-secondary" onclick="clearFilters()">Clear</button>
+                </div>
+            </div>
 
+            <button class="btn-secondary" onclick="toggleFilters()" style="margin-top: 0.75rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                Filters
+            </button>
+        </div>
+
+        <!-- My Calibration Sessions (For Participants) -->
+        <div class="section-card" id="myCalibrationSessionsSection" style="display: none;">
+            <div class="section-header">
+                <div class="section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    My Calibration Sessions
+                </div>
+                <span id="mySessionsCount" style="font-size: 0.5625rem; color: #6b7280;">0 sessions</span>
+            </div>
+
+            <div id="mySessionsList">
+                <div class="loading">Loading your calibration sessions...</div>
+            </div>
+        </div>
+
+        <!-- Calibration Sessions List (All Sessions - Admin View) -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    All Calibration Sessions
+                </div>
+                <span id="sessionsCount" style="font-size: 0.5625rem; color: #6b7280;">0 sessions</span>
+            </div>
+
+            <div id="sessionsList">
+                <div class="loading">Loading calibration sessions...</div>
+            </div>
+        </div>
+    </div>
 </main>
+
+<!-- Create Session Modal -->
+<div id="createSessionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Create Calibration Session</h3>
+            <button class="modal-close" onclick="closeCreateSessionModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="createSessionForm">
+                <div class="form-group">
+                    <label for="sessionName">Session Name *</label>
+                    <input type="text" id="sessionName" required placeholder="e.g., Q1 2024 Calibration Session">
+                </div>
+                <div class="form-group">
+                    <label for="sessionScorecard">Scorecard *</label>
+                    <select id="sessionScorecard" required>
+                        <option value="">Select Scorecard</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sample Source *</label>
+                    <div style="display: flex; gap: 0.75rem; margin-bottom: 0.375rem;">
+                        <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.5625rem;">
+                            <input type="radio" name="sampleSource" value="audit" id="sampleSourceAudit" checked onchange="toggleSampleSource()">
+                            <span>Existing Audit</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.5625rem;">
+                            <input type="radio" name="sampleSource" value="interaction" id="sampleSourceInteraction" onchange="toggleSampleSource()">
+                            <span>Specific Interaction ID</span>
+                        </label>
+                    </div>
+                    <div id="sampleAuditContainer">
+                        <select id="sessionAudit">
+                            <option value="">Select Audit</option>
+                        </select>
+                        <small style="font-size: 0.4688rem; color: #6b7280; margin-top: 0.1875rem; display: block;">
+                            Select a scorecard first, then choose an existing completed audit to use as the calibration sample
+                        </small>
+                    </div>
+                    <div id="sampleInteractionContainer" style="display: none;">
+                        <input type="text" id="sessionInteractionId" placeholder="Enter Interaction ID (e.g., 12345678)" style="width: 100%; padding: 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5625rem;">
+                        <small style="font-size: 0.4688rem; color: #6b7280; margin-top: 0.1875rem; display: block;">
+                            Enter a specific Interaction ID from Intercom to use as the calibration sample
+                        </small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="sessionDescription">Description</label>
+                    <textarea id="sessionDescription" rows="3" placeholder="Optional description or notes for this calibration session"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Participants (Quality Analysts) *</label>
+                    <div class="participant-list" id="participantsList">
+                        <div class="loading">Loading participants...</div>
+                    </div>
+                    <small style="font-size: 0.4688rem; color: #6b7280; margin-top: 0.1875rem; display: block;">
+                        Select Quality Analysts who will participate in this calibration
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="sessionDeadline">Deadline</label>
+                    <input type="datetime-local" id="sessionDeadline">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeCreateSessionModal()">Cancel</button>
+            <button type="button" class="btn-primary" onclick="createCalibrationSession()">Create Session</button>
+        </div>
+    </div>
+</div>
+
+<!-- View Session Details Modal -->
+<div id="viewSessionModal" class="modal">
+    <div class="modal-content" style="max-width: 42.1875rem;">
+        <div class="modal-header">
+            <h3 id="viewSessionTitle">Calibration Session Details</h3>
+            <button class="modal-close" onclick="closeViewSessionModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="viewSessionBody">
+            <!-- Session details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeViewSessionModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Calibration Audit Form Modal -->
+<div id="calibrationAuditFormModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 0; overflow-y: auto;">
+    <form id="calibrationAuditForm" method="POST" style="background: white; width: 100%; min-height: 100vh; display: flex; flex-direction: column; gap: 0; padding: 0; margin: 0;">
+        <!-- Form will be loaded dynamically from create-audit.html structure -->
+        <!-- This is a placeholder - we'll populate it when starting calibration -->
+        <div style="padding: 2rem; text-align: center;">
+            <p>Loading calibration audit form...</p>
+        </div>
+    </form>
+</div>
+
+<script>
+// Global variables
+let allSessions = [];
+let filteredSessions = [];
+let allScorecards = [];
+let allAudits = [];
+let allQualityAnalysts = [];
+let currentUserEmail = '';
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', async function() {
+    await initializeCalibration();
+});
+
+async function initializeCalibration() {
+    try {
+        // Wait for Supabase
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.supabaseClient) {
+            console.error('Supabase client not initialized');
+            return;
+        }
+
+        // Get current user
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        currentUserEmail = userInfo.email;
+
+        // Load initial data
+        await loadScorecards();
+        await loadQualityAnalysts();
+        await loadCalibrationSessions();
+        await loadMyCalibrationSessions(); // Load sessions assigned to current user
+        updateStatistics();
+
+        // Setup event listeners
+        document.getElementById('searchInput')?.addEventListener('input', filterSessions);
+        document.getElementById('statusFilter')?.addEventListener('change', filterSessions);
+        document.getElementById('scorecardFilter')?.addEventListener('change', filterSessions);
+        document.getElementById('dateFromFilter')?.addEventListener('change', filterSessions);
+        document.getElementById('dateToFilter')?.addEventListener('change', filterSessions);
+
+    } catch (error) {
+        console.error('Error initializing calibration:', error);
+    }
+}
+
+async function loadScorecards() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('scorecards')
+            .select('id, name, table_name')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        allScorecards = data || [];
+        
+        // Populate scorecard filter
+        const scorecardFilter = document.getElementById('scorecardFilter');
+        if (scorecardFilter) {
+            scorecardFilter.innerHTML = '<option value="">All Scorecards</option>';
+            allScorecards.forEach(scorecard => {
+                const option = document.createElement('option');
+                option.value = scorecard.id;
+                option.textContent = scorecard.name;
+                scorecardFilter.appendChild(option);
+            });
+        }
+
+        // Populate create session scorecard dropdown
+        const sessionScorecard = document.getElementById('sessionScorecard');
+        if (sessionScorecard) {
+            sessionScorecard.innerHTML = '<option value="">Select Scorecard</option>';
+            allScorecards.forEach(scorecard => {
+                const option = document.createElement('option');
+                option.value = scorecard.id;
+                option.textContent = scorecard.name;
+                sessionScorecard.appendChild(option);
+            });
+            
+            // Attach event listener for scorecard change
+            setupScorecardChangeListener();
+        }
+
+    } catch (error) {
+        console.error('Error loading scorecards:', error);
+    }
+}
+
+// Global flag to prevent duplicate listeners
+let scorecardChangeListenerAttached = false;
+
+function setupScorecardChangeListener() {
+    const sessionScorecard = document.getElementById('sessionScorecard');
+    if (!sessionScorecard || scorecardChangeListenerAttached) return;
+    
+    // Attach event listener
+    sessionScorecard.addEventListener('change', handleScorecardChange);
+    scorecardChangeListenerAttached = true;
+}
+
+async function handleScorecardChange(event) {
+    const scorecardId = event.target.value;
+    const auditSelect = document.getElementById('sessionAudit');
+    
+    if (!auditSelect) return;
+    
+    if (!scorecardId) {
+        auditSelect.innerHTML = '<option value="">Select a scorecard first</option>';
+        auditSelect.disabled = true;
+        auditSelect.removeAttribute('required');
+        return;
+    }
+
+    auditSelect.disabled = true;
+    auditSelect.removeAttribute('required');
+    auditSelect.innerHTML = '<option value="">Loading audits...</option>';
+    
+    try {
+        const audits = await loadAuditsForScorecard(scorecardId);
+        
+        auditSelect.innerHTML = '<option value="">Select Audit</option>';
+        
+        if (audits.length === 0) {
+            const noAuditsOption = document.createElement('option');
+            noAuditsOption.value = '';
+            noAuditsOption.textContent = 'No completed audits found for this scorecard';
+            noAuditsOption.disabled = true;
+            auditSelect.appendChild(noAuditsOption);
+            auditSelect.disabled = true;
+            auditSelect.removeAttribute('required');
+            return;
+        }
+        
+        audits.forEach(audit => {
+            const option = document.createElement('option');
+            option.value = audit.id;
+            const employeeName = audit.employee_name || audit.employee_email || 'Unknown';
+            const submitDate = audit.submitted_at ? new Date(audit.submitted_at).toLocaleDateString() : 'N/A';
+            // Use average_score, fallback to final_score or score if available
+            const score = audit.average_score !== null && audit.average_score !== undefined 
+                ? `${audit.average_score}%` 
+                : (audit.final_score !== null && audit.final_score !== undefined
+                    ? `${audit.final_score}%`
+                    : (audit.score !== null && audit.score !== undefined
+                        ? `${audit.score}%`
+                        : 'N/A'));
+            option.textContent = `${employeeName} - ${submitDate}${score !== 'N/A' ? ' (Score: ' + score + ')' : ''}`;
+            auditSelect.appendChild(option);
+        });
+        
+        auditSelect.disabled = false;
+        auditSelect.setAttribute('required', 'required');
+        
+    } catch (error) {
+        console.error('Error loading audits:', error);
+        auditSelect.innerHTML = '<option value="">Error loading audits - ' + error.message + '</option>';
+        auditSelect.disabled = true;
+        auditSelect.removeAttribute('required');
+    }
+}
+
+async function loadQualityAnalysts() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('users')
+            .select('email, name')
+            .eq('role', 'Quality Analyst')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        allQualityAnalysts = data || [];
+        populateParticipantsList();
+
+    } catch (error) {
+        console.error('Error loading quality analysts:', error);
+    }
+}
+
+function populateParticipantsList() {
+    const participantsList = document.getElementById('participantsList');
+    if (!participantsList) return;
+
+    if (allQualityAnalysts.length === 0) {
+        participantsList.innerHTML = '<div style="text-align: center; padding: 0.75rem; color: #6b7280; font-size: 0.5625rem;">No Quality Analysts found</div>';
+        return;
+    }
+
+    participantsList.innerHTML = allQualityAnalysts.map(analyst => `
+        <div class="participant-item">
+            <input type="checkbox" id="participant_${analyst.email}" value="${analyst.email}" class="participant-checkbox">
+            <label for="participant_${analyst.email}" style="cursor: pointer; flex: 1; font-size: 0.5625rem;">
+                ${escapeHtml(analyst.name || analyst.email)}
+            </label>
+        </div>
+    `).join('');
+}
+
+async function loadCalibrationSessions() {
+    try {
+        // Note: This assumes a 'calibration_sessions' table exists in Supabase
+        // If not, you'll need to create it with fields: id, name, scorecard_id, audit_id, 
+        // status, created_by, created_at, deadline, description, participants (JSON array)
+        
+        const { data, error } = await window.supabaseClient
+            .from('calibration_sessions')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            // If table doesn't exist, show empty state
+            if (error.code === 'PGRST116') {
+                console.warn('calibration_sessions table does not exist');
+                allSessions = [];
+                filteredSessions = [];
+                renderSessions();
+                return;
+            }
+            throw error;
+        }
+
+        allSessions = data || [];
+        filteredSessions = [...allSessions];
+        renderSessions();
+
+    } catch (error) {
+        console.error('Error loading calibration sessions:', error);
+        document.getElementById('sessionsList').innerHTML = 
+            '<div class="loading" style="color: #ef4444;">Error loading sessions: ' + error.message + '</div>';
+    }
+}
+
+function renderSessions() {
+    const sessionsList = document.getElementById('sessionsList');
+    if (!sessionsList) return;
+
+    if (filteredSessions.length === 0) {
+        sessionsList.innerHTML = `
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <p style="font-size: 0.6562rem; font-weight: 500; margin-bottom: 0.375rem;">No calibration sessions found</p>
+                <p style="font-size: 0.5625rem; color: #9ca3af;">Create your first calibration session to get started</p>
+            </div>
+        `;
+        return;
+    }
+
+    sessionsList.innerHTML = filteredSessions.map(session => {
+        const scorecard = allScorecards.find(s => s.id === session.scorecard_id);
+        const participants = Array.isArray(session.participants) ? session.participants : [];
+        const status = session.status || 'pending';
+        
+        const statusClass = {
+            'active': 'status-active',
+            'completed': 'status-completed',
+            'pending': 'status-pending'
+        }[status] || 'status-pending';
+
+        const statusText = {
+            'active': 'Active',
+            'completed': 'Completed',
+            'pending': 'Pending'
+        }[status] || 'Pending';
+
+        return `
+            <div class="calibration-session-card">
+                <div class="session-header">
+                    <div class="session-info">
+                        <div class="session-title">${escapeHtml(session.name || 'Unnamed Session')}</div>
+                        <div class="session-meta">
+                            <span>Scorecard: ${escapeHtml(scorecard?.name || 'Unknown')}</span>
+                            <span>Created: ${new Date(session.created_at).toLocaleDateString()}</span>
+                            ${session.deadline ? `<span>Deadline: ${new Date(session.deadline).toLocaleDateString()}</span>` : ''}
+                        </div>
+                        <div class="session-participants">
+                            ${participants.map(email => {
+                                const analyst = allQualityAnalysts.find(a => a.email === email);
+                                return `<span class="participant-badge">${escapeHtml(analyst?.name || email)}</span>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <span class="session-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="session-actions">
+                    <button class="btn-primary btn-small" onclick="viewSessionDetails('${session.id}')">
+                        View Details
+                    </button>
+                    ${status === 'active' ? `
+                        <button class="btn-secondary btn-small" onclick="completeSession('${session.id}')">
+                            Complete Session
+                        </button>
+                        ${session.deadline ? `
+                            <div style="margin-top: 0.375rem; padding: 0.375rem 0.75rem; background: #f3f4f6; border-radius: 0.1875rem; font-size: 0.5625rem; color: #374151;">
+                                <strong>Time Remaining:</strong> <span id="timer-${session.id}" style="font-weight: 600; color: var(--primary-color);">Calculating...</span>
+                            </div>
+                        ` : ''}
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('sessionsCount').textContent = `${filteredSessions.length} session${filteredSessions.length !== 1 ? 's' : ''}`;
+    
+    // Start countdown timers for active sessions with deadlines
+    filteredSessions.forEach(session => {
+        if (session.status === 'active' && session.deadline) {
+            updateDeadlineTimer(session.id, session.deadline);
+        }
+    });
+}
+
+// Update deadline countdown timer
+function updateDeadlineTimer(timerId, deadline) {
+    const timerElement = document.getElementById(timerId);
+    if (!timerElement) return;
+    
+    const deadlineDate = new Date(deadline);
+    const now = new Date();
+    const diff = deadlineDate - now;
+    
+    if (diff <= 0) {
+        timerElement.textContent = 'Expired';
+        timerElement.style.color = '#ef4444';
+        return;
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    let timeString = '';
+    if (days > 0) {
+        timeString = `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+        timeString = `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+        timeString = `${minutes}m ${seconds}s`;
+    } else {
+        timeString = `${seconds}s`;
+    }
+    
+    timerElement.textContent = timeString;
+    
+    // Update every second
+    setTimeout(() => updateDeadlineTimer(sessionId, deadline), 1000);
+}
+
+// Load calibration sessions assigned to current user
+let myCalibrationSessions = [];
+
+async function loadMyCalibrationSessions() {
+    try {
+        if (!currentUserEmail) return;
+        
+        // Get all sessions where current user is a participant
+        const { data, error } = await window.supabaseClient
+            .from('calibration_sessions')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                myCalibrationSessions = [];
+                renderMySessions();
+                return;
+            }
+            throw error;
+        }
+
+        // Filter sessions where user is a participant
+        myCalibrationSessions = (data || []).filter(session => {
+            const participants = Array.isArray(session.participants) ? session.participants : [];
+            return participants.includes(currentUserEmail);
+        });
+
+        renderMySessions();
+
+    } catch (error) {
+        console.error('Error loading my calibration sessions:', error);
+        const mySessionsList = document.getElementById('mySessionsList');
+        if (mySessionsList) {
+            mySessionsList.innerHTML = 
+                '<div class="loading" style="color: #ef4444;">Error loading sessions: ' + error.message + '</div>';
+        }
+    }
+}
+
+function renderMySessions() {
+    const mySessionsList = document.getElementById('mySessionsList');
+    const mySessionsSection = document.getElementById('myCalibrationSessionsSection');
+    
+    if (!mySessionsList || !mySessionsSection) return;
+
+    // Show section if user has assigned sessions
+    if (myCalibrationSessions.length > 0) {
+        mySessionsSection.style.display = 'block';
+    } else {
+        mySessionsSection.style.display = 'none';
+        return;
+    }
+
+    // Check which sessions user has already submitted
+    loadMyCalibrationResults().then(results => {
+        const submittedSessionIds = new Set((results || []).map(r => r.calibration_session_id));
+
+        if (myCalibrationSessions.length === 0) {
+            mySessionsList.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <p style="font-size: 0.6562rem; font-weight: 500; margin-bottom: 0.375rem;">No calibration sessions assigned</p>
+                    <p style="font-size: 0.5625rem; color: #9ca3af;">You will see sessions here when you are assigned as a participant</p>
+                </div>
+            `;
+            return;
+        }
+
+        mySessionsList.innerHTML = myCalibrationSessions.map(session => {
+            const scorecard = allScorecards.find(s => s.id === session.scorecard_id);
+            const status = session.status || 'pending';
+            const isSubmitted = submittedSessionIds.has(session.id);
+            
+            const statusClass = {
+                'active': 'status-active',
+                'completed': 'status-completed',
+                'pending': 'status-pending'
+            }[status] || 'status-pending';
+
+            const statusText = {
+                'active': 'Active',
+                'completed': 'Completed',
+                'pending': 'Pending'
+            }[status] || 'Pending';
+
+            return `
+                <div class="calibration-session-card">
+                    <div class="session-header">
+                        <div class="session-info">
+                            <div class="session-title">${escapeHtml(session.name || 'Unnamed Session')}</div>
+                            <div class="session-meta">
+                                <span>Scorecard: ${escapeHtml(scorecard?.name || 'Unknown')}</span>
+                                <span>Created: ${new Date(session.created_at).toLocaleDateString()}</span>
+                                ${session.deadline ? `<span>Deadline: ${new Date(session.deadline).toLocaleDateString()}</span>` : ''}
+                            </div>
+                            ${session.description ? `<div style="font-size: 0.5625rem; color: #6b7280; margin-top: 0.375rem;">${escapeHtml(session.description)}</div>` : ''}
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.375rem;">
+                            <span class="session-status ${statusClass}">${statusText}</span>
+                            ${isSubmitted ? '<span style="font-size: 0.5625rem; color: #10b981; font-weight: 600;">✓ Submitted</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="session-actions">
+                        ${status === 'active' && session.deadline ? `
+                            <div style="margin-bottom: 0.375rem; padding: 0.375rem 0.75rem; background: #f3f4f6; border-radius: 0.1875rem; font-size: 0.5625rem; color: #374151;">
+                                <strong>Time Remaining:</strong> <span id="my-timer-${session.id}" style="font-weight: 600; color: var(--primary-color);">Calculating...</span>
+                            </div>
+                        ` : ''}
+                        ${status === 'active' && !isSubmitted ? `
+                            <button class="btn-primary btn-small" onclick="startCalibration('${session.id}')">
+                                Start Calibration
+                            </button>
+                        ` : ''}
+                        ${status === 'active' && isSubmitted ? `
+                            <button class="btn-secondary btn-small" onclick="viewMyCalibrationResult('${session.id}')">
+                                View Submission
+                            </button>
+                        ` : ''}
+                        ${status === 'pending' ? `
+                            <span style="font-size: 0.5625rem; color: #9ca3af;">Waiting for activation...</span>
+                        ` : ''}
+                        ${status === 'completed' ? `
+                            <span style="font-size: 0.5625rem; color: #6b7280;">Session completed</span>
+                        ` : ''}
+                        <button class="btn-secondary btn-small" onclick="viewSessionDetails('${session.id}')" style="margin-top: 0.375rem;">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('mySessionsCount').textContent = `${myCalibrationSessions.length} session${myCalibrationSessions.length !== 1 ? 's' : ''}`;
+    });
+    
+    // Start countdown timers for active sessions with deadlines
+    myCalibrationSessions.forEach(session => {
+        if (session.status === 'active' && session.deadline) {
+            updateDeadlineTimer(`my-timer-${session.id}`, session.deadline);
+        }
+    });
+}
+
+async function loadMyCalibrationResults() {
+    try {
+        if (!currentUserEmail) return [];
+        
+        const { data, error } = await window.supabaseClient
+            .from('calibration_results')
+            .select('calibration_session_id, submitted_at')
+            .eq('participant_email', currentUserEmail);
+
+        if (error) {
+            if (error.code === 'PGRST116') return [];
+            throw error;
+        }
+
+        return data || [];
+    } catch (error) {
+        console.error('Error loading my calibration results:', error);
+        return [];
+    }
+}
+
+function updateStatistics() {
+    const totalSessions = allSessions.length;
+    const activeSessions = allSessions.filter(s => s.status === 'active').length;
+    const completedSessions = allSessions.filter(s => s.status === 'completed');
+    
+    // Calculate average agreement (mock calculation - would need actual calibration results)
+    let avgAgreement = '-';
+    if (completedSessions.length > 0) {
+        // This would calculate from actual calibration results
+        avgAgreement = '85%'; // Placeholder
+    }
+
+    // Count unique participants
+    const allParticipants = new Set();
+    allSessions.forEach(session => {
+        if (Array.isArray(session.participants)) {
+            session.participants.forEach(email => allParticipants.add(email));
+        }
+    });
+
+    document.getElementById('totalSessions').textContent = totalSessions;
+    document.getElementById('activeSessions').textContent = activeSessions;
+    document.getElementById('avgAgreement').textContent = avgAgreement;
+    document.getElementById('totalParticipants').textContent = allParticipants.size;
+}
+
+function toggleFilters() {
+    const panel = document.getElementById('filterPanel');
+    if (panel) {
+        panel.classList.toggle('active');
+    }
+}
+
+function filterSessions() {
+    const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const scorecardFilter = document.getElementById('scorecardFilter')?.value || '';
+    const dateFrom = document.getElementById('dateFromFilter')?.value || '';
+    const dateTo = document.getElementById('dateToFilter')?.value || '';
+
+    filteredSessions = allSessions.filter(session => {
+        const matchesSearch = !searchTerm || 
+            (session.name && session.name.toLowerCase().includes(searchTerm)) ||
+            (session.description && session.description.toLowerCase().includes(searchTerm));
+
+        const matchesStatus = !statusFilter || session.status === statusFilter;
+        const matchesScorecard = !scorecardFilter || session.scorecard_id === scorecardFilter;
+
+        let matchesDate = true;
+        if (dateFrom || dateTo) {
+            const sessionDate = new Date(session.created_at);
+            if (dateFrom && sessionDate < new Date(dateFrom)) matchesDate = false;
+            if (dateTo && sessionDate > new Date(dateTo)) matchesDate = false;
+        }
+
+        return matchesSearch && matchesStatus && matchesScorecard && matchesDate;
+    });
+
+    renderSessions();
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('scorecardFilter').value = '';
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+    filteredSessions = [...allSessions];
+    renderSessions();
+}
+
+function applyFilters() {
+    filterSessions();
+}
+
+async function loadAuditsForScorecard(scorecardId) {
+    try {
+        const scorecard = allScorecards.find(s => s.id === scorecardId);
+        if (!scorecard) {
+            console.error('Scorecard not found:', scorecardId);
+            return [];
+        }
+        
+        if (!scorecard.table_name) {
+            console.error('Scorecard missing table_name:', scorecard);
+            return [];
+        }
+
+        console.log('Loading audits from table:', scorecard.table_name);
+
+        // First, try to get a sample row to see what columns exist
+        // Then query with the correct columns
+        try {
+            // Try querying with all common columns first
+            let query = window.supabaseClient
+                .from(scorecard.table_name)
+                .select('id, employee_name, employee_email, submitted_at, average_score, status')
+                .not('submitted_at', 'is', null)
+                .order('submitted_at', { ascending: false })
+                .limit(100);
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Error querying audits:', error);
+                // If specific columns don't exist, try with just basic columns
+                if (error.message && (error.message.includes('column') || error.message.includes('does not exist'))) {
+                    console.log('Retrying with basic columns only...');
+                    
+                    // Try with minimal columns first
+                    const { data: basicData, error: basicError } = await window.supabaseClient
+                        .from(scorecard.table_name)
+                        .select('id, employee_name, employee_email, submitted_at')
+                        .not('submitted_at', 'is', null)
+                        .order('submitted_at', { ascending: false })
+                        .limit(100);
+                    
+                    if (basicError) {
+                        // If that fails, try selecting all columns
+                        console.log('Trying with select(*)...');
+                        const { data: allData, error: allError } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('*')
+                            .not('submitted_at', 'is', null)
+                            .order('submitted_at', { ascending: false })
+                            .limit(100);
+                        
+                        if (allError) throw allError;
+                        
+                        // Map the data to include score from whatever column exists
+                        const mappedAudits = (allData || []).map(audit => ({
+                            id: audit.id,
+                            employee_name: audit.employee_name,
+                            employee_email: audit.employee_email,
+                            submitted_at: audit.submitted_at,
+                            average_score: audit.average_score || audit.final_score || audit.score || null,
+                            status: audit.status
+                        }));
+                        
+                        // Filter for completed audits
+                        const completedAudits = mappedAudits.filter(audit => {
+                            if (audit.status !== undefined) {
+                                return audit.status === 'completed' || audit.status === 'submitted';
+                            }
+                            return true; // If no status field, assume all with submitted_at are completed
+                        });
+                        
+                        console.log(`Found ${completedAudits.length} completed audits`);
+                        return completedAudits;
+                    }
+                    
+                    // Map basic data and add null scores
+                    const mappedBasicAudits = (basicData || []).map(audit => ({
+                        id: audit.id,
+                        employee_name: audit.employee_name,
+                        employee_email: audit.employee_email,
+                        submitted_at: audit.submitted_at,
+                        average_score: null,
+                        status: null
+                    }));
+                    
+                    console.log(`Found ${mappedBasicAudits.length} audits (no score column)`);
+                    return mappedBasicAudits;
+                }
+                throw error;
+            }
+
+            // Filter for completed audits if status field exists
+            const completedAudits = (data || []).filter(audit => {
+                // If status field exists, filter by it
+                if (audit.status !== undefined && audit.status !== null) {
+                    return audit.status === 'completed' || audit.status === 'submitted';
+                }
+                // Otherwise, assume all audits with submitted_at are completed
+                return true;
+            });
+
+            console.log(`Found ${completedAudits.length} completed audits`);
+            return completedAudits;
+
+        } catch (error) {
+            console.error('Error loading audits for scorecard:', error);
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error loading audits for scorecard:', error);
+        throw error; // Re-throw to let caller handle it
+    }
+}
+
+// Modal functions
+function openCreateSessionModal() {
+    const modal = document.getElementById('createSessionModal');
+    if (modal) {
+        modal.classList.add('active');
+        
+        // Reset form
+        const form = document.getElementById('createSessionForm');
+        if (form) form.reset();
+        
+        // Reset scorecard dropdown
+        const scorecardSelect = document.getElementById('sessionScorecard');
+        if (scorecardSelect) {
+            scorecardSelect.value = '';
+        }
+        
+        // Reset and disable audit dropdown
+        const auditSelect = document.getElementById('sessionAudit');
+        if (auditSelect) {
+            auditSelect.innerHTML = '<option value="">Select a scorecard first</option>';
+            auditSelect.disabled = true;
+            auditSelect.removeAttribute('required');
+        }
+        
+        // Uncheck all participants
+        document.querySelectorAll('.participant-checkbox').forEach(cb => cb.checked = false);
+        
+        // Ensure event listener is attached (will skip if already attached)
+        setupScorecardChangeListener();
+    }
+}
+
+function closeCreateSessionModal() {
+    const modal = document.getElementById('createSessionModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Toggle between sample audit and interaction ID
+function toggleSampleSource() {
+    const sourceAudit = document.getElementById('sampleSourceAudit');
+    const sourceInteraction = document.getElementById('sampleSourceInteraction');
+    const auditContainer = document.getElementById('sampleAuditContainer');
+    const interactionContainer = document.getElementById('sampleInteractionContainer');
+    const auditSelect = document.getElementById('sessionAudit');
+    const interactionInput = document.getElementById('sessionInteractionId');
+    
+    if (sourceAudit && sourceAudit.checked) {
+        auditContainer.style.display = 'block';
+        interactionContainer.style.display = 'none';
+        if (auditSelect) auditSelect.setAttribute('required', 'required');
+        if (interactionInput) {
+            interactionInput.removeAttribute('required');
+            interactionInput.value = '';
+        }
+    } else if (sourceInteraction && sourceInteraction.checked) {
+        auditContainer.style.display = 'none';
+        interactionContainer.style.display = 'block';
+        if (auditSelect) auditSelect.removeAttribute('required');
+        if (interactionInput) interactionInput.setAttribute('required', 'required');
+    }
+}
+
+// Event listener is now set up in setupScorecardChangeListener() function
+// This ensures it's properly attached when the modal opens
+
+async function createCalibrationSession() {
+    const sessionName = document.getElementById('sessionName').value.trim();
+    const scorecardId = document.getElementById('sessionScorecard').value;
+    const description = document.getElementById('sessionDescription').value.trim();
+    const deadline = document.getElementById('sessionDeadline').value;
+    
+    // Check which source is selected
+    const sourceAudit = document.getElementById('sampleSourceAudit');
+    const sourceInteraction = document.getElementById('sampleSourceInteraction');
+    const auditId = document.getElementById('sessionAudit').value;
+    const interactionId = document.getElementById('sessionInteractionId').value.trim();
+
+    // Validation
+    if (!sessionName) {
+        alert('Please enter a session name');
+        return;
+    }
+    
+    if (!scorecardId) {
+        alert('Please select a scorecard');
+        return;
+    }
+    
+    // Validate based on selected source
+    if (sourceAudit && sourceAudit.checked) {
+        if (!auditId) {
+            alert('Please select a sample audit. If no audits are available, complete some audits first.');
+            return;
+        }
+    } else if (sourceInteraction && sourceInteraction.checked) {
+        if (!interactionId) {
+            alert('Please enter an Interaction ID');
+            return;
+        }
+    } else {
+        alert('Please select a sample source (Existing Audit or Interaction ID)');
+        return;
+    }
+
+    const selectedParticipants = Array.from(document.querySelectorAll('.participant-checkbox:checked'))
+        .map(cb => cb.value);
+
+    if (selectedParticipants.length === 0) {
+        alert('Please select at least one participant');
+        return;
+    }
+
+    try {
+        const sessionData = {
+            name: sessionName,
+            scorecard_id: scorecardId,
+            audit_id: sourceAudit && sourceAudit.checked ? auditId : null,
+            interaction_id: sourceInteraction && sourceInteraction.checked ? interactionId : null,
+            description: description || null,
+            deadline: deadline || null,
+            participants: selectedParticipants, // This will be stored as JSONB array
+            status: 'active', // Auto-activate on creation
+            created_by: currentUserEmail,
+            created_at: new Date().toISOString()
+        };
+
+        const { data, error } = await window.supabaseClient
+            .from('calibration_sessions')
+            .insert([sessionData])
+            .select();
+
+        if (error) {
+            // Check if table doesn't exist
+            if (error.code === 'PGRST116' || error.message.includes('schema cache') || error.message.includes('does not exist')) {
+                alert('The calibration_sessions table does not exist. Please run the SQL script to create it.\n\nCheck the file: create-calibration-sessions-table.sql\n\nOr contact your administrator to create the table.');
+                console.error('Table does not exist. SQL script available at: create-calibration-sessions-table.sql');
+                return;
+            }
+            throw error;
+        }
+
+        alert('Calibration session created successfully!');
+        closeCreateSessionModal();
+        await loadCalibrationSessions();
+        updateStatistics();
+
+    } catch (error) {
+        console.error('Error creating session:', error);
+        alert('Error creating session: ' + error.message);
+    }
+}
+
+async function viewSessionDetails(sessionId) {
+    const session = allSessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const modal = document.getElementById('viewSessionModal');
+    const modalTitle = document.getElementById('viewSessionTitle');
+    const modalBody = document.getElementById('viewSessionBody');
+
+    modalTitle.textContent = session.name || 'Calibration Session Details';
+
+    // Load calibration results if available
+    // This would typically come from a calibration_results table
+    const scorecard = allScorecards.find(s => s.id === session.scorecard_id);
+    
+    modalBody.innerHTML = `
+        <div style="margin-bottom: 1.125rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Status</label>
+                    <div style="font-size: 0.6562rem; color: #374151;">${session.status || 'Pending'}</div>
+                </div>
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Scorecard</label>
+                    <div style="font-size: 0.6562rem; color: #374151;">${scorecard?.name || 'Unknown'}</div>
+                </div>
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Created</label>
+                    <div style="font-size: 0.6562rem; color: #374151;">${new Date(session.created_at).toLocaleString()}</div>
+                </div>
+                ${session.deadline ? `
+                <div>
+                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Deadline</label>
+                    <div style="font-size: 0.6562rem; color: #374151;">${new Date(session.deadline).toLocaleString()}</div>
+                </div>
+                ` : ''}
+            </div>
+            ${session.description ? `
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Description</label>
+                <div style="font-size: 0.6562rem; color: #374151;">${escapeHtml(session.description)}</div>
+            </div>
+            ` : ''}
+            <div>
+                <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Participants</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
+                    ${(Array.isArray(session.participants) ? session.participants : []).map(email => {
+                        const analyst = allQualityAnalysts.find(a => a.email === email);
+                        return `<span class="participant-badge">${escapeHtml(analyst?.name || email)}</span>`;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 1.125rem; padding-top: 0.75rem; border-top: 0.0469rem solid #e5e7eb;">
+            <h4 style="font-size: 0.6562rem; font-weight: 600; color: #374151; margin-bottom: 0.5625rem;">Calibration Results</h4>
+            <div style="color: #6b7280; font-size: 0.5625rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.1875rem;">
+                ${session.status === 'completed' 
+                    ? 'Calibration results will be displayed here once all participants complete their audits.'
+                    : 'Results will be available after the session is completed.'}
+            </div>
+        </div>
+    `;
+
+    modal.classList.add('active');
+}
+
+function closeViewSessionModal() {
+    const modal = document.getElementById('viewSessionModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Removed activateSession - sessions are now auto-activated on creation
+
+async function completeSession(sessionId) {
+    if (!confirm('Are you sure you want to mark this session as completed? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const { error } = await window.supabaseClient
+            .from('calibration_sessions')
+            .update({ status: 'completed' })
+            .eq('id', sessionId);
+
+        if (error) throw error;
+
+        await loadCalibrationSessions();
+        updateStatistics();
+        alert('Session marked as completed!');
+
+    } catch (error) {
+        console.error('Error completing session:', error);
+        alert('Error completing session: ' + error.message);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Global variable to track current calibration session
+let currentCalibrationSession = null;
+let currentCalibrationSampleAudit = null;
+
+// Start calibration - open audit form with sample audit data
+async function startCalibration(sessionId) {
+    try {
+        // Find the session
+        const session = myCalibrationSessions.find(s => s.id === sessionId);
+        if (!session) {
+            alert('Session not found');
+            return;
+        }
+
+        if (session.status !== 'active') {
+            alert('This session is not active. Only active sessions can be calibrated.');
+            return;
+        }
+
+        currentCalibrationSession = session;
+
+        // Get scorecard
+        const scorecard = allScorecards.find(s => s.id === session.scorecard_id);
+        if (!scorecard || !scorecard.table_name) {
+            alert('Scorecard not found or invalid');
+            return;
+        }
+
+        // Check if we have an audit_id or interaction_id
+        let sampleAudit = null;
+        
+        if (session.audit_id) {
+            // Load the sample audit from the scorecard's table
+            const { data, error: auditError } = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('*')
+                .eq('id', session.audit_id)
+                .single();
+
+            if (auditError || !data) {
+                alert('Error loading sample audit: ' + (auditError?.message || 'Audit not found'));
+                return;
+            }
+            sampleAudit = data;
+        } else if (session.interaction_id) {
+            // Create a minimal audit object from interaction_id
+            // This will be used to populate the form with just the interaction_id
+            sampleAudit = {
+                interaction_id: session.interaction_id,
+                scorecard_id: session.scorecard_id,
+                // Other fields will be empty/null - they'll be populated from Intercom if available
+            };
+        } else {
+            alert('No sample audit or interaction ID found for this session');
+            return;
+        }
+
+        currentCalibrationSampleAudit = sampleAudit;
+
+        // Load scorecard parameters
+        const { data: parameters, error: paramsError } = await window.supabaseClient
+            .from('scorecard_parameters')
+            .select('*')
+            .eq('scorecard_id', session.scorecard_id)
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+
+        if (paramsError) {
+            alert('Error loading scorecard parameters: ' + paramsError.message);
+            return;
+        }
+
+        // Open the audit form in a new window/tab pointing to create-audit.html with calibration mode
+        const calibrationParams = new URLSearchParams({
+            calibration: 'true',
+            sessionId: sessionId,
+            scorecardId: session.scorecard_id,
+            tableName: scorecard.table_name
+        });
+        
+        // Add audit_id or interaction_id based on what's available
+        if (session.audit_id) {
+            calibrationParams.append('auditId', session.audit_id);
+        }
+        if (session.interaction_id) {
+            calibrationParams.append('interactionId', session.interaction_id);
+        }
+        
+        // Open in new window
+        const calibrationWindow = window.open(`create-audit.html?${calibrationParams.toString()}`, '_blank');
+        
+        // Listen for calibration submission message
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'calibration_submitted') {
+                // Reload my sessions to show updated status
+                reloadMySessions();
+            }
+        });
+
+    } catch (error) {
+        console.error('Error starting calibration:', error);
+        alert('Error starting calibration: ' + error.message);
+    }
+}
+
+function viewMyCalibrationResult(sessionId) {
+    // TODO: Show the user's submitted calibration result
+    alert('View calibration result - to be implemented');
+}
+
+// Reload my sessions after calibration submission
+async function reloadMySessions() {
+    await loadMyCalibrationSessions();
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.classList.remove('active');
+    }
+});
+</script>
+
 </body>
 </html>
-

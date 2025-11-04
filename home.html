@@ -1,7 +1,7 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Home | QMS</title>
 <meta name="description" content="Quality Management System Dashboard">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
@@ -10,117 +10,1819 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: '#1a733e',
+          'primary-dark': '#0d5e3a',
+          'dark-forest': '#032816',
+          'success': '#10b981',
+          'warning': '#f59e0b',
+          'error': '#ef4444',
+        },
+        fontFamily: {
+          sans: ['Poppins', 'sans-serif'],
+        },
+      },
+    },
+  }
+</script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="env-config.js"></script>
+<script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
-
+<style>
+  .main-content {
+    background-color: #f8f7f2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  /* Override sidebar.css centering for home page */
+  .main-content > * {
+    width: 100%;
+  }
+</style>
 </head>
 
 <body>
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
  <main class="main-content" role="main">
-    <p class="page-heading">Home</p>
-    <div style="margin-bottom: 1.125rem;"></div>
+  <!-- Header Bar -->
+  <header class="sticky top-0 z-40">
+    <div class="flex items-center justify-between px-4 py-2">
+      <!-- Left: Logo + Create Button -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-primary" viewBox="0 -960 960 960" fill="currentColor">
+            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm491-80h69v-69l-69 69Zm-457 0h73l120-120h85L452-200h64l120-120h85L541-200h65l120-120h34v-440H200v509l69-69h85L434-200Zm72-200-56-56 177-177 80 80 147-147 56 56-203 204-80-80-121 120Z"/>
+          </svg>
+          <span class="text-xs font-semibold text-gray-800 hidden sm:inline">NEXT QMS</span>
+        </div>
+        <button id="createAuditBtn" onclick="window.location.href='create-audit.html'" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:bg-primary-dark transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Add
+        </button>
+      </div>
 
-    <!-- Main Clock positioned above buttons -->
-    <div style="text-align: center; margin-bottom: 0.75rem; margin-top: 3rem;">
-        <div style="font-size: 0.9rem; color: var(--text-color); font-weight: 600;" id="clock-date">-- -- ----</div>
-        <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.375rem;" id="clock-time">--:--</div>
-        <script>
-            (function() {
-                function updateClock() {
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString('en-US', {
-                        hour12: true,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                    const dateString = now.toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                    });
-                    document.getElementById('clock-time').textContent = timeString;
-                    document.getElementById('clock-date').textContent = dateString;
-                }
-                updateClock();
-                setInterval(updateClock, 1000);
-            })();
-        </script>
+      <!-- Right: Action Icons -->
+      <div class="flex items-center gap-2">
+        <button onclick="window.location.href='search.html'" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+        <div id="notificationBtn" class="relative group">
+          <button class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors relative">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            <span id="notificationBadge" class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-error rounded-full"></span>
+          </button>
+          
+          <!-- Notifications Modal - Appears on hover -->
+          <div id="notificationsModal" class="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl w-80 max-h-[calc(100vh-5rem)] flex flex-col opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50" onmouseleave="hideNotifications()">
+            <!-- Modal Header -->
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 class="text-sm font-semibold text-gray-900">Notifications</h3>
+              <button onclick="hideNotifications()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Notifications List -->
+            <div id="notificationsList" class="flex-1 overflow-y-auto divide-y divide-gray-200">
+              <div class="px-4 py-8 text-center text-gray-500 text-xs">
+                <div class="animate-pulse">Loading notifications...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </button>
+        <button class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+          </svg>
+        </button>
+        <div id="userAvatar" class="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:bg-primary-dark transition-colors">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88C7.55 15.8 9.68 15 12 15s4.45.8 6.14 2.12C16.43 19.18 14.03 20 12 20z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Dashboard Content -->
+  <div class="px-4 py-4 max-w-7xl mx-auto w-full">
+    <h1 class="text-xl font-bold text-gray-900 mb-4">Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+      <!-- Audits Conducted Card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Audits Conducted</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2" id="statsAuditsConductedCount">-</div>
+        <!-- Progress bar showing remaining audits -->
+        <div class="mt-2">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-medium text-gray-600" id="statsRemainingText">- remaining</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-1.5">
+            <div class="bg-success h-1.5 rounded-full transition-all duration-300" id="statsRemainingProgress" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Average Quality Score Card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
+            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Average Quality Score</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsAvgQualityScore">-</div>
+        <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgScoreSubtitle">-</div>
+      </div>
+
+      <!-- Remaining Card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition-colors">
+            <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Remaining</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsRemainingCount">-</div>
+      </div>
+
+      <!-- In Progress Card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">In Progress</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsInProgressCount">-</div>
+        <div class="text-xs font-medium text-gray-600 mt-1" id="statsDaysRemaining">-</div>
+      </div>
+
+      <!-- Reversal Card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-error/10 flex items-center justify-center group-hover:bg-error/20 transition-colors">
+            <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Reversal</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2" id="statsReversalTotalCount">-</div>
+        <div class="flex items-center gap-3 text-xs">
+          <div class="flex items-center gap-1">
+            <span class="text-gray-600">Active:</span>
+            <span class="font-semibold text-warning" id="statsReversalActiveCount">-</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="text-gray-600">Resolved:</span>
+            <span class="font-semibold text-success" id="statsReversalResolvedCount">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avg Duration Card -->
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Duration</div>
+        <div class="text-2xl font-bold text-gray-900 mb-1" id="statsAvgDuration">-</div>
+        <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgDurationSubtitle">per audit</div>
+      </div>
     </div>
 
-    <!-- World Clocks -->
-    <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 1.125rem; min-height: 7.0312rem;">
-        <div style="text-align: center; background-color: rgba(255, 255, 255, 0.05); border-radius: 0.375rem; border: 0.0469rem solid rgba(255, 255, 255, 0.1); padding: 0.75rem; min-width: 5.625rem;">
-            <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600; margin-bottom: 0.375rem;">
-                <span class="world-clock-flag">🇱🇰</span>
-                <span>🇱🇰</span>
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Left Column: Updates Feed -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded border border-gray-200">
+          <div class="px-4 py-3 border-b border-gray-200">
+            <h2 id="updatesSectionTitle" class="text-sm font-semibold text-gray-900">Updates to your audits</h2>
+          </div>
+          <div id="updatesFeed" class="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div class="px-4 py-3 text-center text-gray-500 text-xs">
+              <div class="animate-pulse">Loading updates...</div>
             </div>
-            <div style="font-size: 1.125rem; font-weight: 700; color: var(--primary-color);" id="sri-lanka-time">--:--</div>
-            <div style="font-size: 0.5625rem; color: var(--text-color); opacity: 0.8;" id="sri-lanka-date">-- -- ----</div>
+          </div>
         </div>
-        <div style="text-align: center; background-color: rgba(255, 255, 255, 0.05); border-radius: 0.375rem; border: 0.0469rem solid rgba(255, 255, 255, 0.1); padding: 0.75rem; min-width: 5.625rem;">
-            <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600; margin-bottom: 0.375rem;">
-                <span class="world-clock-flag">🇲🇾</span>
-                <span>🇲🇾</span>
-            </div>
-            <div style="font-size: 1.125rem; font-weight: 700; color: var(--primary-color);" id="malaysia-time">--:--</div>
-            <div style="font-size: 0.5625rem; color: var(--text-color); opacity: 0.8;" id="malaysia-date">-- -- ----</div>
-        </div>
-        <div style="text-align: center; background-color: rgba(255, 255, 255, 0.05); border-radius: 0.375rem; border: 0.0469rem solid rgba(255, 255, 255, 0.1); padding: 0.75rem; min-width: 5.625rem;">
-            <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600; margin-bottom: 0.375rem;">
-                <span class="world-clock-flag">🇨🇾</span>
-                <span>🇨🇾</span>
-            </div>
-            <div style="font-size: 1.125rem; font-weight: 700; color: var(--primary-color);" id="cyprus-time">--:--</div>
-            <div style="font-size: 0.5625rem; color: var(--text-color); opacity: 0.8;" id="cyprus-date">-- -- ----</div>
-        </div>
-        <script>
-            (function() {
-                function updateWorldClocks() {
-                    const timezones = [
-                        { id: 'sri-lanka', timezone: 'Asia/Colombo' },
-                        { id: 'malaysia', timezone: 'Asia/Kuala_Lumpur' },
-                        { id: 'cyprus', timezone: 'Europe/Nicosia' }
-                    ];
+      </div>
 
-                    timezones.forEach(({ id, timezone }) => {
-                        const now = new Date();
-                        const timeString = now.toLocaleTimeString('en-US', {
-                            timeZone: timezone,
-                            hour12: true,
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
-                        });
-                        const dateString = now.toLocaleDateString('en-US', {
-                            timeZone: timezone,
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                        });
-                        
-                        document.getElementById(`${id}-time`).textContent = timeString;
-                        document.getElementById(`${id}-date`).textContent = dateString;
-                    });
-                }
-                updateWorldClocks();
-                setInterval(updateWorldClocks, 1000);
-            })();
-        </script>
+      <!-- Right Column: Assigned Audits -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded border border-gray-200">
+          <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <span id="auditsSectionTitle">My Audits</span>
+              <span id="pendingCount" class="bg-primary text-white px-2 py-0.5 rounded text-xs font-semibold">0</span>
+            </h2>
+            <div class="flex items-center gap-2">
+              <button id="viewAllBtn" onclick="window.location.href='expert-audits.html'" class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded hover:bg-primary-dark transition-colors" style="display: none;">
+                View All
+              </button>
+              <button id="sortBtn" onclick="toggleSortMenu()" class="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+                </svg>
+              </button>
+              <div id="sortMenu" class="hidden absolute mt-2 bg-white border border-gray-200 rounded shadow-lg z-10">
+                <select id="auditSortBy" onchange="sortAssignedAudits()" class="w-full px-3 py-2 text-xs border-0 focus:ring-0">
+                  <option value="name_asc">Name (A-Z)</option>
+                  <option value="name_desc">Name (Z-A)</option>
+                  <option value="status_asc" id="statusAscOption">Status</option>
+                  <option value="status_desc" id="statusDescOption">Status</option>
+                  <option value="date_desc" selected>Date (Newest)</option>
+                  <option value="date_asc">Date (Oldest)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="assignedAuditsList" class="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div class="px-4 py-8 text-center text-gray-500 text-xs">
+              <div class="animate-pulse">Loading assigned audits...</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div class="button-group">
-        <button class="btn btn-primary" aria-label="Open Dashboard" onclick="window.location.href='auditor-dashboard.html'">Open Dashboard</button>
-        <button class="btn btn-primary" aria-label="Start Auditing Process" onclick="window.location.href='create-audit.html'">Start Auditing</button>
-    </div>
+  </div>
 
 </main>
+
+<script>
+// Dashboard State
+let currentUserEmail = '';
+let currentUserRole = '';
+let isAgent = false;
+let allUsers = [];
+let allAssignments = [];
+let assignedAudits = [];
+let sortBy = 'date_desc'; // Default will be updated based on user role
+let notifications = [];
+let unreadNotificationCount = 0;
+
+// Initialize Dashboard
+document.addEventListener('DOMContentLoaded', async function() {
+  await initializeDashboard();
+});
+
+async function initializeDashboard() {
+  try {
+    // Wait for Supabase to be ready
+    let attempts = 0;
+    while (!window.supabaseClient && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    if (!window.supabaseClient) {
+      console.error('Supabase client not initialized');
+      return;
+    }
+
+    // Get current user
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    currentUserEmail = (userInfo.email || '').toLowerCase().trim();
+    currentUserRole = userInfo.role || '';
+    // Check if user is an agent (Employee role)
+    isAgent = currentUserRole === 'Employee';
+
+    if (!currentUserEmail) {
+      console.error('No user logged in');
+      return;
+    }
+
+    console.log('Current user:', currentUserEmail, 'Role:', currentUserRole, 'IsAgent:', isAgent);
+
+    // Update user avatar
+    updateUserAvatar(userInfo);
+
+    // Update section titles for agents and hide create audit button
+    if (isAgent) {
+      const auditsTitle = document.getElementById('auditsSectionTitle');
+      if (auditsTitle) {
+        auditsTitle.textContent = 'My Audits';
+      }
+      const updatesTitle = document.getElementById('updatesSectionTitle');
+      if (updatesTitle) {
+        updatesTitle.textContent = 'Updates to my audits';
+      }
+      // Hide the "Add" button for employees
+      const createAuditBtn = document.getElementById('createAuditBtn');
+      if (createAuditBtn) {
+        createAuditBtn.style.display = 'none';
+      }
+    } else {
+      // For auditors, update title to "My Assigned Audits" and show View All button
+      const auditsTitle = document.getElementById('auditsSectionTitle');
+      if (auditsTitle) {
+        auditsTitle.textContent = 'My Assigned Audits';
+      }
+      const viewAllBtn = document.getElementById('viewAllBtn');
+      if (viewAllBtn) {
+        viewAllBtn.style.display = 'block';
+      }
+      // Update sort options for assignments
+      const statusAscOption = document.getElementById('statusAscOption');
+      const statusDescOption = document.getElementById('statusDescOption');
+      if (statusAscOption) statusAscOption.textContent = 'Status (Pending → In Progress)';
+      if (statusDescOption) statusDescOption.textContent = 'Status (In Progress → Pending)';
+      
+      // Set default sort to status_desc (In Progress → Pending) for auditors
+      sortBy = 'status_desc';
+      const auditSortBy = document.getElementById('auditSortBy');
+      if (auditSortBy) {
+        auditSortBy.value = 'status_desc';
+      }
+    }
+
+    // Load all users for lookups
+    await loadAllUsers();
+
+    // Load all dashboard data
+    await Promise.all([
+      loadRecentUpdates(),
+      updateYourStats(),
+      loadAssignedAudits(),
+      loadNotifications()
+    ]);
+
+  } catch (error) {
+    console.error('Error initializing dashboard:', error);
+  }
+}
+
+function updateUserAvatar(userInfo) {
+  const avatarEl = document.getElementById('userAvatar');
+  if (!avatarEl) return;
+
+  if (userInfo.avatar) {
+    avatarEl.innerHTML = `<img src="${userInfo.avatar}" alt="${userInfo.name || 'User'}" class="w-full h-full rounded-full object-cover">`;
+  } else if (userInfo.name) {
+    const initials = userInfo.name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+    avatarEl.innerHTML = `<span class="text-xs font-semibold">${initials}</span>`;
+  }
+}
+
+async function loadAllUsers() {
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('users')
+      .select('email, name, role, channel, quality_supervisor')
+      .eq('is_active', true);
+    
+    if (error) throw error;
+    allUsers = data || [];
+  } catch (error) {
+    console.error('Error loading users:', error);
+    allUsers = [];
+  }
+}
+
+async function loadRecentUpdates() {
+  try {
+    const updatesFeed = document.getElementById('updatesFeed');
+    if (!updatesFeed) return;
+
+    let allUpdates = [];
+
+    if (isAgent) {
+      // For agents: Only show completed audits and reversals (not pending/in_progress assignments)
+      
+      // 1. Load completed audits from scorecard tables
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('id, name, table_name')
+        .eq('is_active', true);
+      
+      if (!scError && scorecards) {
+        const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        
+        for (const scorecard of scorecards) {
+          try {
+            const { data: audits, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('*')
+              .eq('employee_email', currentUserEmail)
+              .order('submitted_at', { ascending: false })
+              .limit(20);
+            
+            if (!error && audits && audits.length > 0) {
+              // Client-side filtering with exact email match
+              const filteredAudits = audits.filter(audit => {
+                const emailToCheck = audit.employee_email;
+                if (!emailToCheck) return false;
+                return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+              });
+              
+              filteredAudits.forEach(audit => {
+                const auditorEmail = (audit.auditor_email || '').toLowerCase().trim();
+                const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
+                const auditorName = auditorUser?.name || audit.auditor_name || audit.auditor_email?.split('@')[0] || 'Unknown';
+                
+                allUpdates.push({
+                  id: `audit-${audit.id}`,
+                  type: 'audit_completed',
+                  displayName: auditorName,
+                  displayEmail: audit.auditor_email,
+                  timestamp: audit.submitted_at || audit.audit_timestamp,
+                  status: 'completed',
+                  interactionId: audit.interaction_id || audit.interactionId,
+                  scorecardId: scorecard.id,
+                  scorecardTable: scorecard.table_name,
+                  auditId: audit.id
+                });
+              });
+            }
+          } catch (err) {
+            console.warn(`Error loading audits from ${scorecard.table_name}:`, err);
+          }
+        }
+      }
+      
+      // 2. Load reversals (both requested and responded)
+      if (!scError && scorecards) {
+        const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        
+        for (const scorecard of scorecards) {
+          try {
+            const { data: reversals, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, interaction_id, interactionId, submitted_at')
+              .eq('employee_email', currentUserEmail)
+              .not('reversal_requested_at', 'is', null)
+              .order('reversal_requested_at', { ascending: false })
+              .limit(10);
+            
+            if (!error && reversals && reversals.length > 0) {
+              const filteredReversals = reversals.filter(rev => {
+                const emailToCheck = rev.employee_email;
+                if (!emailToCheck) return false;
+                return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+              });
+              
+              filteredReversals.forEach(reversal => {
+                const auditorEmail = (reversal.auditor_email || '').toLowerCase().trim();
+                const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
+                const auditorName = auditorUser?.name || reversal.auditor_email?.split('@')[0] || 'Unknown';
+                const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
+                
+                if (reversal.reversal_requested_at) {
+                  allUpdates.push({
+                    id: `reversal-request-${reversal.id}`,
+                    type: 'reversal_requested',
+                    displayName: auditorName,
+                    displayEmail: reversal.auditor_email,
+                    timestamp: reversal.reversal_requested_at,
+                    status: 'reversal_requested',
+                    interactionId: interactionId,
+                    scorecardId: scorecard.id,
+                    scorecardTable: scorecard.table_name,
+                    auditId: reversal.id
+                  });
+                }
+                
+                if (reversal.reversal_responded_at) {
+                  allUpdates.push({
+                    id: `reversal-response-${reversal.id}`,
+                    type: 'reversal_responded',
+                    displayName: auditorName,
+                    displayEmail: reversal.auditor_email,
+                    timestamp: reversal.reversal_responded_at,
+                    status: 'reversal_responded',
+                    interactionId: interactionId,
+                    scorecardId: scorecard.id,
+                    scorecardTable: scorecard.table_name,
+                    auditId: reversal.id
+                  });
+                }
+              });
+            }
+          } catch (err) {
+            console.warn(`Error loading reversals from ${scorecard.table_name}:`, err);
+          }
+        }
+      }
+      
+    } else {
+      // For auditors: Show all assignment status changes (pending, in_progress, completed)
+      const { data, error } = await window.supabaseClient
+        .from('audit_assignments')
+        .select('*')
+        .eq('auditor_email', currentUserEmail)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        const filteredAssignments = data.filter(assignment => {
+          const auditorEmail = (assignment.auditor_email || '').toLowerCase().trim();
+          return auditorEmail === normalizedCurrentEmail;
+        });
+        
+        filteredAssignments.forEach(assignment => {
+          const employeeEmail = (assignment.employee_email || '').toLowerCase().trim();
+          const employeeUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
+          const employeeName = employeeUser?.name || assignment.employee_name || assignment.employee_email?.split('@')[0] || 'Unknown';
+          
+          allUpdates.push({
+            id: `assignment-${assignment.id}`,
+            type: 'assignment',
+            displayName: employeeName,
+            displayEmail: assignment.employee_email,
+            timestamp: assignment.status === 'completed' && assignment.completed_at 
+              ? assignment.completed_at 
+              : assignment.created_at,
+            status: assignment.status,
+            assignmentId: assignment.id
+          });
+        });
+      }
+      
+      // Also load reversals for auditors
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('id, name, table_name')
+        .eq('is_active', true);
+      
+      if (!scError && scorecards) {
+        const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        
+        for (const scorecard of scorecards) {
+          try {
+            const { data: reversals, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, interaction_id, interactionId')
+              .eq('auditor_email', currentUserEmail)
+              .not('reversal_requested_at', 'is', null)
+              .order('reversal_requested_at', { ascending: false })
+              .limit(10);
+            
+            if (!error && reversals && reversals.length > 0) {
+              const filteredReversals = reversals.filter(rev => {
+                const emailToCheck = rev.auditor_email;
+                if (!emailToCheck) return false;
+                return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+              });
+              
+              filteredReversals.forEach(reversal => {
+                const employeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                const employeeUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
+                const employeeName = employeeUser?.name || reversal.employee_email?.split('@')[0] || 'Unknown';
+                const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
+                
+                if (reversal.reversal_requested_at) {
+                  allUpdates.push({
+                    id: `reversal-request-${reversal.id}`,
+                    type: 'reversal_requested',
+                    displayName: employeeName,
+                    displayEmail: reversal.employee_email,
+                    timestamp: reversal.reversal_requested_at,
+                    status: 'reversal_requested',
+                    interactionId: interactionId,
+                    scorecardId: scorecard.id,
+                    scorecardTable: scorecard.table_name,
+                    auditId: reversal.id
+                  });
+                }
+              });
+            }
+          } catch (err) {
+            console.warn(`Error loading reversals from ${scorecard.table_name}:`, err);
+          }
+        }
+      }
+    }
+
+    // Sort all updates by timestamp (most recent first)
+    allUpdates.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // Limit to 15 most recent
+    allUpdates = allUpdates.slice(0, 15);
+
+    if (allUpdates.length === 0) {
+      updatesFeed.innerHTML = `
+        <div class="px-4 py-6 text-center text-gray-500 text-xs">
+          <p>No recent updates</p>
+        </div>
+      `;
+      return;
+    }
+
+    updatesFeed.innerHTML = allUpdates.map(update => {
+      const timestamp = formatTimestamp(update.timestamp);
+      const initials = getInitials(update.displayName);
+      
+      let statusText = '';
+      if (update.type === 'audit_completed') {
+        statusText = 'completed your audit';
+      } else if (update.type === 'reversal_requested') {
+        statusText = isAgent 
+          ? `You requested reversal for audit ${update.interactionId || ''}`
+          : `requested reversal for audit ${update.interactionId || ''}`;
+      } else if (update.type === 'reversal_responded') {
+        statusText = 'responded to your reversal request';
+      } else {
+        statusText = getStatusText(update.status, isAgent);
+      }
+      
+      let onClickAction = '';
+      if (update.type === 'audit_completed' || update.type === 'reversal_requested' || update.type === 'reversal_responded') {
+        onClickAction = `onclick="viewAuditDetails('${update.auditId}', '${update.scorecardId || ''}', '${update.scorecardTable || ''}')"`;
+      } else if (update.assignmentId) {
+        onClickAction = `onclick="viewAudit('${update.assignmentId}')"`;
+      }
+
+      return `
+        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer" ${onClickAction}>
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span class="text-xs font-semibold text-primary">${initials}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-gray-900 leading-snug">
+                ${isAgent && update.type === 'reversal_requested' 
+                  ? `<span class="font-medium">You</span> ${statusText.replace('You ', '')}`
+                  : `<span class="font-medium">${escapeHtml(update.displayName)}</span> ${statusText}`
+                }
+              </p>
+              <p class="text-[10px] text-gray-500 mt-0.5">${timestamp}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('Error loading recent updates:', error);
+    document.getElementById('updatesFeed').innerHTML = `
+      <div class="px-4 py-6 text-center text-red-500 text-xs">
+        <p>Error loading updates</p>
+      </div>
+    `;
+  }
+}
+
+async function loadAssignedAudits() {
+  try {
+    console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole, 'IsAgent:', isAgent);
+    
+    if (isAgent) {
+      // For employees: Load completed audits from scorecard tables
+      await loadCompletedAuditsForEmployee();
+    } else {
+      // For auditors: Load pending/in-progress assignments from audit_assignments
+      await loadPendingAssignmentsForAuditor();
+    }
+
+    renderAssignedAudits();
+
+  } catch (error) {
+    console.error('Error loading assigned audits:', error);
+    document.getElementById('assignedAuditsList').innerHTML = `
+      <div class="px-4 py-8 text-center text-red-500 text-xs">
+        <p>Error loading audits</p>
+      </div>
+    `;
+  }
+}
+
+async function loadCompletedAuditsForEmployee() {
+  // Load all scorecards to query audit tables
+  const { data: scorecards, error: scError } = await window.supabaseClient
+    .from('scorecards')
+    .select('id, name, table_name, scoring_type')
+    .eq('is_active', true);
+  
+  if (scError) throw scError;
+  
+  let combinedAudits = [];
+  const auditFilterField = 'employee_email';
+  
+  console.log('Loading completed audits for employee, filtering by:', auditFilterField, 'for email:', currentUserEmail);
+  
+  // Load audits from all scorecard tables
+  for (const scorecard of (scorecards || [])) {
+      try {
+        // Try with exact match first (case-sensitive)
+        const { data, error } = await window.supabaseClient
+          .from(scorecard.table_name)
+          .select('*')
+          .order('submitted_at', { ascending: false })
+          .limit(500); // Get more to filter client-side
+        
+        if (error) {
+          console.warn(`Error loading from ${scorecard.table_name}:`, error);
+          continue;
+        }
+        
+        if (data && data.length > 0) {
+          console.log(`Found ${data.length} audits in ${scorecard.table_name} before filtering`);
+          
+          // Client-side filtering with exact email match (case-insensitive)
+          const filteredAudits = data.filter(audit => {
+            const emailToCheck = audit[auditFilterField];
+            if (!emailToCheck) return false;
+            
+            const normalizedEmailToCheck = emailToCheck.toLowerCase().trim();
+            const matches = normalizedEmailToCheck === currentUserEmail;
+            
+            if (!matches && auditFilterField === 'employee_email') {
+              // Debug: log mismatches for employees
+              console.log(`Mismatch in ${scorecard.table_name}:`, {
+                auditId: audit.id,
+                expectedEmail: currentUserEmail,
+                foundEmail: emailToCheck,
+                normalizedFound: normalizedEmailToCheck,
+                employee_email: audit.employee_email,
+                employee_name: audit.employee_name
+              });
+            }
+            
+            return matches;
+          });
+          
+          console.log(`After filtering: ${filteredAudits.length} audits match for ${currentUserEmail}`);
+          
+          // Debug: Log the filtered audits to verify they're correct
+          if (isAgent && filteredAudits.length > 0) {
+            console.log('Filtered audits for employee:', filteredAudits.map(a => ({
+              id: a.id,
+              employee_email: a.employee_email,
+              employee_name: a.employee_name,
+              auditor_email: a.auditor_email,
+              auditor_name: a.auditor_name
+            })));
+          }
+          
+          // Add scorecard info to each audit
+          const auditsWithScorecard = filteredAudits.map(audit => ({
+            ...audit,
+            _scorecard_id: scorecard.id,
+            _scorecard_name: scorecard.name,
+            _scorecard_table: scorecard.table_name,
+            _scoring_type: scorecard.scoring_type,
+            _isAssignment: false
+          }));
+          combinedAudits = combinedAudits.concat(auditsWithScorecard);
+        }
+      } catch (err) {
+        console.warn(`Exception loading from ${scorecard.table_name}:`, err);
+        continue;
+      }
+    }
+    
+    // Sort by submitted_at descending
+    combinedAudits.sort((a, b) => {
+      const dateA = new Date(a.submitted_at || a.audit_timestamp || 0);
+      const dateB = new Date(b.submitted_at || b.audit_timestamp || 0);
+      return dateB - dateA;
+    });
+    
+    // Final verification: Ensure all audits belong to current user
+    const invalidAudits = combinedAudits.filter(audit => {
+      const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
+      return auditEmployeeEmail !== currentUserEmail;
+    });
+    
+    if (invalidAudits.length > 0) {
+      console.error('CRITICAL: Found audits that do not belong to current user:', invalidAudits);
+      combinedAudits = combinedAudits.filter(audit => {
+        const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
+        return auditEmployeeEmail === currentUserEmail;
+      });
+    }
+    
+    // Limit total results
+    combinedAudits = combinedAudits.slice(0, 50);
+    
+    console.log(`Final completed audits count: ${combinedAudits.length} for employee ${currentUserEmail}`);
+    
+    assignedAudits = combinedAudits;
+    allAssignments = combinedAudits;
+}
+
+async function loadPendingAssignmentsForAuditor() {
+  // Load pending and in-progress assignments from audit_assignments table
+  const { data, error } = await window.supabaseClient
+    .from('audit_assignments')
+    .select(`
+      *,
+      scorecards:scorecard_id (
+        id,
+        name,
+        table_name
+      )
+    `)
+    .eq('auditor_email', currentUserEmail)
+    .in('status', ['pending', 'in_progress'])
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error loading assignments:', error);
+    throw error;
+  }
+  
+  // Normalize and filter client-side for exact match
+  const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+  const filteredAssignments = (data || []).filter(assignment => {
+    const auditorEmail = (assignment.auditor_email || '').toLowerCase().trim();
+    return auditorEmail === normalizedCurrentEmail;
+  });
+  
+  console.log(`Found ${filteredAssignments.length} pending/in-progress assignments for auditor ${currentUserEmail}`);
+  
+  // Map assignments to a format similar to audits for rendering
+  assignedAudits = filteredAssignments.map(assignment => ({
+    ...assignment,
+    _scorecard_id: assignment.scorecard_id,
+    _scorecard_name: assignment.scorecards?.name || 'Unknown Scorecard',
+    _scorecard_table: assignment.scorecards?.table_name || '',
+    _isAssignment: true,
+    // Map assignment fields to audit-like fields for rendering
+    id: assignment.id,
+    employee_name: assignment.employee_name,
+    employee_email: assignment.employee_email,
+    auditor_email: assignment.auditor_email,
+    status: assignment.status,
+    created_at: assignment.created_at
+  }));
+  
+  allAssignments = assignedAudits;
+}
+
+function renderAssignedAudits() {
+  const list = document.getElementById('assignedAuditsList');
+  const countEl = document.getElementById('pendingCount');
+
+  if (!list) return;
+
+  // Update count
+  if (countEl) countEl.textContent = assignedAudits.length;
+
+  if (assignedAudits.length === 0) {
+    const emptyMessage = isAgent 
+      ? 'Your completed audits will appear here'
+      : 'No pending audits assigned';
+    list.innerHTML = `
+      <div class="px-4 py-8 text-center text-gray-500 text-xs">
+        <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="font-medium text-gray-700 mb-1">No audits found</p>
+        <p class="text-gray-500">${emptyMessage}</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Sort audits
+  const sorted = [...assignedAudits];
+  sortAudits(sorted);
+
+  list.innerHTML = sorted.map(audit => {
+    // Check if this is an assignment (pending audit) or a completed audit
+    const isAssignment = audit._isAssignment === true;
+    
+    if (isAssignment) {
+      // Render assignment (pending audit) for auditors
+      const employeeEmail = (audit.employee_email || '').toLowerCase().trim();
+      const displayUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
+      const displayName = audit.employee_name || displayUser?.name || audit.employee_email?.split('@')[0] || 'Unknown';
+      const displayEmail = audit.employee_email || '';
+      const scorecardName = audit._scorecard_name || 'Unknown Scorecard';
+      const initials = getInitials(displayName);
+      
+      let statusBadge = '';
+      if (audit.status === 'in_progress') {
+        statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-yellow-100 text-yellow-800">In Progress</span>';
+      } else {
+        statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-800">Pending</span>';
+      }
+      
+      const requestDate = formatTimestamp(audit.created_at);
+      const buttonText = audit.status === 'in_progress' ? 'Continue' : 'Start';
+
+      return `
+        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAudit('${audit.id}')">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-1 min-w-0">
+              <div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                ${initials}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 mb-0.5">
+                  <h4 class="text-xs font-semibold text-gray-900 truncate">
+                    ${escapeHtml(displayName)}
+                  </h4>
+                </div>
+                <p class="text-[10px] text-gray-600 flex items-center gap-1 flex-wrap">
+                  <span class="truncate">${escapeHtml(displayEmail)}</span>
+                  <span class="text-gray-300">•</span>
+                  <span class="font-medium text-gray-700">${escapeHtml(scorecardName)}</span>
+                  <span class="text-gray-300">•</span>
+                  <span>${requestDate}</span>
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              ${statusBadge}
+              <button onclick="event.stopPropagation(); viewAudit('${audit.id}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
+                ${buttonText}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      // Render completed audit for employees
+      // Verify the audit belongs to the current user (for debugging)
+      if (isAgent) {
+        const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
+        if (auditEmployeeEmail !== currentUserEmail) {
+          console.error('CRITICAL: Audit does not belong to current user!', {
+            auditId: audit.id,
+            auditEmployeeEmail,
+            currentUserEmail,
+            audit
+          });
+        }
+      }
+      
+      // For agents, show auditor info; for auditors, show employee info
+      let displayUser, displayName, displayEmail;
+      if (isAgent) {
+        // For employees, show who audited them (the auditor)
+        const auditorEmail = (audit.auditor_email || '').toLowerCase().trim();
+        displayUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
+        displayName = displayUser?.name || audit.auditor_name || audit.auditor_email?.split('@')[0] || 'Unknown';
+        displayEmail = audit.auditor_email || '';
+      } else {
+        // For auditors, show who they audited (the employee)
+        const employeeEmail = (audit.employee_email || '').toLowerCase().trim();
+        displayUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
+        displayName = audit.employee_name || displayUser?.name || audit.employee_email?.split('@')[0] || 'Unknown';
+        displayEmail = audit.employee_email || '';
+      }
+      
+      const scorecardName = audit._scorecard_name || 'Unknown Scorecard';
+      const initials = getInitials(displayName);
+      
+      // Get passing status
+      const passingStatus = audit.passing_status || audit.passingStatus || 'Unknown';
+      const normalizedStatus = passingStatus === 'Passing' ? 'Passed' : (passingStatus === 'Not Passing' ? 'Not Passed' : passingStatus);
+      const statusColor = normalizedStatus === 'Passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+      const statusIcon = normalizedStatus === 'Passed' ? '✓' : '✗';
+      
+      const submittedDate = formatTimestamp(audit.submitted_at || audit.audit_timestamp);
+      const averageScore = audit.average_score || audit.averageScore || '0';
+      const totalErrors = audit.total_errors_count || audit.totalErrorsCount || '0';
+      const interactionId = audit.interaction_id || audit.interactionId || 'N/A';
+      const channel = audit.channel || 'N/A';
+
+      return `
+        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 flex-1 min-w-0">
+              <div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                ${initials}
+              </div>
+              <div class="flex-1 min-w-0">
+                ${isAgent ? `
+                  <!-- For employees: 2 rows, info compact -->
+                  <!-- Row 1: Interaction ID + Scorecard -->
+                  <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                    <h4 class="text-xs font-semibold text-gray-900 truncate">
+                      ${escapeHtml(interactionId)}
+                    </h4>
+                    ${audit._scorecard_name ? `
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
+                        ${escapeHtml(audit._scorecard_name)}
+                      </span>
+                    ` : ''}
+                  </div>
+                  <!-- Row 2: Auditor name • Channel • Score • Errors • Date -->
+                  <p class="text-[10px] text-gray-600 flex items-center gap-1 flex-wrap">
+                    <span class="font-medium text-gray-700">${escapeHtml(displayName)}</span>
+                    <span class="text-gray-300">•</span>
+                    <span>${escapeHtml(channel)}</span>
+                    <span class="text-gray-300">•</span>
+                    <span class="font-medium text-gray-700">${averageScore}%</span>
+                    <span class="text-gray-300">•</span>
+                    <span>${totalErrors} errors</span>
+                    <span class="text-gray-300">•</span>
+                    <span>${submittedDate}</span>
+                  </p>
+                ` : `
+                  <!-- For auditors: 2 rows, info compact -->
+                  <!-- Row 1: Employee name + Scorecard -->
+                  <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                    <h4 class="text-xs font-semibold text-gray-900 truncate">
+                      ${escapeHtml(displayName)}
+                    </h4>
+                    ${audit._scorecard_name ? `
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
+                        ${escapeHtml(audit._scorecard_name)}
+                      </span>
+                    ` : ''}
+                  </div>
+                  <!-- Row 2: Interaction ID • Channel • Score • Errors • Date -->
+                  <p class="text-[10px] text-gray-600 flex items-center gap-1 flex-wrap">
+                    <span>${escapeHtml(interactionId)}</span>
+                    <span class="text-gray-300">•</span>
+                    <span>${escapeHtml(channel)}</span>
+                    <span class="text-gray-300">•</span>
+                    <span class="font-medium text-gray-700">${averageScore}%</span>
+                    <span class="text-gray-300">•</span>
+                    <span>${totalErrors} errors</span>
+                    <span class="text-gray-300">•</span>
+                    <span>${submittedDate}</span>
+                  </p>
+                `}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${statusColor}">
+                ${statusIcon} ${normalizedStatus}
+              </span>
+              <button onclick="event.stopPropagation(); viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }).join('');
+}
+
+function sortAudits(audits) {
+  audits.sort((a, b) => {
+    const isAssignmentA = a._isAssignment === true;
+    const isAssignmentB = b._isAssignment === true;
+    
+    switch (sortBy) {
+      case 'name_asc':
+        // For agents, sort by auditor; for auditors, sort by employee
+        const nameA = (isAgent ? (a.auditor_name || a.auditor_email || '') : (a.employee_name || a.employee_email || '')).toLowerCase();
+        const nameB = (isAgent ? (b.auditor_name || b.auditor_email || '') : (b.employee_name || b.employee_email || '')).toLowerCase();
+        return nameA.localeCompare(nameB);
+      case 'name_desc':
+        const nameA2 = (isAgent ? (a.auditor_name || a.auditor_email || '') : (a.employee_name || a.employee_email || '')).toLowerCase();
+        const nameB2 = (isAgent ? (b.auditor_name || b.auditor_email || '') : (b.employee_name || b.employee_email || '')).toLowerCase();
+        return nameB2.localeCompare(nameA2);
+      case 'status_asc':
+        // For assignments, sort by assignment status; for audits, sort by passing status
+        if (isAssignmentA && isAssignmentB) {
+          const statusOrder = { 'pending': 0, 'in_progress': 1 };
+          return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
+        }
+        const statusA = (a.passing_status || a.passingStatus || '').toLowerCase();
+        const statusB = (b.passing_status || b.passingStatus || '').toLowerCase();
+        return statusA.localeCompare(statusB);
+      case 'status_desc':
+        if (isAssignmentA && isAssignmentB) {
+          const statusOrder = { 'pending': 0, 'in_progress': 1 };
+          return (statusOrder[b.status] || 0) - (statusOrder[a.status] || 0);
+        }
+        const statusA2 = (a.passing_status || a.passingStatus || '').toLowerCase();
+        const statusB2 = (b.passing_status || b.passingStatus || '').toLowerCase();
+        return statusB2.localeCompare(statusA2);
+      case 'date_asc':
+        const dateA = new Date(a.submitted_at || a.audit_timestamp || a.created_at || 0);
+        const dateB = new Date(b.submitted_at || b.audit_timestamp || b.created_at || 0);
+        return dateA - dateB;
+      case 'date_desc':
+      default:
+        const dateA2 = new Date(a.submitted_at || a.audit_timestamp || a.created_at || 0);
+        const dateB2 = new Date(b.submitted_at || b.audit_timestamp || b.created_at || 0);
+        return dateB2 - dateA2;
+    }
+  });
+}
+
+function sortAssignedAudits() {
+  const select = document.getElementById('auditSortBy');
+  if (select) {
+    sortBy = select.value;
+    renderAssignedAudits();
+  }
+}
+
+function toggleSortMenu() {
+  const menu = document.getElementById('sortMenu');
+  if (menu) {
+    menu.classList.toggle('hidden');
+  }
+}
+
+// Close sort menu when clicking outside
+document.addEventListener('click', function(event) {
+  const sortBtn = document.getElementById('sortBtn');
+  const sortMenu = document.getElementById('sortMenu');
+  if (sortMenu && sortBtn && !sortMenu.contains(event.target) && !sortBtn.contains(event.target)) {
+    sortMenu.classList.add('hidden');
+  }
+});
+
+// Update your stats (assignment progress)
+async function updateYourStats() {
+  try {
+    if (!currentUserEmail) {
+      console.log('No user email found for stats');
+      return;
+    }
+    
+    // Load assignments for current user
+    // Filter by employee_email if agent, otherwise by auditor_email
+    const filterField = isAgent ? 'employee_email' : 'auditor_email';
+    const { data: assignments, error: assignmentsError } = await window.supabaseClient
+      .from('audit_assignments')
+      .select('*')
+      .eq(filterField, currentUserEmail)
+      .order('created_at', { ascending: false });
+    
+    if (assignmentsError) {
+      console.error('Error loading assignments for stats:', assignmentsError);
+      return;
+    }
+    
+    const allAssignments = assignments || [];
+    const totalAssigned = allAssignments.length;
+    const completed = allAssignments.filter(a => a.status === 'completed').length;
+    const inProgress = allAssignments.filter(a => a.status === 'in_progress').length;
+    const pending = allAssignments.filter(a => a.status === 'pending').length;
+    const remaining = pending + inProgress;
+    
+    // Calculate percentage
+    const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+    
+    // Calculate working days remaining (assuming 5 working days per week)
+    const today = new Date();
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + (5 - today.getDay())); // Friday
+    const daysRemaining = Math.max(0, Math.ceil((endOfWeek - today) / (1000 * 60 * 60 * 24)));
+    
+    // Calculate average audit duration
+    let avgDuration = 0;
+    let avgDurationText = '-';
+    
+    try {
+      // Get all scorecards to query audit tables
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+        .eq('is_active', true);
+      
+      if (!scError && scorecards) {
+        let totalDuration = 0;
+        let auditCount = 0;
+        
+        // Query each scorecard table for audits by this user
+        // Filter by employee_email if agent, otherwise by auditor_email
+        const auditFilterField = isAgent ? 'employee_email' : 'auditor_email';
+        for (const scorecard of scorecards) {
+          try {
+            const { data: audits, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('audit_duration')
+              .eq(auditFilterField, currentUserEmail)
+              .not('audit_duration', 'is', null);
+            
+            if (!error && audits) {
+              audits.forEach(audit => {
+                // Handle duration conversion (new format: seconds, legacy format: minutes)
+                let durationInMinutes = 0;
+                if (typeof audit.audit_duration === 'number') {
+                  const value = audit.audit_duration;
+                  // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
+                  // Otherwise, assume it's already in minutes (legacy format)
+                  if (value >= 1440) {
+                    durationInMinutes = value / 60; // Convert seconds to minutes
+                  } else {
+                    durationInMinutes = value; // Already in minutes
+                  }
+                } else if (typeof audit.audit_duration === 'string') {
+                  // Try parsing as integer first
+                  const asInt = parseInt(audit.audit_duration);
+                  if (!isNaN(asInt)) {
+                    if (asInt >= 1440) {
+                      durationInMinutes = asInt / 60; // Convert seconds to minutes
+                    } else {
+                      durationInMinutes = asInt; // Already in minutes
+                    }
+                  } else {
+                    // Legacy format: time string (MM:SS or HH:MM:SS)
+                    const timeParts = audit.audit_duration.split(':');
+                    if (timeParts.length === 2) {
+                      // MM:SS format
+                      const minutes = parseInt(timeParts[0]) || 0;
+                      const seconds = parseInt(timeParts[1]) || 0;
+                      durationInMinutes = minutes + (seconds / 60);
+                    } else if (timeParts.length === 3) {
+                      // HH:MM:SS format
+                      const hours = parseInt(timeParts[0]) || 0;
+                      const minutes = parseInt(timeParts[1]) || 0;
+                      const seconds = parseInt(timeParts[2]) || 0;
+                      durationInMinutes = (hours * 60) + minutes + (seconds / 60);
+                    }
+                  }
+                }
+                
+                if (durationInMinutes > 0) {
+                  totalDuration += durationInMinutes; // Add minutes
+                  auditCount++;
+                }
+              });
+            }
+          } catch (err) {
+            console.warn(`Error getting duration from ${scorecard.table_name}:`, err);
+          }
+        }
+        
+        if (auditCount > 0) {
+          avgDuration = totalDuration / auditCount; // Average in minutes
+          
+          // Format duration (avgDuration is in minutes)
+          if (avgDuration >= 60) {
+            const hours = Math.floor(avgDuration / 60);
+            const minutes = Math.round(avgDuration % 60);
+            avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+          } else {
+            avgDurationText = `${Math.round(avgDuration)}m`;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating average duration:', error);
+    }
+    
+    // Calculate total audits conducted
+    let totalAuditsConducted = 0;
+    let totalScoreSum = 0;
+    let totalAuditsWithScore = 0;
+    let avgQualityScore = 0;
+    let avgQualityScoreText = '-';
+    
+    if (isAgent) {
+      // For employees: Count completed audits from scorecard tables
+      // Use the same logic as loadCompletedAuditsForEmployee
+      try {
+        const { data: scorecards, error: scError } = await window.supabaseClient
+          .from('scorecards')
+          .select('id, name, table_name, scoring_type')
+          .eq('is_active', true);
+        
+        if (!scError && scorecards) {
+          const auditFilterField = 'employee_email';
+          const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+          
+          for (const scorecard of scorecards) {
+            try {
+              // Use the same query as loadCompletedAuditsForEmployee: select('*')
+              const { data: audits, error } = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('*')
+                .order('submitted_at', { ascending: false })
+                .limit(500); // Get more to filter client-side
+              
+              if (!error && audits && audits.length > 0) {
+                // Client-side filtering with exact email match (case-insensitive)
+                const filteredAudits = audits.filter(audit => {
+                  const emailToCheck = audit[auditFilterField];
+                  if (!emailToCheck) return false;
+                  const normalizedEmailToCheck = emailToCheck.toLowerCase().trim();
+                  return normalizedEmailToCheck === normalizedCurrentEmail;
+                });
+                
+                totalAuditsConducted += filteredAudits.length;
+                filteredAudits.forEach(audit => {
+                  const score = parseFloat(audit.average_score || audit.averageScore || 0);
+                  // Include all valid scores (including 0) in the average
+                  if (!isNaN(score)) {
+                    totalScoreSum += score;
+                    totalAuditsWithScore++;
+                  }
+                });
+              }
+            } catch (err) {
+              console.warn(`Error getting audits from ${scorecard.table_name}:`, err);
+            }
+          }
+          
+          if (totalAuditsWithScore > 0) {
+            avgQualityScore = totalScoreSum / totalAuditsWithScore;
+            avgQualityScoreText = `${Math.round(avgQualityScore)}%`;
+          }
+          
+          console.log(`Stats for employee: ${totalAuditsConducted} audits conducted, ${avgQualityScoreText} average score`);
+        }
+      } catch (error) {
+        console.error('Error calculating audits conducted and average score:', error);
+      }
+    } else {
+      // For auditors: Count completed assignments from audit_assignments table
+      totalAuditsConducted = completed; // Use the completed count from assignments
+      
+      // Also calculate average quality score from completed audits
+      try {
+        const { data: scorecards, error: scError } = await window.supabaseClient
+          .from('scorecards')
+          .select('table_name')
+          .eq('is_active', true);
+        
+        if (!scError && scorecards) {
+          const auditFilterField = 'auditor_email';
+          const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+          
+          for (const scorecard of scorecards) {
+            try {
+              // Load all audits and filter client-side for exact match
+              const { data: audits, error } = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('average_score, averageScore, ' + auditFilterField);
+              
+              if (!error && audits && audits.length > 0) {
+                // Client-side filtering with exact email match (case-insensitive)
+                const filteredAudits = audits.filter(audit => {
+                  const emailToCheck = audit[auditFilterField];
+                  if (!emailToCheck) return false;
+                  return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+                });
+                
+                filteredAudits.forEach(audit => {
+                  const score = parseFloat(audit.average_score || audit.averageScore || 0);
+                  // Include all valid scores (including 0) in the average
+                  if (!isNaN(score)) {
+                    totalScoreSum += score;
+                    totalAuditsWithScore++;
+                  }
+                });
+              }
+            } catch (err) {
+              console.warn(`Error getting audits from ${scorecard.table_name}:`, err);
+            }
+          }
+          
+          if (totalAuditsWithScore > 0) {
+            avgQualityScore = totalScoreSum / totalAuditsWithScore;
+            avgQualityScoreText = `${Math.round(avgQualityScore)}%`;
+          }
+        }
+      } catch (error) {
+        console.error('Error calculating average quality score:', error);
+      }
+    }
+    
+    // Calculate reversal counts (active and resolved)
+    let activeReversals = 0;
+    let resolvedReversals = 0;
+    let totalReversals = 0;
+    
+    try {
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+        .eq('is_active', true);
+      
+      if (!scError && scorecards) {
+        // Filter by employee_email if agent, otherwise by auditor_email
+        const reversalFilterField = isAgent ? 'employee_email' : 'auditor_email';
+        for (const scorecard of scorecards) {
+          try {
+            // Get all reversals (with reversal_requested_at)
+            const { data: allReversals, error: allError } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('reversal_requested_at, reversal_responded_at')
+              .eq(reversalFilterField, currentUserEmail)
+              .not('reversal_requested_at', 'is', null);
+            
+            if (!allError && allReversals) {
+              allReversals.forEach(reversal => {
+                totalReversals++;
+                // Active: has reversal_requested_at but no reversal_responded_at
+                if (reversal.reversal_requested_at && !reversal.reversal_responded_at) {
+                  activeReversals++;
+                } else if (reversal.reversal_responded_at) {
+                  resolvedReversals++;
+                }
+              });
+            }
+          } catch (err) {
+            console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating reversal counts:', error);
+    }
+    
+    // Update stat cards
+    const statsAuditsConductedCount = document.getElementById('statsAuditsConductedCount');
+    const statsRemainingText = document.getElementById('statsRemainingText');
+    const statsRemainingProgress = document.getElementById('statsRemainingProgress');
+    const statsAvgQualityScore = document.getElementById('statsAvgQualityScore');
+    const statsAvgScoreSubtitle = document.getElementById('statsAvgScoreSubtitle');
+    const statsRemainingCount = document.getElementById('statsRemainingCount');
+    const statsInProgressCount = document.getElementById('statsInProgressCount');
+    const statsDaysRemaining = document.getElementById('statsDaysRemaining');
+    const statsReversalTotalCount = document.getElementById('statsReversalTotalCount');
+    const statsReversalActiveCount = document.getElementById('statsReversalActiveCount');
+    const statsReversalResolvedCount = document.getElementById('statsReversalResolvedCount');
+    const statsAvgDuration = document.getElementById('statsAvgDuration');
+    const statsAvgDurationSubtitle = document.getElementById('statsAvgDurationSubtitle');
+    
+    // Update Audits Conducted card
+    if (statsAuditsConductedCount) statsAuditsConductedCount.textContent = totalAuditsConducted;
+    if (statsRemainingText) statsRemainingText.textContent = `${remaining} remaining`;
+    
+    // Calculate progress bar percentage (completed / total assigned, showing completed portion in green)
+    // The bar shows how much is completed (green), and the remaining is unfilled
+    const completedCount = totalAssigned - remaining;
+    const progressPercentage = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
+    if (statsRemainingProgress) {
+      statsRemainingProgress.style.width = `${Math.min(100, progressPercentage)}%`;
+      // Make it green if there's any progress
+      if (progressPercentage > 0) {
+        statsRemainingProgress.classList.remove('bg-warning');
+        statsRemainingProgress.classList.add('bg-success');
+      } else {
+        statsRemainingProgress.classList.remove('bg-success');
+        statsRemainingProgress.classList.add('bg-warning');
+      }
+    }
+    
+    // Update Average Quality Score card
+    if (statsAvgQualityScore) statsAvgQualityScore.textContent = avgQualityScoreText;
+    if (statsAvgScoreSubtitle) {
+      statsAvgScoreSubtitle.textContent = totalAuditsWithScore > 0 ? `from ${totalAuditsWithScore} audits` : 'No audits yet';
+    }
+    
+    // Update other cards
+    if (statsRemainingCount) statsRemainingCount.textContent = remaining;
+    if (statsInProgressCount) statsInProgressCount.textContent = inProgress;
+    if (statsDaysRemaining) statsDaysRemaining.textContent = `${daysRemaining} working day${daysRemaining !== 1 ? 's' : ''} remaining`;
+    
+    // Update Reversal card
+    if (statsReversalTotalCount) statsReversalTotalCount.textContent = totalReversals;
+    if (statsReversalActiveCount) statsReversalActiveCount.textContent = activeReversals;
+    if (statsReversalResolvedCount) statsReversalResolvedCount.textContent = resolvedReversals;
+    
+    if (statsAvgDuration) statsAvgDuration.textContent = avgDurationText;
+    if (statsAvgDurationSubtitle) statsAvgDurationSubtitle.textContent = 'per audit';
+    
+  } catch (error) {
+    console.error('Error updating your stats:', error);
+  }
+}
+
+function viewAudit(assignmentId) {
+  window.location.href = `create-audit.html?assignment=${assignmentId}`;
+}
+
+function viewAuditDetails(auditId, scorecardId, tableName) {
+  window.location.href = `audit-view.html?id=${auditId}&scorecard=${scorecardId || ''}&table=${tableName || ''}`;
+}
+
+function formatTimestamp(timestamp) {
+  if (!timestamp) return 'N/A';
+  
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return 'Today ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  } else if (diffDays === 1) {
+    return 'Yesterday';
+  } else if (diffDays < 7) {
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+}
+
+function getStatusText(status, isAgentView = false) {
+  if (isAgentView) {
+    // For agents, show status from their perspective
+    const statusMap = {
+      'pending': 'audit assigned',
+      'in_progress': 'audit in progress',
+      'completed': 'audit completed'
+    };
+    return statusMap[status] || 'updated';
+  } else {
+    // For auditors, show status from their perspective
+    const statusMap = {
+      'pending': 'was assigned',
+      'in_progress': 'started',
+      'completed': 'completed'
+    };
+    return statusMap[status] || 'updated';
+  }
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Notifications
+async function loadNotifications() {
+  try {
+    if (!currentUserEmail) return;
+
+    // Get recent audit assignments updates
+    // Filter by employee_email if agent, otherwise by auditor_email
+    const notificationFilterField = isAgent ? 'employee_email' : 'auditor_email';
+    const { data: assignments, error: assignmentsError } = await window.supabaseClient
+      .from('audit_assignments')
+      .select('*')
+      .eq(notificationFilterField, currentUserEmail)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (assignmentsError) throw assignmentsError;
+
+    // Get reversals (audits with reversal requests)
+    const { data: scorecards, error: scError } = await window.supabaseClient
+      .from('scorecards')
+      .select('table_name')
+      .eq('is_active', true);
+
+    let reversals = [];
+    if (!scError && scorecards) {
+      // Filter by employee_email if agent, otherwise by auditor_email
+      const reversalNotificationFilterField = isAgent ? 'employee_email' : 'auditor_email';
+      for (const scorecard of scorecards) {
+        try {
+          const { data: auditReversals, error } = await window.supabaseClient
+            .from(scorecard.table_name)
+            .select('id, employee_name, employee_email, reversal_requested_at, submitted_at')
+            .eq(reversalNotificationFilterField, currentUserEmail)
+            .not('reversal_requested_at', 'is', null)
+            .order('reversal_requested_at', { ascending: false })
+            .limit(10);
+
+          if (!error && auditReversals) {
+            reversals = reversals.concat(auditReversals.map(rev => ({
+              ...rev,
+              type: 'reversal',
+              scorecard_table: scorecard.table_name
+            })));
+          }
+        } catch (err) {
+          console.warn(`Error loading reversals from ${scorecard.table_name}:`, err);
+        }
+      }
+    }
+
+    // Combine and format notifications
+    notifications = [];
+
+    // Add assignment updates
+    (assignments || []).forEach(assignment => {
+      const employee = allUsers.find(u => u.email === assignment.employee_email);
+      const employeeName = employee?.name || assignment.employee_name || assignment.employee_email?.split('@')[0] || 'Unknown';
+      
+      notifications.push({
+        id: `assignment-${assignment.id}`,
+        type: 'assignment',
+        title: `Audit ${assignment.status === 'completed' ? 'completed' : assignment.status === 'in_progress' ? 'started' : 'assigned'}`,
+        message: `${employeeName} - ${assignment.employee_name || 'Audit'}`,
+        timestamp: assignment.created_at,
+        status: assignment.status,
+        assignmentId: assignment.id
+      });
+    });
+
+    // Add reversal notifications
+    reversals.forEach(reversal => {
+      notifications.push({
+        id: `reversal-${reversal.id}`,
+        type: 'reversal',
+        title: 'Reversal Requested',
+        message: `${reversal.employee_name || reversal.employee_email || 'Audit'} - Reversal requested`,
+        timestamp: reversal.reversal_requested_at,
+        auditId: reversal.id,
+        tableName: reversal.scorecard_table
+      });
+    });
+
+    // Sort by timestamp (most recent first)
+    notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Limit to 20 most recent
+    notifications = notifications.slice(0, 20);
+
+    // Count unread (consider all as unread for now, or you can add a read/unread tracking system)
+    // For now, show count of recent notifications (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    unreadNotificationCount = notifications.filter(n => new Date(n.timestamp) >= sevenDaysAgo).length;
+
+    renderNotifications();
+    updateNotificationBadge();
+
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+    document.getElementById('notificationsList').innerHTML = `
+      <div class="px-4 py-8 text-center text-red-500 text-xs">
+        <p>Error loading notifications</p>
+      </div>
+    `;
+  }
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notificationsList');
+  if (!list) return;
+
+  if (notifications.length === 0) {
+    list.innerHTML = `
+      <div class="px-4 py-8 text-center text-gray-500 text-xs">
+        <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        <p class="font-medium text-gray-700 mb-1">No notifications</p>
+        <p class="text-gray-500">You're all caught up!</p>
+    </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = notifications.map(notification => {
+    const timestamp = formatTimestamp(notification.timestamp);
+    const iconColor = notification.type === 'reversal' ? 'text-warning' : 'text-primary';
+    const bgColor = notification.type === 'reversal' ? 'bg-warning/10' : 'bg-primary/10';
+
+    let iconPath = '';
+    if (notification.type === 'reversal') {
+      iconPath = 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
+    } else if (notification.status === 'completed') {
+      iconPath = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+    } else if (notification.status === 'in_progress') {
+      iconPath = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z';
+    } else {
+      iconPath = 'M12 6v6m0 0v6m0-6h6m-6 0H6';
+    }
+
+    return `
+      <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer" onclick="handleNotificationClick('${notification.id}')">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full ${bgColor} flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-gray-900 mb-0.5">${escapeHtml(notification.title)}</p>
+            <p class="text-xs text-gray-600 mb-1">${escapeHtml(notification.message)}</p>
+            <p class="text-[10px] text-gray-500">${timestamp}</p>
+          </div>
+        </div>
+    </div>
+    `;
+  }).join('');
+}
+
+function updateNotificationBadge() {
+  const badge = document.getElementById('notificationBadge');
+  if (!badge) return;
+
+  if (unreadNotificationCount > 0) {
+    badge.style.display = 'block';
+    badge.textContent = unreadNotificationCount > 9 ? '9+' : unreadNotificationCount;
+    badge.className = 'absolute top-0 right-0 w-5 h-5 bg-error rounded-full text-white text-[10px] font-semibold flex items-center justify-center';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function showNotifications() {
+  const modal = document.getElementById('notificationsModal');
+  if (!modal) return;
+  
+  // Load notifications when showing
+  loadNotifications();
+  modal.classList.remove('opacity-0', 'invisible');
+  modal.classList.add('opacity-100', 'visible');
+}
+
+function hideNotifications() {
+  const modal = document.getElementById('notificationsModal');
+  if (!modal) return;
+  
+  modal.classList.remove('opacity-100', 'visible');
+  modal.classList.add('opacity-0', 'invisible');
+}
+
+// Show notifications on hover
+document.addEventListener('DOMContentLoaded', function() {
+  const notificationBtn = document.getElementById('notificationBtn');
+  const notificationModal = document.getElementById('notificationsModal');
+  
+  if (notificationBtn && notificationModal) {
+    let hoverTimeout;
+    
+    notificationBtn.addEventListener('mouseenter', function() {
+      clearTimeout(hoverTimeout);
+      showNotifications();
+    });
+    
+    notificationBtn.addEventListener('mouseleave', function(e) {
+      // Check if mouse is moving to modal
+      const relatedTarget = e.relatedTarget;
+      if (notificationModal.contains(relatedTarget)) {
+        return; // Don't hide if moving to modal
+      }
+      
+      hoverTimeout = setTimeout(() => {
+        hideNotifications();
+      }, 200); // Small delay to allow moving to modal
+    });
+    
+    notificationModal.addEventListener('mouseenter', function() {
+      clearTimeout(hoverTimeout);
+    });
+    
+    notificationModal.addEventListener('mouseleave', function() {
+      hideNotifications();
+    });
+  }
+});
+
+function handleNotificationClick(notificationId) {
+  const notification = notifications.find(n => n.id === notificationId);
+  if (!notification) return;
+
+  // Hide modal
+  hideNotifications();
+
+  // Navigate based on type
+  if (notification.type === 'assignment' && notification.assignmentId) {
+    viewAudit(notification.assignmentId);
+  } else if (notification.type === 'reversal' && notification.auditId && notification.tableName) {
+    // Navigate to audit view for reversal
+    window.location.href = `audit-view.html?id=${notification.auditId}&table=${notification.tableName}`;
+  }
+}
+</script>
 </body>
 </html>
