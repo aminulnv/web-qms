@@ -899,6 +899,17 @@ async function initializePage() {
             return;
         }
 
+        // Check user role and restrict access for employees/agents
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userRole = userInfo.role || '';
+        
+        if (userRole === 'Employee') {
+            // Show access denied message and redirect employees to home page
+            alert('Access Denied: You do not have permission to access this page. Only Quality Analysts, Supervisors, and Admins can access Audit Distribution.');
+            window.location.href = 'home.html';
+            return;
+        }
+
         // Load users first (needed for lookups)
         await loadAllUsers();
         

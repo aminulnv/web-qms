@@ -39,6 +39,7 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <script src="keyboard-shortcuts.js"></script>
 <style>
   .main-content {
     background-color: #f8f7f2;
@@ -51,6 +52,115 @@
   /* Override sidebar.css centering for home page */
   .main-content > * {
     width: 100%;
+  }
+
+  /* Date Range Picker and Filter Styles */
+  .header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background-color: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .action-btn:hover {
+    background-color: #f9fafb;
+    border-color: #1a733e;
+  }
+
+  .action-btn.active {
+    background-color: #1a733e;
+    color: white;
+    border-color: #1a733e;
+  }
+
+  .action-btn svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  /* Filter Panel */
+  .filter-panel {
+    display: none;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .filter-panel.active {
+    display: grid;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .filter-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  .filter-input, .filter-select {
+    padding: 0.375rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-family: 'Poppins', sans-serif;
+    background-color: white;
+    color: #374151;
+  }
+
+  .filter-input:focus, .filter-select:focus {
+    outline: none;
+    border-color: #1a733e;
+  }
+
+  /* Date Range Picker */
+  .date-picker-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .date-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.375rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 0.75rem;
+    z-index: 1000;
+    min-width: 250px;
+  }
+
+  .date-dropdown-menu.active {
+    display: block;
   }
 </style>
 </head>
@@ -133,12 +243,75 @@
 
   <!-- Main Dashboard Content -->
   <div class="px-4 py-4 max-w-7xl mx-auto w-full">
-    <h1 class="text-xl font-bold text-gray-900 mb-4">Dashboard</h1>
+    <h1 class="text-xl font-bold text-gray-900 mb-4">Home</h1>
+
+    <!-- Action Buttons -->
+    <div class="header-actions">
+      <div class="date-picker-dropdown">
+        <button class="action-btn" id="dateBtn">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span id="dateBtnText">Date Range</span>
+          <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div class="date-dropdown-menu" id="dateDropdown">
+          <div class="filter-group">
+            <label class="filter-label">Start Date</label>
+            <input type="date" class="filter-input" id="startDate">
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">End Date</label>
+            <input type="date" class="filter-input" id="endDate">
+          </div>
+          <div style="display: flex; gap: 0.375rem; margin-top: 0.375rem;">
+            <button class="action-btn" style="flex: 1;" onclick="applyDateFilter()">Apply</button>
+            <button class="action-btn" style="flex: 1;" onclick="clearDateFilter()">Clear</button>
+          </div>
+        </div>
+      </div>
+      <button class="action-btn" id="filterBtn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+        </svg>
+        <span>Filter</span>
+      </button>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="filter-panel" id="filterPanel">
+      <div class="filter-group">
+        <label class="filter-label">Channel</label>
+        <select class="filter-select" id="filterChannel">
+          <option value="">All Channels</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Status</label>
+        <select class="filter-select" id="filterStatus">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+      <div class="filter-group" id="filterAgentGroup" style="display: none;">
+        <label class="filter-label">Agent</label>
+        <select class="filter-select" id="filterAgent">
+          <option value="">All Agents</option>
+        </select>
+      </div>
+      <div class="filter-group" style="align-self: flex-end;">
+        <button class="action-btn" onclick="applyFilters()" style="margin-top: 1.125rem;">Apply Filters</button>
+      </div>
+    </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+    <div class="flex flex-nowrap gap-3 mb-4 overflow-x-auto">
       <!-- Audits Conducted Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +333,7 @@
       </div>
 
       <!-- Average Quality Score Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
             <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +347,7 @@
       </div>
 
       <!-- Remaining Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition-colors">
             <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,7 +360,7 @@
       </div>
 
       <!-- In Progress Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+      <div id="inProgressCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +374,7 @@
       </div>
 
       <!-- Reversal Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-error/10 flex items-center justify-center group-hover:bg-error/20 transition-colors">
             <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +397,7 @@
       </div>
 
       <!-- Avg Duration Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group">
+      <div id="avgDurationCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,6 +480,242 @@ let sortBy = 'date_desc'; // Default will be updated based on user role
 let notifications = [];
 let unreadNotificationCount = 0;
 
+// Date Filter State
+let dateFilter = { start: null, end: null };
+let currentFilters = { channel: '', status: '', agent: '' };
+
+// Helper function to get current week (Monday to Sunday)
+function getCurrentWeek() {
+  const today = new Date();
+  const day = today.getDay();
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+  const monday = new Date(today.getFullYear(), today.getMonth(), diff);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+// Initialize date filter to current week
+function initializeDateFilter() {
+  const week = getCurrentWeek();
+  dateFilter.start = week.start;
+  dateFilter.end = week.end;
+  
+  // Set date inputs
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  if (startDateInput) {
+    startDateInput.value = formatDateForInput(week.start);
+  }
+  if (endDateInput) {
+    endDateInput.value = formatDateForInput(week.end);
+  }
+  
+  // Update button text
+  updateDateButtonText();
+}
+
+function formatDateForInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function updateDateButtonText() {
+  const dateBtnText = document.getElementById('dateBtnText');
+  if (!dateBtnText) return;
+  
+  if (dateFilter.start && dateFilter.end) {
+    const start = new Date(dateFilter.start);
+    const end = new Date(dateFilter.end);
+    const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    dateBtnText.textContent = `${startStr} - ${endStr}`;
+  } else {
+    dateBtnText.textContent = 'Date Range';
+  }
+}
+
+// Apply date filter
+function applyDateFilter() {
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  
+  if (startDateInput && startDateInput.value) {
+    const startDate = new Date(startDateInput.value);
+    startDate.setHours(0, 0, 0, 0);
+    dateFilter.start = startDate;
+  } else {
+    dateFilter.start = null;
+  }
+  
+  if (endDateInput && endDateInput.value) {
+    const endDate = new Date(endDateInput.value);
+    endDate.setHours(23, 59, 59, 999);
+    dateFilter.end = endDate;
+  } else {
+    dateFilter.end = null;
+  }
+  
+  updateDateButtonText();
+  document.getElementById('dateDropdown').classList.remove('active');
+  
+  // Reload data with filters
+  Promise.all([
+    loadRecentUpdates(),
+    updateYourStats(),
+    loadAssignedAudits(),
+    loadNotifications()
+  ]);
+}
+
+// Clear date filter
+function clearDateFilter() {
+  dateFilter.start = null;
+  dateFilter.end = null;
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  if (startDateInput) startDateInput.value = '';
+  if (endDateInput) endDateInput.value = '';
+  updateDateButtonText();
+  document.getElementById('dateDropdown').classList.remove('active');
+  
+  // Reload data without date filter
+  Promise.all([
+    loadRecentUpdates(),
+    updateYourStats(),
+    loadAssignedAudits(),
+    loadNotifications()
+  ]);
+}
+
+// Apply filters
+function applyFilters() {
+  const channelSelect = document.getElementById('filterChannel');
+  const statusSelect = document.getElementById('filterStatus');
+  const agentSelect = document.getElementById('filterAgent');
+  
+  currentFilters.channel = channelSelect ? channelSelect.value : '';
+  currentFilters.status = statusSelect ? statusSelect.value : '';
+  currentFilters.agent = agentSelect ? agentSelect.value : '';
+  
+  // Reload data with filters
+  Promise.all([
+    loadRecentUpdates(),
+    updateYourStats(),
+    loadAssignedAudits(),
+    loadNotifications()
+  ]);
+}
+
+// Populate filter options
+async function populateFilters() {
+  try {
+    // Load all assignments for filter population (without filters)
+    let allAssignmentsForFilters = [];
+    
+    if (isAgent) {
+      // For agents, load all completed audits to get channels
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+        .eq('is_active', true);
+      
+      if (!scError && scorecards) {
+        for (const scorecard of scorecards) {
+          try {
+            const { data: audits, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('channel, employee_email')
+              .eq('employee_email', currentUserEmail);
+            
+            if (!error && audits) {
+              allAssignmentsForFilters = allAssignmentsForFilters.concat(audits);
+            }
+          } catch (err) {
+            console.warn(`Error loading audits for filters from ${scorecard.table_name}:`, err);
+          }
+        }
+      }
+    } else {
+      // For auditors, load all assignments
+      const { data, error } = await window.supabaseClient
+        .from('audit_assignments')
+        .select('channel, employee_email')
+        .eq('auditor_email', currentUserEmail);
+      
+      if (!error && data) {
+        allAssignmentsForFilters = data;
+      }
+    }
+    
+    // Populate channels
+    const channels = [...new Set(allAssignmentsForFilters.map(a => a.channel).filter(Boolean))].sort();
+    const channelSelect = document.getElementById('filterChannel');
+    if (channelSelect) {
+      const existingValue = channelSelect.value;
+      channelSelect.innerHTML = '<option value="">All Channels</option>';
+      channels.forEach(channel => {
+        const option = document.createElement('option');
+        option.value = channel;
+        option.textContent = channel;
+        channelSelect.appendChild(option);
+      });
+      if (existingValue) channelSelect.value = existingValue;
+    }
+
+    // Populate agents (only for auditors)
+    if (!isAgent) {
+      const agents = [...new Set(allAssignmentsForFilters.map(a => a.employee_email).filter(Boolean))].sort();
+      const agentSelect = document.getElementById('filterAgent');
+      const agentGroup = document.getElementById('filterAgentGroup');
+      if (agentSelect && agentGroup) {
+        const existingValue = agentSelect.value;
+        agentSelect.innerHTML = '<option value="">All Agents</option>';
+        agents.forEach(agent => {
+          const option = document.createElement('option');
+          option.value = agent;
+          option.textContent = formatAgentName(agent);
+          agentSelect.appendChild(option);
+        });
+        if (existingValue) agentSelect.value = existingValue;
+        agentGroup.style.display = 'flex';
+      }
+    }
+  } catch (error) {
+    console.error('Error populating filters:', error);
+  }
+}
+
+function formatAgentName(email) {
+  if (!email || email === 'Unknown') return 'Unknown';
+  return email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+// Helper function to check if date is within filter range
+function isDateInRange(date, filterStart, filterEnd) {
+  if (!filterStart && !filterEnd) return true;
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  
+  if (filterStart) {
+    const start = new Date(filterStart);
+    start.setHours(0, 0, 0, 0);
+    if (checkDate < start) return false;
+  }
+  
+  if (filterEnd) {
+    const end = new Date(filterEnd);
+    end.setHours(23, 59, 59, 999);
+    if (checkDate > end) return false;
+  }
+  
+  return true;
+}
+
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', async function() {
   await initializeDashboard();
@@ -340,6 +749,12 @@ async function initializeDashboard() {
 
     console.log('Current user:', currentUserEmail, 'Role:', currentUserRole, 'IsAgent:', isAgent);
 
+    // Initialize date filter to current week
+    initializeDateFilter();
+
+    // Setup event listeners for date picker and filter
+    setupEventListeners();
+
     // Update user avatar
     updateUserAvatar(userInfo);
 
@@ -357,6 +772,15 @@ async function initializeDashboard() {
       const createAuditBtn = document.getElementById('createAuditBtn');
       if (createAuditBtn) {
         createAuditBtn.style.display = 'none';
+      }
+      // Hide "In Progress" and "Avg Duration" cards for agents/employees
+      const inProgressCard = document.getElementById('inProgressCard');
+      if (inProgressCard) {
+        inProgressCard.style.display = 'none';
+      }
+      const avgDurationCard = document.getElementById('avgDurationCard');
+      if (avgDurationCard) {
+        avgDurationCard.style.display = 'none';
       }
     } else {
       // For auditors, update title to "My Assigned Audits" and show View All button
@@ -393,8 +817,47 @@ async function initializeDashboard() {
       loadNotifications()
     ]);
 
+    // Populate filter options after loading data
+    populateFilters();
+
   } catch (error) {
     console.error('Error initializing dashboard:', error);
+  }
+}
+
+function setupEventListeners() {
+  // Date button
+  const dateBtn = document.getElementById('dateBtn');
+  if (dateBtn) {
+    dateBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dropdown = document.getElementById('dateDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('active');
+      }
+    });
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.date-picker-dropdown')) {
+      const dropdown = document.getElementById('dateDropdown');
+      if (dropdown) {
+        dropdown.classList.remove('active');
+      }
+    }
+  });
+
+  // Filter button
+  const filterBtn = document.getElementById('filterBtn');
+  if (filterBtn) {
+    filterBtn.addEventListener('click', () => {
+      const panel = document.getElementById('filterPanel');
+      if (panel) {
+        panel.classList.toggle('active');
+        filterBtn.classList.toggle('active');
+      }
+    });
   }
 }
 
@@ -642,6 +1105,14 @@ async function loadRecentUpdates() {
       }
     }
 
+    // Apply date filter to updates
+    if (dateFilter.start || dateFilter.end) {
+      allUpdates = allUpdates.filter(update => {
+        if (!update.timestamp) return false;
+        return isDateInRange(update.timestamp, dateFilter.start, dateFilter.end);
+      });
+    }
+    
     // Sort all updates by timestamp (most recent first)
     allUpdates.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
@@ -768,7 +1239,7 @@ async function loadCompletedAuditsForEmployee() {
           console.log(`Found ${data.length} audits in ${scorecard.table_name} before filtering`);
           
           // Client-side filtering with exact email match (case-insensitive)
-          const filteredAudits = data.filter(audit => {
+          let filteredAudits = data.filter(audit => {
             const emailToCheck = audit[auditFilterField];
             if (!emailToCheck) return false;
             
@@ -789,6 +1260,20 @@ async function loadCompletedAuditsForEmployee() {
             
             return matches;
           });
+          
+          // Apply date filter
+          if (dateFilter.start || dateFilter.end) {
+            filteredAudits = filteredAudits.filter(audit => {
+              const auditDate = audit.submitted_at || audit.audit_timestamp;
+              if (!auditDate) return false;
+              return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
+            });
+          }
+          
+          // Apply channel filter
+          if (currentFilters.channel) {
+            filteredAudits = filteredAudits.filter(audit => audit.channel === currentFilters.channel);
+          }
           
           console.log(`After filtering: ${filteredAudits.length} audits match for ${currentUserEmail}`);
           
@@ -873,10 +1358,34 @@ async function loadPendingAssignmentsForAuditor() {
   
   // Normalize and filter client-side for exact match
   const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
-  const filteredAssignments = (data || []).filter(assignment => {
+  let filteredAssignments = (data || []).filter(assignment => {
     const auditorEmail = (assignment.auditor_email || '').toLowerCase().trim();
     return auditorEmail === normalizedCurrentEmail;
   });
+  
+  // Apply date filter
+  if (dateFilter.start || dateFilter.end) {
+    filteredAssignments = filteredAssignments.filter(assignment => {
+      const assignmentDate = assignment.created_at;
+      if (!assignmentDate) return false;
+      return isDateInRange(assignmentDate, dateFilter.start, dateFilter.end);
+    });
+  }
+  
+  // Apply channel filter
+  if (currentFilters.channel) {
+    filteredAssignments = filteredAssignments.filter(assignment => assignment.channel === currentFilters.channel);
+  }
+  
+  // Apply status filter
+  if (currentFilters.status) {
+    filteredAssignments = filteredAssignments.filter(assignment => assignment.status === currentFilters.status);
+  }
+  
+  // Apply agent filter
+  if (currentFilters.agent) {
+    filteredAssignments = filteredAssignments.filter(assignment => assignment.employee_email === currentFilters.agent);
+  }
   
   console.log(`Found ${filteredAssignments.length} pending/in-progress assignments for auditor ${currentUserEmail}`);
   

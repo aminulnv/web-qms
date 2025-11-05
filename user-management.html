@@ -415,38 +415,6 @@
             vertical-align: middle;
         }
         
-        .users-table th:nth-child(1),
-        .users-table td:nth-child(1) { width: 5%; } /* ID */
-        
-        .users-table th:nth-child(2),
-        .users-table td:nth-child(2) { width: 13%; } /* Name */
-        
-        .users-table th:nth-child(3),
-        .users-table td:nth-child(3) { width: 7%; } /* Department */
-        
-        .users-table th:nth-child(4),
-        .users-table td:nth-child(4) { width: 9%; } /* Channel */
-        
-        .users-table th:nth-child(5),
-        .users-table td:nth-child(5) { width: 9%; } /* Team */
-        
-        .users-table th:nth-child(6),
-        .users-table td:nth-child(6) { width: 10%; } /* Designation */
-        
-        .users-table th:nth-child(7),
-        .users-table td:nth-child(7) { width: 12%; } /* Team Supervisor */
-        
-        .users-table th:nth-child(8),
-        .users-table td:nth-child(8) { width: 12%; } /* Quality Supervisor */
-        
-        .users-table th:nth-child(9),
-        .users-table td:nth-child(9) { width: 10%; } /* Role */
-        
-        .users-table th:nth-child(10),
-        .users-table td:nth-child(10) { width: 7%; } /* Status */
-        
-        .users-table th:nth-child(11),
-        .users-table td:nth-child(11) { width: 6%; } /* Actions */
 
         .users-table th {
             background-color: #f9fafb;
@@ -537,6 +505,114 @@
             padding: 1.5rem;
             color: #ef4444;
         }
+
+        .bulk-actions-bar {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 0.0469rem solid #e5e7eb;
+            padding: 0.5625rem 0.75rem;
+            margin: 0.75rem -0.5625rem -0.5625rem -0.5625rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -0.0938rem 0.1875rem rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 0.375rem;
+        }
+
+        .bulk-actions-bar.active {
+            display: flex;
+        }
+
+        .bulk-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5625rem;
+        }
+
+        .selected-count {
+            font-size: 0.6094rem;
+            font-weight: 600;
+            color: #1A733E;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 0.375rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .bulk-edit-select {
+            padding: 0.2812rem 0.4688rem;
+            border: 0.0469rem solid #d1d5db;
+            border-radius: 0.1875rem;
+            font-size: 0.5625rem;
+            font-family: 'Poppins', sans-serif;
+            min-width: 6.3281rem;
+        }
+
+        .btn-bulk-apply {
+            background: #1A733E;
+            color: white;
+            padding: 0.2812rem 0.75rem;
+            border: none;
+            border-radius: 0.1875rem;
+            font-size: 0.5625rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-bulk-apply:hover {
+            background: #15582E;
+        }
+
+        .btn-bulk-apply:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .users-table th:nth-child(1),
+        .users-table td:nth-child(1) { width: 3%; } /* Checkbox */
+        
+        .users-table th:nth-child(2),
+        .users-table td:nth-child(2) { width: 5%; } /* ID */
+        
+        .users-table th:nth-child(3),
+        .users-table td:nth-child(3) { width: 12%; } /* Name */
+        
+        .users-table th:nth-child(4),
+        .users-table td:nth-child(4) { width: 7%; } /* Department */
+        
+        .users-table th:nth-child(5),
+        .users-table td:nth-child(5) { width: 8%; } /* Channel */
+        
+        .users-table th:nth-child(6),
+        .users-table td:nth-child(6) { width: 8%; } /* Team */
+        
+        .users-table th:nth-child(7),
+        .users-table td:nth-child(7) { width: 9%; } /* Designation */
+        
+        .users-table th:nth-child(8),
+        .users-table td:nth-child(8) { width: 10%; } /* Team Supervisor */
+        
+        .users-table th:nth-child(9),
+        .users-table td:nth-child(9) { width: 10%; } /* Quality Supervisor */
+        
+        .users-table th:nth-child(10),
+        .users-table td:nth-child(10) { width: 8%; } /* Role */
+        
+        .users-table th:nth-child(11),
+        .users-table td:nth-child(11) { width: 7%; } /* Country */
+        
+        .users-table th:nth-child(12),
+        .users-table td:nth-child(12) { width: 6%; } /* Status */
+        
+        .users-table th:nth-child(13),
+        .users-table td:nth-child(13) { width: 5%; } /* Actions */
 
     </style>
 </head>
@@ -725,16 +801,55 @@
                     <h3 class="table-title">All Users</h3>
                     <span class="table-count" id="usersCount">0 Users</span>
                 </div>
-                <button class="btn-create" onclick="openCreateUserModal()" style="margin: 0;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Create User
-                </button>
+                <div style="display: flex; gap: 0.375rem;">
+                    <button class="btn-secondary" onclick="openBulkUploadModal()" style="margin: 0;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17,8 12,3 7,8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Bulk Upload CSV
+                    </button>
+                    <button class="btn-create" onclick="openCreateUserModal()" style="margin: 0;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Create User
+                    </button>
+                </div>
             </div>
             <div id="usersTableContent">
                 <div class="loading">Loading users...</div>
+            </div>
+            <!-- Bulk Actions Bar -->
+            <div class="bulk-actions-bar" id="bulkActionsBar">
+                <div class="bulk-info">
+                    <span class="selected-count" id="bulkSelectedCount">0 users selected</span>
+                </div>
+                <div class="bulk-actions">
+                    <select id="bulkEditTeam" class="bulk-edit-select">
+                        <option value="">Change Team...</option>
+                    </select>
+                    <select id="bulkEditChannel" class="bulk-edit-select">
+                        <option value="">Change Channel...</option>
+                    </select>
+                    <select id="bulkEditTeamSupervisor" class="bulk-edit-select">
+                        <option value="">Change Team Supervisor...</option>
+                    </select>
+                    <select id="bulkEditQualitySupervisor" class="bulk-edit-select">
+                        <option value="">Change Quality Supervisor...</option>
+                    </select>
+                    <select id="bulkEditRole" class="bulk-edit-select">
+                        <option value="">Change Role...</option>
+                        <option value="Super Admin">Super Admin</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Quality Analyst">Quality Analyst</option>
+                        <option value="Employee">Employee</option>
+                        <option value="General User">General User</option>
+                    </select>
+                    <button class="btn-bulk-apply" onclick="applyBulkEdit()">Apply Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -768,8 +883,6 @@
                     <label for="editUserDepartment">Department</label>
                     <select id="editUserDepartment">
                         <option value="">Select Department</option>
-                        <option value="QPT">QPT</option>
-                        <option value="CEx">CEx</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -818,6 +931,53 @@
     </div>
 </div>
 
+<!-- Bulk Upload Modal -->
+<div id="bulkUploadModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 28.125rem;">
+        <div class="modal-header">
+            <h3>Bulk Upload Users</h3>
+            <button class="modal-close" onclick="closeBulkUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 0.75rem; padding: 0.75rem; background-color: #f3f4f6; border-radius: 0.1875rem; font-size: 0.5rem; color: #6b7280;">
+                <strong>Instructions:</strong>
+                <ul style="margin: 0.375rem 0 0 1.25rem; padding: 0;">
+                    <li>Download the CSV template below</li>
+                    <li>Fill in the user information</li>
+                    <li>Upload the completed CSV file</li>
+                    <li>Required fields: Name, Email, Role</li>
+                </ul>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.75rem;">
+                <button type="button" class="btn-secondary" onclick="downloadSampleCSV()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 0.375rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download CSV Template
+                </button>
+            </div>
+            <div class="form-group">
+                <label for="csvFileInput">Select CSV File</label>
+                <input type="file" id="csvFileInput" accept=".csv" style="padding: 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5625rem; width: 100%;">
+            </div>
+            <div id="uploadProgress" style="display: none; margin-top: 0.75rem;">
+                <div style="font-size: 0.5rem; color: #6b7280; margin-bottom: 0.375rem;">Processing...</div>
+                <div style="background-color: #e5e7eb; border-radius: 0.1875rem; height: 0.5rem; overflow: hidden;">
+                    <div id="progressBar" style="background-color: var(--primary-color); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                <div id="uploadStatus" style="font-size: 0.5rem; color: #6b7280; margin-top: 0.375rem;"></div>
+            </div>
+            <div id="uploadResults" style="display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 0.1875rem; font-size: 0.5rem;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeBulkUploadModal()">Cancel</button>
+            <button type="button" class="btn-primary" onclick="processBulkUpload()">Upload</button>
+        </div>
+    </div>
+</div>
+
 <!-- Create User Modal -->
 <div id="createUserModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -850,8 +1010,6 @@
                     <label for="createUserDepartment">Department</label>
                     <select id="createUserDepartment">
                         <option value="">Select Department</option>
-                        <option value="QPT">QPT</option>
-                        <option value="CEx">CEx</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -909,12 +1067,31 @@
 let allUsers = [];
 let filteredUsers = [];
 let availableChannels = [];
+let selectedUsers = new Set(); // Store selected user emails
+const availableDepartments = [
+    'Admin, Compliance & Corporate Affairs',
+    'Business Development',
+    "CEO's Office",
+    'Client Experience',
+    'Community & Partner Management',
+    'Finance & Audit',
+    'Payments & Treasury',
+    'Marketing',
+    'People & Culture',
+    'Quality, Performance & Training',
+    'Technology',
+    'Trading & Risk Management',
+    'FNmarkets',
+    'Sri Lanka Operations',
+    'Malaysia Operations'
+];
 
 
 document.addEventListener('DOMContentLoaded', function() {
     // Wait for Supabase to be initialized
     waitForSupabaseAndLoadUsers();
     loadChannels();
+    updateDepartmentFilter();
     setupEventListeners();
 });
 
@@ -936,10 +1113,67 @@ async function loadChannels() {
 
         availableChannels = data.map(channel => channel.name);
         console.log('Loaded channels:', availableChannels);
+        
+        // Update bulk edit dropdowns if they exist
+        populateBulkEditDropdowns();
 
     } catch (error) {
         console.error('Error loading channels:', error);
         availableChannels = [];
+    }
+}
+
+
+// Update department filter dropdown
+function updateDepartmentFilter() {
+    const departmentFilter = document.getElementById('departmentFilter');
+    const editDepartmentSelect = document.getElementById('editUserDepartment');
+    const createDepartmentSelect = document.getElementById('createUserDepartment');
+    
+    // Update filter dropdown
+    if (departmentFilter) {
+        const currentValue = departmentFilter.value;
+        departmentFilter.innerHTML = '<option value="">All Departments</option>';
+        
+        availableDepartments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            departmentFilter.appendChild(option);
+        });
+        
+        if (currentValue && availableDepartments.includes(currentValue)) {
+            departmentFilter.value = currentValue;
+        }
+    }
+    
+    // Update edit modal dropdown
+    if (editDepartmentSelect) {
+        const currentValue = editDepartmentSelect.value;
+        editDepartmentSelect.innerHTML = '<option value="">Select Department</option>';
+        
+        availableDepartments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            editDepartmentSelect.appendChild(option);
+        });
+        
+        if (currentValue && availableDepartments.includes(currentValue)) {
+            editDepartmentSelect.value = currentValue;
+        }
+    }
+    
+    // Update create modal dropdown
+    if (createDepartmentSelect) {
+        createDepartmentSelect.innerHTML = '<option value="">Select Department</option>';
+        
+        availableDepartments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            createDepartmentSelect.appendChild(option);
+        });
     }
 }
 
@@ -1086,6 +1320,9 @@ function renderUsersTable() {
         <table>
             <thead>
                 <tr>
+                    <th style="text-align: center; width: 3%;">
+                        <input type="checkbox" id="selectAllUsers" onchange="toggleAllUsers(this.checked)" style="cursor: pointer; accent-color: #1A733E;">
+                    </th>
                     <th>ID</th>
                     <th>Name</th>
                     <th>Department</th>
@@ -1095,6 +1332,7 @@ function renderUsersTable() {
                     <th>Team<br>Supervisor</th>
                     <th>Quality<br>Supervisor</th>
                     <th>Role</th>
+                    <th>Country</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -1106,6 +1344,7 @@ function renderUsersTable() {
     `;
     
     usersTableContent.innerHTML = tableHTML;
+    populateBulkEditDropdowns();
 }
 
 function createUserRow(user) {
@@ -1122,8 +1361,16 @@ function createUserRow(user) {
         ? (allUsers.find(u => u.email === user.quality_supervisor)?.name || user.quality_supervisor)
         : '-';
     
+    const isSelected = selectedUsers.has(user.email);
+    
     return `
         <tr>
+            <td style="text-align: center;">
+                <input type="checkbox" class="user-checkbox" data-email="${user.email}" 
+                       ${isSelected ? 'checked' : ''}
+                       onchange="toggleUserSelection('${user.email}', this.checked)"
+                       style="cursor: pointer; accent-color: #1A733E;">
+            </td>
             <td>${user.employee_id || '-'}</td>
             <td>
                 <div style="display: flex; align-items: center; gap: 0.2625rem;">
@@ -1138,6 +1385,7 @@ function createUserRow(user) {
             <td>${teamSupervisorName}</td>
             <td>${qualitySupervisorName}</td>
             <td><span class="role-badge role-${roleClass}">${user.role || '-'}</span></td>
+            <td>${user.country || '-'}</td>
             <td><span class="${statusClass}">${statusText}</span></td>
             <td>
                 <button class="btn-edit" onclick="editUser('${user.email}')" title="Edit User">
@@ -1196,7 +1444,16 @@ function filterUsers() {
     // Re-sort filtered results by access level
     filteredUsers = sortUsersByAccessLevel(filteredUsers);
     
+    // Clear selections that are no longer in filtered list
+    const filteredEmails = new Set(filteredUsers.map(u => u.email));
+    selectedUsers.forEach(email => {
+        if (!filteredEmails.has(email)) {
+            selectedUsers.delete(email);
+        }
+    });
+    
     renderUsersTable();
+    updateBulkActionsBar();
 }
 
 function refreshUsers() {
@@ -1214,6 +1471,7 @@ function editUser(userEmail) {
     // Populate dropdowns
     populateChannelDropdown('editUserChannel');
     populateSupervisorDropdowns();
+    updateDepartmentFilter();
 
     // Populate the form with user data
     document.getElementById('editUserId').value = user.email;
@@ -1348,6 +1606,7 @@ function openCreateUserModal() {
     // Populate dropdowns
     populateChannelDropdown('createUserChannel');
     populateCreateSupervisorDropdowns();
+    updateDepartmentFilter();
     
     // Reset form
     document.getElementById('createUserForm').reset();
@@ -1472,10 +1731,541 @@ async function createNewUser() {
     }
 }
 
+// Bulk Upload Functions
+function openBulkUploadModal() {
+    document.getElementById('bulkUploadModal').style.display = 'flex';
+    document.getElementById('csvFileInput').value = '';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadResults').style.display = 'none';
+}
+
+function closeBulkUploadModal() {
+    document.getElementById('bulkUploadModal').style.display = 'none';
+    document.getElementById('csvFileInput').value = '';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadResults').style.display = 'none';
+}
+
+function downloadSampleCSV() {
+    const sampleData = [
+        {
+            'Name': 'John Doe',
+            'Email': 'john.doe@example.com',
+            'Role': 'Employee',
+            'Department': 'QPT',
+            'Channel': 'Voice',
+            'Team': 'Team A',
+            'Designation': 'Customer Service Representative',
+            'Employee ID': 'EMP001',
+            'Country': 'Bangladesh',
+            'Team Supervisor': 'supervisor@example.com',
+            'Quality Supervisor': 'qa@example.com',
+            'Status': 'Active'
+        },
+        {
+            'Name': 'Jane Smith',
+            'Email': 'jane.smith@example.com',
+            'Role': 'Quality Analyst',
+            'Department': 'CEx',
+            'Channel': 'Chat',
+            'Team': 'Team B',
+            'Designation': 'Senior Quality Analyst',
+            'Employee ID': 'EMP002',
+            'Country': 'Bangladesh',
+            'Team Supervisor': '',
+            'Quality Supervisor': '',
+            'Status': 'Active'
+        }
+    ];
+    
+    const headers = Object.keys(sampleData[0]);
+    const csvContent = [
+        headers.join(','),
+        ...sampleData.map(row => 
+            headers.map(header => {
+                const value = row[header] || '';
+                // Escape commas and quotes in values
+                if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            }).join(',')
+        )
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'user_bulk_upload_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                current += '"';
+                i++; // Skip next quote
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    
+    return result;
+}
+
+function parseCSV(csvText) {
+    const lines = csvText.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length < 2) {
+        throw new Error('CSV file must have at least a header row and one data row');
+    }
+    
+    const headers = parseCSVLine(lines[0]).map(h => h.trim());
+    const records = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length === headers.length) {
+            const record = {};
+            headers.forEach((header, index) => {
+                record[header] = values[index] || '';
+            });
+            records.push(record);
+        }
+    }
+    
+    return { headers, records };
+}
+
+function mapCSVRowToUser(row) {
+    // Map CSV columns to user data fields
+    const userData = {
+        name: (row['Name'] || row['name'] || '').trim(),
+        email: (row['Email'] || row['email'] || '').trim().toLowerCase(),
+        role: row['Role'] || row['role'] || 'Employee',
+        department: (row['Department'] || row['department'] || '').trim() || null,
+        channel: (row['Channel'] || row['channel'] || '').trim() || null,
+        team: (row['Team'] || row['team'] || '').trim() || null,
+        designation: (row['Designation'] || row['designation'] || '').trim() || null,
+        employee_id: (row['Employee ID'] || row['Employee ID'] || row['employee_id'] || '').trim() || null,
+        country: (row['Country'] || row['country'] || '').trim() || null,
+        team_supervisor: (row['Team Supervisor'] || row['Team Supervisor'] || row['team_supervisor'] || '').trim() || null,
+        quality_supervisor: (row['Quality Supervisor'] || row['Quality Supervisor'] || row['quality_supervisor'] || '').trim() || null,
+        is_active: (row['Status'] || row['status'] || 'Active').toLowerCase() === 'active',
+        login_count: 0,
+        last_login: null
+    };
+    
+    return userData;
+}
+
+async function processBulkUpload() {
+    const fileInput = document.getElementById('csvFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a CSV file');
+        return;
+    }
+    
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadResults = document.getElementById('uploadResults');
+    
+    progressDiv.style.display = 'block';
+    uploadResults.style.display = 'none';
+    progressBar.style.width = '0%';
+    uploadStatus.textContent = 'Reading file...';
+    
+    try {
+        // Read file
+        const text = await file.text();
+        uploadStatus.textContent = 'Parsing CSV...';
+        progressBar.style.width = '20%';
+        
+        // Parse CSV
+        const { records } = parseCSV(text);
+        
+        if (records.length === 0) {
+            throw new Error('No records found in CSV file');
+        }
+        
+        uploadStatus.textContent = `Processing ${records.length} users...`;
+        progressBar.style.width = '40%';
+        
+        // Validate and transform records
+        const usersToInsert = [];
+        const errors = [];
+        
+        for (let i = 0; i < records.length; i++) {
+            const row = records[i];
+            const userData = mapCSVRowToUser(row);
+            
+            // Validate required fields
+            if (!userData.name) {
+                errors.push(`Row ${i + 2}: Name is required`);
+                continue;
+            }
+            
+            if (!userData.email) {
+                errors.push(`Row ${i + 2}: Email is required`);
+                continue;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(userData.email)) {
+                errors.push(`Row ${i + 2}: Invalid email format: ${userData.email}`);
+                continue;
+            }
+            
+            // Check if email already exists
+            if (allUsers.some(u => u.email === userData.email)) {
+                errors.push(`Row ${i + 2}: Email already exists: ${userData.email}`);
+                continue;
+            }
+            
+            // Validate role
+            const validRoles = ['Super Admin', 'Admin', 'Quality Analyst', 'Employee', 'General User'];
+            if (!validRoles.includes(userData.role)) {
+                errors.push(`Row ${i + 2}: Invalid role: ${userData.role}. Must be one of: ${validRoles.join(', ')}`);
+                continue;
+            }
+            
+            usersToInsert.push(userData);
+        }
+        
+        uploadStatus.textContent = `Uploading ${usersToInsert.length} users...`;
+        progressBar.style.width = '60%';
+        
+        // Upload to Supabase in batches
+        if (!window.supabaseClient) {
+            throw new Error('Supabase not initialized');
+        }
+        
+        const BATCH_SIZE = 50;
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (let i = 0; i < usersToInsert.length; i += BATCH_SIZE) {
+            const batch = usersToInsert.slice(i, i + BATCH_SIZE);
+            
+            const { data, error } = await window.supabaseClient
+                .from('users')
+                .insert(batch)
+                .select();
+            
+            if (error) {
+                failCount += batch.length;
+                errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${error.message}`);
+            } else {
+                successCount += batch.length;
+                // Add to local data
+                allUsers.push(...data);
+            }
+            
+            progressBar.style.width = `${60 + ((i + batch.length) / usersToInsert.length) * 30}%`;
+            uploadStatus.textContent = `Uploaded ${Math.min(i + batch.length, usersToInsert.length)}/${usersToInsert.length} users...`;
+        }
+        
+        progressBar.style.width = '100%';
+        uploadStatus.textContent = 'Upload complete!';
+        
+        // Update filtered users and refresh
+        filteredUsers = [...allUsers];
+        updateStatistics();
+        renderUsersTable();
+        
+        // Show results
+        let resultsHTML = `
+            <div style="padding: 0.75rem; border-radius: 0.1875rem; background-color: #d1fae5; color: #065f46; margin-bottom: 0.375rem;">
+                <strong>Success:</strong> ${successCount} user(s) uploaded successfully
+            </div>
+        `;
+        
+        if (failCount > 0 || errors.length > 0) {
+            resultsHTML += `
+                <div style="padding: 0.75rem; border-radius: 0.1875rem; background-color: #fee2e2; color: #991b1b; margin-bottom: 0.375rem;">
+                    <strong>Failed:</strong> ${failCount} user(s) failed to upload
+                </div>
+            `;
+            
+            if (errors.length > 0) {
+                resultsHTML += `
+                    <div style="padding: 0.75rem; border-radius: 0.1875rem; background-color: #fef3c7; color: #92400e; max-height: 12.5rem; overflow-y: auto; font-size: 0.45rem;">
+                        <strong>Errors:</strong><br>
+                        ${errors.slice(0, 10).join('<br>')}
+                        ${errors.length > 10 ? `<br><em>... and ${errors.length - 10} more errors</em>` : ''}
+                    </div>
+                `;
+            }
+        }
+        
+        uploadResults.innerHTML = resultsHTML;
+        uploadResults.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error processing bulk upload:', error);
+        uploadStatus.textContent = 'Error: ' + error.message;
+        uploadResults.innerHTML = `
+            <div style="padding: 0.75rem; border-radius: 0.1875rem; background-color: #fee2e2; color: #991b1b;">
+                <strong>Error:</strong> ${error.message}
+            </div>
+        `;
+        uploadResults.style.display = 'block';
+    }
+}
+
+// Bulk Edit Functions
+function toggleAllUsers(checked) {
+    filteredUsers.forEach(user => {
+        if (checked) {
+            selectedUsers.add(user.email);
+        } else {
+            selectedUsers.delete(user.email);
+        }
+    });
+    
+    // Update all checkboxes
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(cb => cb.checked = checked);
+    
+    updateBulkActionsBar();
+}
+
+function toggleUserSelection(email, selected) {
+    if (selected) {
+        selectedUsers.add(email);
+    } else {
+        selectedUsers.delete(email);
+    }
+    
+    // Update select all checkbox
+    const selectAllCheckbox = document.getElementById('selectAllUsers');
+    const allCheckboxes = document.querySelectorAll('.user-checkbox');
+    const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
+    }
+    
+    updateBulkActionsBar();
+}
+
+function updateBulkActionsBar() {
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCount = selectedUsers.size;
+    
+    if (selectedCount > 0) {
+        bulkActionsBar.classList.add('active');
+        document.getElementById('bulkSelectedCount').textContent = 
+            `${selectedCount} user${selectedCount !== 1 ? 's' : ''} selected`;
+    } else {
+        bulkActionsBar.classList.remove('active');
+    }
+}
+
+function populateBulkEditDropdowns() {
+    // Populate Team dropdown (get unique teams from all users)
+    const teamSelect = document.getElementById('bulkEditTeam');
+    if (teamSelect) {
+        const uniqueTeams = [...new Set(allUsers.map(u => u.team).filter(Boolean))].sort();
+        teamSelect.innerHTML = '<option value="">Change Team...</option>';
+        uniqueTeams.forEach(team => {
+            const option = document.createElement('option');
+            option.value = team;
+            option.textContent = team;
+            teamSelect.appendChild(option);
+        });
+    }
+    
+    // Populate Channel dropdown
+    const channelSelect = document.getElementById('bulkEditChannel');
+    if (channelSelect) {
+        channelSelect.innerHTML = '<option value="">Change Channel...</option>';
+        availableChannels.forEach(channel => {
+            const option = document.createElement('option');
+            option.value = channel;
+            option.textContent = channel;
+            channelSelect.appendChild(option);
+        });
+    }
+    
+    // Populate Team Supervisor dropdown
+    const teamSupervisorSelect = document.getElementById('bulkEditTeamSupervisor');
+    if (teamSupervisorSelect) {
+        const sortedUsers = [...allUsers].sort((a, b) => {
+            const nameA = (a.name || '').toLowerCase();
+            const nameB = (b.name || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        
+        teamSupervisorSelect.innerHTML = '<option value="">Change Team Supervisor...</option>';
+        sortedUsers.forEach(user => {
+            if (user.name && user.email) {
+                const option = document.createElement('option');
+                option.value = user.email;
+                option.textContent = `${user.name}${user.designation ? ' - ' + user.designation : ''}`;
+                teamSupervisorSelect.appendChild(option);
+            }
+        });
+    }
+    
+    // Populate Quality Supervisor dropdown
+    const qualitySupervisorSelect = document.getElementById('bulkEditQualitySupervisor');
+    if (qualitySupervisorSelect) {
+        const sortedUsers = [...allUsers].sort((a, b) => {
+            const nameA = (a.name || '').toLowerCase();
+            const nameB = (b.name || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+        
+        qualitySupervisorSelect.innerHTML = '<option value="">Change Quality Supervisor...</option>';
+        sortedUsers.forEach(user => {
+            if (user.name && user.email) {
+                const option = document.createElement('option');
+                option.value = user.email;
+                option.textContent = `${user.name}${user.designation ? ' - ' + user.designation : ''}`;
+                qualitySupervisorSelect.appendChild(option);
+            }
+        });
+    }
+}
+
+async function applyBulkEdit() {
+    const selectedEmails = Array.from(selectedUsers);
+    
+    if (selectedEmails.length === 0) {
+        alert('Please select at least one user to edit.');
+        return;
+    }
+    
+    // Get values from bulk edit dropdowns
+    const team = document.getElementById('bulkEditTeam').value;
+    const channel = document.getElementById('bulkEditChannel').value;
+    const teamSupervisor = document.getElementById('bulkEditTeamSupervisor').value;
+    const qualitySupervisor = document.getElementById('bulkEditQualitySupervisor').value;
+    const role = document.getElementById('bulkEditRole').value;
+    
+    // Check if at least one field is filled
+    if (!team && !channel && !teamSupervisor && !qualitySupervisor && !role) {
+        alert('Please select at least one field to update.');
+        return;
+    }
+    
+    // Build update object
+    const updates = {};
+    if (team) updates.team = team;
+    if (channel) updates.channel = channel;
+    if (teamSupervisor) updates.team_supervisor = teamSupervisor;
+    if (qualitySupervisor) updates.quality_supervisor = qualitySupervisor;
+    if (role) updates.role = role;
+    
+    // Build confirmation message
+    let message = `Are you sure you want to update ${selectedEmails.length} user${selectedEmails.length !== 1 ? 's' : ''}?\n\n`;
+    message += 'Changes to be applied:\n';
+    if (team) message += `• Team: ${team}\n`;
+    if (channel) message += `• Channel: ${channel}\n`;
+    if (teamSupervisor) {
+        const supervisor = allUsers.find(u => u.email === teamSupervisor);
+        message += `• Team Supervisor: ${supervisor ? supervisor.name : teamSupervisor}\n`;
+    }
+    if (qualitySupervisor) {
+        const supervisor = allUsers.find(u => u.email === qualitySupervisor);
+        message += `• Quality Supervisor: ${supervisor ? supervisor.name : qualitySupervisor}\n`;
+    }
+    if (role) message += `• Role: ${role}\n`;
+    
+    const confirmed = confirm(message);
+    if (!confirmed) return;
+    
+    try {
+        // Check if Supabase is available
+        if (!window.SupabaseUsers) {
+            throw new Error('Supabase not initialized');
+        }
+        
+        // Update each user
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+        
+        for (const email of selectedEmails) {
+            try {
+                const result = await window.SupabaseUsers.updateUser(email, updates);
+                if (result.error) {
+                    throw new Error(result.error.message);
+                }
+                successCount++;
+                
+                // Update local data
+                const userIndex = allUsers.findIndex(u => u.email === email);
+                if (userIndex !== -1) {
+                    allUsers[userIndex] = { ...allUsers[userIndex], ...updates };
+                }
+            } catch (error) {
+                errorCount++;
+                errors.push(`${email}: ${error.message}`);
+                console.error(`Error updating user ${email}:`, error);
+            }
+        }
+        
+        // Refresh the table and statistics
+        filteredUsers = [...allUsers];
+        updateStatistics();
+        renderUsersTable();
+        
+        // Clear selections
+        selectedUsers.clear();
+        updateBulkActionsBar();
+        
+        // Show result message
+        let resultMessage = `Successfully updated ${successCount} user${successCount !== 1 ? 's' : ''}.`;
+        if (errorCount > 0) {
+            resultMessage += `\n\n${errorCount} user${errorCount !== 1 ? 's' : ''} failed to update:\n${errors.slice(0, 5).join('\n')}`;
+            if (errors.length > 5) {
+                resultMessage += `\n... and ${errors.length - 5} more errors`;
+            }
+        }
+        alert(resultMessage);
+        
+        // Reset bulk edit dropdowns
+        document.getElementById('bulkEditTeam').value = '';
+        document.getElementById('bulkEditChannel').value = '';
+        document.getElementById('bulkEditTeamSupervisor').value = '';
+        document.getElementById('bulkEditQualitySupervisor').value = '';
+        document.getElementById('bulkEditRole').value = '';
+        
+    } catch (error) {
+        console.error('Error applying bulk edit:', error);
+        alert('Error applying bulk edit: ' + error.message);
+    }
+}
+
 // Close modal when clicking outside
 document.addEventListener('click', function(event) {
     const editModal = document.getElementById('editUserModal');
     const createModal = document.getElementById('createUserModal');
+    const bulkUploadModal = document.getElementById('bulkUploadModal');
     
     if (event.target === editModal) {
         closeEditModal();
@@ -1483,6 +2273,10 @@ document.addEventListener('click', function(event) {
     
     if (event.target === createModal) {
         closeCreateModal();
+    }
+    
+    if (event.target === bulkUploadModal) {
+        closeBulkUploadModal();
     }
 });
 

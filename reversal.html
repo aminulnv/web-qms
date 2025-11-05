@@ -19,6 +19,7 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <script src="keyboard-shortcuts.js"></script>
     <style>
         /* Reversal Management Specific Styles */
         .stats-grid {
@@ -87,12 +88,15 @@
 
     <!-- Filter Toggle Button -->
     <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-        <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.2812rem; font-weight: 600; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif;">
-            <svg style="width: 0.75rem; height: 0.75rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
-                <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Z"/>
-            </svg>
-            Filters
-        </button>
+        <div style="display: flex; gap: 0.375rem; align-items: center;">
+            <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.2812rem; font-weight: 600; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif;">
+                <svg style="width: 0.75rem; height: 0.75rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                    <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Z"/>
+                </svg>
+                Filters
+            </button>
+            <button id="viewAllBtn" onclick="toggleViewAll()" style="padding: 0.375rem 0.75rem; background-color: #6b7280; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">View All</button>
+        </div>
         <button id="exportBtn" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Export</button>
     </div>
 
@@ -174,6 +178,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let allReversals = [];
         let filteredReversals = [];
         let allScorecards = [];
+        let viewingAll = false; // Track if we're viewing all reversals or just pending
+        let allReversalsLoaded = false; // Track if all reversals have been loaded
+        let pendingReversalsLoaded = false; // Track if pending reversals have been loaded
         
         // Load scorecards first
         async function loadScorecards() {
@@ -190,13 +197,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Load reversals from all audit tables
-        async function loadReversals() {
+        async function loadReversals(onlyPending = true) {
             try {
-                console.log('Loading reversals from Supabase...');
+                const loadingMessage = onlyPending ? 'Loading pending reversals...' : 'Loading all reversals...';
+                console.log(loadingMessage);
                 
                 if (!window.supabaseClient) {
                     throw new Error('Supabase client not initialized');
                 }
+                
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                loadingIndicator.innerHTML = `<p>${loadingMessage}</p>`;
+                reversalList.style.display = 'flex';
+                noReversalsMessage.style.display = 'none';
                 
                 await loadScorecards();
                 
@@ -205,11 +219,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Load from all scorecard tables
                 for (const scorecard of allScorecards) {
                     try {
-                        const { data, error } = await window.supabaseClient
+                        let query = window.supabaseClient
                             .from(scorecard.table_name)
                             .select('*')
-                            .not('reversal_requested_at', 'is', null)
-                            .order('reversal_requested_at', { ascending: false });
+                            .not('reversal_requested_at', 'is', null);
+                        
+                        // If loading only pending, filter at database level
+                        if (onlyPending) {
+                            // Filter for pending reversals (reversal_approved is null)
+                            query = query.is('reversal_approved', null);
+                        }
+                        
+                        query = query.order('reversal_requested_at', { ascending: false });
+                        
+                        const { data, error } = await query;
                         
                         if (error) {
                             console.warn(`Error loading from ${scorecard.table_name}:`, error);
@@ -238,10 +261,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     return dateB - dateA;
                 });
                 
-                console.log(`Total reversals loaded: ${combinedReversals.length}`);
+                console.log(`Total reversals loaded: ${combinedReversals.length} (${onlyPending ? 'pending only' : 'all'})`);
                 
-                allReversals = combinedReversals;
-                filteredReversals = [...allReversals];
+                // Update the appropriate array based on what we loaded
+                if (onlyPending) {
+                    // Merge with existing allReversals if we have them, but prioritize new pending data
+                    const existingNonPending = allReversals.filter(r => {
+                        const status = r.reversal_status || 
+                                      (r.reversal_approved === null ? 'Pending' : 
+                                       (r.reversal_approved ? 'Approved' : 'Rejected'));
+                        return status !== 'Pending';
+                    });
+                    allReversals = [...combinedReversals, ...existingNonPending];
+                    pendingReversalsLoaded = true;
+                } else {
+                    allReversals = combinedReversals;
+                    allReversalsLoaded = true;
+                }
+                
+                // Update filtered reversals based on current view mode
+                if (viewingAll) {
+                    filteredReversals = [...allReversals];
+                } else {
+                    // Filter to only show pending in the view
+                    const getStatus = (r) => r.reversal_status || 
+                                        (r.reversal_approved === null ? 'Pending' : 
+                                         (r.reversal_approved ? 'Approved' : 'Rejected'));
+                    filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                }
                 
                 updateStatistics();
                 renderReversals();
@@ -252,18 +299,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Update statistics
+        // Update statistics - show totals from allReversals, but counts for current view
         function updateStatistics() {
-            const total = filteredReversals.length;
-            
             // Use reversal_status with fallback to reversal_approved for backward compatibility
             const getStatus = (r) => r.reversal_status || 
                                     (r.reversal_approved === null ? 'Pending' : 
                                      (r.reversal_approved ? 'Approved' : 'Rejected'));
             
-            const pending = filteredReversals.filter(r => getStatus(r) === 'Pending').length;
-            const approved = filteredReversals.filter(r => getStatus(r) === 'Approved').length;
-            const rejected = filteredReversals.filter(r => getStatus(r) === 'Rejected').length;
+            // Calculate totals from allReversals (if loaded) or just show current view
+            const reversalsForStats = allReversalsLoaded ? allReversals : filteredReversals;
+            
+            const total = reversalsForStats.length;
+            const pending = reversalsForStats.filter(r => getStatus(r) === 'Pending').length;
+            const approved = reversalsForStats.filter(r => getStatus(r) === 'Approved').length;
+            const rejected = reversalsForStats.filter(r => getStatus(r) === 'Rejected').length;
             
             document.getElementById('totalReversals').textContent = total;
             document.getElementById('pendingReversals').textContent = pending;
@@ -356,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             return `
                 <div class="reversal-card" style="background: #f9fafb; border: 0.0469rem solid #e5e7eb; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer;" 
-                     onclick="viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')"
+                     onclick="${reversal.reversal_approved === null ? `reviewAndProcessReversal('${reversal.id}', '${reversal._scorecard_table}')` : `viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')`}"
                      onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='#ffffff';"
                      onmouseleave="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb';">
                     
@@ -400,24 +449,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <!-- Action buttons -->
                     <div style="display: flex; gap: 0.375rem; flex-shrink: 0;">
-                        <button 
-                            onclick="event.stopPropagation(); viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')"
-                            style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
-                            onmouseover="this.style.backgroundColor='#15582E'"
-                            onmouseout="this.style.backgroundColor='#1A733E'"
-                        >
-                            View Details
-                        </button>
                         ${reversal.reversal_approved === null ? `
                             <button 
-                                onclick="event.stopPropagation(); processReversal('${reversal.id}', '${reversal._scorecard_table}')"
-                                style="padding: 0.375rem 0.75rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
-                                onmouseover="this.style.backgroundColor='#d97706'"
-                                onmouseout="this.style.backgroundColor='#f59e0b'"
+                                onclick="event.stopPropagation(); reviewAndProcessReversal('${reversal.id}', '${reversal._scorecard_table}')"
+                                style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                                onmouseover="this.style.backgroundColor='#15582E'"
+                                onmouseout="this.style.backgroundColor='#1A733E'"
                             >
-                                Process
+                                Review & Process
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button 
+                                onclick="event.stopPropagation(); viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')"
+                                style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                                onmouseover="this.style.backgroundColor='#15582E'"
+                                onmouseout="this.style.backgroundColor='#1A733E'"
+                            >
+                                View Details
+                            </button>
+                        `}
                     </div>
                 </div>
             `;
@@ -433,6 +483,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
+        // Toggle between viewing all reversals and pending only
+        window.toggleViewAll = async function() {
+            const viewAllBtn = document.getElementById('viewAllBtn');
+            
+            if (viewingAll) {
+                // Switch to pending only view
+                viewingAll = false;
+                viewAllBtn.textContent = 'View All';
+                viewAllBtn.style.backgroundColor = '#6b7280';
+                
+                // Filter to show only pending
+                const getStatus = (r) => r.reversal_status || 
+                                    (r.reversal_approved === null ? 'Pending' : 
+                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
+                filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                
+                // Clear filters that might conflict
+                if (statusFilter) statusFilter.value = '';
+                if (searchInput) searchInput.value = '';
+                if (typeFilter) typeFilter.value = '';
+                const dateFromFilter = document.getElementById('dateFromFilter');
+                const dateToFilter = document.getElementById('dateToFilter');
+                if (dateFromFilter) dateFromFilter.value = '';
+                if (dateToFilter) dateToFilter.value = '';
+            } else {
+                // Switch to view all
+                viewingAll = true;
+                viewAllBtn.textContent = 'Show Pending Only';
+                viewAllBtn.style.backgroundColor = '#1A733E';
+                
+                // Load all reversals if not already loaded
+                if (!allReversalsLoaded) {
+                    await loadReversals(false);
+                    return; // loadReversals will call renderReversals
+                }
+                
+                // Show all reversals
+                filteredReversals = [...allReversals];
+            }
+            
+            updateStatistics();
+            renderReversals();
+        };
+        
         // Filter reversals
         function filterReversals() {
             const searchTerm = (searchInput?.value || '').toLowerCase();
@@ -441,7 +535,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const dateFrom = document.getElementById('dateFromFilter')?.value || '';
             const dateTo = document.getElementById('dateToFilter')?.value || '';
             
-            filteredReversals = allReversals.filter(reversal => {
+            // Start with the appropriate base set
+            let baseReversals = viewingAll ? allReversals : allReversals.filter(r => {
+                const getStatus = (r) => r.reversal_status || 
+                                    (r.reversal_approved === null ? 'Pending' : 
+                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
+                return getStatus(r) === 'Pending';
+            });
+            
+            // If viewing all is false and we need to load all for filtering, prompt user
+            if (!viewingAll && (statusValue === 'approved' || statusValue === 'rejected')) {
+                // If filtering by approved/rejected while in pending view, we need all data
+                if (!allReversalsLoaded) {
+                    alert('Please click "View All" to filter by approved or rejected reversals.');
+                    if (statusFilter) statusFilter.value = '';
+                    return;
+                }
+                baseReversals = allReversals;
+            }
+            
+            filteredReversals = baseReversals.filter(reversal => {
                 // Search filter
                 const matchesSearch = !searchTerm || 
                     (reversal.employee_name && reversal.employee_name.toLowerCase().includes(searchTerm)) ||
@@ -449,13 +562,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     (reversal.reversal_reason && reversal.reversal_reason.toLowerCase().includes(searchTerm));
                 
                 // Status filter
+                const getStatus = (r) => r.reversal_status || 
+                                    (r.reversal_approved === null ? 'Pending' : 
+                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
+                
                 let matchesStatus = true;
                 if (statusValue === 'pending') {
-                    matchesStatus = reversal.reversal_approved === null;
+                    matchesStatus = getStatus(reversal) === 'Pending';
                 } else if (statusValue === 'approved') {
-                    matchesStatus = reversal.reversal_approved === true;
+                    matchesStatus = getStatus(reversal) === 'Approved';
                 } else if (statusValue === 'rejected') {
-                    matchesStatus = reversal.reversal_approved === false;
+                    matchesStatus = getStatus(reversal) === 'Rejected';
                 }
                 
                 // Type filter
@@ -552,18 +669,24 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = `audit-view.html?id=${auditId}&table=${tableName}`;
         };
         
-        // Process reversal
-        window.processReversal = async function(auditId, tableName) {
-            // Find the reversal in our data
+        // Review and process reversal - redirects to edit page
+        window.reviewAndProcessReversal = function(auditId, tableName) {
+            // Get scorecard ID from reversal data
             const reversal = allReversals.find(r => r.id === auditId && r._scorecard_table === tableName);
+            const scorecardId = reversal?._scorecard_id || reversal?.scorecard_id || '';
             
-            if (!reversal) {
-                alert('Reversal not found');
-                return;
+            // Redirect to edit-audit.html with the audit
+            if (scorecardId) {
+                window.location.href = `edit-audit.html?id=${auditId}&scorecard=${scorecardId}&table=${tableName}`;
+            } else {
+                window.location.href = `edit-audit.html?id=${auditId}&table=${tableName}`;
             }
-            
-            // Open processing modal
-            showReversalProcessingModal(reversal, tableName);
+        };
+        
+        // Process reversal (kept for backward compatibility, but not used in new flow)
+        window.processReversal = async function(auditId, tableName) {
+            // Redirect to edit page instead of opening modal
+            window.reviewAndProcessReversal(auditId, tableName);
         };
         
         // Show reversal processing modal
@@ -772,9 +895,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     alert('✓ Reversal processed successfully!');
                     
-                    // Close modal and reload data
+                    // Close modal and reload data based on current view mode
                     document.getElementById('processingModal').remove();
-                    loadReversals();
+                    // Reload pending if in pending view, or reload all if in all view
+                    if (viewingAll && allReversalsLoaded) {
+                        loadReversals(false);
+                    } else {
+                        loadReversals(true);
+                    }
                     
                 } catch (error) {
                     console.error('Error processing reversal:', error);
@@ -783,8 +911,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Initialize
-        loadReversals();
+        // Initialize - load only pending reversals by default
+        loadReversals(true);
         
     } catch (error) {
         console.error('Error in reversal management functionality:', error);

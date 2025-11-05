@@ -22,6 +22,7 @@
     <script src="form-validation.js"></script>
     <script src="intercom-config.js"></script>
     <script src="audit-template.js"></script>
+    <script src="keyboard-shortcuts.js"></script>
 </head>
 
 <body>
@@ -201,10 +202,6 @@
                 <h2 style="font-size: 0.7278rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">Create New Audit</h2>
             </div>
             <div style="display: flex; align-items: center; gap: 0.3234rem;">
-                <button type="button" onclick="autoFillTestData()" style="background: rgba(255,193,7,0.9); border: 0.0606rem solid rgba(255,255,255,0.3); border-radius: 0.2425rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; cursor: pointer; color: #1A733E; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.2425rem; white-space: nowrap;" onmouseover="this.style.background='rgba(255,193,7,1)'" onmouseout="this.style.background='rgba(255,193,7,0.9)'" title="Auto-fill form with test data">
-                    <svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
-                    Fill Test Data
-                </button>
                 <button type="button" onclick="closeAuditForm()" style="background: rgba(255,255,255,0.2); border: 0.0606rem solid white; border-radius: 0.2425rem; width: 1.2937rem; height: 1.2937rem; font-size: 0.8086rem; cursor: pointer; color: white; font-weight: bold; transition: all 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">×</button>
             </div>
         </div>
@@ -287,21 +284,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.3234rem;">
-                            <button type="button" id="toggleTranscriptViewBtn" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Toggle between chat view and text view">Chat View</button>
-                        </div>
                     </div>
                     <!-- Chat Interface View -->
-                    <div id="transcriptChatView" style="display: none; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
+                    <div id="transcriptChatView" style="display: flex; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
                         <!-- Chat messages will be dynamically inserted here -->
-                        <div id="chatMessagesContainer" style="display: flex; flex-direction: column;">
+                        <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0;">
                             <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
-                                <p>Enter an Interaction ID and click "Load" to fetch conversation from Intercom</p>
+                                <p>Enter an Interaction ID to automatically load conversation from Intercom</p>
                             </div>
                         </div>
                     </div>
-                    <!-- Text Area View (Default) -->
-                    <div id="transcriptTextView" style="padding: 0.6469rem; background: white; overflow-y: auto; flex: 1; display: flex; position: relative;">
+                    <!-- Text Area View (Fallback) -->
+                    <div id="transcriptTextView" style="display: none; padding: 0.6469rem; background: white; overflow-y: auto; flex: 1; position: relative;">
                         <textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none; transition: padding-top 0.3s ease;"></textarea>
                     </div>
                 </div>
@@ -1627,261 +1621,6 @@ window.createManualAudit = async function() {
 }
 
 // ============================================================================
-// Auto-Fill Test Data Function
-// ============================================================================
-
-// Auto-fill form with test data for testing purposes
-window.autoFillTestData = async function() {
-    try {
-        // Show loading notification
-        const loadingNotification = document.createElement('div');
-        loadingNotification.style.cssText = `
-            position: fixed;
-            top: 2.4258rem;
-            right: 0.6064rem;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            padding: 0.6469rem 0.9704rem;
-            border-radius: 0.3234rem;
-            box-shadow: 0 0.1213rem 0.3639rem rgba(0, 0, 0, 0.15);
-            z-index: 10000;
-            font-size: 0.5659rem;
-            font-weight: 600;
-            animation: slideIn 0.3s ease;
-        `;
-        loadingNotification.textContent = '🔄 Auto-filling form with test data...';
-        document.body.appendChild(loadingNotification);
-        
-        // Auto-select first employee if available
-        const employeeSelect = document.getElementById('employeeName');
-        if (employeeSelect && employeeSelect.options.length > 1) {
-            employeeSelect.selectedIndex = 1; // Select first actual employee (skip "Select Employee..." option)
-            employeeSelect.dispatchEvent(new Event('change'));
-            // Wait a bit for employee data to populate
-            await new Promise(resolve => setTimeout(resolve, 300));
-        }
-        
-        // Ensure scorecard is selected (auto-select first if not already selected)
-        const scorecardSelect = document.getElementById('scorecardSelect');
-        if (scorecardSelect) {
-            if (!scorecardSelect.value && scorecardSelect.options.length > 1) {
-                scorecardSelect.value = scorecardSelect.options[1].value;
-                await loadScorecardParameters(scorecardSelect.value);
-                // Wait for parameters to load
-                await new Promise(resolve => setTimeout(resolve, 500));
-            } else if (scorecardSelect.value && currentParameters.length === 0) {
-                await loadScorecardParameters(scorecardSelect.value);
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-        }
-        
-        // Fill interaction details
-        const interactionId = document.getElementById('interactionId');
-        if (interactionId) {
-            interactionId.value = `TEST-${Date.now()}`;
-        }
-        
-        const interactionDate = document.getElementById('interactionDate');
-        if (interactionDate) {
-            const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
-            interactionDate.value = dateStr;
-        }
-        
-        const channelSelect = document.getElementById('channel');
-        if (channelSelect && channelSelect.options.length > 1) {
-            // Try to select Chat or Email first, otherwise select first available
-            let selected = false;
-            for (let i = 0; i < channelSelect.options.length; i++) {
-                const opt = channelSelect.options[i];
-                if (opt.value && (opt.value.toLowerCase().includes('chat') || opt.value.toLowerCase().includes('email'))) {
-                    channelSelect.selectedIndex = i;
-                    selected = true;
-                    break;
-                }
-            }
-            if (!selected && channelSelect.options.length > 1) {
-                channelSelect.selectedIndex = 1;
-            }
-            channelSelect.dispatchEvent(new Event('change'));
-        }
-        
-        const clientEmail = document.getElementById('clientEmail');
-        if (clientEmail) {
-            clientEmail.value = 'test.client@example.com';
-        }
-        
-        // Fill transcript
-        const transcript = document.getElementById('transcript');
-        if (transcript) {
-            transcript.value = `[TEST TRANSCRIPT - Auto-filled for testing]
-
-Agent: Good morning! Thank you for contacting us. How can I assist you today?
-
-Customer: Hi, I have a question about my recent order.
-
-Agent: I'd be happy to help you with that. Could you please provide me with your order number?
-
-Customer: Sure, it's ORD-12345.
-
-Agent: Thank you. Let me look that up for you. I can see your order was placed on [date] and is currently being processed. Is there something specific you'd like to know about it?
-
-Customer: Yes, I want to know when it will be shipped.
-
-Agent: Based on the information I have, your order should be shipped within 2-3 business days. You'll receive a tracking number via email once it's dispatched.
-
-Customer: Perfect, thank you!
-
-Agent: You're welcome! Is there anything else I can help you with today?
-
-Customer: No, that's all. Thanks again!
-
-Agent: You're very welcome! Have a great day!
-
-[End of transcript - This is auto-filled test data]`;
-        }
-        
-        // Fill agent status
-        const agentPreStatus = document.getElementById('agentPreStatus');
-        if (agentPreStatus) {
-            agentPreStatus.value = 'No active quality concerns';
-        }
-        
-        const agentPostStatus = document.getElementById('agentPostStatus');
-        if (agentPostStatus) {
-            agentPostStatus.value = 'No active quality concerns';
-        }
-        
-        // Fill audit type and validation (already have defaults, but ensure they're set)
-        const auditType = document.getElementById('auditType');
-        if (auditType && !auditType.value) {
-            auditType.value = 'Routine Audit (Recorded)';
-        }
-        
-        const validationStatus = document.getElementById('validationStatus');
-        if (validationStatus && !validationStatus.value) {
-            validationStatus.value = 'Validated';
-        }
-        
-        // Fill error parameters with some test values
-        if (currentParameters && currentParameters.length > 0) {
-            currentParameters.forEach((param, index) => {
-                if (param.field_type === 'radio') {
-                    // For radio buttons, randomly select YES or NO (alternating for variety)
-                    const radioYes = document.getElementById(`${param.field_id}_yes`);
-                    const radioNo = document.getElementById(`${param.field_id}_no`);
-                    if (radioYes && radioNo) {
-                        // Alternate between YES and NO, or choose YES for first few
-                        if (index < 2) {
-                            radioYes.checked = true;
-                            radioYes.dispatchEvent(new Event('change'));
-                        } else {
-                            radioNo.checked = true;
-                            radioNo.dispatchEvent(new Event('change'));
-                        }
-                    }
-                } else {
-                    // For counters, set a small test value (capped at 10)
-                    const counterInput = document.getElementById(param.field_id);
-                    if (counterInput) {
-                        const testValue = Math.min(index % 3, 2); // 0, 1, or 2
-                        if (testValue > 0) {
-                            counterInput.value = testValue;
-                            
-                            // Update plain text display
-                            const displayElement = document.getElementById(`${param.field_id}_display`);
-                            if (displayElement) {
-                                displayElement.textContent = testValue;
-                                displayElement.style.color = '#ef4444';
-                                displayElement.style.fontWeight = '700';
-                            }
-                            
-                            // Trigger change event to update calculations
-                            counterInput.dispatchEvent(new Event('change', { bubbles: true }));
-                            
-                            // Fill feedback textarea (only for first 3 parameters, and only if error count > 0)
-                            if (index < 3) {
-                                // Update feedback boxes, then fill the first one
-                                updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', param.parameter_type || 'error');
-                                const firstFeedback = document.getElementById(`feedback_${param.field_id}_0`);
-                                if (firstFeedback) {
-                                    firstFeedback.value = `Test feedback for ${param.error_name}. This is auto-filled test data.`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Recalculate everything after filling parameters
-            if (typeof calculateTotalErrorsCount === 'function') {
-                calculateTotalErrorsCount();
-            }
-            if (typeof calculateAverageScore === 'function') {
-                calculateAverageScore();
-            }
-            if (typeof calculateErrorsByCategory === 'function') {
-                calculateErrorsByCategory();
-            }
-        }
-        
-        // Fill recommendations
-        const recommendations = document.getElementById('recommendations');
-        if (recommendations) {
-            recommendations.value = `TEST RECOMMENDATIONS (Auto-filled):
-
-1. Continue following the established procedures and maintaining the current level of service quality.
-
-2. The agent demonstrated good communication skills and proper use of the knowledge base.
-
-3. This is auto-filled test data for testing purposes only.`;
-
-        }
-        
-        // Remove loading notification and show success
-        if (loadingNotification.parentNode) {
-            loadingNotification.parentNode.removeChild(loadingNotification);
-        }
-        
-        const successNotification = document.createElement('div');
-        successNotification.style.cssText = `
-            position: fixed;
-            top: 2.4258rem;
-            right: 0.6064rem;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 0.6469rem 0.9704rem;
-            border-radius: 0.3234rem;
-            box-shadow: 0 0.1213rem 0.3639rem rgba(0, 0, 0, 0.15);
-            z-index: 10000;
-            font-size: 0.5659rem;
-            font-weight: 600;
-            animation: slideIn 0.3s ease;
-        `;
-        successNotification.textContent = 'Form auto-filled with test data!';
-        document.body.appendChild(successNotification);
-        
-        setTimeout(() => {
-            successNotification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => {
-                if (successNotification.parentNode) {
-                    successNotification.parentNode.removeChild(successNotification);
-                }
-            }, 300);
-        }, 3000);
-        
-    } catch (error) {
-        console.error('Error auto-filling test data:', error);
-        await window.confirmationDialog.show({
-            title: 'Error',
-            message: 'Failed to auto-fill test data: ' + error.message,
-            confirmText: 'OK',
-            type: 'error'
-        });
-    }
-}
-
-// ============================================================================
 // Start Assigned Audit Function
 // ============================================================================
 
@@ -3015,7 +2754,7 @@ async function loadAuditForEditing() {
         
         console.log('Loaded audit data:', data);
         
-        // Set editing mode
+        // Set editing mode flag FIRST to prevent event handlers from interfering
         isEditingExistingAudit = true;
         currentEditingAuditId = auditId;
         currentEditingTableName = tableName;
@@ -3036,8 +2775,32 @@ async function loadAuditForEditing() {
         if (scorecardId) {
             const scorecardSelect = document.getElementById('scorecardSelect');
             if (scorecardSelect) {
-                scorecardSelect.value = scorecardId;
-                await loadScorecardParameters(scorecardId);
+                // Wait for scorecard options to be populated
+                let attempts = 0;
+                while (scorecardSelect.options.length <= 1 && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (scorecardSelect.options.length > 1) {
+                    // Set the value (this will trigger the change event, but that's okay since we're in edit mode)
+                    scorecardSelect.value = scorecardId;
+                    
+                    // Wait for scorecard parameters to fully load
+                    // The isEditingExistingAudit flag should prevent the change handler from clearing the form
+                    await loadScorecardParameters(scorecardId);
+                    
+                    // Additional wait to ensure parameters are rendered in DOM
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                } else {
+                    console.error('Scorecard dropdown not populated yet');
+                    alert('Error: Scorecard dropdown not ready. Please refresh the page.');
+                    return;
+                }
+            } else {
+                console.error('Scorecard select element not found');
+                alert('Error: Scorecard select element not found. Please refresh the page.');
+                return;
             }
         }
         
@@ -3085,17 +2848,33 @@ async function populateFormWithAuditData(audit) {
         const countryOfEmployee = document.getElementById('countryOfEmployee');
         
         if (employeeSelect && audit.employee_email) {
+            // Wait for employee options to be populated if not ready
+            let attempts = 0;
+            while (employeeSelect.options.length === 0 && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
             // Find and select the employee in dropdown
+            let employeeFound = false;
+            const normalizedEmail = (audit.employee_email || '').toLowerCase().trim();
             for (let i = 0; i < employeeSelect.options.length; i++) {
-                if (employeeSelect.options[i].dataset.email === audit.employee_email) {
+                const optionEmail = (employeeSelect.options[i].dataset.email || '').toLowerCase().trim();
+                if (optionEmail === normalizedEmail) {
                     employeeSelect.selectedIndex = i;
                     // Trigger change event to populate other fields
                     employeeSelect.dispatchEvent(new Event('change'));
+                    employeeFound = true;
                     break;
                 }
             }
+            
+            if (!employeeFound && employeeSelect.options.length > 0) {
+                console.warn('Employee not found in dropdown:', audit.employee_email);
+            }
         }
         
+        // Set employee fields directly from audit data (in case dropdown selection fails)
         if (employeeEmail) employeeEmail.value = audit.employee_email || '';
         if (employeeType) employeeType.value = audit.employee_type || '';
         if (employeeDepartment) employeeDepartment.value = audit.employee_department || '';
@@ -3133,8 +2912,16 @@ async function populateFormWithAuditData(audit) {
         if (transcript) transcript.value = audit.transcript || '';
         if (recommendations) recommendations.value = audit.recommendations || '';
         
-        // Wait a bit for scorecard parameters to load
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Wait for scorecard parameters to be fully loaded and rendered
+        let attempts = 0;
+        while ((!currentParameters || currentParameters.length === 0) && attempts < 30) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (attempts >= 30) {
+            console.warn('Timeout waiting for scorecard parameters to load');
+        }
         
         // Populate error parameters
         if (currentParameters && currentParameters.length > 0) {
@@ -3556,17 +3343,12 @@ async function populateFormWithCalibrationSample(sampleAudit) {
         // Show chat view by default for calibration (like audit-view.html)
         const transcriptChatView = document.getElementById('transcriptChatView');
         const transcriptTextView = document.getElementById('transcriptTextView');
-        const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
         const chatMessagesContainer = document.getElementById('chatMessagesContainer');
         
         if (transcriptChatView && transcriptTextView) {
             // Show chat view by default
             transcriptChatView.style.display = 'flex';
             transcriptTextView.style.display = 'none';
-            if (toggleTranscriptViewBtn) {
-                toggleTranscriptViewBtn.textContent = 'Text View';
-                toggleTranscriptViewBtn.title = 'Switch to text view';
-            }
             // Set global flag if available
             if (typeof window !== 'undefined') {
                 window.isChatViewActive = true;
@@ -3596,24 +3378,21 @@ async function populateFormWithCalibrationSample(sampleAudit) {
                 } else if (attempts >= maxAttempts) {
                     clearInterval(checkAndLoad);
                     console.error('loadConversationFromIntercom function not available after waiting');
-                    if (chatMessagesContainer) {
-                        chatMessagesContainer.innerHTML = `
-                            <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
-                                <p style="font-size: 0.5659rem;">Error: Could not load conversation function. Please refresh the page.</p>
-                            </div>
-                        `;
+                    // Auto-fallback to text view on error
+                    if (transcriptChatView && transcriptTextView) {
+                        transcriptChatView.style.display = 'none';
+                        transcriptTextView.style.display = 'flex';
+                        if (typeof window !== 'undefined') {
+                            window.isChatViewActive = false;
+                        }
                     }
                 }
             }, 100);
         } else {
-            // No interaction ID - show text view with database transcript
+            // No interaction ID - auto-fallback to text view with database transcript
             if (transcriptChatView && transcriptTextView) {
                 transcriptChatView.style.display = 'none';
                 transcriptTextView.style.display = 'flex';
-                if (toggleTranscriptViewBtn) {
-                    toggleTranscriptViewBtn.textContent = 'Chat View';
-                    toggleTranscriptViewBtn.title = 'Switch to chat view';
-                }
                 if (typeof window !== 'undefined') {
                     window.isChatViewActive = false;
                 }
@@ -3782,15 +3561,50 @@ document.addEventListener('DOMContentLoaded', function() {
         // Load your stats when page loads
         updateYourStats();
         
+        // Load employees when page loads
+        loadEmployees();
+        
         // Check if we're editing an existing audit from URL parameters
-        setTimeout(() => {
-            loadAuditForEditing();
-        }, 1000); // Wait for Supabase and employees to load
+        // Wait for dependencies to load: Supabase, scorecards, and employees
+        setTimeout(async () => {
+            // Ensure scorecards and employees are loaded before editing
+            let attempts = 0;
+            const maxAttempts = 30; // 3 seconds max wait
+            
+            while (attempts < maxAttempts) {
+                // Check if scorecards dropdown has options (other than the default "Select a scorecard..." option)
+                const scorecardSelect = document.getElementById('scorecardSelect');
+                const employeeSelect = document.getElementById('employeeName');
+                
+                const scorecardsLoaded = scorecardSelect && scorecardSelect.options.length > 1;
+                const employeesLoaded = employeeSelect && employeeSelect.options.length > 0;
+                const supabaseReady = window.supabaseClient;
+                
+                if (scorecardsLoaded && employeesLoaded && supabaseReady) {
+                    console.log('Dependencies loaded, proceeding with edit mode');
+                    await loadAuditForEditing();
+                    break;
+                }
+                
+                attempts++;
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            if (attempts >= maxAttempts) {
+                console.warn('Timeout waiting for dependencies, attempting to load audit anyway');
+                await loadAuditForEditing();
+            }
+        }, 500); // Start checking after 500ms
         
         // Handle scorecard selection change
         const scorecardSelect = document.getElementById('scorecardSelect');
         if (scorecardSelect) {
             scorecardSelect.addEventListener('change', async function() {
+                // Don't clear form if we're in edit mode
+                if (isEditingExistingAudit) {
+                    return; // Let the edit mode handler manage the scorecard selection
+                }
+                
                 const selectedValue = this.value;
                 // Validate before loading to prevent UUID errors
                 if (selectedValue && selectedValue !== 'null' && selectedValue !== 'undefined' && selectedValue.trim() !== '') {
@@ -5106,7 +4920,6 @@ document.addEventListener('change', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     const interactionIdInput = document.getElementById('interactionId');
     const viewChatBtn = document.getElementById('viewChatBtn');
-    const toggleTranscriptViewBtn = document.getElementById('toggleTranscriptViewBtn');
     const transcriptChatView = document.getElementById('transcriptChatView');
     const transcriptTextView = document.getElementById('transcriptTextView');
     const chatMessagesContainer = document.getElementById('chatMessagesContainer');
@@ -5126,58 +4939,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const SUPABASE_URL = window.SupabaseConfig?.url || '';
     const SUPABASE_ANON_KEY = window.SupabaseConfig?.anonKey || '';
 
-    // Toggle between chat view and text view
-    toggleTranscriptViewBtn.addEventListener('click', function() {
-        const chatPanel = document.getElementById('conversationAttributesPanel');
-        const textPanel = document.getElementById('conversationAttributesPanelTextView');
-        const rightColumn = document.getElementById('rightColumn');
-        
-        isChatViewActive = !isChatViewActive;
-        
-        if (isChatViewActive) {
-            // Switch to chat view
+    // Show chat view by default (will auto-load transcripts or fallback to text view on failure)
+    if (transcriptChatView && transcriptTextView) {
             transcriptChatView.style.display = 'flex';
             transcriptTextView.style.display = 'none';
-            toggleTranscriptViewBtn.textContent = 'Text View';
-            toggleTranscriptViewBtn.title = 'Switch to text view';
-            
-            // Show chat panel, hide text panel
-            if (chatPanel) {
-                chatPanel.style.display = 'block';
-                if (rightColumn) {
-                    setTimeout(() => {
-                        const rightHeight = rightColumn.scrollHeight;
-                        chatPanel.style.height = rightHeight + 'px';
-                    }, 100);
-                }
-            }
-            if (textPanel) {
-                textPanel.style.display = 'none';
-            }
-        } else {
-            // Switch to text view
-            transcriptChatView.style.display = 'none';
-            transcriptTextView.style.display = 'flex';
-            toggleTranscriptViewBtn.textContent = 'Chat View';
-            toggleTranscriptViewBtn.title = 'Switch to chat view';
-            
-            // Show text panel, hide chat panel
-            if (textPanel) {
-                textPanel.style.display = 'block';
-                if (rightColumn) {
-                    setTimeout(() => {
-                        const rightHeight = rightColumn.scrollHeight;
-                        textPanel.style.height = rightHeight + 'px';
-                    }, 100);
-                }
-            }
-            if (chatPanel) {
-                chatPanel.style.display = 'none';
-            }
-        }
-            // Sync chat messages to textarea
-            syncChatToTextarea();
-    });
+        isChatViewActive = true;
+    }
 
     // Auto-load conversation when Interaction ID changes
     let loadTimeout = null;
@@ -5298,13 +5065,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Extract and display all conversation attributes
             displayConversationAttributes(conversation);
 
-            // Auto-switch to chat view if not already active
+            // Ensure chat view is active (it should already be)
             if (!isChatViewActive) {
                 isChatViewActive = true;
                 transcriptChatView.style.display = 'flex';
                 transcriptTextView.style.display = 'none';
-                toggleTranscriptViewBtn.textContent = 'Text View';
-                toggleTranscriptViewBtn.title = 'Switch to text view';
             }
 
             // Enable Open button after successful load
@@ -5323,18 +5088,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading conversation from Intercom:', error);
             
-            chatMessagesContainer.innerHTML = `
-                <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
-                    <svg style="width: 1.9406rem; height: 1.9406rem; margin: 0 auto 0.6469rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <p style="font-size: 0.5659rem; font-weight: 600; margin-bottom: 0.3234rem;">Failed to load conversation</p>
-                    <p style="font-size: 0.4852rem; color: #6b7280;">${error.message}</p>
-                    <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">Please check your Intercom API credentials and conversation ID.</p>
-                </div>
-            `;
+            // Auto-fallback to text view on error
+            if (transcriptChatView && transcriptTextView) {
+                transcriptChatView.style.display = 'none';
+                transcriptTextView.style.display = 'flex';
+                isChatViewActive = false;
+            }
 
             // Keep Open button disabled on error
             if (viewChatBtn) {
@@ -5346,13 +5105,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 viewChatBtn.title = 'Open in Intercom (load conversation first)';
             }
 
-            await window.confirmationDialog.show({
-                title: 'Error Loading Conversation',
-                message: 'Failed to load conversation from Intercom: ' + error.message,
-                confirmText: 'OK',
-                cancelText: 'Close',
-                type: 'error'
-            });
+            // Show error message in chat container (for debugging, but user will see text view)
+            chatMessagesContainer.innerHTML = `
+                <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
+                    <svg style="width: 1.9406rem; height: 1.9406rem; margin: 0 auto 0.6469rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <p style="font-size: 0.5659rem; font-weight: 600; margin-bottom: 0.3234rem;">Failed to load conversation from Intercom</p>
+                    <p style="font-size: 0.4852rem; color: #6b7280;">${escapeHtml(error.message)}</p>
+                    <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">Falling back to text view.</p>
+                </div>
+            `;
         }
     };
     // Also create a local reference for backward compatibility
@@ -5910,24 +5675,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const chatViewStyle = transcriptChatView ? window.getComputedStyle(transcriptChatView).display : 'none';
             const isChatView = chatViewStyle !== 'none' && chatViewStyle !== '';
             
-            const rightColumn = document.getElementById('rightColumn');
+            // Get the transcript container to match its height (left column details section)
+            const transcriptContainer = transcriptChatView?.parentElement || transcriptTextView?.parentElement;
             
-            if (isChatView && chatPanel) {
+            if (isChatView && chatPanel && transcriptContainer) {
                 chatPanel.style.display = 'block';
-                if (rightColumn) {
+                // Match height to transcript container (left column details)
                     setTimeout(() => {
-                        const rightHeight = rightColumn.scrollHeight;
-                        chatPanel.style.height = rightHeight + 'px';
-                    }, 100);
-                }
-            } else if (!isChatView && textPanel) {
+                    const transcriptHeight = transcriptContainer.offsetHeight || transcriptContainer.clientHeight;
+                    if (transcriptHeight > 0) {
+                        chatPanel.style.maxHeight = transcriptHeight + 'px';
+                        chatPanel.style.height = 'auto';
+                    }
+                }, 100);
+            } else if (!isChatView && textPanel && transcriptContainer) {
                 textPanel.style.display = 'block';
-                if (rightColumn) {
+                // Match height to transcript container (left column details)
                     setTimeout(() => {
-                        const rightHeight = rightColumn.scrollHeight;
-                        textPanel.style.height = rightHeight + 'px';
+                    const transcriptHeight = transcriptContainer.offsetHeight || transcriptContainer.clientHeight;
+                    if (transcriptHeight > 0) {
+                        textPanel.style.maxHeight = transcriptHeight + 'px';
+                        textPanel.style.height = 'auto';
+                    }
                     }, 100);
-                }
             }
         } else {
             // Hide panels if no attributes

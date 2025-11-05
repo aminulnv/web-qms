@@ -19,6 +19,7 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <script src="keyboard-shortcuts.js"></script>
     <style>
         /* Audit Reports Specific Styles */
         .expert-audits-container {
@@ -222,12 +223,17 @@
 
         <!-- Filter Toggle Button -->
         <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.2812rem; font-weight: 600; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0469rem 0.0938rem 0 rgba(0, 0, 0, 0.05); font-family: 'Poppins', sans-serif;">
-                <svg style="width: 0.75rem; height: 0.75rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.125rem" viewBox="0 -960 960 960" width="1.125rem" fill="currentColor">
-                    <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
-                </svg>
-                Filters
-            </button>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.2812rem; font-weight: 600; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0469rem 0.0938rem 0 rgba(0, 0, 0, 0.05); font-family: 'Poppins', sans-serif;">
+                    <svg style="width: 0.75rem; height: 0.75rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.125rem" viewBox="0 -960 960 960" width="1.125rem" fill="currentColor">
+                        <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
+                    </svg>
+                    Filters
+                </button>
+                <button id="viewAllBtn" onclick="toggleViewAll()" style="display: none; padding: 0.375rem 0.75rem; background-color: #f3f4f6; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    View All
+                </button>
+            </div>
             <button id="exportFilters" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Export</button>
         </div>
 
@@ -506,10 +512,61 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentScorecard = null;
     let allScorecards = [];
     
+    // User info and filtering state
+    let currentUserEmail = '';
+    let currentUserRole = '';
+    let isAgent = false;
+    let showAllAudits = false; // For employees, defaults to false (only show their audits)
+    
     // Pagination state
     let currentPage = 1;
     let itemsPerPage = 25;
     let totalPages = 1;
+    
+    // Initialize user info
+    function initializeUserInfo() {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            currentUserEmail = (userInfo.email || '').toLowerCase().trim();
+            currentUserRole = userInfo.role || '';
+            isAgent = currentUserRole === 'Employee';
+            
+            // Show "View All" button only for employees
+            const viewAllBtn = document.getElementById('viewAllBtn');
+            if (viewAllBtn) {
+                viewAllBtn.style.display = isAgent ? 'block' : 'none';
+            }
+            
+            console.log('User initialized:', { email: currentUserEmail, role: currentUserRole, isAgent, showAllAudits });
+        } catch (error) {
+            console.error('Error initializing user info:', error);
+        }
+    }
+    
+    // Toggle View All functionality for employees
+    window.toggleViewAll = function() {
+        if (!isAgent) return;
+        
+        showAllAudits = !showAllAudits;
+        const viewAllBtn = document.getElementById('viewAllBtn');
+        if (viewAllBtn) {
+            if (showAllAudits) {
+                viewAllBtn.textContent = 'Show My Audits Only';
+                viewAllBtn.style.backgroundColor = '#1A733E';
+                viewAllBtn.style.color = 'white';
+                viewAllBtn.style.borderColor = '#1A733E';
+            } else {
+                viewAllBtn.textContent = 'View All';
+                viewAllBtn.style.backgroundColor = '#f3f4f6';
+                viewAllBtn.style.color = '#374151';
+                viewAllBtn.style.borderColor = '#d1d5db';
+            }
+        }
+        
+        // Reset to first page and reload audits
+        currentPage = 1;
+        loadAudits();
+    };
     
     // Load available scorecards
     async function loadScorecards() {
@@ -584,7 +641,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize
+    // Initialize user info first
+    initializeUserInfo();
+    
+    // Initialize scorecards (which will trigger loadAudits)
     loadScorecards();
     
     // Load audits from Supabase
@@ -641,10 +701,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (const tableInfo of tablesToQuery) {
                     try {
                         console.log(`Loading from table: ${tableInfo.table_name}`);
-                        const { data, error } = await window.supabaseClient
+                        let query = window.supabaseClient
                             .from(tableInfo.table_name)
                             .select('*')
                             .order('submitted_at', { ascending: false });
+                        
+                        // If employee and not showing all audits, filter by employee_email
+                        if (isAgent && !showAllAudits && currentUserEmail) {
+                            query = query.eq('employee_email', currentUserEmail);
+                            console.log(`Filtering by employee_email: ${currentUserEmail}`);
+                        }
+                        
+                        const { data, error } = await query;
                         
                         if (error) {
                             console.warn(`Error loading from ${tableInfo.table_name}:`, error);
@@ -652,8 +720,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         if (data && data.length > 0) {
+                            // For employees, do additional client-side filtering to ensure exact match
+                            let filteredData = data;
+                            if (isAgent && !showAllAudits && currentUserEmail) {
+                                filteredData = data.filter(audit => {
+                                    const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
+                                    return auditEmployeeEmail === currentUserEmail;
+                                });
+                            }
+                            
                             // Add scorecard info to each audit
-                            const auditsWithScorecard = data.map(audit => ({
+                            const auditsWithScorecard = filteredData.map(audit => ({
                                 ...audit,
                                 _scorecard_id: tableInfo.scorecard_id,
                                 _scorecard_name: tableInfo.scorecard_name,
@@ -680,10 +757,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Load from specific scorecard table
                 console.log('Loading from table:', currentScorecard.table_name);
                 
-                const { data, error } = await window.supabaseClient
+                let query = window.supabaseClient
                     .from(currentScorecard.table_name)
                     .select('*')
                     .order('submitted_at', { ascending: false });
+                
+                // If employee and not showing all audits, filter by employee_email
+                if (isAgent && !showAllAudits && currentUserEmail) {
+                    query = query.eq('employee_email', currentUserEmail);
+                    console.log(`Filtering by employee_email: ${currentUserEmail}`);
+                }
+                
+                const { data, error } = await query;
                 
                 if (error) {
                     console.error('Error loading from Supabase:', error);
@@ -693,9 +778,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                if (data && data.length > 0) {
+                let processedData = data || [];
+                
+                // For employees, do additional client-side filtering to ensure exact match
+                if (isAgent && !showAllAudits && currentUserEmail && processedData.length > 0) {
+                    processedData = processedData.filter(audit => {
+                        const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
+                        return auditEmployeeEmail === currentUserEmail;
+                    });
+                }
+                
+                if (processedData.length > 0) {
                     // Add scorecard info to each audit
-                    combinedAudits = data.map(audit => ({
+                    combinedAudits = processedData.map(audit => ({
                         ...audit,
                         _scorecard_id: currentScorecard.id,
                         _scorecard_name: currentScorecard.name,

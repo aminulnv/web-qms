@@ -305,9 +305,6 @@ window.generateTranscriptSection = function(options = {}) {
                         </h3>
                         ${transcriptInfoHtml}
                     </div>
-                    <div style="display: flex; gap: 0.3234rem;">
-                        <button type="button" id="toggleTranscriptViewBtn" onclick="if(window.toggleTranscriptView) window.toggleTranscriptView();" style="padding: 0.1617rem 0.3234rem; background-color: #ffffff; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; font-weight: 500;" title="Toggle between chat view and text view">${isEdit ? 'Chat View' : 'Chat View'}</button>
-                    </div>
                 </div>
                 <!-- Chat Interface View -->
                 <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">

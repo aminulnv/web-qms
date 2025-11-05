@@ -19,6 +19,7 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <script src="keyboard-shortcuts.js"></script>
     <style>
         /* Search Page Specific Styles */
         .search-page-container {
@@ -456,45 +457,64 @@
 class SearchPage {
     constructor() {
         this.searchIndex = new Map()
+        this.allItems = []
         this.searchResults = []
         this.currentFilter = 'all'
         this.currentSort = 'relevance'
         this.isSearching = false
+        this.searchDebounceTimer = null
+        this.lastSearchTime = 0
         this.init()
     }
 
     init() {
+        console.log('SearchPage: Initializing...')
         this.buildSearchIndex()
+        console.log(`SearchPage: Built index with ${this.allItems.length} items`)
         this.setupEventListeners()
         this.handleURLParams()
+        
+        // Auto-focus search input on page load
+        setTimeout(() => {
+            const searchInput = document.getElementById('search-input-large')
+            if (searchInput) {
+                searchInput.focus()
+            }
+        }, 100)
     }
 
     buildSearchIndex() {
-        const searchableContent = [
-            { type: "page", title: "Home", url: "home.html", keywords: ["home", "dashboard", "main", "overview"], description: "Main dashboard and overview page" },
-            { type: "audit", title: "Create Audit", url: "create-audit.html", keywords: ["create", "audit", "new", "start", "begin"], description: "Create and initiate new audit processes" },
-            { type: "dashboard", title: "Auditor Dashboard", url: "auditor-dashboard.html", keywords: ["auditor", "dashboard", "monitor", "track"], description: "Comprehensive auditor dashboard for monitoring audit activities" },
-            { type: "audit", title: "Audit Distribution", url: "audit-distribution.html", keywords: ["distribution", "assign", "allocate", "spread"], description: "Distribute and assign audits to team members" },
-            { type: "report", title: "Audit Reports", url: "expert-audits.html", keywords: ["reports", "analytics", "data", "statistics"], description: "Generate and view comprehensive audit reports" },
-            { type: "performance", title: "Performance", url: "employee-performance.html", keywords: ["performance", "metrics", "kpi", "employee"], description: "Monitor and analyze employee performance metrics" },
-            { type: "audit", title: "Reversal", url: "reversal.html", keywords: ["reversal", "undo", "cancel", "reverse"], description: "Reverse or undo audit actions and processes" },
-            { type: "setting", title: "Settings", url: "settings.html", keywords: ["settings", "config", "preferences", "options"], description: "System configuration and user preferences" },
-            { type: "profile", title: "Profile", url: "profile.html", keywords: ["profile", "user", "account", "personal"], description: "User profile and account management" },
-            { type: "feature", title: "Improvement Corner", url: "improvement-corner.html", keywords: ["improvement", "suggestions", "feedback", "enhancement"], description: "Submit and track improvement suggestions" }
+        this.allItems = [
+            { type: "page", title: "Home", url: "home.html", keywords: ["home", "dashboard", "main", "overview", "landing"], description: "Main dashboard and overview page" },
+            { type: "audit", title: "Create Audit", url: "create-audit.html", keywords: ["create", "audit", "new", "start", "begin", "initiate", "launch"], description: "Create and initiate new audit processes" },
+            { type: "audit", title: "Edit Audit", url: "edit-audit.html", keywords: ["edit", "audit", "modify", "update", "change", "revise"], description: "Edit and modify existing audit records" },
+            { type: "audit", title: "View Audit", url: "audit-view.html", keywords: ["view", "audit", "details", "inspect", "review", "examine"], description: "View detailed audit information and results" },
+            { type: "dashboard", title: "Auditor Dashboard", url: "auditor-dashboard.html", keywords: ["auditor", "dashboard", "monitor", "track", "overview"], description: "Comprehensive auditor dashboard for monitoring audit activities" },
+            { type: "audit", title: "Audit Distribution", url: "audit-distribution.html", keywords: ["distribution", "assign", "allocate", "spread", "delegate"], description: "Distribute and assign audits to team members" },
+            { type: "report", title: "Expert Audits", url: "expert-audits.html", keywords: ["reports", "expert", "audits", "analytics", "data", "statistics", "review"], description: "Generate and view comprehensive expert audit reports" },
+            { type: "report", title: "AI Audits", url: "ai-audits.html", keywords: ["ai", "artificial", "intelligence", "audits", "automated", "machine", "learning"], description: "View AI-powered audit analysis and insights" },
+            { type: "performance", title: "Employee Performance", url: "employee-performance.html", keywords: ["performance", "metrics", "kpi", "employee", "staff", "team", "productivity"], description: "Monitor and analyze employee performance metrics" },
+            { type: "audit", title: "Reversal", url: "reversal.html", keywords: ["reversal", "undo", "cancel", "reverse", "revoke", "rollback"], description: "Reverse or undo audit actions and processes" },
+            { type: "setting", title: "Settings", url: "settings.html", keywords: ["settings", "config", "preferences", "options", "configuration"], description: "System configuration and user preferences" },
+            { type: "profile", title: "Profile", url: "profile.html", keywords: ["profile", "user", "account", "personal", "information"], description: "User profile and account management" },
+            { type: "feature", title: "Improvement Corner", url: "improvement-corner.html", keywords: ["improvement", "suggestions", "feedback", "enhancement", "ideas"], description: "Submit and track improvement suggestions" },
+            { type: "report", title: "Scorecards", url: "scorecards.html", keywords: ["scorecard", "score", "cards", "evaluation", "rating", "assessment"], description: "View and manage audit scorecards and evaluations" },
+            { type: "page", title: "Calibration", url: "calibration.html", keywords: ["calibration", "calibrate", "adjust", "align", "standardize"], description: "Calibration sessions and quality alignment" },
+            { type: "page", title: "User Management", url: "user-management.html", keywords: ["user", "management", "users", "admin", "accounts", "permissions"], description: "Manage users, roles, and permissions" },
+            { type: "page", title: "Grading Guide", url: "grading-guide.html", keywords: ["grading", "guide", "grades", "scoring", "rubric", "criteria"], description: "Guide for understanding grading and scoring systems" },
+            { type: "page", title: "Scoring Basics", url: "article-scoring-basics.html", keywords: ["scoring", "basics", "fundamentals", "how", "to", "score"], description: "Learn the basics of scoring audits" },
+            { type: "page", title: "Scoring Types", url: "article-scoring-types.html", keywords: ["scoring", "types", "methods", "categories", "varieties"], description: "Different types and methods of scoring" },
+            { type: "page", title: "Common Scenarios", url: "article-common-scenarios.html", keywords: ["scenarios", "common", "examples", "use", "cases", "situations"], description: "Common audit scenarios and use cases" },
+            { type: "page", title: "ATA", url: "ata.html", keywords: ["ata", "audit", "analysis", "tracking"], description: "Audit Tracking and Analysis" }
         ]
 
-        searchableContent.forEach((item) => {
-            this.searchIndex.set(item.title.toLowerCase(), item)
+        // Build keyword index for fast lookups (optional optimization)
+        this.allItems.forEach((item) => {
             item.keywords.forEach((keyword) => {
-                if (!this.searchIndex.has(keyword)) {
-                    this.searchIndex.set(keyword, [])
+                if (!this.searchIndex.has(keyword.toLowerCase())) {
+                    this.searchIndex.set(keyword.toLowerCase(), [])
                 }
-                const keywordArray = this.searchIndex.get(keyword)
-                if (Array.isArray(keywordArray)) {
-                    keywordArray.push(item)
-                } else {
-                    this.searchIndex.set(keyword, [item])
-                }
+                this.searchIndex.get(keyword.toLowerCase()).push(item)
             })
         })
     }
@@ -509,21 +529,41 @@ class SearchPage {
         // Search input events
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
-                this.handleSearch(e.target.value)
+                const query = e.target.value.trim()
+                
+                // Clear previous debounce timer
+                if (this.searchDebounceTimer) {
+                    clearTimeout(this.searchDebounceTimer)
+                }
+                
+                // Debounce search for better performance
+                this.searchDebounceTimer = setTimeout(() => {
+                    if (query.length >= 2) {
+                        this.handleSearch(query)
+                    } else if (query.length === 0) {
+                        this.showNoResultsState()
+                    }
+                }, 300)
             })
 
             searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault()
-                    this.performSearch(e.target.value)
+                    if (this.searchDebounceTimer) {
+                        clearTimeout(this.searchDebounceTimer)
+                    }
+                    this.performSearch(e.target.value.trim())
                 }
             })
         }
 
         // Search button
-        if (searchBtn) {
+        if (searchBtn && searchInput) {
             searchBtn.addEventListener('click', () => {
-                this.performSearch(searchInput.value)
+                if (this.searchDebounceTimer) {
+                    clearTimeout(this.searchDebounceTimer)
+                }
+                this.performSearch(searchInput.value.trim())
             })
         }
 
@@ -560,46 +600,134 @@ class SearchPage {
     }
 
     handleSearch(query) {
-        if (query.length < 2) {
+        const trimmedQuery = query.trim()
+        if (trimmedQuery.length < 2) {
+            this.searchResults = []
             this.showNoResultsState()
             return
         }
 
-        this.searchResults = this.search(query)
+        console.log(`SearchPage: handleSearch called with "${trimmedQuery}"`)
+        this.searchResults = this.search(trimmedQuery)
+        console.log(`SearchPage: handleSearch found ${this.searchResults.length} results`)
         this.displayResults()
     }
 
     performSearch(query) {
-        if (!query.trim()) return
+        const trimmedQuery = query.trim()
+        if (!trimmedQuery) {
+            console.log('SearchPage: Empty query, returning')
+            return
+        }
 
+        console.log(`SearchPage: Performing search for "${trimmedQuery}"`)
         this.isSearching = true
         this.showLoadingState()
 
-        // Simulate search delay for better UX
+        // Record search start time
+        const startTime = performance.now()
+
+        // Perform search
         setTimeout(() => {
-            this.searchResults = this.search(query)
+            this.searchResults = this.search(trimmedQuery)
+            console.log(`SearchPage: Found ${this.searchResults.length} results`)
             this.isSearching = false
+            
+            // Calculate search time
+            const endTime = performance.now()
+            this.lastSearchTime = Math.round(endTime - startTime)
+            
             this.displayResults()
-            this.updateURL(query)
-        }, 300)
+            this.updateURL(trimmedQuery)
+        }, 100)
     }
 
     search(query) {
         const results = []
-        const queryLower = query.toLowerCase()
+        const queryLower = query.toLowerCase().trim()
+        const queryTerms = queryLower.split(/\s+/).filter(term => term.length > 0)
 
-        for (const [key, value] of this.searchIndex) {
-            if (key.includes(queryLower)) {
-                if (Array.isArray(value)) {
-                    results.push(...value)
-                } else {
-                    results.push(value)
+        if (!queryLower || queryTerms.length === 0) {
+            return []
+        }
+
+        // Search through ALL items directly
+        if (this.allItems && this.allItems.length > 0) {
+            this.allItems.forEach((item) => {
+                if (this.itemMatchesQuery(item, queryLower, queryTerms)) {
+                    results.push(item)
                 }
-            }
+            })
         }
 
         const uniqueResults = this.removeDuplicates(results)
         return this.sortByRelevance(uniqueResults, query)
+    }
+
+    itemMatchesQuery(item, queryLower, queryTerms) {
+        if (!item || !queryLower) return false
+
+        const titleLower = item.title ? item.title.toLowerCase() : ''
+        const descLower = item.description ? item.description.toLowerCase() : ''
+        const urlLower = item.url ? item.url.toLowerCase() : ''
+        
+        // Single word search - check if query appears anywhere
+        if (queryTerms.length === 1) {
+            const term = queryTerms[0]
+            
+            // Check title
+            if (titleLower.includes(term)) {
+                return true
+            }
+            
+            // Check description
+            if (descLower.includes(term)) {
+                return true
+            }
+            
+            // Check URL
+            if (urlLower.includes(term)) {
+                return true
+            }
+            
+            // Check keywords
+            if (item.keywords && Array.isArray(item.keywords)) {
+                for (const keyword of item.keywords) {
+                    if (keyword.toLowerCase().includes(term)) {
+                        return true
+                    }
+                }
+            }
+        } else {
+            // Multi-word search - all terms must match somewhere
+            const allTermsMatch = queryTerms.every(term => {
+                // Check title
+                if (titleLower.includes(term)) return true
+                
+                // Check description
+                if (descLower.includes(term)) return true
+                
+                // Check URL
+                if (urlLower.includes(term)) return true
+                
+                // Check keywords
+                if (item.keywords && Array.isArray(item.keywords)) {
+                    for (const keyword of item.keywords) {
+                        if (keyword.toLowerCase().includes(term)) {
+                            return true
+                        }
+                    }
+                }
+                
+                return false
+            })
+            
+            if (allTermsMatch) {
+                return true
+            }
+        }
+        
+        return false
     }
 
     removeDuplicates(results) {
@@ -626,7 +754,9 @@ class SearchPage {
         let score = 0
         const queryLower = query.toLowerCase()
         const titleLower = result.title.toLowerCase()
+        const queryTerms = queryLower.split(/\s+/).filter(term => term.length > 0)
 
+        // Exact title match gets highest score
         if (titleLower === queryLower) {
             score += 100
         } else if (titleLower.startsWith(queryLower)) {
@@ -635,12 +765,43 @@ class SearchPage {
             score += 25
         }
 
+        // Check if all query terms appear in title (for multi-word queries)
+        if (queryTerms.length > 1) {
+            const allTermsInTitle = queryTerms.every(term => titleLower.includes(term))
+            if (allTermsInTitle) {
+                score += 30
+            }
+        }
+
+        // Description matching
+        if (result.description) {
+            const descLower = result.description.toLowerCase()
+            if (descLower.includes(queryLower)) {
+                score += 15
+            }
+        }
+
+        // Keyword matching
         if (result.keywords) {
             result.keywords.forEach((keyword) => {
-                if (keyword.toLowerCase().includes(queryLower)) {
+                const keywordLower = keyword.toLowerCase()
+                if (keywordLower === queryLower) {
+                    score += 20
+                } else if (keywordLower.includes(queryLower)) {
                     score += 10
                 }
             })
+            
+            // Check if all query terms match keywords
+            if (queryTerms.length > 1) {
+                const keywordLower = result.keywords.map(k => k.toLowerCase())
+                const allTermsMatchKeywords = queryTerms.every(term => 
+                    keywordLower.some(kw => kw.includes(term))
+                )
+                if (allTermsMatchKeywords) {
+                    score += 15
+                }
+            }
         }
 
         return score
@@ -698,6 +859,7 @@ class SearchPage {
         // Update stats
         document.getElementById('total-results').textContent = filteredResults.length
         document.getElementById('results-count').textContent = `${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''} found`
+        document.getElementById('search-time').textContent = `${this.lastSearchTime}ms`
 
         // Display results
         filteredResults.forEach(result => {
@@ -798,7 +960,24 @@ class SearchPage {
     }
 
     showNoResultsState() {
-        document.getElementById('no-results-state').style.display = 'block'
+        const noResults = document.getElementById('no-results-state')
+        const searchInput = document.getElementById('search-input-large')
+        const query = searchInput ? searchInput.value.trim() : ''
+        
+        // Update no results message based on whether there's a query
+        if (query.length >= 2) {
+            const titleEl = noResults.querySelector('.no-results-title')
+            const subtitleEl = noResults.querySelector('.no-results-subtitle')
+            if (titleEl) titleEl.textContent = 'No Results Found'
+            if (subtitleEl) subtitleEl.textContent = `No results found for "${query}". Try different keywords or check your spelling.`
+        } else {
+            const titleEl = noResults.querySelector('.no-results-title')
+            const subtitleEl = noResults.querySelector('.no-results-subtitle')
+            if (titleEl) titleEl.textContent = 'Start Searching'
+            if (subtitleEl) subtitleEl.textContent = 'Enter a search term above to find pages, features, and information'
+        }
+        
+        noResults.style.display = 'block'
         document.getElementById('search-results-header').style.display = 'none'
         document.getElementById('search-stats').style.display = 'none'
         document.getElementById('search-results-grid').innerHTML = ''
@@ -825,9 +1004,31 @@ class SearchPage {
 }
 
 // Initialize search page when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+function initializeSearchPage() {
+    if (window.SearchPage) {
+        console.log('SearchPage: Already initialized, skipping')
+        return
+    }
+    
+    console.log('SearchPage: Creating SearchPage instance')
+    try {
     window.SearchPage = new SearchPage()
-})
+        console.log('SearchPage: Successfully initialized')
+    } catch (error) {
+        console.error('SearchPage: Error initializing', error)
+    }
+}
+
+// Check if DOM is already loaded
+if (document.readyState === 'loading') {
+    // DOM is still loading, wait for it
+    console.log('SearchPage: Waiting for DOM to load')
+    document.addEventListener('DOMContentLoaded', initializeSearchPage)
+} else {
+    // DOM is already loaded, initialize immediately
+    console.log('SearchPage: DOM already loaded, initializing immediately')
+    initializeSearchPage()
+}
 </script>
 </body>
 </html>
