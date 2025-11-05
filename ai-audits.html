@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="sidebar.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
@@ -19,95 +20,17 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
-    <style>
-        /* AI Audits Specific Styles */
-        .ai-audits-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.125rem;
-            padding: 0;
-            width: 100%;
-            margin: 0;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1A733E',
+                    }
+                }
+            }
         }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.125rem;
-            width: 100%;
-        }
-
-        .stat-card {
-            background: #ffffff;
-            border-radius: 0.375rem;
-            padding: 0.75rem;
-            border: 0.0469rem solid #e5e7eb;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .stat-card:hover {
-            box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1);
-            transform: translateY(-0.0938rem);
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.375rem;
-        }
-
-        .stat-title {
-            font-size: 0.5625rem;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .stat-icon {
-            width: 0.9375rem;
-            height: 0.9375rem;
-            color: var(--primary-color);
-        }
-
-        .stat-value {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 0.1875rem;
-        }
-
-        .stat-change {
-            font-size: 0.5625rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.1875rem;
-        }
-
-        .stat-change.positive {
-            color: #10b981;
-        }
-
-        .stat-change.negative {
-            color: #ef4444;
-        }
-
-        .info-message {
-            background: #f0f9ff;
-            border: 0.0469rem solid #bae6fd;
-            border-radius: 0.375rem;
-            padding: 1.125rem;
-            color: #0369a1;
-            font-size: 0.6562rem;
-            line-height: 1.5;
-        }
-
-    </style>
-
+    </script>
 </head>
 
 <body>
@@ -116,13 +39,13 @@
     <p class="page-heading">AI Audits</p>
     <div style="margin-bottom: 1.125rem; width: 100%;"></div>
 
-    <div class="ai-audits-container">
+    <div class="flex flex-col gap-4 w-full">
         <!-- Statistics Overview -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">Total AI Audits</span>
-                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Total AI Audits</span>
+                    <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 12l2 2 4-4"/>
                         <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
                         <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
@@ -130,49 +53,699 @@
                         <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
                     </svg>
                 </div>
-                <div class="stat-value" id="totalAIAudits">-</div>
-                <div class="stat-change" id="totalAIAuditsChange">
-                    All time
-                </div>
+                <div class="text-2xl font-bold text-primary mb-1" id="totalAIAudits">-</div>
+                <div class="text-xs text-gray-500">All time</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">Passed</span>
-                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Passed</span>
+                    <svg class="w-4 h-4 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="8 12 12 16 16 12"/>
                     </svg>
                 </div>
-                <div class="stat-value" id="passingAIAudits">-</div>
-                <div class="stat-change positive" id="passingAIAuditsChange">
-                    Pass rate
-                </div>
+                <div class="text-2xl font-bold text-green-600 mb-1" id="passingAIAudits">-</div>
+                <div class="text-xs text-green-600 font-medium" id="passingAIAuditsChange">Pass rate</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">Not Passed</span>
-                    <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Not Passed</span>
+                    <svg class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 8 12 12 12 16"/>
                         <polyline points="8 12 16 12"/>
                     </svg>
                 </div>
-                <div class="stat-value" id="notPassingAIAudits">-</div>
-                <div class="stat-change negative" id="notPassingAIAuditsChange">
-                    Fail rate
+                <div class="text-2xl font-bold text-red-600 mb-1" id="notPassingAIAudits">-</div>
+                <div class="text-xs text-red-600 font-medium" id="notPassingAIAuditsChange">Fail rate</div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-primary">Controls</h3>
+                <button id="filterToggleBtn" onclick="toggleFilters()" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                    Filters
+                </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <input type="text" id="searchInput" placeholder="Search by conversation ID, agent name..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                       onkeyup="applyFilters()">
+            </div>
+
+            <!-- Collapsible Filters -->
+            <div id="filtersSection" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Agent Name</label>
+                    <select id="agentFilter" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">All Agents</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">All Status</option>
+                        <option value="passed">Passed</option>
+                        <option value="not_passed">Not Passed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Date From</label>
+                    <input type="date" id="dateFromFilter" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Date To</label>
+                    <input type="date" id="dateToFilter" onchange="applyFilters()" class="w-full px-3 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-primary">
                 </div>
             </div>
         </div>
 
-        <!-- Placeholder Content -->
-        <div class="info-message">
-            <strong>AI Audits</strong><br>
-            This section will display audits performed by AI systems. Content and functionality will be implemented here.
+        <!-- Audit List -->
+        <div class="bg-white rounded-lg border border-gray-200">
+            <div id="loadingIndicator" class="flex items-center justify-center p-8">
+                <div class="text-center">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-primary mb-2"></div>
+                    <p class="text-sm text-gray-600">Loading audits...</p>
+                </div>
+            </div>
+
+            <div id="noAuditsMessage" class="hidden p-8 text-center text-gray-500">
+                <p class="text-sm">No audits found</p>
+            </div>
+
+            <div id="auditList" class="divide-y divide-gray-100"></div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="hidden flex items-center justify-between p-4 border-t border-gray-200">
+                <div class="text-xs text-gray-600">
+                    Showing <span id="paginationStart">0</span> - <span id="paginationEnd">0</span> of <span id="paginationTotal">0</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="prevPageBtn" onclick="changePage(-1)" class="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <span class="px-3 py-1.5 text-xs text-gray-700">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                    <button id="nextPageBtn" onclick="changePage(1)" class="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                </div>
+            </div>
         </div>
     </div>
 </main>
+
+<!-- Detailed Audit Modal -->
+<div id="auditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Audit Details</h2>
+            <button onclick="closeAuditModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div id="auditModalContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global state
+let allAudits = [];
+let filteredAudits = [];
+let currentPage = 1;
+const itemsPerPage = 20;
+const PASS_THRESHOLD = 90; // 90% threshold
+
+// Load audits on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializePage();
+});
+
+// Initialize page and wait for Supabase
+async function initializePage() {
+    try {
+        // Wait for Supabase to be ready
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.supabaseClient) {
+            console.error('Supabase client not initialized');
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            document.getElementById('noAuditsMessage').classList.remove('hidden');
+            document.getElementById('noAuditsMessage').innerHTML = '<p class="text-sm text-red-600">Error: Supabase client not initialized. Please refresh the page.</p>';
+            return;
+        }
+
+        console.log('Supabase client ready, loading audits...');
+        await loadAudits();
+    } catch (error) {
+        console.error('Error initializing page:', error);
+        document.getElementById('loadingIndicator').classList.add('hidden');
+        document.getElementById('noAuditsMessage').classList.remove('hidden');
+        document.getElementById('noAuditsMessage').innerHTML = '<p class="text-sm text-red-600">Error initializing: ' + error.message + '</p>';
+    }
+}
+
+// Toggle filters visibility
+function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    const filterBtn = document.getElementById('filterToggleBtn');
+    const isHidden = filtersSection.classList.contains('hidden');
+    
+    if (isHidden) {
+        filtersSection.classList.remove('hidden');
+        filterBtn.classList.add('bg-primary', 'text-white');
+        filterBtn.classList.remove('bg-gray-100', 'text-gray-700');
+    } else {
+        filtersSection.classList.add('hidden');
+        filterBtn.classList.remove('bg-primary', 'text-white');
+        filterBtn.classList.add('bg-gray-100', 'text-gray-700');
+    }
+}
+
+// Load audits from Supabase
+async function loadAudits() {
+    try {
+        document.getElementById('loadingIndicator').classList.remove('hidden');
+        document.getElementById('auditList').innerHTML = '';
+        document.getElementById('noAuditsMessage').classList.add('hidden');
+        document.getElementById('pagination').classList.add('hidden');
+
+        console.log('Fetching audits from ai_audits table...');
+        
+        if (!window.supabaseClient) {
+            throw new Error('Supabase client not available');
+        }
+
+        const { data, error } = await window.supabaseClient
+            .from('ai_audits')
+            .select('*')
+            .order('opened_at', { ascending: false });
+
+        if (error) {
+            console.error('Error loading audits:', error);
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            document.getElementById('noAuditsMessage').classList.remove('hidden');
+            document.getElementById('noAuditsMessage').innerHTML = `
+                <div class="p-4">
+                    <p class="text-sm text-red-600 font-semibold mb-2">Error loading audits</p>
+                    <p class="text-xs text-gray-600">${error.message}</p>
+                    <p class="text-xs text-gray-500 mt-2">Code: ${error.code || 'N/A'}</p>
+                    <p class="text-xs text-gray-500">Details: ${error.details || 'N/A'}</p>
+                    <p class="text-xs text-gray-500 mt-2">Please check if the table 'ai_audits' exists in your Supabase database.</p>
+                </div>
+            `;
+            return;
+        }
+
+        console.log('Audits loaded:', data?.length || 0, 'records');
+        
+        allAudits = data || [];
+        filteredAudits = [...allAudits];
+
+        if (allAudits.length === 0) {
+            console.log('No audits found in database');
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            document.getElementById('noAuditsMessage').classList.remove('hidden');
+            document.getElementById('noAuditsMessage').innerHTML = '<p class="text-sm text-gray-500">No audits found in the database.</p>';
+            updateStatistics(); // Still update stats (will show 0)
+            return;
+        }
+
+        // Populate agent filter
+        populateAgentFilter();
+        
+        // Update statistics
+        updateStatistics();
+        
+        // Apply filters and render
+        applyFilters();
+        
+        document.getElementById('loadingIndicator').classList.add('hidden');
+    } catch (error) {
+        console.error('Error loading audits:', error);
+        document.getElementById('loadingIndicator').classList.add('hidden');
+        document.getElementById('noAuditsMessage').classList.remove('hidden');
+        document.getElementById('noAuditsMessage').innerHTML = `
+            <div class="p-4">
+                <p class="text-sm text-red-600 font-semibold mb-2">Unexpected error</p>
+                <p class="text-xs text-gray-600">${error.message}</p>
+                <p class="text-xs text-gray-500 mt-2">Please check the browser console for more details.</p>
+            </div>
+        `;
+    }
+}
+
+// Populate agent filter dropdown
+function populateAgentFilter() {
+    const agentFilter = document.getElementById('agentFilter');
+    const uniqueAgents = [...new Set(allAudits.map(a => a.agent_name).filter(Boolean))].sort();
+    
+    // Clear existing options except "All Agents"
+    agentFilter.innerHTML = '<option value="">All Agents</option>';
+    
+    uniqueAgents.forEach(agent => {
+        const option = document.createElement('option');
+        option.value = agent;
+        option.textContent = agent;
+        agentFilter.appendChild(option);
+    });
+}
+
+// Update statistics
+function updateStatistics() {
+    const total = allAudits.length;
+    const passed = allAudits.filter(a => isPassed(a)).length;
+    const notPassed = total - passed;
+    const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+    const failRate = total > 0 ? ((notPassed / total) * 100).toFixed(1) : 0;
+
+    document.getElementById('totalAIAudits').textContent = total;
+    document.getElementById('passingAIAudits').textContent = passed;
+    document.getElementById('notPassingAIAudits').textContent = notPassed;
+    document.getElementById('passingAIAuditsChange').textContent = `${passRate}% pass rate`;
+    document.getElementById('notPassingAIAuditsChange').textContent = `${failRate}% fail rate`;
+}
+
+// Check if audit passed (score >= 90%)
+function isPassed(audit) {
+    const score = parseFloat(audit.score) || 0;
+    const defaultScore = parseFloat(audit.default_score) || 100;
+    const percentage = defaultScore > 0 ? (score / defaultScore) * 100 : 0;
+    return percentage >= PASS_THRESHOLD;
+}
+
+// Apply filters
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const agentFilter = document.getElementById('agentFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const dateFrom = document.getElementById('dateFromFilter').value;
+    const dateTo = document.getElementById('dateToFilter').value;
+
+    filteredAudits = allAudits.filter(audit => {
+        // Search filter
+        if (searchTerm) {
+            const matchesSearch = 
+                (audit.conversation_id && audit.conversation_id.toString().toLowerCase().includes(searchTerm)) ||
+                (audit.agent_name && audit.agent_name.toLowerCase().includes(searchTerm));
+            if (!matchesSearch) return false;
+        }
+
+        // Agent filter
+        if (agentFilter && audit.agent_name !== agentFilter) return false;
+
+        // Status filter
+        if (statusFilter) {
+            const passed = isPassed(audit);
+            if (statusFilter === 'passed' && !passed) return false;
+            if (statusFilter === 'not_passed' && passed) return false;
+        }
+
+        // Date filters
+        if (dateFrom || dateTo) {
+            const auditDate = audit.opened_at ? new Date(audit.opened_at).toISOString().split('T')[0] : null;
+            if (dateFrom && auditDate && auditDate < dateFrom) return false;
+            if (dateTo && auditDate && auditDate > dateTo) return false;
+        }
+
+        return true;
+    });
+
+    currentPage = 1;
+    renderAudits();
+}
+
+// Render audits
+function renderAudits() {
+    const auditList = document.getElementById('auditList');
+    const noAuditsMessage = document.getElementById('noAuditsMessage');
+    const pagination = document.getElementById('pagination');
+
+    if (filteredAudits.length === 0) {
+        auditList.innerHTML = '';
+        noAuditsMessage.classList.remove('hidden');
+        pagination.classList.add('hidden');
+        return;
+    }
+
+    noAuditsMessage.classList.add('hidden');
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredAudits.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredAudits.length);
+    const paginatedAudits = filteredAudits.slice(startIndex, endIndex);
+
+    // Render audit cards
+    auditList.innerHTML = paginatedAudits.map(audit => createAuditCard(audit)).join('');
+
+    // Update pagination UI
+    updatePaginationUI(totalPages, startIndex, endIndex);
+}
+
+// Create audit card
+function createAuditCard(audit) {
+    const score = parseFloat(audit.score) || 0;
+    const defaultScore = parseFloat(audit.default_score) || 100;
+    const percentage = defaultScore > 0 ? ((score / defaultScore) * 100).toFixed(1) : 0;
+    const passed = isPassed(audit);
+    const statusColor = passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+    const statusText = passed ? 'Passed' : 'Not Passed';
+    const statusIcon = passed ? '✓' : '✗';
+
+    // Format date
+    const date = audit.opened_at ? new Date(audit.opened_at).toLocaleString() : 'N/A';
+
+    return `
+        <div class="p-4 hover:bg-gray-50 transition-colors cursor-pointer" onclick="viewAuditDetails('${audit.conversation_id || audit.id}')">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm">
+                            ${getInitials(audit.agent_name || 'Unknown')}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-semibold text-gray-900 truncate">${escapeHtml(audit.agent_name || 'Unknown Agent')}</h4>
+                            <p class="text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+                                <span>ID: ${escapeHtml(audit.conversation_id || 'N/A')}</span>
+                                <span>•</span>
+                                <span>${date}</span>
+                            </p>
+                        </div>
+                    </div>
+                    ${audit.remarks ? `
+                        <p class="text-xs text-gray-600 line-clamp-2 mb-2">${escapeHtml(audit.remarks.substring(0, 200))}${audit.remarks.length > 200 ? '...' : ''}</p>
+                    ` : ''}
+                    <div class="flex items-center gap-4 text-xs text-gray-600">
+                        <span class="font-medium">Score: <span class="font-bold ${passed ? 'text-green-600' : 'text-red-600'}">${score}/${defaultScore} (${percentage}%)</span></span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold ${statusColor}">
+                        ${statusIcon} ${statusText}
+                    </span>
+                    <button onclick="event.stopPropagation(); viewAuditDetails('${audit.conversation_id || audit.id}')" 
+                            class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded hover:bg-green-700 transition-colors">
+                        View Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// View audit details
+function viewAuditDetails(conversationId) {
+    console.log('View audit details called with ID:', conversationId);
+    console.log('Total audits:', allAudits.length);
+    
+    // Try to find audit - handle both string and number comparisons
+    const audit = allAudits.find(a => {
+        const auditId = String(a.conversation_id || a.id || '');
+        const searchId = String(conversationId || '');
+        return auditId === searchId;
+    });
+    
+    if (!audit) {
+        console.error('Audit not found for ID:', conversationId);
+        console.log('Available IDs:', allAudits.slice(0, 5).map(a => a.conversation_id || a.id));
+        alert('Audit not found. Please try again.');
+        return;
+    }
+
+    console.log('Found audit:', audit);
+    
+    const modal = document.getElementById('auditModal');
+    const modalContent = document.getElementById('auditModalContent');
+    
+    if (!modal || !modalContent) {
+        console.error('Modal elements not found');
+        return;
+    }
+
+    const score = parseFloat(audit.score) || 0;
+    const defaultScore = parseFloat(audit.default_score) || 100;
+    const percentage = defaultScore > 0 ? ((score / defaultScore) * 100).toFixed(1) : 0;
+    const passed = isPassed(audit);
+    const statusText = passed ? 'Passed' : 'Not Passed';
+    const statusIcon = passed ? '✓' : '✗';
+
+    // Parse parameters
+    const parameters = parseParameters(audit);
+
+    modalContent.innerHTML = `
+        <div class="space-y-6">
+            <!-- Header Info -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                    <div class="text-xs text-gray-500 mb-1">Conversation ID</div>
+                    <div class="text-sm font-semibold text-gray-900">${escapeHtml(audit.conversation_id || 'N/A')}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 mb-1">Agent Name</div>
+                    <div class="text-sm font-semibold text-gray-900">${escapeHtml(audit.agent_name || 'Unknown')}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-500 mb-1">Date</div>
+                    <div class="text-sm font-semibold text-gray-900">${audit.opened_at ? new Date(audit.opened_at).toLocaleString() : 'N/A'}</div>
+                </div>
+            </div>
+
+            <!-- Score Summary -->
+            <div class="p-4 border-2 ${passed ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'} rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm text-gray-600 mb-1">Overall Score</div>
+                        <div class="text-3xl font-bold ${passed ? 'text-green-700' : 'text-red-700'}">${score}/${defaultScore}</div>
+                        <div class="text-sm ${passed ? 'text-green-600' : 'text-red-600'} font-medium">${percentage}% - ${statusText}</div>
+                    </div>
+                    <div class="text-6xl ${passed ? 'text-green-400' : 'text-red-400'}">${statusIcon}</div>
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            ${audit.remarks ? `
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Remarks</h3>
+                    <div class="p-4 bg-gray-50 rounded-lg text-sm text-gray-700 whitespace-pre-wrap">${escapeHtml(audit.remarks)}</div>
+                </div>
+            ` : ''}
+
+            <!-- Parameters Breakdown -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Parameter Breakdown</h3>
+                <div class="space-y-2">
+                    ${parameters.map(param => `
+                        <div class="p-3 border rounded-lg ${param.compliant ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-sm font-medium text-gray-900">${escapeHtml(param.name)}</span>
+                                        <span class="px-2 py-0.5 rounded text-xs font-semibold ${param.compliant ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">
+                                            ${param.compliant ? '✓ Compliant' : '✗ Non-Compliant'}
+                                        </span>
+                                    </div>
+                                    ${param.feedback ? `<div class="text-xs text-gray-600 mt-1">${escapeHtml(param.feedback)}</div>` : ''}
+                                </div>
+                                <div class="text-sm font-bold ${param.compliant ? 'text-green-700' : 'text-red-700'} ml-4">
+                                    ${param.compliant ? '+' : '-'}${param.points}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Conversation Body -->
+            ${audit.conversation_body ? `
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Conversation</h3>
+                    <div class="p-4 bg-gray-50 rounded-lg max-h-96 overflow-y-auto">
+                        <pre class="text-xs text-gray-700 whitespace-pre-wrap font-mono">${escapeHtml(audit.conversation_body)}</pre>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    console.log('Modal opened');
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+}
+
+// Close audit modal
+function closeAuditModal() {
+    const modal = document.getElementById('auditModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        // Restore body scroll
+        document.body.style.overflow = '';
+    }
+}
+
+// Parse parameters from audit
+function parseParameters(audit) {
+    const parameters = [];
+    const parameterColumns = Object.keys(audit).filter(key => 
+        key.includes('_') && 
+        (key.endsWith('_15') || key.endsWith('_10') || key.endsWith('_5')) &&
+        key !== 'conversation_id' && 
+        key !== 'agent_name' && 
+        key !== 'opened_at' && 
+        key !== 'conversation_body' && 
+        key !== 'remarks' && 
+        key !== 'score' && 
+        key !== 'default_score'
+    );
+
+    parameterColumns.forEach(columnName => {
+        const value = audit[columnName];
+        if (!value || (typeof value !== 'string' && typeof value !== 'number')) return;
+
+        // Convert to string if needed
+        const valueStr = String(value).trim();
+        if (!valueStr) return;
+
+        // Extract points from column name (e.g., "address_all_queries_before_chat_closure_15" -> 15)
+        const pointsMatch = columnName.match(/_(\d+)$/);
+        const points = pointsMatch ? parseInt(pointsMatch[1]) : 0;
+
+        // Check if compliant or non-compliant (handle both with and without quotes)
+        const normalizedValue = valueStr.toLowerCase();
+        const isCompliant = normalizedValue.startsWith('#compliant') || normalizedValue.startsWith('"#compliant');
+        const isNonCompliant = normalizedValue.startsWith('#non_compliant') || normalizedValue.startsWith('"#non_compliant');
+
+        // If neither, skip this parameter
+        if (!isCompliant && !isNonCompliant) return;
+
+        // Extract feedback (everything after the colon)
+        let feedback = '';
+        const colonIndex = valueStr.indexOf(':');
+        if (colonIndex !== -1) {
+            feedback = valueStr.substring(colonIndex + 1).trim();
+            // Remove quotes if present
+            feedback = feedback.replace(/^["']|["']$/g, '');
+        } else {
+            // Fallback: remove the prefix
+            const prefix = isCompliant ? '#compliant' : '#non_compliant';
+            const prefixIndex = valueStr.toLowerCase().indexOf(prefix);
+            if (prefixIndex !== -1) {
+                feedback = valueStr.substring(prefixIndex + prefix.length).trim();
+                feedback = feedback.replace(/^[:\-]/, '').trim(); // Remove colon or dash
+            }
+        }
+
+        // Convert column name to readable format
+        const readableName = columnName
+            .replace(/_(\d+)$/, '') // Remove trailing number
+            .replace(/_/g, ' ')
+            .trim()
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
+        parameters.push({
+            name: readableName,
+            compliant: isCompliant,
+            points: points,
+            feedback: feedback,
+            rawValue: valueStr
+        });
+    });
+
+    // Sort: non-compliant first, then by points descending
+    parameters.sort((a, b) => {
+        if (a.compliant !== b.compliant) return a.compliant ? 1 : -1;
+        return b.points - a.points;
+    });
+
+    return parameters;
+}
+
+// Update pagination UI
+function updatePaginationUI(totalPages, startIndex, endIndex) {
+    const pagination = document.getElementById('pagination');
+    if (totalPages <= 1) {
+        pagination.classList.add('hidden');
+        return;
+    }
+
+    pagination.classList.remove('hidden');
+    document.getElementById('paginationStart').textContent = startIndex + 1;
+    document.getElementById('paginationEnd').textContent = endIndex;
+    document.getElementById('paginationTotal').textContent = filteredAudits.length;
+    document.getElementById('currentPage').textContent = currentPage;
+    document.getElementById('totalPages').textContent = totalPages;
+
+    document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+}
+
+// Change page
+function changePage(direction) {
+    const totalPages = Math.ceil(filteredAudits.length / itemsPerPage);
+    const newPage = currentPage + direction;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderAudits();
+        // Scroll to top of audit list
+        document.getElementById('auditList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Helper functions
+function getInitials(name) {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Setup modal event listeners (run after DOM is ready)
+document.addEventListener('DOMContentLoaded', function() {
+    // Close modal on outside click
+    const modal = document.getElementById('auditModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            // Only close if clicking the backdrop (not the content)
+            if (e.target === this) {
+                closeAuditModal();
+            }
+        });
+    }
+});
+
+// Close modal on Escape key (global listener)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('auditModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeAuditModal();
+        }
+    }
+});
+</script>
 </body>
 </html>
-
