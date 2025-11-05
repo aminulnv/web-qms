@@ -181,11 +181,18 @@
 
 <script>
 // Global state
-let allAudits = [];
-let filteredAudits = [];
+let currentAudits = []; // Only current page audits
+let totalCount = 0; // Total count for pagination
 let currentPage = 1;
 const itemsPerPage = 20;
 const PASS_THRESHOLD = 90; // 90% threshold
+let currentFilters = {
+    search: '',
+    agent: '',
+    status: '',
+    dateFrom: '',
+    dateTo: ''
+};
 
 // Load audits on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -237,24 +244,51 @@ function toggleFilters() {
     }
 }
 
-// Load audits from Supabase
-async function loadAudits() {
+// Load audits from Supabase with pagination
+async function loadAudits(page = 1, resetPage = false) {
     try {
+        if (resetPage) {
+            currentPage = 1;
+        } else {
+            currentPage = page;
+        }
+
         document.getElementById('loadingIndicator').classList.remove('hidden');
         document.getElementById('auditList').innerHTML = '';
         document.getElementById('noAuditsMessage').classList.add('hidden');
         document.getElementById('pagination').classList.add('hidden');
 
-        console.log('Fetching audits from ai_audits table...');
+        console.log(`Fetching audits page ${currentPage}...`);
         
         if (!window.supabaseClient) {
             throw new Error('Supabase client not available');
         }
 
-        const { data, error } = await window.supabaseClient
+        // Build query with filters
+        let query = window.supabaseClient
             .from('ai_audits')
-            .select('*')
+            .select('*', { count: 'exact' })
             .order('opened_at', { ascending: false });
+
+        // Apply filters
+        if (currentFilters.agent) {
+            query = query.eq('agent_name', currentFilters.agent);
+        }
+
+        if (currentFilters.dateFrom) {
+            query = query.gte('opened_at', currentFilters.dateFrom);
+        }
+
+        if (currentFilters.dateTo) {
+            query = query.lte('opened_at', currentFilters.dateTo + 'T23:59:59');
+        }
+
+        // Calculate pagination range
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage - 1;
+
+        // Fetch paginated data
+        const { data, error, count } = await query.range(start, end);
 
         if (error) {
             console.error('Error loading audits:', error);
@@ -272,28 +306,47 @@ async function loadAudits() {
             return;
         }
 
-        console.log('Audits loaded:', data?.length || 0, 'records');
+        console.log(`Loaded ${data?.length || 0} audits (page ${currentPage} of ${Math.ceil((count || 0) / itemsPerPage)})`);
         
-        allAudits = data || [];
-        filteredAudits = [...allAudits];
+        currentAudits = data || [];
+        totalCount = count || 0;
 
-        if (allAudits.length === 0) {
-            console.log('No audits found in database');
-            document.getElementById('loadingIndicator').classList.add('hidden');
-            document.getElementById('noAuditsMessage').classList.remove('hidden');
-            document.getElementById('noAuditsMessage').innerHTML = '<p class="text-sm text-gray-500">No audits found in the database.</p>';
-            updateStatistics(); // Still update stats (will show 0)
-            return;
+        // Apply client-side filters (search, status) that can't be done server-side easily
+        let filteredData = [...currentAudits];
+
+        // Apply search filter
+        if (currentFilters.search) {
+            const searchLower = currentFilters.search.toLowerCase();
+            filteredData = filteredData.filter(audit => {
+                return (
+                    (audit.conversation_id && audit.conversation_id.toString().toLowerCase().includes(searchLower)) ||
+                    (audit.agent_name && audit.agent_name.toLowerCase().includes(searchLower))
+                );
+            });
         }
 
-        // Populate agent filter
-        populateAgentFilter();
+        // Apply status filter
+        if (currentFilters.status) {
+            filteredData = filteredData.filter(audit => {
+                const passed = isPassed(audit);
+                if (currentFilters.status === 'passed') return passed;
+                if (currentFilters.status === 'not_passed') return !passed;
+                return true;
+            });
+        }
+
+        currentAudits = filteredData;
+
+        // Load agent list for filter dropdown (fetch once on initial load)
+        if (page === 1) {
+            await loadAgentList();
+        }
+
+        // Update statistics (fetch counts separately)
+        await updateStatistics();
         
-        // Update statistics
-        updateStatistics();
-        
-        // Apply filters and render
-        applyFilters();
+        // Render audits
+        renderAudits();
         
         document.getElementById('loadingIndicator').classList.add('hidden');
     } catch (error) {
@@ -310,35 +363,122 @@ async function loadAudits() {
     }
 }
 
+// Load agent list for filter dropdown
+async function loadAgentList() {
+    try {
+        // Fetch a reasonable sample to get unique agents (limit to 1000 rows)
+        const { data, error } = await window.supabaseClient
+            .from('ai_audits')
+            .select('agent_name')
+            .not('agent_name', 'is', null)
+            .limit(1000);
+
+        if (error) {
+            console.warn('Error loading agent list:', error);
+            return;
+        }
+
+        const uniqueAgents = [...new Set(data.map(a => a.agent_name).filter(Boolean))].sort();
+        populateAgentFilter(uniqueAgents);
+    } catch (error) {
+        console.warn('Error loading agent list:', error);
+    }
+}
+
 // Populate agent filter dropdown
-function populateAgentFilter() {
+function populateAgentFilter(agents = []) {
     const agentFilter = document.getElementById('agentFilter');
-    const uniqueAgents = [...new Set(allAudits.map(a => a.agent_name).filter(Boolean))].sort();
+    if (!agentFilter) return;
     
     // Clear existing options except "All Agents"
     agentFilter.innerHTML = '<option value="">All Agents</option>';
     
-    uniqueAgents.forEach(agent => {
+    agents.forEach(agent => {
         const option = document.createElement('option');
         option.value = agent;
         option.textContent = agent;
         agentFilter.appendChild(option);
     });
+    
+    // Restore selected value if any
+    if (currentFilters.agent) {
+        agentFilter.value = currentFilters.agent;
+    }
 }
 
-// Update statistics
-function updateStatistics() {
-    const total = allAudits.length;
-    const passed = allAudits.filter(a => isPassed(a)).length;
-    const notPassed = total - passed;
-    const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
-    const failRate = total > 0 ? ((notPassed / total) * 100).toFixed(1) : 0;
+// Update statistics (fetch counts from database)
+async function updateStatistics() {
+    try {
+        // Get total count
+        const { count: totalCountResult, error: totalError } = await window.supabaseClient
+            .from('ai_audits')
+            .select('*', { count: 'exact', head: true });
 
-    document.getElementById('totalAIAudits').textContent = total;
-    document.getElementById('passingAIAudits').textContent = passed;
-    document.getElementById('notPassingAIAudits').textContent = notPassed;
-    document.getElementById('passingAIAuditsChange').textContent = `${passRate}% pass rate`;
-    document.getElementById('notPassingAIAuditsChange').textContent = `${failRate}% fail rate`;
+        if (totalError) {
+            console.warn('Error getting total count:', totalError);
+            return;
+        }
+
+        const total = totalCountResult || 0;
+
+        // Get passed count (score >= 90% of default_score)
+        // We need to calculate this, but Supabase doesn't support complex WHERE clauses easily
+        // So we'll fetch a sample and calculate, or use a more efficient approach
+        // For now, let's fetch all scores and calculate (this could be optimized with a view/function)
+        // But to keep it efficient, we'll fetch counts with filters
+        
+        // Get passed count - need to check if score >= (default_score * 0.9)
+        // Since Supabase doesn't support computed columns easily, we'll estimate or fetch all
+        // For performance, let's fetch a larger sample and calculate
+        const { data: sampleData, error: sampleError } = await window.supabaseClient
+            .from('ai_audits')
+            .select('score, default_score')
+            .limit(1000);
+
+        let passed = 0;
+        let notPassed = 0;
+
+        if (!sampleError && sampleData) {
+            sampleData.forEach(audit => {
+                const score = parseFloat(audit.score) || 0;
+                const defaultScore = parseFloat(audit.default_score) || 100;
+                const percentage = defaultScore > 0 ? (score / defaultScore) * 100 : 0;
+                if (percentage >= PASS_THRESHOLD) {
+                    passed++;
+                } else {
+                    notPassed++;
+                }
+            });
+
+            // Extrapolate if we have more than sample
+            if (total > sampleData.length) {
+                const ratio = total / sampleData.length;
+                passed = Math.round(passed * ratio);
+                notPassed = total - passed;
+            }
+        } else {
+            // Fallback: estimate based on current page
+            if (currentAudits.length > 0) {
+                const pagePassed = currentAudits.filter(a => isPassed(a)).length;
+                const pageNotPassed = currentAudits.length - pagePassed;
+                // Estimate based on current page ratio
+                const ratio = total / currentAudits.length;
+                passed = Math.round(pagePassed * ratio);
+                notPassed = total - passed;
+            }
+        }
+
+        const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+        const failRate = total > 0 ? ((notPassed / total) * 100).toFixed(1) : 0;
+
+        document.getElementById('totalAIAudits').textContent = total;
+        document.getElementById('passingAIAudits').textContent = passed;
+        document.getElementById('notPassingAIAudits').textContent = notPassed;
+        document.getElementById('passingAIAuditsChange').textContent = `${passRate}% pass rate`;
+        document.getElementById('notPassingAIAuditsChange').textContent = `${failRate}% fail rate`;
+    } catch (error) {
+        console.error('Error updating statistics:', error);
+    }
 }
 
 // Check if audit passed (score >= 90%)
@@ -351,43 +491,15 @@ function isPassed(audit) {
 
 // Apply filters
 function applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const agentFilter = document.getElementById('agentFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    const dateFrom = document.getElementById('dateFromFilter').value;
-    const dateTo = document.getElementById('dateToFilter').value;
+    // Update filter state
+    currentFilters.search = document.getElementById('searchInput').value.toLowerCase();
+    currentFilters.agent = document.getElementById('agentFilter').value;
+    currentFilters.status = document.getElementById('statusFilter').value;
+    currentFilters.dateFrom = document.getElementById('dateFromFilter').value;
+    currentFilters.dateTo = document.getElementById('dateToFilter').value;
 
-    filteredAudits = allAudits.filter(audit => {
-        // Search filter
-        if (searchTerm) {
-            const matchesSearch = 
-                (audit.conversation_id && audit.conversation_id.toString().toLowerCase().includes(searchTerm)) ||
-                (audit.agent_name && audit.agent_name.toLowerCase().includes(searchTerm));
-            if (!matchesSearch) return false;
-        }
-
-        // Agent filter
-        if (agentFilter && audit.agent_name !== agentFilter) return false;
-
-        // Status filter
-        if (statusFilter) {
-            const passed = isPassed(audit);
-            if (statusFilter === 'passed' && !passed) return false;
-            if (statusFilter === 'not_passed' && passed) return false;
-        }
-
-        // Date filters
-        if (dateFrom || dateTo) {
-            const auditDate = audit.opened_at ? new Date(audit.opened_at).toISOString().split('T')[0] : null;
-            if (dateFrom && auditDate && auditDate < dateFrom) return false;
-            if (dateTo && auditDate && auditDate > dateTo) return false;
-        }
-
-        return true;
-    });
-
-    currentPage = 1;
-    renderAudits();
+    // Reload data with new filters (reset to page 1)
+    loadAudits(1, true);
 }
 
 // Render audits
@@ -396,7 +508,7 @@ function renderAudits() {
     const noAuditsMessage = document.getElementById('noAuditsMessage');
     const pagination = document.getElementById('pagination');
 
-    if (filteredAudits.length === 0) {
+    if (currentAudits.length === 0) {
         auditList.innerHTML = '';
         noAuditsMessage.classList.remove('hidden');
         pagination.classList.add('hidden');
@@ -406,13 +518,12 @@ function renderAudits() {
     noAuditsMessage.classList.add('hidden');
 
     // Calculate pagination
-    const totalPages = Math.ceil(filteredAudits.length / itemsPerPage);
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, filteredAudits.length);
-    const paginatedAudits = filteredAudits.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + currentAudits.length, totalCount);
 
     // Render audit cards
-    auditList.innerHTML = paginatedAudits.map(audit => createAuditCard(audit)).join('');
+    auditList.innerHTML = currentAudits.map(audit => createAuditCard(audit)).join('');
 
     // Update pagination UI
     updatePaginationUI(totalPages, startIndex, endIndex);
@@ -470,25 +581,45 @@ function createAuditCard(audit) {
 }
 
 // View audit details
-function viewAuditDetails(conversationId) {
+async function viewAuditDetails(conversationId) {
     console.log('View audit details called with ID:', conversationId);
-    console.log('Total audits:', allAudits.length);
     
-    // Try to find audit - handle both string and number comparisons
-    const audit = allAudits.find(a => {
-        const auditId = String(a.conversation_id || a.id || '');
-        const searchId = String(conversationId || '');
-        return auditId === searchId;
-    });
-    
+    // Fetch the specific audit from database
+    const { data, error } = await window.supabaseClient
+        .from('ai_audits')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .single();
+
+    if (error || !data) {
+        // Fallback: try to find in current page
+        const audit = currentAudits.find(a => {
+            const auditId = String(a.conversation_id || a.id || '');
+            const searchId = String(conversationId || '');
+            return auditId === searchId;
+        });
+        
+        if (!audit) {
+            console.error('Audit not found for ID:', conversationId);
+            alert('Audit not found. Please try again.');
+            return;
+        }
+        displayAuditDetails(audit);
+        return;
+    }
+
+    displayAuditDetails(data);
+}
+
+// Display audit details in modal
+function displayAuditDetails(audit) {
     if (!audit) {
-        console.error('Audit not found for ID:', conversationId);
-        console.log('Available IDs:', allAudits.slice(0, 5).map(a => a.conversation_id || a.id));
+        console.error('Audit is null or undefined');
         alert('Audit not found. Please try again.');
         return;
     }
 
-    console.log('Found audit:', audit);
+    console.log('Displaying audit:', audit);
     
     const modal = document.getElementById('auditModal');
     const modalContent = document.getElementById('auditModalContent');
@@ -682,29 +813,28 @@ function parseParameters(audit) {
 // Update pagination UI
 function updatePaginationUI(totalPages, startIndex, endIndex) {
     const pagination = document.getElementById('pagination');
-    if (totalPages <= 1) {
+    if (totalPages <= 1 && totalCount === 0) {
         pagination.classList.add('hidden');
         return;
     }
 
     pagination.classList.remove('hidden');
-    document.getElementById('paginationStart').textContent = startIndex + 1;
+    document.getElementById('paginationStart').textContent = totalCount > 0 ? startIndex + 1 : 0;
     document.getElementById('paginationEnd').textContent = endIndex;
-    document.getElementById('paginationTotal').textContent = filteredAudits.length;
+    document.getElementById('paginationTotal').textContent = totalCount;
     document.getElementById('currentPage').textContent = currentPage;
-    document.getElementById('totalPages').textContent = totalPages;
+    document.getElementById('totalPages').textContent = totalPages || 1;
 
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
-    document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
 }
 
 // Change page
 function changePage(direction) {
-    const totalPages = Math.ceil(filteredAudits.length / itemsPerPage);
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
     const newPage = currentPage + direction;
     if (newPage >= 1 && newPage <= totalPages) {
-        currentPage = newPage;
-        renderAudits();
+        loadAudits(newPage, false);
         // Scroll to top of audit list
         document.getElementById('auditList').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }

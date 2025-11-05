@@ -735,17 +735,32 @@ async function loadAuditFromURL() {
                     .order('display_order', { ascending: true });
 
                 if (!paramsError && parameters) {
-                    errorFields = parameters.map(param => ({
-                        key: param.field_id,
-                        label: param.error_name,
-                        feedback: `feedback_${param.field_id}`,
-                        severity: param.error_category.includes('Fail') ? 'Critical Fail' : 
-                                 param.error_category.includes('Critical') ? 'Critical' : 
-                                 'Significant',
-                        field_type: param.field_type || 'counter',
-                        parameter_type: param.parameter_type || 'error',
-                        points: param.penalty_points || 0
-                    }));
+                    errorFields = parameters.map(param => {
+                        // Map error category to severity label
+                        const category = param.error_category || '';
+                        let severity = 'Significant'; // default
+                        if (category.includes('Fail')) {
+                            severity = 'Critical Fail';
+                        } else if (category.includes('Critical')) {
+                            severity = 'Critical';
+                        } else if (category.includes('Significant')) {
+                            severity = 'Significant';
+                        } else if (category.includes('Major')) {
+                            severity = 'Major';
+                        } else if (category.includes('Minor')) {
+                            severity = 'Minor';
+                        }
+                        
+                        return {
+                            key: param.field_id,
+                            label: param.error_name,
+                            feedback: `feedback_${param.field_id}`,
+                            severity: severity,
+                            field_type: param.field_type || 'counter',
+                            parameter_type: param.parameter_type || 'error',
+                            points: param.penalty_points || 0
+                        };
+                    });
                 }
             } catch (err) {
                 console.error('Error loading scorecard parameters:', err);

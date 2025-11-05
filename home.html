@@ -7,7 +7,8 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -35,11 +36,11 @@
 <script src="env-config.js"></script>
 <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
-    <script src="confirmation-dialog.js"></script>
-    <script src="load-sidebar.js"></script>
-    <script src="search.js"></script>
-    <script src="form-validation.js"></script>
-    <script src="keyboard-shortcuts.js"></script>
+    <script src="confirmation-dialog.js" defer></script>
+    <script src="load-sidebar.js" defer></script>
+    <script src="search.js" defer></script>
+    <script src="form-validation.js" defer></script>
+    <script src="keyboard-shortcuts.js" defer></script>
 <style>
   .main-content {
     background-color: #f8f7f2;
@@ -320,7 +321,9 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Audits Conducted</div>
-        <div class="text-3xl font-bold text-gray-900 mb-2" id="statsAuditsConductedCount">-</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2" id="statsAuditsConductedCount">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
         <!-- Progress bar showing remaining audits -->
         <div class="mt-2">
           <div class="flex items-center justify-between mb-1">
@@ -342,8 +345,12 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Average Quality Score</div>
-        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsAvgQualityScore">-</div>
-        <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgScoreSubtitle">-</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsAvgQualityScore">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgScoreSubtitle">
+          <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+        </div>
       </div>
 
       <!-- Remaining Card -->
@@ -356,7 +363,9 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Remaining</div>
-        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsRemainingCount">-</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsRemainingCount">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
       </div>
 
       <!-- In Progress Card -->
@@ -369,8 +378,12 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">In Progress</div>
-        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsInProgressCount">-</div>
-        <div class="text-xs font-medium text-gray-600 mt-1" id="statsDaysRemaining">-</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsInProgressCount">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div class="text-xs font-medium text-gray-600 mt-1" id="statsDaysRemaining">
+          <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+        </div>
       </div>
 
       <!-- Reversal Card -->
@@ -383,15 +396,21 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Reversal</div>
-        <div class="text-3xl font-bold text-gray-900 mb-2" id="statsReversalTotalCount">-</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2" id="statsReversalTotalCount">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
         <div class="flex items-center gap-3 text-xs">
           <div class="flex items-center gap-1">
             <span class="text-gray-600">Active:</span>
-            <span class="font-semibold text-warning" id="statsReversalActiveCount">-</span>
+            <span class="font-semibold text-warning" id="statsReversalActiveCount">
+              <span class="inline-block h-4 w-6 bg-gray-200 rounded animate-pulse"></span>
+            </span>
           </div>
           <div class="flex items-center gap-1">
             <span class="text-gray-600">Resolved:</span>
-            <span class="font-semibold text-success" id="statsReversalResolvedCount">-</span>
+            <span class="font-semibold text-success" id="statsReversalResolvedCount">
+              <span class="inline-block h-4 w-6 bg-gray-200 rounded animate-pulse"></span>
+            </span>
           </div>
         </div>
       </div>
@@ -406,7 +425,9 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Duration</div>
-        <div class="text-2xl font-bold text-gray-900 mb-1" id="statsAvgDuration">-</div>
+        <div class="text-2xl font-bold text-gray-900 mb-1" id="statsAvgDuration">
+          <div class="h-7 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
         <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgDurationSubtitle">per audit</div>
       </div>
     </div>
@@ -420,8 +441,21 @@
             <h2 id="updatesSectionTitle" class="text-sm font-semibold text-gray-900">Updates to your audits</h2>
           </div>
           <div id="updatesFeed" class="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
-            <div class="px-4 py-3 text-center text-gray-500 text-xs">
-              <div class="animate-pulse">Loading updates...</div>
+            <div class="px-4 py-3 space-y-3">
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse flex-shrink-0"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                  <div class="h-3 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="w-8 h-8 bg-gray-200 rounded-full animate-pulse flex-shrink-0"></div>
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                  <div class="h-3 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -457,8 +491,21 @@
             </div>
           </div>
           <div id="assignedAuditsList" class="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
-            <div class="px-4 py-8 text-center text-gray-500 text-xs">
-              <div class="animate-pulse">Loading assigned audits...</div>
+            <div class="px-4 py-3 space-y-3">
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+                  <div class="h-3 w-1/4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+                <div class="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+                  <div class="h-3 w-1/4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+                <div class="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -721,25 +768,30 @@ document.addEventListener('DOMContentLoaded', async function() {
   await initializeDashboard();
 });
 
+// Wait for Supabase with better strategy
+async function waitForSupabase(maxWait = 2000) {
+  if (window.supabaseClient) return true;
+  
+  const startTime = Date.now();
+  return new Promise((resolve) => {
+    const checkInterval = setInterval(() => {
+      if (window.supabaseClient) {
+        clearInterval(checkInterval);
+        resolve(true);
+      } else if (Date.now() - startTime > maxWait) {
+        clearInterval(checkInterval);
+        resolve(false);
+      }
+    }, 50); // Check every 50ms instead of 100ms
+  });
+}
+
 async function initializeDashboard() {
   try {
-    // Wait for Supabase to be ready
-    let attempts = 0;
-    while (!window.supabaseClient && attempts < 50) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-
-    if (!window.supabaseClient) {
-      console.error('Supabase client not initialized');
-      return;
-    }
-
-    // Get current user
+    // Get current user immediately (from cache) - no need to wait
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     currentUserEmail = (userInfo.email || '').toLowerCase().trim();
     currentUserRole = userInfo.role || '';
-    // Check if user is an agent (Employee role)
     isAgent = currentUserRole === 'Employee';
 
     if (!currentUserEmail) {
@@ -747,69 +799,61 @@ async function initializeDashboard() {
       return;
     }
 
-    console.log('Current user:', currentUserEmail, 'Role:', currentUserRole, 'IsAgent:', isAgent);
-
-    // Initialize date filter to current week
+    // Initialize UI immediately - no waiting
     initializeDateFilter();
-
-    // Setup event listeners for date picker and filter
     setupEventListeners();
-
-    // Update user avatar
     updateUserAvatar(userInfo);
 
     // Update section titles for agents and hide create audit button
     if (isAgent) {
       const auditsTitle = document.getElementById('auditsSectionTitle');
-      if (auditsTitle) {
-        auditsTitle.textContent = 'My Audits';
-      }
+      if (auditsTitle) auditsTitle.textContent = 'My Audits';
       const updatesTitle = document.getElementById('updatesSectionTitle');
-      if (updatesTitle) {
-        updatesTitle.textContent = 'Updates to my audits';
-      }
-      // Hide the "Add" button for employees
+      if (updatesTitle) updatesTitle.textContent = 'Updates to my audits';
       const createAuditBtn = document.getElementById('createAuditBtn');
-      if (createAuditBtn) {
-        createAuditBtn.style.display = 'none';
-      }
-      // Hide "In Progress" and "Avg Duration" cards for agents/employees
+      if (createAuditBtn) createAuditBtn.style.display = 'none';
       const inProgressCard = document.getElementById('inProgressCard');
-      if (inProgressCard) {
-        inProgressCard.style.display = 'none';
-      }
+      if (inProgressCard) inProgressCard.style.display = 'none';
       const avgDurationCard = document.getElementById('avgDurationCard');
-      if (avgDurationCard) {
-        avgDurationCard.style.display = 'none';
-      }
+      if (avgDurationCard) avgDurationCard.style.display = 'none';
     } else {
-      // For auditors, update title to "My Assigned Audits" and show View All button
       const auditsTitle = document.getElementById('auditsSectionTitle');
-      if (auditsTitle) {
-        auditsTitle.textContent = 'My Assigned Audits';
-      }
+      if (auditsTitle) auditsTitle.textContent = 'My Assigned Audits';
       const viewAllBtn = document.getElementById('viewAllBtn');
-      if (viewAllBtn) {
-        viewAllBtn.style.display = 'block';
-      }
-      // Update sort options for assignments
+      if (viewAllBtn) viewAllBtn.style.display = 'block';
       const statusAscOption = document.getElementById('statusAscOption');
       const statusDescOption = document.getElementById('statusDescOption');
       if (statusAscOption) statusAscOption.textContent = 'Status (Pending → In Progress)';
       if (statusDescOption) statusDescOption.textContent = 'Status (In Progress → Pending)';
-      
-      // Set default sort to status_desc (In Progress → Pending) for auditors
       sortBy = 'status_desc';
       const auditSortBy = document.getElementById('auditSortBy');
-      if (auditSortBy) {
-        auditSortBy.value = 'status_desc';
-      }
+      if (auditSortBy) auditSortBy.value = 'status_desc';
     }
 
-    // Load all users for lookups
-    await loadAllUsers();
+    // Wait for Supabase in parallel with UI setup (max 2 seconds)
+    const supabaseReady = await waitForSupabase(2000);
+    
+    if (!supabaseReady) {
+      console.error('Supabase client not initialized');
+      // Show error state in UI
+      return;
+    }
 
-    // Load all dashboard data
+    // Load data in optimized order - users first, then everything in parallel
+    // Use cached users if available
+    const cachedUsers = sessionStorage.getItem('cachedUsers');
+    const cachedUsersTime = sessionStorage.getItem('cachedUsersTime');
+    const cacheAge = cachedUsersTime ? Date.now() - parseInt(cachedUsersTime) : Infinity;
+    
+    if (cachedUsers && cacheAge < 300000) { // 5 minutes cache
+      allUsers = JSON.parse(cachedUsers);
+    } else {
+      await loadAllUsers();
+      sessionStorage.setItem('cachedUsers', JSON.stringify(allUsers));
+      sessionStorage.setItem('cachedUsersTime', Date.now().toString());
+    }
+
+    // Load all dashboard data in parallel
     await Promise.all([
       loadRecentUpdates(),
       updateYourStats(),
@@ -817,8 +861,8 @@ async function initializeDashboard() {
       loadNotifications()
     ]);
 
-    // Populate filter options after loading data
-    populateFilters();
+    // Populate filter options after loading data (non-blocking)
+    populateFilters().catch(err => console.error('Error populating filters:', err));
 
   } catch (error) {
     console.error('Error initializing dashboard:', error);
@@ -907,7 +951,8 @@ async function loadRecentUpdates() {
       if (!scError && scorecards) {
         const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
         
-        for (const scorecard of scorecards) {
+        // Parallelize all scorecard queries
+        const auditPromises = scorecards.map(async (scorecard) => {
           try {
             const { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
@@ -924,12 +969,12 @@ async function loadRecentUpdates() {
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
               
-              filteredAudits.forEach(audit => {
+              return filteredAudits.map(audit => {
                 const auditorEmail = (audit.auditor_email || '').toLowerCase().trim();
                 const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
                 const auditorName = auditorUser?.name || audit.auditor_name || audit.auditor_email?.split('@')[0] || 'Unknown';
                 
-                allUpdates.push({
+                return {
                   id: `audit-${audit.id}`,
                   type: 'audit_completed',
                   displayName: auditorName,
@@ -940,36 +985,43 @@ async function loadRecentUpdates() {
                   scorecardId: scorecard.id,
                   scorecardTable: scorecard.table_name,
                   auditId: audit.id
-                });
+                };
               });
             }
+            return [];
           } catch (err) {
             console.warn(`Error loading audits from ${scorecard.table_name}:`, err);
+            return [];
           }
-        }
+        });
+        
+        const auditResults = await Promise.all(auditPromises);
+        allUpdates.push(...auditResults.flat());
       }
       
-      // 2. Load reversals (both requested and responded)
+      // 2. Load reversals (both requested and responded) - parallelized
       if (!scError && scorecards) {
         const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        const reversalFilterField = 'employee_email';
         
-        for (const scorecard of scorecards) {
+        // Parallelize all reversal queries
+        const reversalPromises = scorecards.map(async (scorecard) => {
           try {
             const { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, interaction_id, interactionId, submitted_at')
-              .eq('employee_email', currentUserEmail)
               .not('reversal_requested_at', 'is', null)
               .order('reversal_requested_at', { ascending: false })
-              .limit(10);
+              .limit(50);
             
             if (!error && reversals && reversals.length > 0) {
               const filteredReversals = reversals.filter(rev => {
-                const emailToCheck = rev.employee_email;
+                const emailToCheck = rev[reversalFilterField];
                 if (!emailToCheck) return false;
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
               
+              const updates = [];
               filteredReversals.forEach(reversal => {
                 const auditorEmail = (reversal.auditor_email || '').toLowerCase().trim();
                 const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
@@ -977,7 +1029,7 @@ async function loadRecentUpdates() {
                 const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
                 
                 if (reversal.reversal_requested_at) {
-                  allUpdates.push({
+                  updates.push({
                     id: `reversal-request-${reversal.id}`,
                     type: 'reversal_requested',
                     displayName: auditorName,
@@ -992,7 +1044,7 @@ async function loadRecentUpdates() {
                 }
                 
                 if (reversal.reversal_responded_at) {
-                  allUpdates.push({
+                  updates.push({
                     id: `reversal-response-${reversal.id}`,
                     type: 'reversal_responded',
                     displayName: auditorName,
@@ -1006,11 +1058,17 @@ async function loadRecentUpdates() {
                   });
                 }
               });
+              return updates;
             }
+            return [];
           } catch (err) {
             console.warn(`Error loading reversals from ${scorecard.table_name}:`, err);
+            return [];
           }
-        }
+        });
+        
+        const reversalResults = await Promise.all(reversalPromises);
+        allUpdates.push(...reversalResults.flat());
       }
       
     } else {
@@ -1050,7 +1108,7 @@ async function loadRecentUpdates() {
         });
       }
       
-      // Also load reversals for auditors
+      // Also load reversals for auditors - parallelized
       const { data: scorecards, error: scError } = await window.supabaseClient
         .from('scorecards')
         .select('id, name, table_name')
@@ -1058,24 +1116,26 @@ async function loadRecentUpdates() {
       
       if (!scError && scorecards) {
         const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        const reversalFilterField = 'auditor_email';
         
-        for (const scorecard of scorecards) {
+        // Parallelize all reversal queries
+        const reversalPromises = scorecards.map(async (scorecard) => {
           try {
             const { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, interaction_id, interactionId')
-              .eq('auditor_email', currentUserEmail)
               .not('reversal_requested_at', 'is', null)
               .order('reversal_requested_at', { ascending: false })
-              .limit(10);
+              .limit(50);
             
             if (!error && reversals && reversals.length > 0) {
               const filteredReversals = reversals.filter(rev => {
-                const emailToCheck = rev.auditor_email;
+                const emailToCheck = rev[reversalFilterField];
                 if (!emailToCheck) return false;
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
               
+              const updates = [];
               filteredReversals.forEach(reversal => {
                 const employeeEmail = (reversal.employee_email || '').toLowerCase().trim();
                 const employeeUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
@@ -1083,7 +1143,7 @@ async function loadRecentUpdates() {
                 const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
                 
                 if (reversal.reversal_requested_at) {
-                  allUpdates.push({
+                  updates.push({
                     id: `reversal-request-${reversal.id}`,
                     type: 'reversal_requested',
                     displayName: employeeName,
@@ -1096,12 +1156,33 @@ async function loadRecentUpdates() {
                     auditId: reversal.id
                   });
                 }
+                
+                if (reversal.reversal_responded_at) {
+                  updates.push({
+                    id: `reversal-response-${reversal.id}`,
+                    type: 'reversal_responded',
+                    displayName: employeeName,
+                    displayEmail: reversal.employee_email,
+                    timestamp: reversal.reversal_responded_at,
+                    status: 'reversal_responded',
+                    interactionId: interactionId,
+                    scorecardId: scorecard.id,
+                    scorecardTable: scorecard.table_name,
+                    auditId: reversal.id
+                  });
+                }
               });
+              return updates;
             }
+            return [];
           } catch (err) {
             console.warn(`Error loading reversals from ${scorecard.table_name}:`, err);
+            return [];
           }
-        }
+        });
+        
+        const reversalResults = await Promise.all(reversalPromises);
+        allUpdates.push(...reversalResults.flat());
       }
     }
 
@@ -1732,13 +1813,10 @@ async function updateYourStats() {
         .eq('is_active', true);
       
       if (!scError && scorecards) {
-        let totalDuration = 0;
-        let auditCount = 0;
-        
-        // Query each scorecard table for audits by this user
-        // Filter by employee_email if agent, otherwise by auditor_email
         const auditFilterField = isAgent ? 'employee_email' : 'auditor_email';
-        for (const scorecard of scorecards) {
+        
+        // Parallelize all duration queries
+        const durationPromises = scorecards.map(async (scorecard) => {
           try {
             const { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
@@ -1747,37 +1825,31 @@ async function updateYourStats() {
               .not('audit_duration', 'is', null);
             
             if (!error && audits) {
-              audits.forEach(audit => {
+              return audits.map(audit => {
                 // Handle duration conversion (new format: seconds, legacy format: minutes)
                 let durationInMinutes = 0;
                 if (typeof audit.audit_duration === 'number') {
                   const value = audit.audit_duration;
-                  // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
-                  // Otherwise, assume it's already in minutes (legacy format)
                   if (value >= 1440) {
                     durationInMinutes = value / 60; // Convert seconds to minutes
                   } else {
                     durationInMinutes = value; // Already in minutes
                   }
                 } else if (typeof audit.audit_duration === 'string') {
-                  // Try parsing as integer first
                   const asInt = parseInt(audit.audit_duration);
                   if (!isNaN(asInt)) {
                     if (asInt >= 1440) {
-                      durationInMinutes = asInt / 60; // Convert seconds to minutes
+                      durationInMinutes = asInt / 60;
                     } else {
-                      durationInMinutes = asInt; // Already in minutes
+                      durationInMinutes = asInt;
                     }
                   } else {
-                    // Legacy format: time string (MM:SS or HH:MM:SS)
                     const timeParts = audit.audit_duration.split(':');
                     if (timeParts.length === 2) {
-                      // MM:SS format
                       const minutes = parseInt(timeParts[0]) || 0;
                       const seconds = parseInt(timeParts[1]) || 0;
                       durationInMinutes = minutes + (seconds / 60);
                     } else if (timeParts.length === 3) {
-                      // HH:MM:SS format
                       const hours = parseInt(timeParts[0]) || 0;
                       const minutes = parseInt(timeParts[1]) || 0;
                       const seconds = parseInt(timeParts[2]) || 0;
@@ -1785,17 +1857,20 @@ async function updateYourStats() {
                     }
                   }
                 }
-                
-                if (durationInMinutes > 0) {
-                  totalDuration += durationInMinutes; // Add minutes
-                  auditCount++;
-                }
-              });
+                return durationInMinutes > 0 ? durationInMinutes : null;
+              }).filter(Boolean);
             }
+            return [];
           } catch (err) {
             console.warn(`Error getting duration from ${scorecard.table_name}:`, err);
+            return [];
           }
-        }
+        });
+        
+        const durationResults = await Promise.all(durationPromises);
+        const allDurations = durationResults.flat();
+        const totalDuration = allDurations.reduce((sum, d) => sum + d, 0);
+        const auditCount = allDurations.length;
         
         if (auditCount > 0) {
           avgDuration = totalDuration / auditCount; // Average in minutes
@@ -1834,17 +1909,16 @@ async function updateYourStats() {
           const auditFilterField = 'employee_email';
           const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
           
-          for (const scorecard of scorecards) {
+          // Parallelize all audit queries
+          const auditPromises = scorecards.map(async (scorecard) => {
             try {
-              // Use the same query as loadCompletedAuditsForEmployee: select('*')
               const { data: audits, error } = await window.supabaseClient
                 .from(scorecard.table_name)
                 .select('*')
                 .order('submitted_at', { ascending: false })
-                .limit(500); // Get more to filter client-side
+                .limit(500);
               
               if (!error && audits && audits.length > 0) {
-                // Client-side filtering with exact email match (case-insensitive)
                 const filteredAudits = audits.filter(audit => {
                   const emailToCheck = audit[auditFilterField];
                   if (!emailToCheck) return false;
@@ -1852,20 +1926,27 @@ async function updateYourStats() {
                   return normalizedEmailToCheck === normalizedCurrentEmail;
                 });
                 
-                totalAuditsConducted += filteredAudits.length;
-                filteredAudits.forEach(audit => {
+                return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
-                  // Include all valid scores (including 0) in the average
-                  if (!isNaN(score)) {
-                    totalScoreSum += score;
-                    totalAuditsWithScore++;
-                  }
+                  return { score: !isNaN(score) ? score : null };
                 });
               }
+              return [];
             } catch (err) {
               console.warn(`Error getting audits from ${scorecard.table_name}:`, err);
+              return [];
             }
-          }
+          });
+          
+          const auditResults = await Promise.all(auditPromises);
+          const allAudits = auditResults.flat();
+          totalAuditsConducted = allAudits.length;
+          allAudits.forEach(audit => {
+            if (audit.score !== null) {
+              totalScoreSum += audit.score;
+              totalAuditsWithScore++;
+            }
+          });
           
           if (totalAuditsWithScore > 0) {
             avgQualityScore = totalScoreSum / totalAuditsWithScore;
@@ -1892,34 +1973,38 @@ async function updateYourStats() {
           const auditFilterField = 'auditor_email';
           const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
           
-          for (const scorecard of scorecards) {
+          // Parallelize all audit queries
+          const auditPromises = scorecards.map(async (scorecard) => {
             try {
-              // Load all audits and filter client-side for exact match
               const { data: audits, error } = await window.supabaseClient
                 .from(scorecard.table_name)
                 .select('average_score, averageScore, ' + auditFilterField);
               
               if (!error && audits && audits.length > 0) {
-                // Client-side filtering with exact email match (case-insensitive)
                 const filteredAudits = audits.filter(audit => {
                   const emailToCheck = audit[auditFilterField];
                   if (!emailToCheck) return false;
                   return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
                 });
                 
-                filteredAudits.forEach(audit => {
+                return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
-                  // Include all valid scores (including 0) in the average
-                  if (!isNaN(score)) {
-                    totalScoreSum += score;
-                    totalAuditsWithScore++;
-                  }
-                });
+                  return !isNaN(score) ? score : null;
+                }).filter(score => score !== null);
               }
+              return [];
             } catch (err) {
               console.warn(`Error getting audits from ${scorecard.table_name}:`, err);
+              return [];
             }
-          }
+          });
+          
+          const auditResults = await Promise.all(auditPromises);
+          const allScores = auditResults.flat();
+          allScores.forEach(score => {
+            totalScoreSum += score;
+            totalAuditsWithScore++;
+          });
           
           if (totalAuditsWithScore > 0) {
             avgQualityScore = totalScoreSum / totalAuditsWithScore;
@@ -1943,11 +2028,11 @@ async function updateYourStats() {
         .eq('is_active', true);
       
       if (!scError && scorecards) {
-        // Filter by employee_email if agent, otherwise by auditor_email
         const reversalFilterField = isAgent ? 'employee_email' : 'auditor_email';
-        for (const scorecard of scorecards) {
+        
+        // Parallelize all reversal count queries
+        const reversalPromises = scorecards.map(async (scorecard) => {
           try {
-            // Get all reversals (with reversal_requested_at)
             const { data: allReversals, error: allError } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('reversal_requested_at, reversal_responded_at')
@@ -1955,20 +2040,27 @@ async function updateYourStats() {
               .not('reversal_requested_at', 'is', null);
             
             if (!allError && allReversals) {
-              allReversals.forEach(reversal => {
-                totalReversals++;
-                // Active: has reversal_requested_at but no reversal_responded_at
-                if (reversal.reversal_requested_at && !reversal.reversal_responded_at) {
-                  activeReversals++;
-                } else if (reversal.reversal_responded_at) {
-                  resolvedReversals++;
-                }
+              return allReversals.map(reversal => {
+                return {
+                  active: reversal.reversal_requested_at && !reversal.reversal_responded_at,
+                  resolved: !!reversal.reversal_responded_at
+                };
               });
             }
+            return [];
           } catch (err) {
             console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
+            return [];
           }
-        }
+        });
+        
+        const reversalResults = await Promise.all(reversalPromises);
+        const allReversalsData = reversalResults.flat();
+        allReversalsData.forEach(reversal => {
+          totalReversals++;
+          if (reversal.active) activeReversals++;
+          if (reversal.resolved) resolvedReversals++;
+        });
       }
     } catch (error) {
       console.error('Error calculating reversal counts:', error);

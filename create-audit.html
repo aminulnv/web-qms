@@ -2010,9 +2010,22 @@ function renderErrorParameters() {
             severityBg = '#d1fae5';
         }
         
-        const severityLabel = (paramType === 'achievement' || paramType === 'bonus') && param.field_type !== 'radio' ? 'ACHIEVEMENT' : 
-                             (param.error_category.includes('Fail') ? 'Critical Fail' : 
-                              param.error_category.includes('Critical') ? 'Critical' : 'Significant');
+        // Map error category to severity label
+        let mappedSeverity = 'Significant'; // default
+        const category = param.error_category || '';
+        if (category.includes('Fail')) {
+            mappedSeverity = 'Critical Fail';
+        } else if (category.includes('Critical')) {
+            mappedSeverity = 'Critical';
+        } else if (category.includes('Significant')) {
+            mappedSeverity = 'Significant';
+        } else if (category.includes('Major')) {
+            mappedSeverity = 'Major';
+        } else if (category.includes('Minor')) {
+            mappedSeverity = 'Minor';
+        }
+        
+        const severityLabel = (paramType === 'achievement' || paramType === 'bonus') && param.field_type !== 'radio' ? 'ACHIEVEMENT' : mappedSeverity;
         
         let inputHtml = '';
         
@@ -4602,15 +4615,28 @@ function calculateAverageScore() {
         }
         
         if (errorCount > 0) {
-            // Determine severity
-            const severity = param.error_category.includes('Fail') ? 'Critical Fail' : 
-                           param.error_category.includes('Critical') ? 'Critical' : 'Significant';
+            // Determine severity - properly map all error categories
+            const category = param.error_category || '';
+            let severity = 'Significant'; // default
+            if (category.includes('Fail')) {
+                severity = 'Critical Fail';
+            } else if (category.includes('Critical')) {
+                severity = 'Critical';
+            } else if (category.includes('Significant')) {
+                severity = 'Significant';
+            } else if (category.includes('Major')) {
+                severity = 'Major';
+            } else if (category.includes('Minor')) {
+                severity = 'Minor';
+            }
             
             if (severity === 'Critical Fail') {
                 criticalFailCount += errorCount;
             } else if (severity === 'Critical') {
                 criticalCount += errorCount;
-            } else if (severity === 'Significant') {
+            } else if (severity === 'Significant' || severity === 'Major' || severity === 'Minor') {
+                // For now, Significant, Major, and Minor all count as significant errors
+                // This maintains backward compatibility with existing error counting
                 significantCount += errorCount;
             }
             
