@@ -3676,13 +3676,49 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Table name:', currentTableName);
             console.log('Audit ID:', currentAudit.id);
             
+            // Helper function to retry database operations on schema cache errors
+            async function retryOnSchemaCacheError(operation, maxRetries = 3) {
+                for (let attempt = 0; attempt < maxRetries; attempt++) {
+                    if (attempt > 0) {
+                        // Wait longer on each retry (exponential backoff)
+                        console.log(`Retrying database operation (attempt ${attempt + 1}/${maxRetries})...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                    }
+                    
+                    const result = await operation();
+                    
+                    // If no error, return success
+                    if (!result.error) {
+                        return result;
+                    }
+                    
+                    // If it's a schema cache error, retry
+                    if (result.error.message && (
+                        result.error.message.includes('schema cache') ||
+                        result.error.message.includes('Could not find') ||
+                        result.error.message.includes('column') && result.error.message.includes('schema cache')
+                    )) {
+                        console.log(`Schema cache not ready, retrying (attempt ${attempt + 1}/${maxRetries})...`);
+                        continue;
+                    }
+                    
+                    // If it's not a schema cache error, return immediately
+                    return result;
+                }
+                
+                // Return last result after all retries exhausted
+                return await operation();
+            }
+            
             try {
-                // Update the audit record with reversal request
-                const { data, error } = await window.supabaseClient
-                    .from(currentTableName)
-                    .update(reversalData)
-                    .eq('id', currentAudit.id)
-                    .select();
+                // Update the audit record with reversal request (with retry logic for schema cache errors)
+                const { data, error } = await retryOnSchemaCacheError(async () => {
+                    return await window.supabaseClient
+                        .from(currentTableName)
+                        .update(reversalData)
+                        .eq('id', currentAudit.id)
+                        .select();
+                });
                 
                 if (error) throw error;
                 
@@ -3721,14 +3757,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error submitting reversal request:', error);
                 console.error('Error details:', error.message, error);
                 
+                // Check if this is a schema cache or column error
+                let errorMessage = error.message || 'Unknown error occurred';
+                if (error.message && (
+                    error.message.includes('schema cache') ||
+                    error.message.includes('Could not find') ||
+                    (error.message.includes('column') && error.message.includes('schema cache'))
+                )) {
+                    errorMessage = 'The database schema cache is being updated. Please wait a moment and try again. If the issue persists, the column may need to be added to the database table.';
+                }
+                
                 // Provide more helpful error message
                 let errorMsg = 'Failed to submit reversal request.\n\n';
-                if (error.message) {
-                    errorMsg += 'Error: ' + error.message + '\n\n';
-                }
+                errorMsg += 'Error: ' + errorMessage + '\n\n';
                 errorMsg += 'Please try again or contact support if the issue persists.';
                 
-                alert(errorMsg);
+                if (window.confirmationDialog) {
+                    await window.confirmationDialog.show({
+                        title: 'Error',
+                        message: errorMsg,
+                        confirmText: 'OK',
+                        type: 'error'
+                    });
+                } else {
+                    alert(errorMsg);
+                }
             }
         });
     }

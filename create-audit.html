@@ -4073,6 +4073,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 let data, error;
                 const wasEditingExistingAudit = isEditingExistingAudit; // Store before resetting
                 
+                // Helper function to retry database operations on schema cache errors
+                async function retryOnSchemaCacheError(operation, maxRetries = 3) {
+                    for (let attempt = 0; attempt < maxRetries; attempt++) {
+                        if (attempt > 0) {
+                            // Wait longer on each retry (exponential backoff)
+                            console.log(`Retrying database operation (attempt ${attempt + 1}/${maxRetries})...`);
+                            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                        }
+                        
+                        const result = await operation();
+                        
+                        // If no error, return success
+                        if (!result.error) {
+                            return result;
+                        }
+                        
+                        // If it's a schema cache error, retry
+                        if (result.error.message && result.error.message.includes('schema cache')) {
+                            console.log(`Schema cache not ready, retrying (attempt ${attempt + 1}/${maxRetries})...`);
+                            continue;
+                        }
+                        
+                        // If it's not a schema cache error, return immediately
+                        return result;
+                    }
+                    
+                    // Return last result after all retries exhausted
+                    return await operation();
+                }
+                
                 // Check if we're editing an existing audit from audit reports
                 if (isEditingExistingAudit && currentEditingAuditId && currentEditingTableName) {
                     // UPDATE existing audit record
@@ -4091,11 +4121,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     // Always update end time and duration when editing
                     
-                    const result = await window.supabaseClient
-                        .from(currentEditingTableName)
-                        .update(auditPayload)
-                        .eq('id', currentEditingAuditId)
-                        .select();
+                    const result = await retryOnSchemaCacheError(async () => {
+                        return await window.supabaseClient
+                            .from(currentEditingTableName)
+                            .update(auditPayload)
+                            .eq('id', currentEditingAuditId)
+                            .select();
+                    });
                     
                     data = result.data;
                     error = result.error;
@@ -4117,11 +4149,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     auditPayload.validation_status = 'Validated';
                     auditPayload.submitted_at = new Date().toISOString();
                     
-                    const result = await window.supabaseClient
-                        .from(currentScorecard.table_name)
-                        .update(auditPayload)
-                        .eq('id', currentEditingAuditId)
-                        .select();
+                    const result = await retryOnSchemaCacheError(async () => {
+                        return await window.supabaseClient
+                            .from(currentScorecard.table_name)
+                            .update(auditPayload)
+                            .eq('id', currentEditingAuditId)
+                            .select();
+                    });
                     
                     data = result.data;
                     error = result.error;
@@ -4162,10 +4196,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // INSERT new audit record
                     console.log('Inserting new audit...');
                     
-                    const result = await window.supabaseClient
-                        .from(currentScorecard.table_name)
-                        .insert([auditPayload])
-                        .select();
+                    const result = await retryOnSchemaCacheError(async () => {
+                        return await window.supabaseClient
+                            .from(currentScorecard.table_name)
+                            .insert([auditPayload])
+                            .select();
+                    });
                     
                     data = result.data;
                     error = result.error;
