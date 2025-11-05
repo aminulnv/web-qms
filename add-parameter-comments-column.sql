@@ -5,14 +5,31 @@
 DO $$
 DECLARE
     table_name TEXT;
-    audit_table_pattern TEXT := 'audit_%';
 BEGIN
-    -- Loop through all tables matching the audit pattern
+    -- Loop through all audit-related tables (including fnchat_cfd and similar tables)
+    -- This includes tables matching audit_% pattern and tables like fnchat_cfd, fn_chat_cfd, etc.
+    -- Exclude known system/metadata tables
     FOR table_name IN 
         SELECT tablename 
         FROM pg_tables 
         WHERE schemaname = 'public' 
-        AND tablename LIKE audit_table_pattern
+        AND tablename NOT IN (
+            'scorecards', 
+            'scorecard_parameters', 
+            'users', 
+            'audit_assignments', 
+            'calibration_sessions', 
+            'calibration_results',
+            'reversal_change_log'
+        )
+        AND (
+            tablename LIKE 'audit_%' 
+            OR tablename LIKE 'fn%_cfd'
+            OR tablename LIKE 'fnchat_cfd'
+            OR tablename LIKE 'fn_chat_cfd'
+            OR tablename = 'fnchat_cfd'
+            OR tablename = 'fn_chat_cfd'
+        )
         ORDER BY tablename
     LOOP
         -- Check if parameter_comments column already exists

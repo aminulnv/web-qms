@@ -3711,14 +3711,44 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
-                // Update the audit record with reversal request (with retry logic for schema cache errors)
-                const { data, error } = await retryOnSchemaCacheError(async () => {
+                // First, try with parameter_comments included
+                let result = await retryOnSchemaCacheError(async () => {
                     return await window.supabaseClient
                         .from(currentTableName)
                         .update(reversalData)
                         .eq('id', currentAudit.id)
                         .select();
                 });
+                
+                let data = result.data;
+                let error = result.error;
+                
+                // If error is specifically about parameter_comments column not existing, retry without it
+                if (error && error.message && (
+                    error.message.includes('parameter_comments') && 
+                    (error.message.includes('Could not find') || error.message.includes('does not exist') || error.message.includes('column'))
+                )) {
+                    console.warn('parameter_comments column not found, retrying without it...');
+                    
+                    // Create a copy without parameter_comments
+                    const reversalDataWithoutComments = { ...reversalData };
+                    delete reversalDataWithoutComments.parameter_comments;
+                    
+                    result = await retryOnSchemaCacheError(async () => {
+                        return await window.supabaseClient
+                            .from(currentTableName)
+                            .update(reversalDataWithoutComments)
+                            .eq('id', currentAudit.id)
+                            .select();
+                    });
+                    
+                    data = result.data;
+                    error = result.error;
+                    
+                    if (!error) {
+                        console.log('Successfully submitted reversal request without parameter_comments column');
+                    }
+                }
                 
                 if (error) throw error;
                 
