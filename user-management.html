@@ -582,37 +582,40 @@
         .users-table td:nth-child(2) { width: 5%; } /* ID */
         
         .users-table th:nth-child(3),
-        .users-table td:nth-child(3) { width: 12%; } /* Name */
+        .users-table td:nth-child(3) { width: 10%; } /* Name */
         
         .users-table th:nth-child(4),
-        .users-table td:nth-child(4) { width: 7%; } /* Department */
+        .users-table td:nth-child(4) { width: 12%; } /* Email */
         
         .users-table th:nth-child(5),
-        .users-table td:nth-child(5) { width: 8%; } /* Channel */
+        .users-table td:nth-child(5) { width: 7%; } /* Department */
         
         .users-table th:nth-child(6),
-        .users-table td:nth-child(6) { width: 8%; } /* Team */
+        .users-table td:nth-child(6) { width: 7%; } /* Channel */
         
         .users-table th:nth-child(7),
-        .users-table td:nth-child(7) { width: 9%; } /* Designation */
+        .users-table td:nth-child(7) { width: 7%; } /* Team */
         
         .users-table th:nth-child(8),
-        .users-table td:nth-child(8) { width: 10%; } /* Team Supervisor */
+        .users-table td:nth-child(8) { width: 8%; } /* Designation */
         
         .users-table th:nth-child(9),
-        .users-table td:nth-child(9) { width: 10%; } /* Quality Supervisor */
+        .users-table td:nth-child(9) { width: 9%; } /* Team Supervisor */
         
         .users-table th:nth-child(10),
-        .users-table td:nth-child(10) { width: 8%; } /* Role */
+        .users-table td:nth-child(10) { width: 9%; } /* Quality Supervisor */
         
         .users-table th:nth-child(11),
-        .users-table td:nth-child(11) { width: 7%; } /* Country */
+        .users-table td:nth-child(11) { width: 7%; } /* Role */
         
         .users-table th:nth-child(12),
-        .users-table td:nth-child(12) { width: 6%; } /* Status */
+        .users-table td:nth-child(12) { width: 6%; } /* Country */
         
         .users-table th:nth-child(13),
-        .users-table td:nth-child(13) { width: 5%; } /* Actions */
+        .users-table td:nth-child(13) { width: 5%; } /* Status */
+        
+        .users-table th:nth-child(14),
+        .users-table td:nth-child(14) { width: 5%; } /* Actions */
 
     </style>
 </head>
@@ -1325,6 +1328,7 @@ function renderUsersTable() {
                     </th>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Email</th>
                     <th>Department</th>
                     <th>Channel</th>
                     <th>Team</th>
@@ -1378,6 +1382,7 @@ function createUserRow(user) {
                     <span>${user.name || 'Unknown'}</span>
                 </div>
             </td>
+            <td>${user.email || '-'}</td>
             <td>${user.department || '-'}</td>
             <td>${user.channel || '-'}</td>
             <td>${user.team || '-'}</td>
