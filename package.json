@@ -2,12 +2,19 @@
   "name": "web-qms-v2",
   "version": "1.0.0",
   "scripts": {
-    "build:config": "node build-config.js",
+    "build:config": "node scripts/generate-env-config.js",
     "prebuild": "npm run build:config",
-    "vercel-build": "npm run build:config"
+    "vercel-build": "npm run build:config",
+    "dev": "node scripts/dev-server.js",
+    "start": "npm run dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
     "csv-parser": "^3.2.0"
+  },
+  "devDependencies": {
+    "chokidar": "^4.0.3",
+    "dotenv": "^17.2.3",
+    "ws": "^8.18.3"
   }
 }

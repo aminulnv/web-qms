@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Audit Details | QMS</title>
 <meta name="description" content="Quality Management System Dashboard">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
@@ -1556,7 +1559,7 @@ function handleReversalStatusUI(audit) {
                 <svg style="width: 0.9375rem; height: 0.9375rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
-                <span>Reversal request is pending review by the quality team. You cannot acknowledge until the reversal is processed.</span>
+                <span>Reversal request is pending review by the quality team. This cannot be acknowledged until the reversal is processed.</span>
             `;
             // Disable the reversal button (user can't submit another reversal while one is pending)
             const reversalBtn = acknowledgeBtn?.parentElement?.querySelector('button[onclick="toggleReversalForm()"]');
@@ -2013,7 +2016,8 @@ async function loadConversationFromIntercom(conversationId) {
 
     try {
         // Fetch conversation data from Intercom API via Supabase Edge Function (to avoid CORS)
-        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?conversation_id=${encodeURIComponent(conversationId)}`;
+        // Add display_as parameter to get full conversation data including email_message_metadata
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?conversation_id=${encodeURIComponent(conversationId)}&display_as=plaintext`;
         
         const response = await fetch(edgeFunctionUrl, {
             method: 'GET',
@@ -2031,6 +2035,34 @@ async function loadConversationFromIntercom(conversationId) {
 
         const conversation = await response.json();
         currentConversationData = conversation;
+
+        // DEBUG: Log raw API response
+        console.log('=== RAW API RESPONSE ===');
+        console.log('Full conversation object:', conversation);
+        console.log('Total conversation parts:', conversation.conversation_parts?.conversation_parts?.length || 0);
+        
+        // Check specific email parts to see if email_message_metadata is present
+        if (conversation.conversation_parts?.conversation_parts) {
+            const part32842906801 = conversation.conversation_parts.conversation_parts.find(p => p.id === '32842906801');
+            const part32842914590 = conversation.conversation_parts.conversation_parts.find(p => p.id === '32842914590');
+            
+            if (part32842906801) {
+                console.log('=== PART 32842906801 (should be email) ===');
+                console.log('Full part:', JSON.stringify(part32842906801, null, 2));
+                console.log('Has email_message_metadata key?', 'email_message_metadata' in part32842906801);
+                console.log('email_message_metadata value:', part32842906801.email_message_metadata);
+                console.log('All keys:', Object.keys(part32842906801));
+            }
+            
+            if (part32842914590) {
+                console.log('=== PART 32842914590 (should be email) ===');
+                console.log('Full part:', JSON.stringify(part32842914590, null, 2));
+                console.log('Has email_message_metadata key?', 'email_message_metadata' in part32842914590);
+                console.log('email_message_metadata value:', part32842914590.email_message_metadata);
+                console.log('All keys:', Object.keys(part32842914590));
+            }
+        }
+        console.log('========================');
 
         // Parse and display conversation messages
         displayConversationMessages(conversation);
@@ -2094,7 +2126,96 @@ function displayConversationMessages(conversation) {
     const chatMessagesContainer = document.getElementById('chatMessagesContainer');
     if (!chatMessagesContainer) return;
     
+    // Helper function to generate avatar with initials
+    function generateAvatar(name, type) {
+        // Extract initials from name
+        const getInitials = (name) => {
+            if (!name || name === 'Unknown') return '?';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        };
+        
+        const initials = getInitials(name);
+        
+        // Determine colors and gradients based on type
+        let bgGradient, textColor, label, borderColor;
+        if (type === 'user' || type === 'contact') {
+            // Blue gradient for client
+            bgGradient = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+            textColor = '#ffffff';
+            label = 'Client'; // Use "Client" label under avatar
+            borderColor = '#2563eb';
+        } else if (type === 'ai' || type === 'bot') {
+            // Darker green gradient for AI
+            bgGradient = 'linear-gradient(135deg, #15803d 0%, #166534 100%)';
+            textColor = '#ffffff';
+            label = 'AI';
+            borderColor = '#166534';
+        } else {
+            // Green gradient for agent
+            bgGradient = 'linear-gradient(135deg, #1A733E 0%, #14532d 100%)';
+            textColor = '#ffffff';
+            label = 'Agent';
+            borderColor = '#14532d';
+        }
+        
+        return {
+            initials,
+            bgGradient,
+            textColor,
+            label,
+            borderColor
+        };
+    }
+
     const parts = conversation.conversation_parts?.conversation_parts || [];
+    
+    console.log('displayConversationMessages called with', parts.length, 'parts');
+    
+    // Update conversation heading with client name
+    const transcriptHeading = document.querySelector('h3');
+    if (transcriptHeading) {
+        // Extract client name from conversation
+        let clientName = 'Transcript';
+        // Try to get client name from source.author
+        if (conversation.source?.author?.name) {
+            clientName = conversation.source.author.name;
+        }
+        // Try contacts
+        else if (conversation.contacts?.contacts && conversation.contacts.contacts.length > 0) {
+            const contact = conversation.contacts.contacts[0];
+            if (contact.name) {
+                clientName = contact.name;
+            }
+        }
+        // Try to find first user/contact in conversation parts
+        else if (parts.length > 0) {
+            for (const part of parts) {
+                if (part.author && (part.author.type === 'user' || part.author.type === 'contact')) {
+                    if (part.author.name) {
+                        clientName = part.author.name;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Update heading text (keep the icon)
+        const icon = transcriptHeading.querySelector('svg');
+        if (icon) {
+            // Keep the SVG icon and replace "Transcript" with client name
+            transcriptHeading.innerHTML = icon.outerHTML + ' ' + escapeHtml(clientName);
+        } else {
+            transcriptHeading.textContent = clientName;
+        }
+    }
+    
+    // Log all part types to see what we're getting
+    const partTypes = parts.map(p => ({ id: p.id, type: p.part_type, hasEmailMeta: !!p.email_message_metadata, hasAttachments: (p.attachments || []).length > 0 }));
+    console.log('Part types:', partTypes);
     
     if (parts.length === 0) {
         chatMessagesContainer.innerHTML = `
@@ -2113,6 +2234,9 @@ function displayConversationMessages(conversation) {
     });
 
     chatMessagesContainer.innerHTML = '';
+    
+    // Reset images array
+    allConversationImages = [];
 
     sortedParts.forEach(part => {
         const message = part.body || '';
@@ -2130,19 +2254,84 @@ function displayConversationMessages(conversation) {
             timestamp = new Date(part.created_at);
         }
         const isUser = authorType === 'user' || authorType === 'contact';
+        // Detect AI/Bot messages
+        const isAI = authorType === 'bot' || 
+                    author.from_ai_agent === true || 
+                    author.is_ai_answer === true ||
+                    (authorType === 'admin' && (author.name || '').toLowerCase().includes('ai'));
         
         // Format the message body to check if it has content
-        const formattedMessage = formatMessageBody(message);
+        const messageData = formatMessageBody(message);
+        const formattedText = messageData.text;
+        const images = messageData.images || [];
+        
+        // Check if this is an email interaction
+        // email_message_metadata is either null (not an email) or an object with properties (is an email)
+        // Note: typeof null === 'object' in JavaScript, so we must explicitly check for null
+        const isEmail = !!(part.email_message_metadata && 
+            part.email_message_metadata !== null && 
+            typeof part.email_message_metadata === 'object' && 
+            Object.keys(part.email_message_metadata).length > 0);
+        const emailMetadata = isEmail ? part.email_message_metadata : {};
+        
+        // Debug logging for email detection
+        if (partType === 'open' || partType === 'comment') {
+            console.log(`Part ${part.id} (${partType}):`, {
+                hasEmailMetadataKey: 'email_message_metadata' in part,
+                hasEmailMetadata: !!part.email_message_metadata,
+                emailMetadataType: typeof part.email_message_metadata,
+                emailMetadataValue: part.email_message_metadata,
+                isEmail: isEmail,
+                subject: part.email_message_metadata?.subject || 'N/A',
+                allKeys: Object.keys(part).slice(0, 15) // First 15 keys to see structure
+            });
+        }
+        
+        if (isEmail) {
+            console.log('✅ Email detected:', {
+                partId: part.id,
+                partType: partType,
+                subject: emailMetadata.subject,
+                from: emailMetadata.email_address_headers?.find(h => h.type === 'from')?.email_address,
+                to: emailMetadata.email_address_headers?.find(h => h.type === 'to')?.email_address,
+                hasAttachments: (part.attachments || []).length > 0
+            });
+        }
+        
+        // Extract attachments from attachments array (separate from body images)
+        const attachments = part.attachments || [];
+        const attachmentImages = attachments
+            .filter(att => att.type === 'upload' && att.content_type && att.content_type.startsWith('image/'))
+            .map(att => att.url);
+        
+        // Combine body images and attachment images
+        const allImages = [...images, ...attachmentImages];
+        
+        // Add images to global array with their index for viewer navigation
+        const imageStartIndex = allConversationImages.length;
+        allImages.forEach((imgSrc, idx) => {
+            allConversationImages.push({
+                src: imgSrc,
+                partIndex: sortedParts.indexOf(part),
+                localIndex: idx
+            });
+        });
         
         // Skip empty messages or non-comment parts (like assignments, system messages, etc.)
-        // Only show parts that have actual text content
-        if (!formattedMessage || formattedMessage.trim() === '' || formattedMessage.trim() === '{}') {
+        // BUT allow email interactions even if part_type is not 'comment' or 'note'
+        // Only show parts that have actual text content, images, attachments, or email metadata
+        if ((!formattedText || formattedText.trim() === '' || formattedText.trim() === '{}') && 
+            allImages.length === 0 && 
+            attachments.length === 0 && 
+            !isEmail) {
             return; // Skip this part
         }
         
-        // Also skip if part type is not a comment (assignment, system messages, etc.)
-        if (partType !== 'comment' && partType !== 'note') {
-            return; // Skip non-comment parts
+        // Also skip if part type is not a comment, note, or email
+        // Email interactions can have part_type: "open" or "comment" (both can have email_message_metadata)
+        // Only show: comment, note, or any part with email_message_metadata
+        if (!isEmail && partType !== 'comment' && partType !== 'note') {
+            return; // Skip non-comment parts (unless it's an email)
         }
         
         // Format timestamp
@@ -2156,17 +2345,14 @@ function displayConversationMessages(conversation) {
             day: 'numeric'
         });
 
-        // Create message bubble
-        // User messages on LEFT (white), Agent messages on RIGHT (green)
+        // Determine message type for avatar and styling
+        const messageType = isUser ? 'user' : (isAI ? 'ai' : 'agent');
+        const avatar = generateAvatar(authorName, messageType);
+        
+        // Create message bubble container (avatar will be added in innerHTML)
         const messageDiv = document.createElement('div');
-        messageDiv.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 0.3234rem;
-            align-items: ${isUser ? 'flex-start' : 'flex-end'};
-        `;
 
-        // Switched colors: Agent = flat green, User = white
+        // Colors: User = white, Agent = #1A733E, AI = #1d1d1d (dark gray)
         const bubbleStyle = isUser 
             ? `
                 background: white;
@@ -2176,6 +2362,14 @@ function displayConversationMessages(conversation) {
                 max-width: 75%;
                 margin-right: auto;
             `
+            : isAI
+            ? `
+                background: #1d1d1d;
+                color: white;
+                border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
+                max-width: 75%;
+                margin-left: auto;
+            `
             : `
                 background: #1A733E;
                 color: white;
@@ -2184,12 +2378,233 @@ function displayConversationMessages(conversation) {
                 margin-left: auto;
             `;
 
+        // Build email header if this is an email
+        let emailHeaderHTML = '';
+        if (isEmail) {
+            const emailHeaders = emailMetadata.email_address_headers || [];
+            const fromHeader = emailHeaders.find(h => h.type === 'from') || {};
+            const toHeader = emailHeaders.find(h => h.type === 'to') || {};
+            const replyToHeader = emailHeaders.find(h => h.type === 'reply_to') || {};
+            const subject = emailMetadata.subject || 'No Subject';
+            
+            // Format email addresses
+            const formatEmailAddress = (header) => {
+                if (!header) return '';
+                const name = header.name || '';
+                const email = header.email_address || '';
+                if (name && email) {
+                    return `${escapeHtml(name)} <${escapeHtml(email)}>`;
+                } else if (email) {
+                    return escapeHtml(email);
+                } else if (name) {
+                    return escapeHtml(name);
+                }
+                return '';
+            };
+            
+            const fromStr = formatEmailAddress(fromHeader);
+            const toStr = formatEmailAddress(toHeader);
+            const replyToStr = formatEmailAddress(replyToHeader);
+            
+            // For agent emails, use a more prominent blue background that stands out from green
+            // For user emails, use a light blue background
+            // For AI emails, use dark gray background matching chat bubble
+            const emailBgColor = isUser ? '#e0f2fe' : (isAI ? '#2d2d2d' : '#1e40af');
+            const emailBorderColor = isUser ? '#0284c7' : (isAI ? '#1d1d1d' : '#3b82f6');
+            const emailIconColor = isUser ? '#0284c7' : (isAI ? '#ffffff' : '#93c5fd');
+            const emailTextColor = isUser ? '#0369a1' : (isAI ? '#ffffff' : '#bfdbfe');
+            const emailLabelColor = isUser ? '#0369a1' : (isAI ? '#ffffff' : '#bfdbfe');
+            const emailSubjectColor = isUser ? '#0c4a6e' : (isAI ? '#ffffff' : '#dbeafe');
+            const emailFieldColor = isUser ? '#075985' : (isAI ? '#e5e7eb' : '#bfdbfe');
+            const emailBorderBottomColor = isUser ? 'rgba(2, 132, 199, 0.2)' : (isAI ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.2)');
+            
+            emailHeaderHTML = `
+                <div style="
+                    background: ${emailBgColor};
+                    border: 0.0606rem solid ${emailBorderColor};
+                    padding: 0.4852rem 0.5659rem;
+                    margin-bottom: 0.4043rem;
+                    border-radius: 0.3234rem;
+                    font-size: 0.4447rem;
+                    box-shadow: 0 0.0405rem 0.1213rem rgba(0,0,0,0.1);
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.3234rem; margin-bottom: 0.2426rem; padding-bottom: 0.1617rem; border-bottom: 0.0304rem solid ${emailBorderBottomColor};">
+                        <svg style="width: 0.6064rem; height: 0.6064rem; color: ${emailIconColor}; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                        </svg>
+                        <span style="font-weight: 700; color: ${emailLabelColor}; text-transform: uppercase; font-size: 0.4043rem; letter-spacing: 0.0405rem;">Email</span>
+                    </div>
+                    ${subject ? `<div style="color: ${emailSubjectColor}; margin-bottom: 0.2426rem; font-weight: 600;">
+                        <span style="color: ${emailFieldColor}; font-weight: 700;">Subject:</span> ${escapeHtml(subject)}
+                    </div>` : ''}
+                    <div style="color: ${emailSubjectColor}; font-size: 0.4043rem; line-height: 1.6;">
+                        ${fromStr ? `<div style="margin-bottom: 0.1213rem;"><span style="color: ${emailFieldColor}; font-weight: 600;">From:</span> ${fromStr}</div>` : ''}
+                        ${toStr ? `<div style="margin-bottom: 0.1213rem;"><span style="color: ${emailFieldColor}; font-weight: 600;">To:</span> ${toStr}</div>` : ''}
+                        ${replyToStr ? `<div style="margin-top: 0.1213rem; font-size: 0.3639rem; opacity: 0.9;"><span style="color: ${emailFieldColor}; font-weight: 600;">Reply-To:</span> ${replyToStr}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Build attachments HTML (non-image attachments)
+        let attachmentsHTML = '';
+        const nonImageAttachments = attachments.filter(att => 
+            att.type === 'upload' && 
+            (!att.content_type || !att.content_type.startsWith('image/'))
+        );
+        if (nonImageAttachments.length > 0) {
+            attachmentsHTML = '<div style="margin-top: 0.3234rem; display: flex; flex-direction: column; gap: 0.1617rem;">';
+            nonImageAttachments.forEach(att => {
+                attachmentsHTML += `
+                    <a 
+                        href="${escapeHtml(att.url)}" 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.2426rem;
+                            padding: 0.2426rem 0.3234rem;
+                            background: ${isUser ? '#f3f4f6' : 'rgba(255,255,255,0.1)'};
+                            border-radius: 0.2426rem;
+                            text-decoration: none;
+                            color: ${isUser ? '#374151' : 'white'};
+                            font-size: 0.4447rem;
+                            transition: background 0.2s ease;
+                        "
+                        onmouseover="this.style.background='${isUser ? '#e5e7eb' : 'rgba(255,255,255,0.15)'}'"
+                        onmouseout="this.style.background='${isUser ? '#f3f4f6' : 'rgba(255,255,255,0.1)'}'"
+                    >
+                        <svg style="width: 0.4852rem; height: 0.4852rem; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(att.name || 'Attachment')}</span>
+                        ${att.filesize ? `<span style="color: ${isUser ? '#9ca3af' : 'rgba(255,255,255,0.7)'}; font-size: 0.3639rem;">${(att.filesize / 1024).toFixed(1)} KB</span>` : ''}
+                    </a>
+                `;
+            });
+            attachmentsHTML += '</div>';
+        }
+
+        // Build images HTML
+        let imagesHTML = '';
+        if (allImages.length > 0) {
+            imagesHTML = '<div style="margin-top: 0.3234rem; display: flex; flex-wrap: wrap; gap: 0.3234rem;">';
+            allImages.forEach((imgSrc, idx) => {
+                const globalIndex = imageStartIndex + idx;
+                imagesHTML += `
+                    <img 
+                        src="${escapeHtml(imgSrc)}" 
+                        alt="Attachment ${idx + 1}"
+                        onclick="openImageViewer(${globalIndex})"
+                        style="
+                            max-width: 200px;
+                            max-height: 200px;
+                            border-radius: 0.3234rem;
+                            cursor: pointer;
+                            object-fit: cover;
+                            border: 0.0304rem solid ${isUser ? '#e5e7eb' : 'rgba(255,255,255,0.3)'};
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        "
+                        onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0.1617rem 0.4852rem rgba(0,0,0,0.2)'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'"
+                    />
+                `;
+            });
+            imagesHTML += '</div>';
+        }
+
         // Compact layout: timestamp next to sender name for both user and agent messages
-        messageDiv.innerHTML = `
-            <div style="${bubbleStyle} padding: 0.3234rem 0.4852rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08);">
-                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
-                <div style="font-size: 0.5257rem; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">${formattedMessage}</div>
+        // For emails, make the border more prominent
+        const emailBorderStyle = isEmail ? `border: 0.0808rem solid ${isUser ? '#0284c7' : (isAI ? '#1d1d1d' : '#3b82f6')} !important; box-shadow: 0 0.0606rem 0.1617rem ${isUser ? 'rgba(2, 132, 199, 0.3)' : (isAI ? 'rgba(29, 29, 29, 0.3)' : 'rgba(59, 130, 246, 0.3)')} !important;` : '';
+        
+        // Avatar alignment: Client on left, Agent/AI on right
+        const avatarAlign = isUser ? 'flex-start' : 'flex-end';
+        const avatarMargin = isUser ? 'margin-right: 0.3234rem;' : 'margin-left: 0.3234rem;';
+        
+        // Avatar HTML - Client left, Agent/AI right
+        // For AI, use the image avatar; for others, use gradient with initials
+        const avatarHTML = isAI ? `
+            <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${isUser ? '1' : '2'};">
+                <div style="
+                    width: 1.455rem;
+                    height: 1.455rem;
+                    border-radius: 50%;
+                    background: ${avatar.bgGradient};
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    box-shadow: 0 0.0808rem 0.1617rem rgba(0,0,0,0.2), 0 0.0203rem 0.0405rem rgba(0,0,0,0.1);
+                    border: 0.0203rem solid ${avatar.borderColor};
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <img src="assests/logos/ai_avatar.webp" alt="AI Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'position: relative; z-index: 1; text-shadow: 0 0.0203rem 0.0405rem rgba(0,0,0,0.2); color: ${avatar.textColor}; font-size: 0.5257rem; font-weight: 700;\\'>${avatar.initials}</span>';" />
+                </div>
+                <span style="
+                    font-size: 0.3639rem;
+                    font-weight: 600;
+                    color: ${isUser ? '#6b7280' : (isAI ? '#1d1d1d' : '#1A733E')};
+                    margin-top: 0.0808rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.0203rem;
+                ">${avatar.label}</span>
             </div>
+        ` : `
+            <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${isUser ? '1' : '2'};">
+                <div style="
+                    width: 1.455rem;
+                    height: 1.455rem;
+                    border-radius: 50%;
+                    background: ${avatar.bgGradient};
+                    color: ${avatar.textColor};
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.5257rem;
+                    font-weight: 700;
+                    flex-shrink: 0;
+                    box-shadow: 0 0.0808rem 0.1617rem rgba(0,0,0,0.2), 0 0.0203rem 0.0405rem rgba(0,0,0,0.1), inset 0 0.0203rem 0 rgba(255,255,255,0.2);
+                    border: 0.0203rem solid ${avatar.borderColor};
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <span style="position: relative; z-index: 1; text-shadow: 0 0.0203rem 0.0405rem rgba(0,0,0,0.2);">${avatar.initials}</span>
+                </div>
+                <span style="
+                    font-size: 0.3639rem;
+                    font-weight: 600;
+                    color: ${isUser ? '#6b7280' : (isAI ? '#1d1d1d' : '#1A733E')};
+                    margin-top: 0.0808rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.0203rem;
+                ">${avatar.label}</span>
+            </div>
+        `;
+        
+        // Message container: Client avatar left, Agent/AI avatar right
+        messageDiv.style.cssText = `
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            margin-bottom: 0.6469rem;
+            justify-content: ${isUser ? 'flex-start' : 'flex-end'};
+        `;
+        
+        messageDiv.innerHTML = `
+            ${isUser ? avatarHTML : ''}
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isUser ? 'flex-start' : 'flex-end'}; order: ${isUser ? '2' : '1'};">
+                <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle}">
+                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
+                ${emailHeaderHTML}
+                ${formattedText ? `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'};">${formattedText}</div>` : ''}
+                ${imagesHTML}
+                ${attachmentsHTML}
+                </div>
+            </div>
+            ${!isUser ? avatarHTML : ''}
         `;
 
         chatMessagesContainer.appendChild(messageDiv);
@@ -2202,49 +2617,361 @@ function displayConversationMessages(conversation) {
     }
 }
 
-// Format message body (handle HTML/plain text)
+// Language detection function - simple heuristic to detect non-English text
+function detectLanguage(text) {
+    if (!text || text.trim().length === 0) return 'en';
+    
+    // Remove HTML tags and get plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    const plainText = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Simple heuristic: check for common English patterns
+    // Count English letters vs non-English characters
+    const englishPattern = /[a-zA-Z]/g;
+    const nonEnglishPattern = /[^\x00-\x7F]/g;
+    
+    const englishChars = (plainText.match(englishPattern) || []).length;
+    const nonEnglishChars = (plainText.match(nonEnglishPattern) || []).length;
+    const totalChars = plainText.replace(/\s/g, '').length;
+    
+    // If more than 30% non-ASCII characters, likely not English
+    if (totalChars > 0 && (nonEnglishChars / totalChars) > 0.3) {
+        return 'auto'; // Needs translation
+    }
+    
+    // Check for common non-English language patterns
+    const commonNonEnglishPatterns = [
+        /[\u0600-\u06FF]/g, // Arabic
+        /[\u4E00-\u9FFF]/g, // Chinese
+        /[\u3040-\u309F\u30A0-\u30FF]/g, // Japanese
+        /[\u0400-\u04FF]/g, // Cyrillic
+        /[\u0590-\u05FF]/g, // Hebrew
+        /[\u0E00-\u0E7F]/g, // Thai
+    ];
+    
+    for (const pattern of commonNonEnglishPatterns) {
+        if (pattern.test(plainText)) {
+            return 'auto'; // Needs translation
+        }
+    }
+    
+    return 'en'; // Likely English
+}
+
+// Translate text using LibreTranslate API with retry logic
+async function translateText(text, targetLang = 'en', retryCount = 0) {
+    if (!text || text.trim().length === 0) return text;
+    
+    const maxRetries = 3;
+    const baseDelay = 1000; // Start with 1 second delay
+    
+    try {
+        // Use LibreTranslate public API
+        const response = await fetch('https://libretranslate.com/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                q: text,
+                source: 'auto',
+                target: targetLang,
+                format: 'text'
+            })
+        });
+        
+        // Handle rate limiting with exponential backoff
+        if (response.status === 429) {
+            if (retryCount < maxRetries) {
+                const delay = baseDelay * Math.pow(2, retryCount); // Exponential backoff: 1s, 2s, 4s
+                console.log(`Rate limited. Retrying in ${delay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return translateText(text, targetLang, retryCount + 1);
+            } else {
+                throw new Error('Rate limit exceeded. Please try again later.');
+            }
+        }
+        
+        // Handle bad requests (400) - skip this message
+        if (response.status === 400) {
+            console.warn('Bad request for translation, skipping:', text.substring(0, 50));
+            return text; // Return original text
+        }
+        
+        if (!response.ok) {
+            throw new Error(`Translation API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.translatedText || text;
+    } catch (error) {
+        // If it's a rate limit error and we've exhausted retries, try fallback
+        if (error.message && error.message.includes('Rate limit') && retryCount >= maxRetries) {
+            console.log('Trying fallback translation API...');
+            // Fallback: try MyMemory Translation API
+            try {
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|en`);
+                const data = await response.json();
+                if (data.responseData && data.responseData.translatedText) {
+                    return data.responseData.translatedText;
+                }
+            } catch (fallbackError) {
+                console.error('Fallback translation error:', fallbackError);
+            }
+        }
+        
+        // If error doesn't mention rate limit, log it but return original text
+        if (!error.message || !error.message.includes('Rate limit')) {
+            console.error('Translation error:', error);
+        }
+        
+        return text; // Return original if translation fails
+    }
+}
+
+// Main translation function
+async function translateChatMessages() {
+    // Feature is currently disabled
+    const translateBtn = document.getElementById('translateChatBtn');
+    if (translateBtn && translateBtn.disabled) {
+        return;
+    }
+    
+    const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+    
+    if (!chatMessagesContainer) {
+        showNotification('Chat messages container not found', 'error');
+        return;
+    }
+    
+    // Get all message text elements
+    const messageTextElements = chatMessagesContainer.querySelectorAll('.message-text-content');
+    
+    if (messageTextElements.length === 0) {
+        showNotification('No messages to translate', 'info');
+        return;
+    }
+    
+    let translatedCount = 0;
+    let skippedCount = 0;
+    
+    // Process messages sequentially to avoid rate limiting
+    // Use longer delays for public API (500ms between requests)
+    const delayBetweenRequests = 500;
+    
+    for (let i = 0; i < messageTextElements.length; i++) {
+        const element = messageTextElements[i];
+        const originalText = element.getAttribute('data-original-text');
+        if (!originalText) continue;
+        
+        // Decode HTML entities to get plain text
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = originalText;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        
+        // Skip if text is too short or empty
+        if (plainText.trim().length < 3) {
+            skippedCount++;
+            continue;
+        }
+        
+        // Detect language
+        const detectedLang = detectLanguage(plainText);
+        
+        if (detectedLang === 'en') {
+            skippedCount++;
+            continue; // Skip English messages
+        }
+        
+        // Translate the text
+        try {
+            const translatedText = await translateText(plainText, 'en');
+            
+            // Only update if translation is different from original
+            if (translatedText && translatedText.trim() !== plainText.trim() && translatedText !== plainText) {
+                // Update the element with translated text (escape HTML for safety)
+                element.innerHTML = escapeHtml(translatedText);
+                translatedCount++;
+            } else {
+                skippedCount++;
+            }
+            
+            // Delay between requests to avoid rate limiting (500ms)
+            // Skip delay for last message
+            if (i < messageTextElements.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, delayBetweenRequests));
+            }
+        } catch (error) {
+            console.error('Error translating message:', error);
+            skippedCount++;
+            // If rate limited, add extra delay
+            if (error.message && error.message.includes('Rate limit')) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+    }
+    
+    // Show completion notification
+    if (translatedCount > 0) {
+        showNotification(`Translated ${translatedCount} message(s) to English`, 'success');
+    } else if (skippedCount > 0) {
+        showNotification('All messages are already in English', 'info');
+    } else {
+        showNotification('No messages found to translate', 'info');
+    }
+}
+
+// Make translation function globally accessible
+window.translateChatMessages = translateChatMessages;
+
+// Format message body (handle HTML/plain text and extract images)
 function formatMessageBody(body) {
-    if (!body) return '';
+    if (!body) return { text: '', images: [] };
     
     // If body is an object, extract text
     if (typeof body === 'object') {
         // Handle empty objects
-        if (Object.keys(body).length === 0) return '';
+        if (Object.keys(body).length === 0) return { text: '', images: [] };
         
         // Check for text content in various possible fields
         if (body.plaintext) {
             const text = String(body.plaintext).trim();
-            return text ? escapeHtml(text) : '';
+            return { text: text ? escapeHtml(text) : '', images: [] };
         }
         if (body.text) {
             const text = String(body.text).trim();
-            return text ? escapeHtml(text) : '';
+            return { text: text ? escapeHtml(text) : '', images: [] };
         }
         if (body.body) {
-            const text = String(body.body).trim();
-            return text ? escapeHtml(text) : '';
+            return parseHtmlBody(String(body.body));
         }
         
         // Check for HTML content
         if (body.html) {
-            const text = String(body.html).replace(/<[^>]*>/g, '').trim();
-            return text ? escapeHtml(text) : '';
+            return parseHtmlBody(String(body.html));
         }
         
         // If object has no text content, return empty
         // Don't stringify as that would just show "{}"
-        return '';
+        return { text: '', images: [] };
     }
     
-    // Handle string body
-    const text = String(body).replace(/<[^>]*>/g, '').trim();
+    // Handle string body (which may contain HTML)
+    return parseHtmlBody(String(body));
+}
+
+// Parse HTML body to extract text and images
+function parseHtmlBody(htmlBody) {
+    if (!htmlBody) return { text: '', images: [] };
+    
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlBody;
+    
+    // Extract all images
+    const images = [];
+    const imgTags = tempDiv.querySelectorAll('img');
+    imgTags.forEach((img, index) => {
+        const src = img.getAttribute('src') || '';
+        if (src) {
+            // Decode HTML entities in URL
+            const decodedSrc = src
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"');
+            images.push(decodedSrc);
+        }
+    });
+    
+    // Remove image tags and extract text
+    imgTags.forEach(img => img.remove());
+    const text = tempDiv.textContent || tempDiv.innerText || '';
+    const cleanedText = text.trim();
     
     // Return empty if text is empty or just whitespace/JSON-like structures
-    if (!text || text === '{}' || text === '[]' || text === 'null' || text === 'undefined') {
-        return '';
+    if (!cleanedText || cleanedText === '{}' || cleanedText === '[]' || cleanedText === 'null' || cleanedText === 'undefined') {
+        return { text: '', images: images };
     }
     
-    return escapeHtml(text);
+    return { text: escapeHtml(cleanedText), images: images };
+}
+
+// Store all images from conversation for image viewer
+let allConversationImages = [];
+let currentImageIndex = 0;
+
+// Open image viewer modal
+function openImageViewer(index) {
+    if (!allConversationImages || allConversationImages.length === 0) return;
+    
+    currentImageIndex = Math.max(0, Math.min(index, allConversationImages.length - 1));
+    const modal = document.getElementById('imageViewerModal');
+    const img = document.getElementById('imageViewerImg');
+    const prevBtn = document.getElementById('imageViewerPrev');
+    const nextBtn = document.getElementById('imageViewerNext');
+    const counter = document.getElementById('imageViewerCounter');
+    const closeBtn = document.getElementById('imageViewerClose');
+    
+    if (modal && img) {
+        img.src = allConversationImages[currentImageIndex].src;
+        img.style.display = 'block';
+        
+        // Update counter
+        if (counter) {
+            counter.textContent = `${currentImageIndex + 1} / ${allConversationImages.length}`;
+        }
+        
+        // Show/hide navigation buttons
+        if (prevBtn) {
+            prevBtn.style.display = allConversationImages.length > 1 ? 'flex' : 'none';
+        }
+        if (nextBtn) {
+            nextBtn.style.display = allConversationImages.length > 1 ? 'flex' : 'none';
+        }
+        
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Focus on modal for keyboard navigation
+        modal.focus();
+    }
+}
+
+// Close image viewer modal
+function closeImageViewer() {
+    const modal = document.getElementById('imageViewerModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+// Navigate to previous image
+function navigateImage(direction) {
+    if (!allConversationImages || allConversationImages.length === 0) return;
+    
+    if (direction === 'prev') {
+        currentImageIndex = (currentImageIndex - 1 + allConversationImages.length) % allConversationImages.length;
+    } else if (direction === 'next') {
+        currentImageIndex = (currentImageIndex + 1) % allConversationImages.length;
+    }
+    
+    const img = document.getElementById('imageViewerImg');
+    const counter = document.getElementById('imageViewerCounter');
+    
+    if (img) {
+        img.style.display = 'none';
+        setTimeout(() => {
+            img.src = allConversationImages[currentImageIndex].src;
+            img.style.display = 'block';
+        }, 150);
+    }
+    
+    if (counter) {
+        counter.textContent = `${currentImageIndex + 1} / ${allConversationImages.length}`;
+    }
 }
 
 // Helper function to escape HTML
@@ -3832,6 +4559,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+    <!-- Image Viewer Modal -->
+    <div id="imageViewerModal" tabindex="0" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10000; align-items: center; justify-content: center; cursor: pointer;" onclick="if(event.target.id === 'imageViewerModal') closeImageViewer();" onkeydown="if(event.key === 'Escape') closeImageViewer(); if(event.key === 'ArrowLeft') navigateImage('prev'); if(event.key === 'ArrowRight') navigateImage('next');">
+        <!-- Close Button -->
+        <button id="imageViewerClose" onclick="closeImageViewer(); event.stopPropagation();" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 2.5rem; height: 2.5rem; border-radius: 50%; cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; z-index: 10001;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Close (Esc)">
+            ×
+        </button>
+        
+        <!-- Previous Button -->
+        <button id="imageViewerPrev" onclick="navigateImage('prev'); event.stopPropagation();" style="position: absolute; left: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 3rem; height: 3rem; border-radius: 50%; cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; z-index: 10001;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Previous (←)">
+            ‹
+        </button>
+        
+        <!-- Next Button -->
+        <button id="imageViewerNext" onclick="navigateImage('next'); event.stopPropagation();" style="position: absolute; right: 1rem; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 3rem; height: 3rem; border-radius: 50%; cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease; z-index: 10001;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" title="Next (→)">
+            ›
+        </button>
+        
+        <!-- Image Counter -->
+        <div id="imageViewerCounter" style="position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.7); color: white; padding: 0.5rem 1rem; border-radius: 1.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; z-index: 10001;">
+            1 / 1
+        </div>
+        
+        <!-- Image Container -->
+        <div style="max-width: 95%; max-height: 95%; display: flex; align-items: center; justify-content: center;" onclick="event.stopPropagation();">
+            <img id="imageViewerImg" src="" alt="Conversation image" style="max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 0.5rem; box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.5);">
+        </div>
+    </div>
 
 </body>
 </html>

@@ -132,6 +132,8 @@ class KeyboardShortcuts {
     if (e.shiftKey) parts.push('shift')
     
     // Add main key (handle special keys)
+    // Check if key exists to avoid undefined errors
+    if (!e.key) return null
     let key = e.key.toLowerCase()
     
     // Handle special keys
