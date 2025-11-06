@@ -296,7 +296,7 @@ window.generateTranscriptSection = function(options = {}) {
 
     return `
         <div style="display: flex; flex-direction: column; gap: 0.6469rem;">
-            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; max-height: calc(100vh - 12rem); min-height: 400px; transition: height 0.3s ease;">
                 <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4852rem;">
                     <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
                         <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
@@ -307,7 +307,7 @@ window.generateTranscriptSection = function(options = {}) {
                     </div>
                 </div>
                 <!-- Chat Interface View -->
-                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
+                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
                     <!-- Chat messages will be dynamically inserted here -->
                     <div id="chatMessagesContainer" style="display: flex; flex-direction: column;">
                         ${isEdit 
