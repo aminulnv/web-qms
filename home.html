@@ -438,7 +438,10 @@
       <div class="lg:col-span-1">
         <div class="bg-white rounded border border-gray-200">
           <div class="px-4 py-3 border-b border-gray-200">
-            <h2 id="updatesSectionTitle" class="text-sm font-semibold text-gray-900">Updates to your audits</h2>
+            <h2 id="updatesSectionTitle" class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <span>Updates to your audits</span>
+              <span id="reversalUpdatesCount" class="bg-warning text-white px-2 py-0.5 rounded text-xs font-semibold" style="display: none;">0</span>
+            </h2>
           </div>
           <div id="updatesFeed" class="divide-y divide-gray-200 max-h-[calc(100vh-300px)] overflow-y-auto">
             <div class="px-4 py-3 space-y-3">
@@ -1007,19 +1010,66 @@ async function loadRecentUpdates() {
         // Parallelize all reversal queries
         const reversalPromises = scorecards.map(async (scorecard) => {
           try {
+            // Query reversals - get all reversals and sort client-side to prioritize recent responses
             const { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, interaction_id, interactionId, submitted_at')
+              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, acknowledgement_status, interaction_id, interactionId, submitted_at')
               .not('reversal_requested_at', 'is', null)
               .order('reversal_requested_at', { ascending: false })
-              .limit(50);
+              .limit(200);
             
             if (!error && reversals && reversals.length > 0) {
-              const filteredReversals = reversals.filter(rev => {
+              // Sort reversals: prioritize those with recent responses
+              reversals.sort((a, b) => {
+                const aResponded = a.reversal_responded_at ? new Date(a.reversal_responded_at).getTime() : 0;
+                const bResponded = b.reversal_responded_at ? new Date(b.reversal_responded_at).getTime() : 0;
+                if (aResponded !== bResponded) {
+                  return bResponded - aResponded; // Most recent responses first
+                }
+                // If both have no response or same response time, sort by request time
+                const aRequested = new Date(a.reversal_requested_at).getTime();
+                const bRequested = new Date(b.reversal_requested_at).getTime();
+                return bRequested - aRequested;
+              });
+              
+              // Filter by email first
+              let filteredReversals = reversals.filter(rev => {
                 const emailToCheck = rev[reversalFilterField];
                 if (!emailToCheck) return false;
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
+              
+              // For agents: Apply the same filtering logic as reversal.html
+              // Show reversals that need acknowledgement (pending, approved but not acknowledged, rejected but not acknowledged)
+              if (isAgent) {
+                filteredReversals = filteredReversals.filter(reversal => {
+                  const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
+                  const isAcknowledged = acknowledgementStatus && (
+                    acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                    acknowledgementStatus === 'Acknowledged'
+                  );
+                  
+                  // Show if:
+                  // 1. Not approved yet (pending) AND not acknowledged
+                  // 2. Approved but not acknowledged
+                  // 3. Rejected but not acknowledged
+                  const isPending = reversal.reversal_approved === null;
+                  const isApproved = reversal.reversal_approved === true || reversal.reversal_approved === 'true' || reversal.reversal_approved === 1 || reversal.reversal_approved === '1';
+                  const isRejected = reversal.reversal_approved === false || reversal.reversal_approved === 'false' || reversal.reversal_approved === 0 || reversal.reversal_approved === '0';
+                  
+                  return !isAcknowledged && (isPending || isApproved || isRejected);
+                });
+              }
+              
+              // Debug logging
+              console.log(`Found ${filteredReversals.length} reversals for ${normalizedCurrentEmail} (isAgent: ${isAgent})`, filteredReversals.map(r => ({
+                  id: r.id,
+                  reversal_approved: r.reversal_approved,
+                  reversal_status: r.reversal_status,
+                acknowledgement_status: r.acknowledgement_status,
+                  reversal_responded_at: r.reversal_responded_at,
+                  reversal_requested_at: r.reversal_requested_at
+                })));
               
               const updates = [];
               filteredReversals.forEach(reversal => {
@@ -1028,7 +1078,41 @@ async function loadRecentUpdates() {
                 const auditorName = auditorUser?.name || reversal.auditor_email?.split('@')[0] || 'Unknown';
                 const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
                 
-                if (reversal.reversal_requested_at) {
+                // Determine reversal status - check if it's been responded to first, then check acknowledgement
+                const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus;
+                const isAcknowledged = acknowledgementStatus && (
+                  acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                  acknowledgementStatus === 'Acknowledged'
+                );
+                
+                let status = null;
+                
+                // Use reversal_status column if available (newer format)
+                if (reversal.reversal_status && reversal.reversal_status !== 'Pending') {
+                  status = reversal.reversal_status;
+                }
+                // If reversal was responded to, check approval status (fallback for older data)
+                else if (reversal.reversal_responded_at) {
+                  const approved = reversal.reversal_approved;
+                  if (approved === true || approved === 'true' || approved === 1 || approved === '1') {
+                    status = 'Approved';
+                  } else if (approved === false || approved === 'false' || approved === 0 || approved === '0') {
+                    status = 'Rejected';
+                  } else {
+                    status = 'Pending';
+                  }
+                }
+                // If reversal was requested but not responded to yet
+                else if (reversal.reversal_requested_at && !reversal.reversal_responded_at) {
+                  status = 'Pending';
+                }
+                
+                // For agents: Show all reversals that appear in reversal.html
+                // This includes: pending reversals, approved but not acknowledged, rejected but not acknowledged
+                // Since we've already filtered to only show these, we should add updates for all of them
+                
+                // Add reversal request update (for pending reversals)
+                if (status === 'Pending' && reversal.reversal_requested_at) {
                   updates.push({
                     id: `reversal-request-${reversal.id}`,
                     type: 'reversal_requested',
@@ -1043,19 +1127,39 @@ async function loadRecentUpdates() {
                   });
                 }
                 
-                if (reversal.reversal_responded_at) {
-                  updates.push({
-                    id: `reversal-response-${reversal.id}`,
-                    type: 'reversal_responded',
-                    displayName: auditorName,
-                    displayEmail: reversal.auditor_email,
-                    timestamp: reversal.reversal_responded_at,
-                    status: 'reversal_responded',
-                    interactionId: interactionId,
-                    scorecardId: scorecard.id,
-                    scorecardTable: scorecard.table_name,
-                    auditId: reversal.id
+                // Add status change update when reversal has been approved/rejected but NOT yet acknowledged
+                // For employees, we want to show when their reversal has been approved or rejected (so they can acknowledge it)
+                if (status && (status === 'Approved' || status === 'Rejected') && !isAcknowledged) {
+                  const statusText = status === 'Approved' ? 'approved' : 'rejected';
+                  
+                  // Use reversal_responded_at if available, otherwise use reversal_requested_at
+                  const statusTimestamp = reversal.reversal_responded_at || reversal.reversal_requested_at;
+                  
+                  // Debug logging
+                      console.log(`Adding reversal status update for ${reversal.id}:`, {
+                        status,
+                        statusText,
+                    timestamp: statusTimestamp,
+                    isAcknowledged,
+                    acknowledgementStatus,
+                    reversal_approved: reversal.reversal_approved,
+                    reversal_status: reversal.reversal_status,
+                    reversal_responded_at: reversal.reversal_responded_at
                   });
+                    
+                    updates.push({
+                      id: `reversal-status-${reversal.id}`,
+                      type: 'reversal_status_update',
+                      displayName: auditorName,
+                      displayEmail: reversal.auditor_email,
+                    timestamp: statusTimestamp,
+                      status: status,
+                      statusText: statusText,
+                      interactionId: interactionId,
+                      scorecardId: scorecard.id,
+                      scorecardTable: scorecard.table_name,
+                      auditId: reversal.id
+                    });
                 }
               });
               return updates;
@@ -1109,6 +1213,7 @@ async function loadRecentUpdates() {
       }
       
       // Also load reversals for auditors - parallelized
+      // For auditors: Show only unprocessed reversals (same as reversal.html)
       const { data: scorecards, error: scError } = await window.supabaseClient
         .from('scorecards')
         .select('id, name, table_name')
@@ -1121,27 +1226,34 @@ async function loadRecentUpdates() {
         // Parallelize all reversal queries
         const reversalPromises = scorecards.map(async (scorecard) => {
           try {
+            // For auditors: Only get unprocessed reversals (reversal_approved is null) - same as reversal.html
             const { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, interaction_id, interactionId')
+              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, interaction_id, interactionId')
               .not('reversal_requested_at', 'is', null)
+              .is('reversal_approved', null) // Only unprocessed reversals
               .order('reversal_requested_at', { ascending: false })
               .limit(50);
             
             if (!error && reversals && reversals.length > 0) {
+              // Filter by email
               const filteredReversals = reversals.filter(rev => {
                 const emailToCheck = rev[reversalFilterField];
                 if (!emailToCheck) return false;
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
               
+              console.log(`Found ${filteredReversals.length} unprocessed reversals for auditor ${normalizedCurrentEmail}`);
+              
               const updates = [];
+              // For auditors: These are all unprocessed reversals (same as what appears in reversal.html)
               filteredReversals.forEach(reversal => {
                 const employeeEmail = (reversal.employee_email || '').toLowerCase().trim();
                 const employeeUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
                 const employeeName = employeeUser?.name || reversal.employee_email?.split('@')[0] || 'Unknown';
                 const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
                 
+                // Add update for unprocessed reversal request (these appear in reversal.html)
                 if (reversal.reversal_requested_at) {
                   updates.push({
                     id: `reversal-request-${reversal.id}`,
@@ -1150,21 +1262,6 @@ async function loadRecentUpdates() {
                     displayEmail: reversal.employee_email,
                     timestamp: reversal.reversal_requested_at,
                     status: 'reversal_requested',
-                    interactionId: interactionId,
-                    scorecardId: scorecard.id,
-                    scorecardTable: scorecard.table_name,
-                    auditId: reversal.id
-                  });
-                }
-                
-                if (reversal.reversal_responded_at) {
-                  updates.push({
-                    id: `reversal-response-${reversal.id}`,
-                    type: 'reversal_responded',
-                    displayName: employeeName,
-                    displayEmail: reversal.employee_email,
-                    timestamp: reversal.reversal_responded_at,
-                    status: 'reversal_responded',
                     interactionId: interactionId,
                     scorecardId: scorecard.id,
                     scorecardTable: scorecard.table_name,
@@ -1186,10 +1283,22 @@ async function loadRecentUpdates() {
       }
     }
 
-    // Apply date filter to updates
+    // Apply date filter to updates (but always include recent reversal status updates for agents)
     if (dateFilter.start || dateFilter.end) {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
       allUpdates = allUpdates.filter(update => {
         if (!update.timestamp) return false;
+        
+        // For agents, always include reversal status updates from the last 7 days
+        if (isAgent && update.type === 'reversal_status_update') {
+          const updateDate = new Date(update.timestamp);
+          if (updateDate >= sevenDaysAgo) {
+            return true; // Always show recent reversal status updates
+          }
+        }
+        
         return isDateInRange(update.timestamp, dateFilter.start, dateFilter.end);
       });
     }
@@ -1199,6 +1308,20 @@ async function loadRecentUpdates() {
     
     // Limit to 15 most recent
     allUpdates = allUpdates.slice(0, 15);
+    
+    // Count reversal status updates for agents
+    if (isAgent) {
+      const reversalStatusUpdates = allUpdates.filter(u => u.type === 'reversal_status_update');
+      const reversalCountEl = document.getElementById('reversalUpdatesCount');
+      if (reversalCountEl) {
+        if (reversalStatusUpdates.length > 0) {
+          reversalCountEl.textContent = reversalStatusUpdates.length;
+          reversalCountEl.style.display = 'inline-flex';
+        } else {
+          reversalCountEl.style.display = 'none';
+        }
+      }
+    }
 
     if (allUpdates.length === 0) {
       updatesFeed.innerHTML = `
@@ -1220,6 +1343,11 @@ async function loadRecentUpdates() {
         statusText = isAgent 
           ? `You requested reversal for audit ${update.interactionId || ''}`
           : `requested reversal for audit ${update.interactionId || ''}`;
+      } else if (update.type === 'reversal_status_update') {
+        const statusDisplay = update.status === 'Approved' ? 'approved' : update.status === 'Rejected' ? 'rejected' : update.status === 'Acknowledged' ? 'acknowledged' : 'updated';
+        statusText = isAgent
+          ? `Your reversal request has been ${statusDisplay}`
+          : `Reversal request for audit ${update.interactionId || ''} has been ${statusDisplay}`;
       } else if (update.type === 'reversal_responded') {
         statusText = 'responded to your reversal request';
       } else {
@@ -1227,22 +1355,44 @@ async function loadRecentUpdates() {
       }
       
       let onClickAction = '';
-      if (update.type === 'audit_completed' || update.type === 'reversal_requested' || update.type === 'reversal_responded') {
+      if (update.type === 'audit_completed' || update.type === 'reversal_requested' || update.type === 'reversal_responded' || update.type === 'reversal_status_update') {
         onClickAction = `onclick="viewAuditDetails('${update.auditId}', '${update.scorecardId || ''}', '${update.scorecardTable || ''}')"`;
       } else if (update.assignmentId) {
         onClickAction = `onclick="viewAudit('${update.assignmentId}')"`;
       }
 
+      // Determine styling for reversal status updates
+      let bgColor = 'bg-primary/10';
+      let textColor = 'text-primary';
+      if (update.type === 'reversal_status_update') {
+        if (update.status === 'Approved') {
+          bgColor = 'bg-success/10';
+          textColor = 'text-success';
+        } else if (update.status === 'Rejected') {
+          bgColor = 'bg-error/10';
+          textColor = 'text-error';
+        } else if (update.status === 'Acknowledged') {
+          bgColor = 'bg-primary/10';
+          textColor = 'text-primary';
+        } else {
+          bgColor = 'bg-warning/10';
+          textColor = 'text-warning';
+        }
+      } else if (update.type === 'reversal_requested') {
+        bgColor = 'bg-warning/10';
+        textColor = 'text-warning';
+      }
+
       return `
         <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer" ${onClickAction}>
           <div class="flex items-start gap-2.5">
-            <div class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span class="text-xs font-semibold text-primary">${initials}</span>
+            <div class="w-7 h-7 rounded-full ${bgColor} flex items-center justify-center flex-shrink-0">
+              <span class="text-xs font-semibold ${textColor}">${initials}</span>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs text-gray-900 leading-snug">
-                ${isAgent && update.type === 'reversal_requested' 
-                  ? `<span class="font-medium">You</span> ${statusText.replace('You ', '')}`
+                ${isAgent && (update.type === 'reversal_requested' || update.type === 'reversal_status_update')
+                  ? statusText
                   : `<span class="font-medium">${escapeHtml(update.displayName)}</span> ${statusText}`
                 }
               </p>
@@ -1617,6 +1767,20 @@ function renderAssignedAudits() {
       const totalErrors = audit.total_errors_count || audit.totalErrorsCount || '0';
       const interactionId = audit.interaction_id || audit.interactionId || 'N/A';
       const channel = audit.channel || 'N/A';
+      
+      // Debug logging for reversal status
+      if (audit.reversal_requested_at) {
+        console.log('Audit with reversal:', {
+          id: audit.id,
+          employee_email: audit.employee_email,
+          reversal_requested_at: audit.reversal_requested_at,
+          reversal_responded_at: audit.reversal_responded_at,
+          reversal_approved: audit.reversal_approved,
+          acknowledgement_status: audit.acknowledgement_status
+        });
+      }
+      
+      const reversalStatusChip = getReversalStatusChip(audit);
 
       return `
         <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')">
@@ -1683,6 +1847,7 @@ function renderAssignedAudits() {
               <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${statusColor}">
                 ${statusIcon} ${normalizedStatus}
               </span>
+              ${reversalStatusChip}
               <button onclick="event.stopPropagation(); viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
                 View Details
               </button>
@@ -2184,6 +2349,72 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function getReversalStatusChip(audit) {
+  // Check if audit has reversal request
+  const reversalRequestedAt = audit.reversal_requested_at || audit.reversalRequestedAt;
+  const reversalRespondedAt = audit.reversal_responded_at || audit.reversalRespondedAt;
+  const reversalApproved = audit.reversal_approved;
+  const acknowledgementStatus = audit.acknowledgement_status || audit.acknowledgementStatus;
+  
+  // If no reversal was requested, return empty
+  if (!reversalRequestedAt) return '';
+  
+  // Determine status - reversal_status column doesn't exist, use reversal_approved
+  let status = null;
+  
+  // Check acknowledgement first
+  if (acknowledgementStatus === 'Acknowledged') {
+    status = 'Acknowledged';
+  } 
+  // If reversal was requested but not responded to yet
+  else if (reversalRequestedAt && !reversalRespondedAt) {
+    status = 'Pending';
+  }
+  // If reversal was responded to, check approval status
+  else if (reversalRespondedAt) {
+    // Handle different possible formats for reversal_approved
+    if (reversalApproved === true || reversalApproved === 'true' || reversalApproved === 1 || reversalApproved === '1') {
+      status = 'Approved';
+    } else if (reversalApproved === false || reversalApproved === 'false' || reversalApproved === 0 || reversalApproved === '0') {
+      status = 'Rejected';
+    } else {
+      // If responded but approval status unclear, default to Pending
+      status = 'Pending';
+    }
+  }
+  
+  // If no status determined, return empty string
+  if (!status) return '';
+  
+  // Determine chip styling based on status
+  let statusBgColor, statusTextColor, statusText;
+  if (status === 'Pending') {
+    statusBgColor = '#fef3c7';
+    statusTextColor = '#92400e';
+    statusText = '⏳ Pending';
+  } else if (status === 'Approved') {
+    statusBgColor = '#dcfce7';
+    statusTextColor = '#166534';
+    statusText = '✓ Approved';
+  } else if (status === 'Rejected') {
+    statusBgColor = '#fee2e2';
+    statusTextColor = '#991b1b';
+    statusText = '✗ Rejected';
+  } else if (status === 'Acknowledged') {
+    statusBgColor = '#dbeafe';
+    statusTextColor = '#1e40af';
+    statusText = '✓ Acknowledged';
+  } else {
+    statusBgColor = '#f3f4f6';
+    statusTextColor = '#374151';
+    statusText = status;
+  }
+  
+  return `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: ${statusBgColor}; color: ${statusTextColor};">
+    ${statusText}
+  </span>`;
+}
+
 // Notifications
 async function loadNotifications() {
   try {
@@ -2211,22 +2442,115 @@ async function loadNotifications() {
     if (!scError && scorecards) {
       // Filter by employee_email if agent, otherwise by auditor_email
       const reversalNotificationFilterField = isAgent ? 'employee_email' : 'auditor_email';
+      const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+      
       for (const scorecard of scorecards) {
         try {
+          // Get all reversals and filter client-side for case-insensitive matching
           const { data: auditReversals, error } = await window.supabaseClient
             .from(scorecard.table_name)
-            .select('id, employee_name, employee_email, reversal_requested_at, submitted_at')
-            .eq(reversalNotificationFilterField, currentUserEmail)
+            .select('id, employee_name, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, acknowledgement_status, interaction_id, interactionId, submitted_at')
             .not('reversal_requested_at', 'is', null)
             .order('reversal_requested_at', { ascending: false })
-            .limit(10);
+            .limit(200);
 
-          if (!error && auditReversals) {
-            reversals = reversals.concat(auditReversals.map(rev => ({
+          if (!error && auditReversals && auditReversals.length > 0) {
+            // Filter reversals by email (case-insensitive)
+            let filteredReversals = auditReversals.filter(rev => {
+              const emailToCheck = rev[reversalNotificationFilterField];
+              if (!emailToCheck) return false;
+              return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+            });
+            
+            // Apply the same filtering logic as reversal.html
+            if (isAgent) {
+              // For agents: Show reversals that need acknowledgement
+              filteredReversals = filteredReversals.filter(reversal => {
+                const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
+                const isAcknowledged = acknowledgementStatus && (
+                  acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                  acknowledgementStatus === 'Acknowledged'
+                );
+                
+                const isPending = reversal.reversal_approved === null;
+                const isApproved = reversal.reversal_approved === true || reversal.reversal_approved === 'true' || reversal.reversal_approved === 1 || reversal.reversal_approved === '1';
+                const isRejected = reversal.reversal_approved === false || reversal.reversal_approved === 'false' || reversal.reversal_approved === 0 || reversal.reversal_approved === '0';
+                
+                return !isAcknowledged && (isPending || isApproved || isRejected);
+              });
+            } else {
+              // For auditors: Only show unprocessed reversals (reversal_approved is null)
+              filteredReversals = filteredReversals.filter(rev => rev.reversal_approved === null);
+            }
+            
+            // Sort reversals: prioritize those with recent responses
+            filteredReversals.sort((a, b) => {
+              const aResponded = a.reversal_responded_at ? new Date(a.reversal_responded_at).getTime() : 0;
+              const bResponded = b.reversal_responded_at ? new Date(b.reversal_responded_at).getTime() : 0;
+              if (aResponded !== bResponded) {
+                return bResponded - aResponded; // Most recent responses first
+              }
+              const aRequested = new Date(a.reversal_requested_at).getTime();
+              const bRequested = new Date(b.reversal_requested_at).getTime();
+              return bRequested - aRequested;
+            });
+            
+            filteredReversals.forEach(rev => {
+              // Determine reversal status - check if it's been responded to first, then check acknowledgement
+              const acknowledgementStatus = rev.acknowledgement_status || rev.acknowledgementStatus;
+              const isAcknowledged = acknowledgementStatus && (
+                acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                acknowledgementStatus === 'Acknowledged'
+              );
+              
+              let status = null;
+              
+              // Use reversal_status column if available (newer format)
+              if (rev.reversal_status && rev.reversal_status !== 'Pending') {
+                status = rev.reversal_status;
+              }
+              // If reversal was responded to, check approval status (fallback for older data)
+              else if (rev.reversal_responded_at) {
+                const approved = rev.reversal_approved;
+                if (approved === true || approved === 'true' || approved === 1 || approved === '1') {
+                  status = 'Approved';
+                } else if (approved === false || approved === 'false' || approved === 0 || approved === '0') {
+                  status = 'Rejected';
+                } else {
+                  status = 'Pending';
+                }
+              }
+              // If reversal was requested but not responded to yet
+              else if (rev.reversal_requested_at && !rev.reversal_responded_at) {
+                status = 'Pending';
+              }
+              
+              // For agents: Add notifications for all reversals that appear in reversal.html
+              // For auditors: Only add notifications for unprocessed reversals (already filtered above)
+              
+              // Add notification for reversal request (for pending reversals)
+              if (status === 'Pending') {
+              reversals.push({
               ...rev,
               type: 'reversal',
+                reversal_status: status,
               scorecard_table: scorecard.table_name
-            })));
+              });
+              }
+              
+              // Add notification for status update if status is Approved or Rejected but NOT yet acknowledged
+              if (status && (status === 'Approved' || status === 'Rejected') && !isAcknowledged) {
+                const statusText = status === 'Approved' ? 'approved' : 'rejected';
+                reversals.push({
+                  ...rev,
+                  type: 'reversal_status_update',
+                  reversal_status: status,
+                  status_text: statusText,
+                  timestamp: rev.reversal_responded_at || rev.reversal_requested_at,
+                  scorecard_table: scorecard.table_name
+                });
+              }
+            });
           }
         } catch (err) {
           console.warn(`Error loading reversals from ${scorecard.table_name}:`, err);
@@ -2255,6 +2579,24 @@ async function loadNotifications() {
 
     // Add reversal notifications
     reversals.forEach(reversal => {
+      if (reversal.type === 'reversal_status_update') {
+        // Status update notification
+        const statusDisplay = reversal.reversal_status === 'Approved' ? 'Approved' : reversal.reversal_status === 'Rejected' ? 'Rejected' : reversal.reversal_status === 'Acknowledged' ? 'Acknowledged' : 'Updated';
+        const interactionId = reversal.interaction_id || reversal.interactionId || '';
+        notifications.push({
+          id: `reversal-status-${reversal.id}`,
+          type: 'reversal_status_update',
+          title: `Reversal ${statusDisplay}`,
+          message: isAgent 
+            ? `Your reversal request has been ${reversal.status_text || 'updated'}`
+            : `Reversal request${interactionId ? ` for ${interactionId}` : ''} has been ${reversal.status_text || 'updated'}`,
+          timestamp: reversal.timestamp || reversal.reversal_responded_at,
+          auditId: reversal.id,
+          tableName: reversal.scorecard_table,
+          status: reversal.reversal_status
+        });
+      } else {
+        // Initial reversal request notification
       notifications.push({
         id: `reversal-${reversal.id}`,
         type: 'reversal',
@@ -2264,6 +2606,7 @@ async function loadNotifications() {
         auditId: reversal.id,
         tableName: reversal.scorecard_table
       });
+      }
     });
 
     // Sort by timestamp (most recent first)
@@ -2272,11 +2615,19 @@ async function loadNotifications() {
     // Limit to 20 most recent
     notifications = notifications.slice(0, 20);
 
-    // Count unread (consider all as unread for now, or you can add a read/unread tracking system)
-    // For now, show count of recent notifications (last 7 days)
+    // Count unread notifications (last 7 days)
+    // For agents, prioritize reversal status updates
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    unreadNotificationCount = notifications.filter(n => new Date(n.timestamp) >= sevenDaysAgo).length;
+    const recentNotifications = notifications.filter(n => new Date(n.timestamp) >= sevenDaysAgo);
+    
+    if (isAgent) {
+      // For agents, count reversal status updates separately
+      const reversalStatusUpdates = recentNotifications.filter(n => n.type === 'reversal_status_update');
+      unreadNotificationCount = reversalStatusUpdates.length > 0 ? reversalStatusUpdates.length : recentNotifications.length;
+    } else {
+      unreadNotificationCount = recentNotifications.length;
+    }
 
     renderNotifications();
     updateNotificationBadge();
@@ -2310,11 +2661,41 @@ function renderNotifications() {
 
   list.innerHTML = notifications.map(notification => {
     const timestamp = formatTimestamp(notification.timestamp);
-    const iconColor = notification.type === 'reversal' ? 'text-warning' : 'text-primary';
-    const bgColor = notification.type === 'reversal' ? 'bg-warning/10' : 'bg-primary/10';
+    let iconColor, bgColor;
+    
+    if (notification.type === 'reversal_status_update') {
+      // Color based on status
+      if (notification.status === 'Approved') {
+        iconColor = 'text-success';
+        bgColor = 'bg-success/10';
+      } else if (notification.status === 'Rejected') {
+        iconColor = 'text-error';
+        bgColor = 'bg-error/10';
+      } else if (notification.status === 'Acknowledged') {
+        iconColor = 'text-primary';
+        bgColor = 'bg-primary/10';
+      } else {
+        iconColor = 'text-warning';
+        bgColor = 'bg-warning/10';
+      }
+    } else if (notification.type === 'reversal') {
+      iconColor = 'text-warning';
+      bgColor = 'bg-warning/10';
+    } else {
+      iconColor = 'text-primary';
+      bgColor = 'bg-primary/10';
+    }
 
     let iconPath = '';
-    if (notification.type === 'reversal') {
+    if (notification.type === 'reversal_status_update') {
+      if (notification.status === 'Approved') {
+        iconPath = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      } else if (notification.status === 'Rejected') {
+        iconPath = 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+      } else {
+        iconPath = 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
+      }
+    } else if (notification.type === 'reversal') {
       iconPath = 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z';
     } else if (notification.status === 'completed') {
       iconPath = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
@@ -2419,7 +2800,7 @@ function handleNotificationClick(notificationId) {
   // Navigate based on type
   if (notification.type === 'assignment' && notification.assignmentId) {
     viewAudit(notification.assignmentId);
-  } else if (notification.type === 'reversal' && notification.auditId && notification.tableName) {
+  } else if ((notification.type === 'reversal' || notification.type === 'reversal_status_update') && notification.auditId && notification.tableName) {
     // Navigate to audit view for reversal
     window.location.href = `audit-view.html?id=${notification.auditId}&table=${notification.tableName}`;
   }

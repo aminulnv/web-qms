@@ -67,7 +67,7 @@
     <div style="margin-bottom: 1.125rem; width: 100%;"></div>
 
     <!-- Statistics Overview -->
-    <div class="stats-grid">
+    <div class="stats-grid mt-24">
         <div class="stat-card">
             <div class="stat-value" id="totalReversals">-</div>
             <div class="stat-title">Total Reversals</div>
@@ -196,11 +196,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
+        // Get current user info to determine role
+        function getCurrentUserInfo() {
+            try {
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                return {
+                    email: (userInfo.email || '').toLowerCase().trim(),
+                    role: userInfo.role || '',
+                    isAgent: userInfo.role === 'Employee'
+                };
+            } catch (error) {
+                console.error('Error getting user info:', error);
+                return { email: '', role: '', isAgent: false };
+            }
+        }
+        
         // Load reversals from all audit tables
         async function loadReversals(onlyPending = true) {
             try {
+                const userInfo = getCurrentUserInfo();
+                const isAgent = userInfo.isAgent;
+                
                 const loadingMessage = onlyPending ? 'Loading pending reversals...' : 'Loading all reversals...';
-                console.log(loadingMessage);
+                console.log(loadingMessage, 'User role:', userInfo.role, 'Is agent:', isAgent);
                 
                 if (!window.supabaseClient) {
                     throw new Error('Supabase client not initialized');
@@ -224,10 +242,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             .select('*')
                             .not('reversal_requested_at', 'is', null);
                         
-                        // If loading only pending, filter at database level
+                        // Filter based on user role and view mode
                         if (onlyPending) {
-                            // Filter for pending reversals (reversal_approved is null)
-                            query = query.is('reversal_approved', null);
+                            if (isAgent) {
+                                // For agents: Show reversals that are:
+                                // 1. Not approved AND not acknowledged (pending)
+                                // 2. Approved but not acknowledged
+                                // 3. Rejected but not acknowledged
+                                // We'll filter client-side after loading
+                            } else {
+                                // For auditors: Only show unprocessed reversals (reversal_approved is null)
+                                query = query.is('reversal_approved', null);
+                            }
                         }
                         
                         query = query.order('reversal_requested_at', { ascending: false });
@@ -252,6 +278,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.warn(`Exception loading from ${scorecard.table_name}:`, err);
                         continue;
                     }
+                }
+                
+                // Filter reversals based on user role if loading pending
+                if (onlyPending && isAgent) {
+                    // For agents: Filter to show only reversals that need acknowledgement
+                    combinedReversals = combinedReversals.filter(reversal => {
+                        const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
+                        const isAcknowledged = acknowledgementStatus && (
+                            acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                            acknowledgementStatus === 'Acknowledged'
+                        );
+                        
+                        // Show if:
+                        // 1. Not approved yet (pending) AND not acknowledged
+                        // 2. Approved but not acknowledged
+                        // 3. Rejected but not acknowledged
+                        const isPending = reversal.reversal_approved === null;
+                        const isApproved = reversal.reversal_approved === true || reversal.reversal_approved === 'true' || reversal.reversal_approved === 1 || reversal.reversal_approved === '1';
+                        const isRejected = reversal.reversal_approved === false || reversal.reversal_approved === 'false' || reversal.reversal_approved === 0 || reversal.reversal_approved === '0';
+                        
+                        return !isAcknowledged && (isPending || isApproved || isRejected);
+                    });
                 }
                 
                 // Sort by reversal request date descending
@@ -279,15 +327,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     allReversalsLoaded = true;
                 }
                 
-                // Update filtered reversals based on current view mode
+                // Update filtered reversals based on current view mode and user role
                 if (viewingAll) {
                     filteredReversals = [...allReversals];
                 } else {
-                    // Filter to only show pending in the view
-                    const getStatus = (r) => r.reversal_status || 
-                                        (r.reversal_approved === null ? 'Pending' : 
-                                         (r.reversal_approved ? 'Approved' : 'Rejected'));
-                    filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                    // Filter based on user role
+                    if (isAgent) {
+                        // For agents: Show reversals that need acknowledgement
+                        filteredReversals = allReversals.filter(reversal => {
+                            const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
+                            const isAcknowledged = acknowledgementStatus && (
+                                acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                                acknowledgementStatus === 'Acknowledged'
+                            );
+                            
+                            const isPending = reversal.reversal_approved === null;
+                            const isApproved = reversal.reversal_approved === true || reversal.reversal_approved === 'true' || reversal.reversal_approved === 1 || reversal.reversal_approved === '1';
+                            const isRejected = reversal.reversal_approved === false || reversal.reversal_approved === 'false' || reversal.reversal_approved === 0 || reversal.reversal_approved === '0';
+                            
+                            return !isAcknowledged && (isPending || isApproved || isRejected);
+                        });
+                    } else {
+                        // For auditors: Only show unprocessed reversals (pending)
+                        const getStatus = (r) => r.reversal_status || 
+                                            (r.reversal_approved === null ? 'Pending' : 
+                                             (r.reversal_approved ? 'Approved' : 'Rejected'));
+                        filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                    }
                 }
                 
                 updateStatistics();
@@ -486,6 +552,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Toggle between viewing all reversals and pending only
         window.toggleViewAll = async function() {
             const viewAllBtn = document.getElementById('viewAllBtn');
+            const userInfo = getCurrentUserInfo();
+            const isAgent = userInfo.isAgent;
             
             if (viewingAll) {
                 // Switch to pending only view
@@ -493,11 +561,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 viewAllBtn.textContent = 'View All';
                 viewAllBtn.style.backgroundColor = '#6b7280';
                 
-                // Filter to show only pending
-                const getStatus = (r) => r.reversal_status || 
-                                    (r.reversal_approved === null ? 'Pending' : 
-                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
-                filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                // Filter based on user role
+                if (isAgent) {
+                    // For agents: Show reversals that need acknowledgement
+                    filteredReversals = allReversals.filter(reversal => {
+                        const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
+                        const isAcknowledged = acknowledgementStatus && (
+                            acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                            acknowledgementStatus === 'Acknowledged'
+                        );
+                        
+                        const isPending = reversal.reversal_approved === null;
+                        const isApproved = reversal.reversal_approved === true || reversal.reversal_approved === 'true' || reversal.reversal_approved === 1 || reversal.reversal_approved === '1';
+                        const isRejected = reversal.reversal_approved === false || reversal.reversal_approved === 'false' || reversal.reversal_approved === 0 || reversal.reversal_approved === '0';
+                        
+                        return !isAcknowledged && (isPending || isApproved || isRejected);
+                    });
+                } else {
+                    // For auditors: Only show unprocessed reversals (pending)
+                    const getStatus = (r) => r.reversal_status || 
+                                        (r.reversal_approved === null ? 'Pending' : 
+                                         (r.reversal_approved ? 'Approved' : 'Rejected'));
+                    filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                }
                 
                 // Clear filters that might conflict
                 if (statusFilter) statusFilter.value = '';
@@ -529,6 +615,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Filter reversals
         function filterReversals() {
+            const userInfo = getCurrentUserInfo();
+            const isAgent = userInfo.isAgent;
             const searchTerm = (searchInput?.value || '').toLowerCase();
             const statusValue = statusFilter?.value || '';
             const typeValue = typeFilter?.value || '';
@@ -536,12 +624,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const dateTo = document.getElementById('dateToFilter')?.value || '';
             
             // Start with the appropriate base set
-            let baseReversals = viewingAll ? allReversals : allReversals.filter(r => {
-                const getStatus = (r) => r.reversal_status || 
-                                    (r.reversal_approved === null ? 'Pending' : 
-                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
-                return getStatus(r) === 'Pending';
-            });
+            let baseReversals = viewingAll ? allReversals : (isAgent ? 
+                // For agents: Show reversals that need acknowledgement
+                allReversals.filter(reversal => {
+                    const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
+                    const isAcknowledged = acknowledgementStatus && (
+                        acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+                        acknowledgementStatus === 'Acknowledged'
+                    );
+                    
+                    const isPending = reversal.reversal_approved === null;
+                    const isApproved = reversal.reversal_approved === true || reversal.reversal_approved === 'true' || reversal.reversal_approved === 1 || reversal.reversal_approved === '1';
+                    const isRejected = reversal.reversal_approved === false || reversal.reversal_approved === 'false' || reversal.reversal_approved === 0 || reversal.reversal_approved === '0';
+                    
+                    return !isAcknowledged && (isPending || isApproved || isRejected);
+                }) :
+                // For auditors: Only show unprocessed reversals (pending)
+                allReversals.filter(r => {
+                    const getStatus = (r) => r.reversal_status || 
+                                        (r.reversal_approved === null ? 'Pending' : 
+                                         (r.reversal_approved ? 'Approved' : 'Rejected'));
+                    return getStatus(r) === 'Pending';
+                })
+            );
             
             // If viewing all is false and we need to load all for filtering, prompt user
             if (!viewingAll && (statusValue === 'approved' || statusValue === 'rejected')) {

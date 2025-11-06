@@ -110,6 +110,12 @@ class SidebarLoader {
       
       // Hide menu items for employees
       this.hideEmployeeMenuItems()
+      
+      // Load pending reversals count (for auditors)
+      this.updatePendingReversalsCount()
+      
+      // Load employee reversal updates count (for employees)
+      this.updateEmployeeReversalUpdatesCount()
     } catch (error) {
       // Error loading sidebar
       // Fallback: show a message or use existing sidebar
@@ -220,6 +226,8 @@ class SidebarLoader {
                     <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
                 </svg>
                 <span>Reversal</span>
+                <span class="notification-badge" id="reversalNotificationBadge" style="display: none;">0</span>
+                <span class="notification-badge" id="employeeReversalNotificationBadge" style="display: none;">0</span>
             </button>
         </li>
 
@@ -769,6 +777,200 @@ class SidebarLoader {
   }
 
   /**
+   * Update pending reversals count badge
+   */
+  async updatePendingReversalsCount() {
+    try {
+      // Only show for non-employees (auditors, quality analysts, etc.)
+      const userInfo = this.getUserInfo()
+      if (userInfo && userInfo.role === 'Employee') {
+        // Hide the badge for employees
+        this.setReversalBadgeCount(0)
+        return
+      }
+
+      if (!window.supabaseClient) {
+        // Supabase not initialized yet, try again after a delay
+        setTimeout(() => this.updatePendingReversalsCount(), 1000)
+        return
+      }
+
+      // Load scorecards first
+      const { data: scorecards, error: scorecardsError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+
+      if (scorecardsError) {
+        console.warn('Error loading scorecards for reversal count:', scorecardsError)
+        return
+      }
+
+      if (!scorecards || scorecards.length === 0) {
+        this.setReversalBadgeCount(0)
+        return
+      }
+
+      // Count pending reversals from all scorecard tables
+      let totalPending = 0
+      for (const scorecard of scorecards) {
+        try {
+          const { count, error } = await window.supabaseClient
+            .from(scorecard.table_name)
+            .select('*', { count: 'exact', head: true })
+            .not('reversal_requested_at', 'is', null)
+            .is('reversal_approved', null)
+
+          if (error) {
+            console.warn(`Error counting reversals from ${scorecard.table_name}:`, error)
+            continue
+          }
+
+          if (count !== null && count !== undefined) {
+            totalPending += count
+          }
+        } catch (err) {
+          console.warn(`Exception counting reversals from ${scorecard.table_name}:`, err)
+          continue
+        }
+      }
+
+      this.setReversalBadgeCount(totalPending)
+    } catch (error) {
+      console.error('Error updating pending reversals count:', error)
+      // Don't show badge on error
+      this.setReversalBadgeCount(0)
+    }
+  }
+
+  /**
+   * Set the reversal badge count
+   */
+  setReversalBadgeCount(count) {
+    const badge = document.getElementById('reversalNotificationBadge')
+    if (!badge) return
+
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count.toString()
+      badge.style.display = 'inline-flex'
+    } else {
+      badge.style.display = 'none'
+    }
+  }
+
+  /**
+   * Update employee reversal updates count badge (for employees to see their approved/rejected reversals)
+   */
+  async updateEmployeeReversalUpdatesCount() {
+    try {
+      // Only show for employees
+      const userInfo = this.getUserInfo()
+      if (!userInfo || userInfo.role !== 'Employee') {
+        return
+      }
+
+      if (!window.supabaseClient) {
+        // Supabase not initialized yet, try again after a delay
+        setTimeout(() => this.updateEmployeeReversalUpdatesCount(), 1000)
+        return
+      }
+
+      const employeeName = userInfo.name || ''
+      const employeeEmail = userInfo.email || ''
+
+      if (!employeeName && !employeeEmail) {
+        return
+      }
+
+      // Load scorecards first
+      const { data: scorecards, error: scorecardsError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+
+      if (scorecardsError) {
+        console.warn('Error loading scorecards for employee reversal count:', scorecardsError)
+        return
+      }
+
+      if (!scorecards || scorecards.length === 0) {
+        this.setEmployeeReversalBadgeCount(0)
+        return
+      }
+
+      // Count reversals that belong to this employee and have been responded to
+      let totalResponded = 0
+      for (const scorecard of scorecards) {
+        try {
+          // Query for reversals that have been responded to
+          // We need to check both employee_name and employee_email
+          let countByName = 0
+          let countByEmail = 0
+
+          // Try matching by name first
+          if (employeeName) {
+            const { count, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('*', { count: 'exact', head: true })
+              .not('reversal_requested_at', 'is', null)
+              .not('reversal_approved', 'is', null)
+              .ilike('employee_name', `%${employeeName}%`)
+
+            if (!error && count !== null && count !== undefined) {
+              countByName = count
+            }
+          }
+
+          // Try matching by email
+          if (employeeEmail) {
+            const { count, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('*', { count: 'exact', head: true })
+              .not('reversal_requested_at', 'is', null)
+              .not('reversal_approved', 'is', null)
+              .ilike('employee_email', employeeEmail)
+
+            if (!error && count !== null && count !== undefined) {
+              countByEmail = count
+            }
+          }
+
+          // Use the maximum count (to avoid double counting if both match)
+          totalResponded += Math.max(countByName, countByEmail)
+        } catch (err) {
+          console.warn(`Exception counting employee reversals from ${scorecard.table_name}:`, err)
+          continue
+        }
+      }
+
+      this.setEmployeeReversalBadgeCount(totalResponded)
+    } catch (error) {
+      console.error('Error updating employee reversal updates count:', error)
+      this.setEmployeeReversalBadgeCount(0)
+    }
+  }
+
+  /**
+   * Set the employee reversal badge count
+   */
+  setEmployeeReversalBadgeCount(count) {
+    const badge = document.getElementById('employeeReversalNotificationBadge')
+    if (!badge) return
+
+    // Only show for employees
+    const userInfo = this.getUserInfo()
+    if (userInfo && userInfo.role !== 'Employee') {
+      badge.style.display = 'none'
+      return
+    }
+
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count.toString()
+      badge.style.display = 'inline-flex'
+    } else {
+      badge.style.display = 'none'
+    }
+  }
+
+  /**
    * Hide menu items for employees based on their role
    */
   hideEmployeeMenuItems() {
@@ -840,6 +1042,13 @@ class SidebarLoader {
       console.error('Error hiding employee menu items:', error)
     }
   }
+}
+
+// Global function to update reversal badge count (can be called from other pages)
+window.updateReversalBadgeCount = async function() {
+  const sidebarLoader = new SidebarLoader()
+  await sidebarLoader.updatePendingReversalsCount()
+  await sidebarLoader.updateEmployeeReversalUpdatesCount()
 }
 
 // Initialize the sidebar loader
