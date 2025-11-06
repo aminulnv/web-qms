@@ -28,7 +28,7 @@
     <script src="keyboard-shortcuts.js"></script>
 </head>
 
-<body>
+<body style="margin: 0; padding: 0;">
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
  <main class="main-content" role="main">
     <p class="page-heading">Create Audit</p>
@@ -189,7 +189,7 @@
 
     <!-- Audit Form Modal (Full Screen) -->
 <div id="auditFormModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; align-items: flex-start; justify-content: center; padding: 0; overflow-y: auto;">
-    <form id="auditForm" method="POST" style="background: white; width: 100%; min-height: 100vh; display: flex; flex-direction: column; gap: 0; padding: 0; margin: 0;">
+    <form id="auditForm" method="POST" style="background: white; width: 100%; height: 100vh; display: flex; flex-direction: column; gap: 0; padding: 0; margin: 0; overflow-y: auto;">
     <!-- Hidden audit information fields - populated behind the scenes -->
     <input type="hidden" id="auditDuration" name="auditDuration">
     <input type="hidden" id="auditorEmail" name="auditorEmail">
@@ -256,65 +256,57 @@
     </div>
 
     <!-- Two Column Layout (matching expert-audits.html) -->
-    <div id="auditContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: flex-start;">
+    <div id="auditContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: stretch;">
         
         <!-- LEFT COLUMN: Interaction Details + Transcript -->
         <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 0 0 33%; min-width: 13.6451rem; max-width: 75%; padding-right: 0.6469rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
             <!-- Transcript -->
-            <div style="display: flex; flex-direction: column; gap: 0.6469rem;">
-                <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; max-height: calc(100vh - 12rem); transition: height 0.3s ease;">
+            <div style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 1; min-height: 0; max-height: calc(100vh - 15rem);">
+                <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 0; transition: height 0.3s ease; overflow: hidden;">
                     <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.4852rem;">
                         <!-- First Row: Transcript Title and Form Fields -->
-                        <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
-                            <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
-                                <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                                Transcript
-                            </h3>
+                        <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap; justify-content: space-between;">
                             <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                                <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                                    Transcript
+                                </h3>
                                 <div style="display: flex; align-items: center; gap: 0.1617rem;">
                                     <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
                                     <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 2.4258rem;">
+                                    <button type="button" onclick="copyConversationId(); return false;" style="padding: 0.0808rem; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s;" title="Copy ID" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </button>
                                     <button type="button" id="viewChatBtn" disabled style="padding: 0.1617rem 0.3234rem; background-color: #9ca3af; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: not-allowed; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; opacity: 0.6;" title="Open in Intercom (load conversation first)">Open</button>
                                 </div>
-                                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
                                 <div style="display: flex; align-items: center; gap: 0.1617rem;">
                                     <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
                                     <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
                                 </div>
                                 <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
                                 <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
+                                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Name:</span>
+                                    <input type="text" id="clientName" name="clientName" readonly placeholder="Client name..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box; background-color: #f9fafb;">
+                                </div>
+                                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                                <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
                                     <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
                                     <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box;">
+                                    <button type="button" onclick="copyClientEmail(); return false;" style="padding: 0.0808rem; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s;" title="Copy Email" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- Second Row: Client Name and Quick Actions (Compact) -->
-                        <div id="clientNameSection" style="display: none; align-items: center; justify-content: space-between; gap: 0.3234rem; padding-top: 0.3234rem; border-top: 0.0304rem solid #e5e7eb;">
-                            <div style="display: flex; align-items: center; gap: 0.2425rem; padding: 0.2425rem 0.4043rem; background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); border-radius: 0.2425rem; box-shadow: 0 0.0203rem 0.0606rem rgba(0,0,0,0.1);">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4852rem; height: 0.4852rem; color: #ffffff;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                                <span id="clientNameDisplay" style="font-family: 'Poppins', sans-serif; font-size: 0.4447rem; font-weight: 600; color: #ffffff; white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis;">Client Name</span>
-                            </div>
+                        <!-- Second Row: Quick Actions (Compact) -->
+                        <div id="clientNameSection" style="display: none; align-items: center; justify-content: flex-end; gap: 0.3234rem; padding-top: 0.3234rem; border-top: 0.0304rem solid #e5e7eb;">
                             <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                                <button type="button" onclick="document.getElementById('viewChatBtn').click(); return false;" style="padding: 0.2425rem 0.4043rem; background: #ffffff; border: 0.0304rem solid #1A733E; border-radius: 0.2425rem; font-size: 0.4043rem; font-family: 'Poppins', sans-serif; font-weight: 500; color: #1A733E; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.1617rem; white-space: nowrap;" onmouseover="this.style.background='#1A733E'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#1A733E';">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                    </svg>
-                                    <span>Open</span>
-                                </button>
-                                <button type="button" onclick="copyConversationId(); return false;" style="padding: 0.2425rem 0.4043rem; background: #ffffff; border: 0.0304rem solid #1A733E; border-radius: 0.2425rem; font-size: 0.4043rem; font-family: 'Poppins', sans-serif; font-weight: 500; color: #1A733E; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.1617rem; white-space: nowrap;" onmouseover="this.style.background='#1A733E'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#1A733E';" title="Copy Conversation ID">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                    </svg>
-                                    <span>Copy ID</span>
-                                </button>
-                                <button type="button" onclick="copyClientEmail(); return false;" style="padding: 0.2425rem 0.4043rem; background: #ffffff; border: 0.0304rem solid #1A733E; border-radius: 0.2425rem; font-size: 0.4043rem; font-family: 'Poppins', sans-serif; font-weight: 500; color: #1A733E; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.1617rem; white-space: nowrap;" onmouseover="this.style.background='#1A733E'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#1A733E';" title="Copy Client Email">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                    </svg>
-                                    <span>Copy Email</span>
-                                </button>
                                 <button type="button" id="translateChatBtn" onclick="translateChatMessages(); return false;" disabled style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; border: 0.0304rem solid #d1d5db; border-radius: 0.2425rem; font-size: 0.4043rem; font-family: 'Poppins', sans-serif; font-weight: 500; color: #9ca3af; cursor: not-allowed; transition: all 0.2s; display: flex; align-items: center; gap: 0.1617rem; white-space: nowrap; opacity: 0.6;" title="Translation feature is currently disabled">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
@@ -342,7 +334,7 @@
                         </div>
                     </div>
                     <!-- Chat Interface View -->
-                    <div id="transcriptChatView" style="display: flex; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0; max-height: calc(100vh - 18rem);">
+                    <div id="transcriptChatView" style="display: flex; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
                         <!-- Chat messages will be dynamically inserted here -->
                         <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0;">
                             <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
@@ -378,7 +370,7 @@
         </div>
         
         <!-- RIGHT COLUMN: Error Details, Post-Status & Recommendations -->
-        <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem;">
+        <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; max-height: calc(100vh - 15rem); overflow-y: auto;">
             
             
             <!-- Error Details (Report-Style Table) -->
@@ -515,7 +507,7 @@
     </div> <!-- End Two Column Layout -->
 
     <!-- Form Actions -->
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; padding: 0.6469rem 0.9704rem; border-top: 0.0405rem solid #e5e7eb; background-color: #f9fafb;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; padding: 0.6469rem 0.9704rem; border-top: 0.0405rem solid #e5e7eb; background-color: #f9fafb; margin-top: auto;">
         <div style="display: flex; align-items: center; gap: 0.4852rem;">
             <div>
                 <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.1617rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Validation</p>
@@ -533,8 +525,6 @@
     </div>
     </form>
 </div> <!-- End auditFormModal -->
-
-
 
 
 
@@ -5173,18 +5163,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const conversationUrl = `${INTERCOM_CONFIG.baseUrl}/${INTERCOM_CONFIG.appId}/inbox/conversation/${interactionId}?view`;
-        const newWindow = window.open(conversationUrl, '_blank', 'noopener,noreferrer,width=1200,height=800,scrollbars=yes,resizable=yes');
-        
-        if (!newWindow) {
-            await window.confirmationDialog.show({
-                title: 'Popup Blocked',
-                message: 'Please allow popups for this site to view the chat, or copy this URL: ' + conversationUrl,
-                confirmText: 'OK',
-                cancelText: 'Close',
-                type: 'warning'
-            });
-        }
+        const conversationUrl = `https://app.intercom.com/a/inbox/aphmhtyj/inbox/conversation/${interactionId}?view`;
+        window.open(conversationUrl, '_blank', 'noopener,noreferrer,width=1200,height=800,scrollbars=yes,resizable=yes');
     });
     }
 
@@ -5558,14 +5538,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Update client name in header section
-        const clientNameSection = document.getElementById('clientNameSection');
-        const clientNameDisplay = document.getElementById('clientNameDisplay');
-        if (clientNameSection && clientNameDisplay) {
+        const clientNameInput = document.getElementById('clientName');
+        if (clientNameInput) {
             if (clientName) {
-                clientNameDisplay.textContent = clientName;
-                clientNameSection.style.display = 'flex';
+                clientNameInput.value = clientName;
             } else {
-                clientNameSection.style.display = 'none';
+                clientNameInput.value = '';
             }
         }
         
@@ -7105,4 +7083,3 @@ Next Steps:
 
 </body>
 </html>
-

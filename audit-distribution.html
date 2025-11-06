@@ -206,10 +206,17 @@
             width: 100% !important;
             box-sizing: border-box !important;
             clear: both;
+            cursor: pointer;
         }
 
         .employee-item:hover {
             background: #f9fafb;
+        }
+        
+        .employee-item .counter-container,
+        .employee-item .counter-container * {
+            cursor: default;
+            pointer-events: auto;
         }
 
         .employee-item:last-child {
@@ -307,7 +314,7 @@
             font-weight: 700;
             background-color: #ffffff;
             color: #1f2937;
-            cursor: default;
+            cursor: text;
             -moz-appearance: textfield;
             appearance: textfield;
         }
@@ -323,6 +330,11 @@
             background-color: #f3f4f6;
             color: #9ca3af;
             cursor: not-allowed;
+        }
+        
+        .audit-count-input.error {
+            border-color: #ef4444;
+            background-color: #fef2f2;
         }
 
         .bulk-actions-bar {
@@ -612,7 +624,7 @@
     <p class="page-heading">Audit Distribution</p>
     <div style="margin-bottom: 1.125rem;"></div>
 
-    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1.125rem; padding: 0 0.75rem; margin-top: 7rem;">
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1.125rem; padding: 0 0.75rem; margin-top: 3rem;">
         <button id="topAutoAssignBtn" class="btn-assign" onclick="autoAssignBySupervisor()" style="display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -633,21 +645,21 @@
                     <h2 class="section-title">Manual Assignment</h2>
                     <p class="section-subtitle">Filter and select employees to assign for auditing (scorecards will be auto-assigned based on their channel)</p>
                 </div>
-                <svg id="manualSectionIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(0deg); transition: transform 0.3s;">
+                <svg id="manualSectionIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg); transition: transform 0.3s;">
                     <polyline points="6 9 12 15 18 9"/>
                 </svg>
             </div>
-            <div id="manualSectionContent" style="display: none;">
+            <div id="manualSectionContent" style="display: block;">
 
             <!-- Filters -->
             <div class="filter-grid">
                 <div class="filter-group">
                     <label class="filter-label">Group By</label>
                     <select id="groupBySelect" class="filter-select" onchange="applyFiltersAndGroup()">
-                        <option value="none">None</option>
+                        <option value="none" selected>None</option>
                         <option value="channel">Channel</option>
                         <option value="team">Team</option>
-                        <option value="quality_supervisor" selected>Quality Supervisor</option>
+                        <option value="quality_supervisor">Quality Supervisor</option>
                         <option value="team_supervisor">Team Supervisor</option>
                         <option value="department">Department</option>
                     </select>
@@ -671,7 +683,7 @@
             </div>
 
             <!-- Quick Actions -->
-            <div style="display: flex; gap: 0.375rem; margin-bottom: 0.5625rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.375rem; margin-bottom: 0.5625rem; flex-wrap: wrap; align-items: flex-end;">
                 <button class="btn-secondary" onclick="selectAllVisible()">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.2812rem;">
                         <polyline points="20 6 9 17 4 12"/>
@@ -685,25 +697,33 @@
                     </svg>
                     Deselect All
                 </button>
-                <div style="display: none; align-items: flex-end; gap: 0.5625rem;" id="quickAuditInputWrapper">
-                    <div style="display: flex; flex-direction: column; gap: 0.1875rem;">
-                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; white-space: nowrap;">
-                            <span style="color: #ef4444;">*</span> Audits per employee:
-                        </label>
-                        <div class="counter-container">
-                            <button type="button" class="counter-btn" onclick="updateBulkAuditCountQuick(Math.max(1, (parseInt(document.getElementById('bulkAuditCountQuick').value) || 1) - 1))">−</button>
-                            <input type="number" id="bulkAuditCountQuick" min="1" max="10" value="1" readonly class="audit-count-input" oninput="updateBulkAuditCountQuick(parseInt(this.value))">
-                            <button type="button" class="counter-btn" onclick="updateBulkAuditCountQuick(Math.min(10, (parseInt(document.getElementById('bulkAuditCountQuick').value) || 1) + 1))">+</button>
+                <div style="display: none; flex-direction: column; gap: 0.1875rem;" id="quickAuditInputWrapper">
+                    <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                        <span style="color: #ef4444;">*</span> Audits per employee:
+                    </label>
+                    <div class="counter-container">
+                        <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.max(0, bulkAuditCount - 1))">−</button>
+                        <input type="number" id="bulkAuditCount" min="0" max="10" value="0" class="audit-count-input" onchange="updateBulkAuditCount(parseInt(this.value) || 0)" oninput="updateBulkAuditCount(parseInt(this.value) || 0)">
+                        <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.min(10, bulkAuditCount + 1))">+</button>
+                    </div>
+                </div>
+                <div style="display: none; flex-direction: column; gap: 0.1875rem; position: relative;" id="quickAssignWrapper">
+                    <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; white-space: nowrap;">
+                        <span style="color: #ef4444;">*</span> Quality Analyst(s):
+                    </label>
+                    <div style="position: relative;">
+                        <button id="qaDropdownButton" class="filter-select" onclick="toggleQADropdown(event)" style="width: 100%; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 10rem;">
+                            <span id="qaDropdownText">Select Quality Analyst(s)...</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div id="qaDropdown" class="filter-dropdown" style="width: 100%; min-width: 10rem;">
+                            <!-- Quality Analyst checkboxes will be populated here -->
                         </div>
                     </div>
                 </div>
-                <div style="display: none; align-items: flex-end; gap: 0.5625rem;" id="quickAssignWrapper">
-                    <select id="assignToSelectQuick" class="assign-select" style="min-width: 7.0312rem;">
-                        <option value="">Select Quality Analyst...</option>
-                        <option value="distribute">Distribute Evenly to All</option>
-                    </select>
-                    <button class="btn-assign" onclick="performBulkAssignmentQuick()" id="assignButtonQuick" disabled>Assign Audits</button>
-                </div>
+                <button class="btn-assign" onclick="performBulkAssignment()" id="assignButton" disabled style="display: none; margin-top: 1.125rem;">Assign Audits</button>
             </div>
 
             <!-- Grouped Employees -->
@@ -721,31 +741,7 @@
                 <p style="font-size: 0.75rem; font-weight: 600; margin: 0 0 0.375rem 0;">No employees found</p>
                 <p style="font-size: 0.6562rem; margin: 0;">Try adjusting your filters or selecting a different scorecard</p>
             </div>
-
-            <!-- Bulk Actions Bar -->
-            <div class="bulk-actions-bar" id="bulkActionsBar">
-                <div class="bulk-info">
-                    <span class="selected-count" id="bulkSelectedCount">0 employees selected</span>
-                    <span class="total-audits" id="bulkTotalAudits">0 total audits</span>
-                </div>
-                <div class="bulk-actions">
-                    <div style="display: flex; flex-direction: column; gap: 0.1875rem;">
-                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; white-space: nowrap;">
-                            <span style="color: #ef4444;">*</span> Audits per employee:
-                        </label>
-                        <div class="counter-container">
-                            <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.max(1, (parseInt(document.getElementById('bulkAuditCount').value) || 1) - 1))">−</button>
-                            <input type="number" id="bulkAuditCount" min="1" max="10" value="1" readonly class="audit-count-input" oninput="updateBulkAuditCount(parseInt(this.value))">
-                            <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.min(10, (parseInt(document.getElementById('bulkAuditCount').value) || 1) + 1))">+</button>
-                        </div>
-                    </div>
-                    <select id="assignToSelect" class="assign-select">
-                        <option value="">Select Quality Analyst...</option>
-                        <option value="distribute">Distribute Evenly to All</option>
-                    </select>
-                    <button class="btn-assign" onclick="performBulkAssignment()" id="assignButton" disabled>Assign Audits</button>
-                </div>
-                </div>
+            
             </div>
         </div>
 
@@ -871,6 +867,10 @@ let selectedEmployees = new Map(); // email -> { employee, auditCount }
 let qualityAnalysts = [];
 let channels = [];
 let allAssignments = []; // Store all assignments for filtering
+let bulkAuditCount = 0; // Global bulk audit count (default 0, mandatory)
+let selectedQualityAnalysts = new Set(); // Set of selected QA emails
+let useEvenDistribution = false; // Flag for even distribution option
+let qaDropdownOpen = false; // Track QA dropdown state
 let columnFilters = {
     week: [],
     employee: [],
@@ -1019,7 +1019,7 @@ async function loadEmployees() {
             .from('users')
             .select('*')
             .eq('is_active', true)
-            .neq('role', 'Quality Analyst') // Exclude QA from being audited
+            .in('role', ['Employee', 'Agent']) // Only include Employee and Agent roles for auditing
             .order('name', { ascending: true });
         
         if (error) throw error;
@@ -1362,33 +1362,157 @@ async function deleteAssignment(assignmentId) {
 // Populate Dropdowns
 // ============================================================================
 function populateQADropdown() {
-    const select = document.getElementById('assignToSelect');
-    const selectQuick = document.getElementById('assignToSelectQuick');
+    const dropdown = document.getElementById('qaDropdown');
+    if (!dropdown) return;
     
-    // Keep the placeholder and distribute option
-    const optionsHTML = `
-        <option value="">Select Quality Analyst...</option>
-        <option value="distribute">Distribute Evenly to All</option>
-    `;
+    dropdown.innerHTML = '';
     
-    select.innerHTML = optionsHTML;
-    if (selectQuick) {
-        selectQuick.innerHTML = optionsHTML;
+    if (qualityAnalysts.length === 0) {
+        dropdown.innerHTML = '<div style="font-size: 0.5625rem; color: #6b7280; padding: 0.375rem;">No Quality Analysts available</div>';
+        return;
     }
     
-    qualityAnalysts.forEach(qa => {
-        const option = document.createElement('option');
-        option.value = qa.email;
-        option.textContent = qa.name;
-        select.appendChild(option);
-        
-        if (selectQuick) {
-            const optionQuick = document.createElement('option');
-            optionQuick.value = qa.email;
-            optionQuick.textContent = qa.name;
-            selectQuick.appendChild(optionQuick);
+    // Add "Even Distribution" option
+    const evenDistOption = document.createElement('label');
+    evenDistOption.className = 'filter-option';
+    evenDistOption.style.cssText = 'display: flex; align-items: center; gap: 0.375rem; padding: 0.2812rem 0.375rem; cursor: pointer; border-radius: 0.1875rem; font-size: 0.6094rem; user-select: none;';
+    evenDistOption.onclick = function(e) { e.stopPropagation(); };
+    
+    const evenDistCheckbox = document.createElement('input');
+    evenDistCheckbox.type = 'checkbox';
+    evenDistCheckbox.id = 'qa-even-distribution';
+    evenDistCheckbox.style.cssText = 'cursor: pointer; accent-color: #1A733E;';
+    evenDistCheckbox.checked = useEvenDistribution;
+    evenDistCheckbox.addEventListener('change', function() {
+        useEvenDistribution = this.checked;
+        if (this.checked) {
+            // Clear individual selections when even distribution is selected
+            selectedQualityAnalysts.clear();
+            qualityAnalysts.forEach(qa => {
+                const cb = document.getElementById(`qa-checkbox-${qa.email}`);
+                if (cb) cb.checked = false;
+            });
         }
+        updateQADropdownText();
+        updateAssignButton();
     });
+    
+    const evenDistLabel = document.createElement('span');
+    evenDistLabel.textContent = 'Even Distribution to All';
+    evenDistLabel.style.cssText = 'font-weight: 600; color: #1A733E;';
+    
+    evenDistOption.appendChild(evenDistCheckbox);
+    evenDistOption.appendChild(evenDistLabel);
+    dropdown.appendChild(evenDistOption);
+    
+    // Add separator
+    const separator = document.createElement('div');
+    separator.style.cssText = 'height: 0.0469rem; background: #e5e7eb; margin: 0.375rem 0;';
+    dropdown.appendChild(separator);
+    
+    // Add individual QA options
+    qualityAnalysts.forEach(qa => {
+        const option = document.createElement('label');
+        option.className = 'filter-option';
+        option.style.cssText = 'display: flex; align-items: center; gap: 0.375rem; padding: 0.2812rem 0.375rem; cursor: pointer; border-radius: 0.1875rem; font-size: 0.6094rem; user-select: none;';
+        option.onclick = function(e) { e.stopPropagation(); };
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `qa-checkbox-${qa.email}`;
+        checkbox.value = qa.email;
+        checkbox.style.cssText = 'cursor: pointer; accent-color: #1A733E;';
+        checkbox.checked = selectedQualityAnalysts.has(qa.email);
+        checkbox.addEventListener('change', function() {
+            if (useEvenDistribution) {
+                // Clear even distribution when individual selection is made
+                useEvenDistribution = false;
+                const evenDistCb = document.getElementById('qa-even-distribution');
+                if (evenDistCb) evenDistCb.checked = false;
+            }
+            toggleQASelection(qa.email, this.checked);
+        });
+        
+        const label = document.createElement('span');
+        label.textContent = qa.name;
+        
+        option.appendChild(checkbox);
+        option.appendChild(label);
+        dropdown.appendChild(option);
+    });
+    
+    // Add action buttons
+    const actions = document.createElement('div');
+    actions.className = 'filter-actions';
+    actions.onclick = function(e) { e.stopPropagation(); };
+    
+    const selectAllBtn = document.createElement('button');
+    selectAllBtn.className = 'filter-clear';
+    selectAllBtn.textContent = 'Select All';
+    selectAllBtn.onclick = function(e) {
+        e.stopPropagation();
+        selectAllQAs();
+    };
+    
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'filter-clear';
+    clearBtn.textContent = 'Clear';
+    clearBtn.onclick = function(e) {
+        e.stopPropagation();
+        deselectAllQAs();
+    };
+    
+    actions.appendChild(selectAllBtn);
+    actions.appendChild(clearBtn);
+    dropdown.appendChild(actions);
+    
+    updateQADropdownText();
+    updateAssignButton();
+}
+
+function toggleQADropdown(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('qaDropdown');
+    if (!dropdown) return;
+    
+    qaDropdownOpen = !qaDropdownOpen;
+    dropdown.classList.toggle('active', qaDropdownOpen);
+    
+    if (qaDropdownOpen) {
+        // Close on outside click
+        setTimeout(() => {
+            document.addEventListener('click', closeQADropdown);
+        }, 0);
+    } else {
+        document.removeEventListener('click', closeQADropdown);
+    }
+}
+
+function closeQADropdown(event) {
+    const dropdown = document.getElementById('qaDropdown');
+    const button = document.getElementById('qaDropdownButton');
+    
+    if (dropdown && button && !dropdown.contains(event.target) && !button.contains(event.target)) {
+        dropdown.classList.remove('active');
+        qaDropdownOpen = false;
+        document.removeEventListener('click', closeQADropdown);
+    }
+}
+
+function updateQADropdownText() {
+    const textElement = document.getElementById('qaDropdownText');
+    if (!textElement) return;
+    
+    if (useEvenDistribution) {
+        textElement.textContent = 'Even Distribution to All';
+    } else if (selectedQualityAnalysts.size === 0) {
+        textElement.textContent = 'Select Quality Analyst(s)...';
+    } else if (selectedQualityAnalysts.size === 1) {
+        const qa = qualityAnalysts.find(qa => qa.email === Array.from(selectedQualityAnalysts)[0]);
+        textElement.textContent = qa ? qa.name : '1 selected';
+    } else {
+        textElement.textContent = `${selectedQualityAnalysts.size} selected`;
+    }
 }
 
 function populateFilters() {
@@ -1447,60 +1571,48 @@ function applyFiltersAndGroup() {
         return matchesChannel && matchesQS && matchesSearch;
     });
     
-    // Apply filters (stats removed)
-    
-    // Show/hide action buttons based on grouping and selections
+    // Show/hide action controls based on whether we have filtered employees
+    const hasEmployees = filteredEmployees.length > 0;
     const quickAuditInputWrapper = document.getElementById('quickAuditInputWrapper');
     const quickAssignWrapper = document.getElementById('quickAssignWrapper');
-    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const assignButton = document.getElementById('assignButton');
     
-    // Show quick action buttons (audits input and assign) for all group by options when employees are filtered
-    if (filteredEmployees.length > 0) {
-        if (quickAuditInputWrapper) quickAuditInputWrapper.style.display = 'flex';
-        if (quickAssignWrapper) quickAssignWrapper.style.display = 'flex';
-    } else {
-        if (quickAuditInputWrapper) quickAuditInputWrapper.style.display = 'none';
-        if (quickAssignWrapper) quickAssignWrapper.style.display = 'none';
+    if (quickAuditInputWrapper) quickAuditInputWrapper.style.display = hasEmployees ? 'flex' : 'none';
+    if (quickAssignWrapper) quickAssignWrapper.style.display = hasEmployees ? 'flex' : 'none';
+    if (assignButton) assignButton.style.display = hasEmployees ? 'block' : 'none';
+    
+    // Initialize error state for audit count input if value is 0
+    if (hasEmployees) {
+        const auditCountInput = document.getElementById('bulkAuditCount');
+        if (auditCountInput && bulkAuditCount === 0) {
+            auditCountInput.classList.add('error');
+        }
     }
     
-    // Hide bottom bulk actions bar - all actions are now in Quick Actions section
-    if (bulkActionsBar) {
-        bulkActionsBar.classList.remove('active');
-    }
-    
-    // Group employees (or render flat list if none)
+    // Render employees
     if (groupBy === 'none') {
         renderFlatList(filteredEmployees);
     } else {
-        const groups = groupEmployees(filteredEmployees, groupBy);
-        renderGroups(groups, groupBy);
+        renderGroups(groupEmployees(filteredEmployees, groupBy), groupBy);
     }
     
-    updateQuickAssignButton();
+    updateAssignButton();
 }
 
 function groupEmployees(employees, groupBy) {
+    if (groupBy === 'none') return new Map();
+    
     const groups = new Map();
-    
-    // If groupBy is 'none', return empty map - handled separately
-    if (groupBy === 'none') {
-        return groups;
-    }
-    
     employees.forEach(emp => {
         let groupKey = emp[groupBy] || 'Unassigned';
         
-        // For supervisors, try to get their name from allUsers (includes QAs)
-        if (groupBy === 'quality_supervisor' || groupBy === 'team_supervisor') {
-            if (groupKey && groupKey !== 'Unassigned') {
-                const supervisor = allUsers.find(u => u.email === groupKey);
-                groupKey = supervisor ? supervisor.name : groupKey;
-            }
+        // Get supervisor name if grouping by supervisor
+        if ((groupBy === 'quality_supervisor' || groupBy === 'team_supervisor') && groupKey !== 'Unassigned') {
+            const supervisor = allUsers.find(u => u.email === groupKey);
+            if (supervisor) groupKey = supervisor.name;
         }
         
-        if (!groups.has(groupKey)) {
-            groups.set(groupKey, []);
-        }
+        if (!groups.has(groupKey)) groups.set(groupKey, []);
         groups.get(groupKey).push(emp);
     });
     
@@ -1595,12 +1707,13 @@ function createEmployeeElement(employee) {
     const auditCount = isSelected ? selectedEmployees.get(employee.email).auditCount : 1;
     
     return `
-        <div class="employee-item">
+        <div class="employee-item" onclick="handleEmployeeRowClick(event, '${employee.email}')">
             <div class="employee-info">
                 <input type="checkbox" class="employee-checkbox" 
                        data-email="${employee.email}"
                        ${isSelected ? 'checked' : ''}
-                       onchange="toggleEmployeeSelection('${employee.email}', this.checked)">
+                       onchange="toggleEmployeeSelection('${employee.email}', this.checked)"
+                       onclick="event.stopPropagation()">
                 <div class="employee-avatar">${initials}</div>
                 <div class="employee-details">
                     <p class="employee-name">${escapeHtml(employee.name || 'Unknown')}</p>
@@ -1609,7 +1722,7 @@ function createEmployeeElement(employee) {
                     </p>
                 </div>
             </div>
-            <div class="counter-container">
+            <div class="counter-container" onclick="event.stopPropagation()">
                 <button type="button" class="counter-btn" 
                         onclick="updateAuditCount('${employee.email}', Math.max(1, (selectedEmployees.get('${employee.email}')?.auditCount || 1) - 1))"
                         ${!isSelected ? 'disabled' : ''}
@@ -1649,154 +1762,119 @@ function toggleGroupSelection(groupId, checked) {
     });
 }
 
+function handleEmployeeRowClick(event, email) {
+    // Don't toggle if clicking on counter container or checkbox (they handle their own clicks)
+    if (event.target.closest('.counter-container') || event.target.type === 'checkbox') {
+        return;
+    }
+    
+    // Toggle selection
+    const checkbox = document.querySelector(`input.employee-checkbox[data-email="${email}"]`);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        toggleEmployeeSelection(email, checkbox.checked);
+    }
+}
+
 function toggleEmployeeSelection(email, selected) {
     const employee = filteredEmployees.find(e => e.email === email);
     if (!employee) return;
     
     if (selected) {
         if (!selectedEmployees.has(email)) {
-            selectedEmployees.set(email, { employee, auditCount: 1 });
+            // Use bulkAuditCount if > 0, otherwise default to 1
+            const auditCount = bulkAuditCount > 0 ? bulkAuditCount : 1;
+            selectedEmployees.set(email, { employee, auditCount });
         }
-        // Enable counter buttons and input
-        const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
-        const buttons = document.querySelectorAll(`button.counter-btn[data-email="${email}"]`);
-        if (input) input.disabled = false;
-        buttons.forEach(btn => btn.disabled = false);
     } else {
         selectedEmployees.delete(email);
-        // Disable counter buttons and input
-        const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
-        const buttons = document.querySelectorAll(`button.counter-btn[data-email="${email}"]`);
-        if (input) input.disabled = true;
-        buttons.forEach(btn => btn.disabled = true);
     }
     
-    updateQuickAssignButton();
+    // Update checkbox state
+    const checkbox = document.querySelector(`input.employee-checkbox[data-email="${email}"]`);
+    if (checkbox) {
+        checkbox.checked = selected;
+    }
+    
+    // Update input and button states
+    const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
+    const buttons = document.querySelectorAll(`button.counter-btn[data-email="${email}"]`);
+    if (input) {
+        input.disabled = !selected;
+        if (selected && selectedEmployees.has(email)) {
+            input.value = selectedEmployees.get(email).auditCount;
+        }
+    }
+    buttons.forEach(btn => btn.disabled = !selected);
+    
+    // Re-render to update the UI
+    applyFiltersAndGroup();
+    updateAssignButton();
 }
 
 function updateAuditCount(email, count) {
     if (selectedEmployees.has(email)) {
         const data = selectedEmployees.get(email);
         data.auditCount = Math.max(1, Math.min(10, count));
-        selectedEmployees.set(email, data);
         
-        // Update the input field
         const input = document.querySelector(`input.audit-count-input[data-email="${email}"]`);
-        if (input) {
-            input.value = data.auditCount;
-        }
+        if (input) input.value = data.auditCount;
         
-        updateBulkActionsBar();
-        updateQuickAssignButton();
+        updateAssignButton();
     }
 }
 
-function updateBulkActionsBar() {
-    const bar = document.getElementById('bulkActionsBar');
-    const selectedCount = selectedEmployees.size;
-    const totalAudits = Array.from(selectedEmployees.values())
-        .reduce((sum, data) => sum + data.auditCount, 0);
+function updateAssignButton() {
+    const assignButton = document.getElementById('assignButton');
     
-    document.getElementById('bulkSelectedCount').textContent = 
-        `${selectedCount} employee${selectedCount !== 1 ? 's' : ''} selected`;
-    document.getElementById('bulkTotalAudits').textContent = 
-        `${totalAudits} total audit${totalAudits !== 1 ? 's' : ''}`;
-    
-    // Update quick assign button state instead
-    updateQuickAssignButton();
-}
-
-function updateQuickAssignButton() {
-    const assignButtonQuick = document.getElementById('assignButtonQuick');
-    const assignSelectQuick = document.getElementById('assignToSelectQuick');
-    const selectedCount = selectedEmployees.size;
-    const totalAudits = Array.from(selectedEmployees.values())
-        .reduce((sum, data) => sum + data.auditCount, 0);
-    
-    // Update stats (keeping for display purposes)
-    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
-    const bulkTotalAudits = document.getElementById('bulkTotalAudits');
-    if (bulkSelectedCount) bulkSelectedCount.textContent = 
-        `${selectedCount} employee${selectedCount !== 1 ? 's' : ''} selected`;
-    if (bulkTotalAudits) bulkTotalAudits.textContent = 
-        `${totalAudits} total audit${totalAudits !== 1 ? 's' : ''}`;
-    
-    // Update quick assign button state
-    if (assignButtonQuick && assignSelectQuick) {
-        assignButtonQuick.disabled = !assignSelectQuick.value || selectedCount === 0;
+    if (assignButton) {
+        const hasQASelection = useEvenDistribution || selectedQualityAnalysts.size > 0;
+        const hasValidAuditCount = bulkAuditCount > 0;
+        assignButton.disabled = !hasQASelection || !hasValidAuditCount || selectedEmployees.size === 0;
     }
 }
 
-// Listen for assign dropdown changes
-document.addEventListener('DOMContentLoaded', function() {
-    const assignSelect = document.getElementById('assignToSelect');
-    const assignSelectQuick = document.getElementById('assignToSelectQuick');
-    
-    if (assignSelect) {
-        assignSelect.addEventListener('change', function() {
-            const assignButton = document.getElementById('assignButton');
-            if (assignButton) assignButton.disabled = !this.value || selectedEmployees.size === 0;
-        });
+function toggleQASelection(qaEmail, selected) {
+    if (selected) {
+        selectedQualityAnalysts.add(qaEmail);
+    } else {
+        selectedQualityAnalysts.delete(qaEmail);
     }
-    
-    if (assignSelectQuick) {
-        assignSelectQuick.addEventListener('change', function() {
-            updateQuickAssignButton();
-        });
-    }
-});
-
-// Quick assignment function that uses quick input fields
-async function performBulkAssignmentQuick() {
-    // Validate audit count from quick input
-    const auditCountInput = document.getElementById('bulkAuditCountQuick');
-    const auditCount = parseInt(auditCountInput?.value);
-    
-    if (!auditCountInput?.value || isNaN(auditCount) || auditCount < 1 || auditCount > 10) {
-        if (auditCountInput) auditCountInput.classList.add('error');
-        await window.confirmationDialog.show({
-            title: 'Audit Count Required',
-            message: 'Please enter the number of audits per employee (1-10) in the highlighted field above.',
-            confirmText: 'OK',
-            type: 'warning'
-        });
-        if (auditCountInput) auditCountInput.focus();
-        return;
-    }
-    
-    const assignTo = document.getElementById('assignToSelectQuick')?.value;
-    
-    if (!assignTo) {
-        await window.confirmationDialog.show({
-            title: 'No Quality Analyst Selected',
-            message: 'Please select a Quality Analyst or choose to distribute evenly.',
-            confirmText: 'OK',
-            type: 'warning'
-        });
-        return;
-    }
-    
-    if (selectedEmployees.size === 0) {
-        await window.confirmationDialog.show({
-            title: 'No Employees Selected',
-            message: 'Please select at least one employee to assign audits.',
-            confirmText: 'OK',
-            type: 'warning'
-        });
-        return;
-    }
-    
-    // Use the same assignment logic as performBulkAssignment but with quick inputs
-    // Update the bulk inputs temporarily to reuse existing logic
-    const bulkAuditCount = document.getElementById('bulkAuditCount');
-    const assignToSelect = document.getElementById('assignToSelect');
-    
-    if (bulkAuditCount) bulkAuditCount.value = auditCount;
-    if (assignToSelect) assignToSelect.value = assignTo;
-    
-    // Call the existing function
-    await performBulkAssignment();
+    updateQADropdownText();
+    updateAssignButton();
 }
+
+function selectAllQAs() {
+    useEvenDistribution = false;
+    const evenDistCb = document.getElementById('qa-even-distribution');
+    if (evenDistCb) evenDistCb.checked = false;
+    
+    selectedQualityAnalysts.clear();
+    qualityAnalysts.forEach(qa => {
+        selectedQualityAnalysts.add(qa.email);
+        const checkbox = document.getElementById(`qa-checkbox-${qa.email}`);
+        if (checkbox) checkbox.checked = true;
+    });
+    updateQADropdownText();
+    updateAssignButton();
+}
+
+function deselectAllQAs() {
+    useEvenDistribution = false;
+    const evenDistCb = document.getElementById('qa-even-distribution');
+    if (evenDistCb) evenDistCb.checked = false;
+    
+    selectedQualityAnalysts.clear();
+    qualityAnalysts.forEach(qa => {
+        const checkbox = document.getElementById(`qa-checkbox-${qa.email}`);
+        if (checkbox) checkbox.checked = false;
+    });
+    updateQADropdownText();
+    updateAssignButton();
+}
+
+// QA selection is handled by checkbox change events in populateQADropdown
+
 
 // ============================================================================
 // Quick Actions
@@ -1816,43 +1894,29 @@ function deselectAll() {
 }
 
 function updateBulkAuditCount(count) {
-    const input = document.getElementById('bulkAuditCount');
-    const quickInput = document.getElementById('bulkAuditCountQuick');
-    
-    // If no value entered, don't update anything
-    if (!count || isNaN(count)) {
-        // Keep the field empty and add error styling
-        if (input) input.classList.add('error');
-        if (quickInput) quickInput.classList.add('error');
-        return;
+    if (count === undefined || count === null || isNaN(count)) {
+        count = 0;
     }
     
-    // Remove error styling
-    if (input) input.classList.remove('error');
-    if (quickInput) quickInput.classList.remove('error');
+    bulkAuditCount = Math.max(0, Math.min(10, count));
     
-    // Ensure count is within valid range
-    const validCount = Math.max(1, Math.min(10, count));
+    const input = document.getElementById('bulkAuditCount');
+    if (input) {
+        input.value = bulkAuditCount;
+        if (bulkAuditCount === 0) {
+            input.classList.add('error');
+        } else {
+            input.classList.remove('error');
+        }
+    }
     
     // Update all selected employees with the new count
-    selectedEmployees.forEach((data, email) => {
-        data.auditCount = validCount;
+    selectedEmployees.forEach((data) => {
+        data.auditCount = bulkAuditCount;
     });
     
-    // Update both input fields to show valid count
-    if (input) input.value = validCount;
-    if (quickInput) quickInput.value = validCount;
-    
-    // Update quick assign button state
-    updateQuickAssignButton();
-    
-    // Re-render to update individual audit count inputs
+    updateAssignButton();
     applyFiltersAndGroup();
-}
-
-function updateBulkAuditCountQuick(count) {
-    // Sync with the main updateBulkAuditCount function
-    updateBulkAuditCount(count);
 }
 
 // ============================================================================
@@ -2008,29 +2072,23 @@ async function autoAssignBySupervisor() {
 // Bulk Assignment
 // ============================================================================
 async function performBulkAssignment() {
-    // Validate audit count is filled
-    const auditCountInput = document.getElementById('bulkAuditCount');
-    const auditCount = parseInt(auditCountInput.value);
-    
-    if (!auditCountInput.value || isNaN(auditCount) || auditCount < 1 || auditCount > 10) {
-        auditCountInput.classList.add('error');
+    // Validate inputs
+    if (bulkAuditCount <= 0 || bulkAuditCount > 10) {
+        const input = document.getElementById('bulkAuditCount');
+        if (input) input.classList.add('error');
         await window.confirmationDialog.show({
             title: 'Audit Count Required',
-            message: 'Please enter the number of audits per employee (1-10) in the highlighted field above.',
+            message: 'Please enter the number of audits per employee (1-10). This field is mandatory.',
             confirmText: 'OK',
             type: 'warning'
         });
-        // Focus on the input field to draw attention
-        auditCountInput.focus();
         return;
     }
     
-    const assignTo = document.getElementById('assignToSelect').value;
-    
-    if (!assignTo) {
+    if (!useEvenDistribution && selectedQualityAnalysts.size === 0) {
         await window.confirmationDialog.show({
             title: 'No Quality Analyst Selected',
-            message: 'Please select a Quality Analyst or choose to distribute evenly.',
+            message: 'Please select at least one Quality Analyst or choose "Even Distribution to All".',
             confirmText: 'OK',
             type: 'warning'
         });
@@ -2038,14 +2096,14 @@ async function performBulkAssignment() {
     }
     
     if (selectedEmployees.size === 0) {
-    await window.confirmationDialog.show({
+        await window.confirmationDialog.show({
             title: 'No Employees Selected',
             message: 'Please select at least one employee to assign audits.',
-        confirmText: 'OK',
+            confirmText: 'OK',
             type: 'warning'
         });
-            return;
-        }
+        return;
+    }
         
     // Calculate total assignments
     let totalAssignments = 0;
@@ -2053,12 +2111,15 @@ async function performBulkAssignment() {
         totalAssignments += data.auditCount;
     });
     
+    // Build confirmation message
     let confirmMessage;
-    if (assignTo === 'distribute') {
-        confirmMessage = `This will create ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''} for ${selectedEmployees.size} employee${selectedEmployees.size !== 1 ? 's' : ''} and distribute them evenly among ${qualityAnalysts.length} Quality Analyst${qualityAnalysts.length !== 1 ? 's' : ''}.\n\nNote: Auditors will select scorecards when performing audits.\n\nContinue?`;
+    if (useEvenDistribution) {
+        confirmMessage = `This will create ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''} for ${selectedEmployees.size} employee${selectedEmployees.size !== 1 ? 's' : ''} and distribute them evenly among all ${qualityAnalysts.length} Quality Analyst${qualityAnalysts.length !== 1 ? 's' : ''}.\n\nNote: Auditors will select scorecards when performing audits.\n\nContinue?`;
     } else {
-        const qa = qualityAnalysts.find(q => q.email === assignTo);
-        confirmMessage = `This will create ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''} for ${selectedEmployees.size} employee${selectedEmployees.size !== 1 ? 's' : ''} and assign them to ${qa.name}.\n\nNote: Auditors will select scorecards when performing audits.\n\nContinue?`;
+        const selectedQANames = Array.from(selectedQualityAnalysts)
+            .map(email => qualityAnalysts.find(qa => qa.email === email)?.name || email)
+            .join(', ');
+        confirmMessage = `This will create ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''} for ${selectedEmployees.size} employee${selectedEmployees.size !== 1 ? 's' : ''} and distribute them evenly among ${selectedQualityAnalysts.size} selected Quality Analyst${selectedQualityAnalysts.size !== 1 ? 's' : ''}:\n\n${selectedQANames}\n\nNote: Auditors will select scorecards when performing audits.\n\nContinue?`;
     }
     
     const confirmed = await window.confirmationDialog.show({
@@ -2077,11 +2138,7 @@ async function performBulkAssignment() {
     assignButton.textContent = 'Assigning...';
     
     try {
-        if (assignTo === 'distribute') {
-            await distributeEvenly();
-    } else {
-            await assignToSpecificQA(assignTo);
-        }
+        await distributeToSelectedQAs();
         
         await window.confirmationDialog.show({
             title: 'Success!',
@@ -2111,72 +2168,63 @@ async function performBulkAssignment() {
     }
 }
 
-async function assignToSpecificQA(qaEmail) {
-    const auditsToCreate = [];
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const assignedBy = userInfo.email || 'unknown';
-    const currentWeek = getWeekNumber();
+async function distributeToSelectedQAs() {
+    let selectedQAsArray;
     
-    selectedEmployees.forEach((data, employeeEmail) => {
-        // Get first applicable scorecard if available, otherwise null
-        const applicableScorecards = getApplicableScorecardsForEmployee(data.employee);
-        const scorecardId = applicableScorecards.length > 0 ? applicableScorecards[0].id : null;
-        
-        // Create exactly auditCount assignments per employee
-        for (let i = 0; i < data.auditCount; i++) {
-                auditsToCreate.push({
-                    employee_email: employeeEmail,
-                    employee_name: data.employee.name,
-                    auditor_email: qaEmail,
-                scorecard_id: scorecardId,
-                week: currentWeek,
-                    status: 'pending',
-                    assigned_by: assignedBy,
-                    created_at: new Date().toISOString()
-            });
-        }
-    });
+    if (useEvenDistribution) {
+        // Use all quality analysts for even distribution
+        selectedQAsArray = qualityAnalysts;
+    } else {
+        // Convert Set to Array for easier indexing
+        selectedQAsArray = Array.from(selectedQualityAnalysts)
+            .map(email => qualityAnalysts.find(qa => qa.email === email))
+            .filter(qa => qa !== undefined);
+    }
     
-    // Insert into audit_assignments table
-    const { error } = await window.supabaseClient
-        .from('audit_assignments')
-        .insert(auditsToCreate);
+    if (!useEvenDistribution && selectedQualityAnalysts.size === 0) {
+        throw new Error('No Quality Analysts selected');
+    }
     
-    if (error) throw error;
-}
-
-async function distributeEvenly() {
-    if (qualityAnalysts.length === 0) {
-        throw new Error('No Quality Analysts available');
+    if (selectedQAsArray.length === 0) {
+        throw new Error('No valid Quality Analysts found');
     }
     
     const auditsToCreate = [];
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const assignedBy = userInfo.email || 'unknown';
     const currentWeek = getWeekNumber();
-    let qaIndex = 0;
     
+    // Collect all audits first, then distribute evenly across all auditors
+    const allAudits = [];
     selectedEmployees.forEach((data, employeeEmail) => {
         // Get first applicable scorecard if available, otherwise null
         const applicableScorecards = getApplicableScorecardsForEmployee(data.employee);
         const scorecardId = applicableScorecards.length > 0 ? applicableScorecards[0].id : null;
         
-        // Create exactly auditCount assignments per employee
+        // Create all audits for this employee
         for (let i = 0; i < data.auditCount; i++) {
-                auditsToCreate.push({
-                    employee_email: employeeEmail,
-                    employee_name: data.employee.name,
-                    auditor_email: qualityAnalysts[qaIndex].email,
-                scorecard_id: scorecardId,
-                week: currentWeek,
-                    status: 'pending',
-                    assigned_by: assignedBy,
-                    created_at: new Date().toISOString()
-                });
-                
-                // Round-robin distribution
-                qaIndex = (qaIndex + 1) % qualityAnalysts.length;
+            allAudits.push({
+                employee_email: employeeEmail,
+                employee_name: data.employee.name,
+                scorecard_id: scorecardId
+            });
         }
+    });
+    
+    // Distribute all audits evenly among selected auditors using round-robin
+    const numAuditors = selectedQAsArray.length;
+    allAudits.forEach((audit, index) => {
+        const auditorIdx = index % numAuditors; // Round-robin: cycles through auditors
+        auditsToCreate.push({
+            employee_email: audit.employee_email,
+            employee_name: audit.employee_name,
+            auditor_email: selectedQAsArray[auditorIdx].email,
+            scorecard_id: audit.scorecard_id,
+            week: currentWeek,
+            status: 'pending',
+            assigned_by: assignedBy,
+            created_at: new Date().toISOString()
+        });
     });
     
     // Insert into audit_assignments table
@@ -2659,3 +2707,4 @@ function escapeHtml(text) {
 
 </body>
 </html>
+

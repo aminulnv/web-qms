@@ -245,46 +245,75 @@ window.generateTranscriptSection = function(options = {}) {
     if (isEdit) {
         // Edit mode: form inputs
         transcriptInfoHtml = `
-            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
-                    <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 2.4258rem;">
-                    <button type="button" id="viewChatBtn" disabled style="padding: 0.1617rem 0.3234rem; background-color: #9ca3af; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: not-allowed; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; opacity: 0.6;" title="Open in Intercom (load conversation first)">Open</button>
+            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                    <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                        <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                        Transcript
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
+                        <input type="text" id="interactionId" name="interactionId" required placeholder="Enter..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 2.4258rem;">
+                        <button type="button" onclick="copyConversationId(); return false;" style="padding: 0.0808rem; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s;" title="Copy ID" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                        </button>
+                        <button type="button" id="viewChatBtn" disabled style="padding: 0.1617rem 0.3234rem; background-color: #9ca3af; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; cursor: not-allowed; white-space: nowrap; transition: all 0.2s ease; font-weight: 500; opacity: 0.6;" title="Open in Intercom (load conversation first)">Open</button>
+                    </div>
                 </div>
-                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
-                    <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
-                </div>
-                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
-                    <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
+                        <input type="date" id="interactionDate" name="interactionDate" required style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600;">
+                    </div>
+                    <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Name:</span>
+                        <input type="text" id="clientName" name="clientName" readonly placeholder="Client name..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box; background-color: #f9fafb;">
+                    </div>
+                    <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
+                        <input type="email" id="clientEmail" name="clientEmail" placeholder="client@..." style="padding: 0.1617rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; min-width: 3.6387rem; box-sizing: border-box;">
+                        <button type="button" onclick="copyClientEmail(); return false;" style="padding: 0.0808rem; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s;" title="Copy Email" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
     } else {
         // View mode: read-only text
         transcriptInfoHtml = `
-            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
-                <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
-                    ${interactionIdHtml}
+            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                    <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                        <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                        Transcript
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">ID:</span>
+                        ${interactionIdHtml}
+                    </div>
                 </div>
-                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
-                    <span style="font-size: 0.4852rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${formatDate(audit.interactionDate, false)}</span>
-                </div>
-                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                <div style="display: flex; align-items: center; gap: 0.1617rem;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Channel:</span>
-                    <span style="font-size: 0.4852rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${escapeHtml(audit.channel || 'N/A')}</span>
-                </div>
-                <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
-                <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
-                    <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
-                    <span style="font-size: 0.4852rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(audit.clientEmail || 'N/A')}">${escapeHtml(audit.clientEmail || 'N/A')}</span>
+                <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Date:</span>
+                        <span style="font-size: 0.4852rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${formatDate(audit.interactionDate, false)}</span>
+                    </div>
+                    <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap;">Channel:</span>
+                        <span style="font-size: 0.4852rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600;">${escapeHtml(audit.channel || 'N/A')}</span>
+                    </div>
+                    <div style="width: 0.0304rem; height: 0.6469rem; background: #d1d5db;"></div>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem; min-width: 0;">
+                        <span style="font-size: 0.4447rem; color: #6b7280; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0092rem; white-space: nowrap; flex-shrink: 0;">Email:</span>
+                        <span style="font-size: 0.4852rem; color: #1f2937; font-family: 'Poppins', sans-serif; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(audit.clientEmail || 'N/A')}">${escapeHtml(audit.clientEmail || 'N/A')}</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -295,23 +324,17 @@ window.generateTranscriptSection = function(options = {}) {
     const textViewDefaultDisplay = isEdit ? 'flex' : 'none';
 
     return `
-        <div style="display: flex; flex-direction: column; gap: 0.6469rem;">
-            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; height: 80vh; transition: height 0.3s ease;">
-                <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.4852rem;">
-                    <div style="display: flex; align-items: center; gap: 0.4852rem; flex-wrap: wrap;">
-                        <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
-                            <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                            Transcript
-                        </h3>
-                        ${transcriptInfoHtml}
-                    </div>
+        <div style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 1; min-height: 0; max-height: calc(100vh - 15rem);">
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 0; transition: height 0.3s ease; overflow: hidden;">
+                <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.4852rem;">
+                    ${transcriptInfoHtml}
                 </div>
                 <!-- Chat Interface View -->
-                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative;">
+                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
                     <!-- Chat messages will be dynamically inserted here -->
-                    <div id="chatMessagesContainer" style="display: flex; flex-direction: column;">
+                    <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0;">
                         ${isEdit 
-                            ? '<div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;"><p>Enter an Interaction ID and click "Load" to fetch conversation from Intercom</p></div>'
+                            ? '<div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;"><p>Enter an Interaction ID to automatically load conversation from Intercom</p></div>'
                             : '<!-- Loading state will be shown here initially, then replaced with messages or error -->'
                         }
                     </div>
@@ -391,7 +414,7 @@ window.generateAuditFormHTML = function(options = {}) {
             ${headerHtml}
             
             <!-- Two Column Layout -->
-            <div id="auditMainContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: flex-start;">
+            <div id="auditMainContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: stretch;">
                 
                 <!-- LEFT COLUMN: Interaction Details + Transcript -->
                 <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 0 0 33%; min-width: 13.6451rem; max-width: 75%; padding-right: 0.6469rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
@@ -401,7 +424,7 @@ window.generateAuditFormHTML = function(options = {}) {
                 ${splitterHtml}
                 
                 <!-- RIGHT COLUMN: Error Details & Recommendations -->
-                <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem;">
+                <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; max-height: calc(100vh - 15rem); overflow-y: auto;">
                     ${errorDetailsHtml}
                     ${recommendationsHtml}
                 </div>

@@ -33,7 +33,6 @@
         
         .full-width-container {
             width: 100%;
-            min-height: 100vh;
             padding: 0;
             margin: 0;
         }
@@ -41,7 +40,7 @@
     </style>
 </head>
 
-<body>
+<body style="margin: 0; padding: 0;">
 <!-- Full screen layout without sidebar -->
 <div class="full-width-container">
 
@@ -1173,9 +1172,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
     let interactionIdHtml;
     if (audit.interactionId) {
         const interactionId = audit.interactionId;
-        const intercomUrl = INTERCOM_APP_ID 
-            ? `https://app.intercom.com/a/inbox/${INTERCOM_APP_ID}/inbox/conversation/${interactionId}?view`
-            : '#';
+        const intercomUrl = `https://app.intercom.com/a/inbox/aphmhtyj/inbox/conversation/${interactionId}?view`;
         interactionIdHtml = '<a href="' + escapeHtml(intercomUrl) + '" target="_blank" rel="noopener noreferrer" style="font-size: 0.4852rem; color: #1A733E; font-family: \'Poppins\', sans-serif; font-weight: 600; text-decoration: underline; cursor: pointer; transition: color 0.2s ease;" onmouseover="this.style.color=\'#2d9a5a\'" onmouseout="this.style.color=\'#1A733E\'">' + escapeHtml(interactionId) + '</a>';
     } else {
         interactionIdHtml = '<span style="font-size: 0.4852rem; color: #1f2937; font-family: \'Poppins\', sans-serif; font-weight: 600;">N/A</span>';
@@ -4590,4 +4587,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
-

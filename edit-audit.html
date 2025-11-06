@@ -34,7 +34,6 @@
         
         .full-width-container {
             width: 100%;
-            min-height: 100vh;
             padding: 0;
             margin: 0;
         }
@@ -42,7 +41,7 @@
     </style>
 </head>
 
-<body>
+<body style="margin: 0; padding: 0;">
 <!-- Full screen layout without sidebar -->
 <div class="full-width-container">
 
@@ -1275,6 +1274,12 @@ async function populateEditFormFields(audit) {
         clientEmailInput.value = audit.clientEmail || audit.client_email || '';
     }
     
+    const clientNameInput = document.getElementById('clientName');
+    if (clientNameInput) {
+        // Client name will be populated when conversation is loaded from Intercom
+        clientNameInput.value = '';
+    }
+    
     const transcriptTextarea = document.getElementById('transcript');
     if (transcriptTextarea) {
         transcriptTextarea.value = audit.transcript || audit.transcript_text || '';
@@ -1292,6 +1297,34 @@ async function populateEditFormFields(audit) {
         auditTypeInput.value = audit.auditType || audit.audit_type || '';
     }
 }
+
+// Helper function to copy conversation ID
+window.copyConversationId = function() {
+    const interactionId = document.getElementById('interactionId');
+    if (interactionId && interactionId.value) {
+        navigator.clipboard.writeText(interactionId.value).then(() => {
+            showNotification('Conversation ID copied to clipboard!', 'success');
+        }).catch(() => {
+            showNotification('Failed to copy Conversation ID', 'error');
+        });
+    } else {
+        showNotification('No Conversation ID available', 'error');
+    }
+};
+
+// Helper function to copy client email
+window.copyClientEmail = function() {
+    const clientEmail = document.getElementById('clientEmail');
+    if (clientEmail && clientEmail.value) {
+        navigator.clipboard.writeText(clientEmail.value).then(() => {
+            showNotification('Client email copied to clipboard!', 'success');
+        }).catch(() => {
+            showNotification('Failed to copy client email', 'error');
+        });
+    } else {
+        showNotification('No client email available', 'error');
+    }
+};
 
 // Load employees for dropdown
 async function loadEmployeesForDropdown(selectElement, currentEmployeeEmail) {
@@ -1437,9 +1470,7 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
     let interactionIdHtml;
     if (audit.interactionId) {
         const interactionId = audit.interactionId;
-        const intercomUrl = INTERCOM_APP_ID 
-            ? `https://app.intercom.com/a/inbox/${INTERCOM_APP_ID}/inbox/conversation/${interactionId}?view`
-            : '#';
+        const intercomUrl = `https://app.intercom.com/a/inbox/aphmhtyj/inbox/conversation/${interactionId}?view`;
         interactionIdHtml = '<a href="' + escapeHtml(intercomUrl) + '" target="_blank" rel="noopener noreferrer" style="font-size: 0.4852rem; color: #1A733E; font-family: \'Poppins\', sans-serif; font-weight: 600; text-decoration: underline; cursor: pointer; transition: color 0.2s ease;" onmouseover="this.style.color=\'#2d9a5a\'" onmouseout="this.style.color=\'#1A733E\'">' + escapeHtml(interactionId) + '</a>';
     } else {
         interactionIdHtml = '<span style="font-size: 0.4852rem; color: #1f2937; font-family: \'Poppins\', sans-serif; font-weight: 600;">N/A</span>';
@@ -2661,6 +2692,12 @@ function displayConversationMessages(conversation) {
                     }
                 }
             }
+        }
+        
+        // Update client name input field
+        const clientNameInput = document.getElementById('clientName');
+        if (clientNameInput && clientName && clientName !== 'Transcript') {
+            clientNameInput.value = clientName;
         }
         
         // Update heading text (keep the icon)
@@ -6156,4 +6193,3 @@ async function saveAuditChanges() {
 
 </body>
 </html>
-
