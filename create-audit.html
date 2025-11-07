@@ -14,6 +14,60 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
+    <style>
+        .copy-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem;
+            background: transparent;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .copy-button:active {
+            transform: scale(0.95);
+        }
+        .copy-button svg {
+            width: 0.875rem;
+            height: 0.875rem;
+        }
+        .copy-success {
+            color: #10b981 !important;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-1.25rem) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes modalSlideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-1.25rem) scale(0.95);
+            }
+        }
+    </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="env-config.js"></script>
@@ -234,6 +288,205 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Conversations Section (Hidden by default, shown when View conversations is clicked) -->
+    <div id="conversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem;">
+            <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E">
+                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                </svg>
+                Conversations for <span id="conversationsEmployeeName"></span>
+            </h3>
+            <button onclick="closeConversationsSection()" style="background: #f3f4f6; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; color: #374151; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                Close
+            </button>
+        </div>
+        
+        <!-- Date Range Picker -->
+        <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
+            <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <label for="conversationsStartDate" style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; white-space: nowrap;">From Date:</label>
+                    <input type="date" id="conversationsStartDate" style="padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <label for="conversationsEndDate" style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; white-space: nowrap;">To Date:</label>
+                    <input type="date" id="conversationsEndDate" style="padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif;">
+                </div>
+                <button onclick="openConversationsFilterDialog()" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'" title="Open filter options">
+                    <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                    Filter
+                    <span id="activeFiltersCount" style="display: none; background-color: rgba(255,255,255,0.3); border-radius: 0.75rem; padding: 0.125rem 0.375rem; font-size: 0.75rem; margin-left: 0.25rem;">0</span>
+                </button>
+                <button onclick="resetConversationsDateRange()" style="padding: 0.375rem 0.75rem; background-color: #f3f4f6; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'" title="Reset to default date range (previous day)">
+                    Reset
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="conversationsLoading" style="display: none; text-align: center; padding: 1.9406rem; color: #6b7280;">
+            <div style="display: inline-block; width: 1.9406rem; height: 1.9406rem; border: 0.1213rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversations...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div id="conversationsError" style="display: none; background: #fee2e2; color: #991b1b; padding: 0.6469rem; border-radius: 0.3234rem; margin-bottom: 0.6469rem; font-size: 0.4852rem;">
+            <strong>Error:</strong> <span id="conversationsErrorMessage"></span>
+        </div>
+        
+        <!-- Conversations List -->
+        <div id="conversationsList" style="display: none;">
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.4852rem; margin-bottom: 0.3234rem; border: 0.0304rem solid #e5e7eb;">
+                <span style="font-size: 0.4852rem; color: #6b7280;">Total Conversations: </span>
+                <span id="conversationsCount" style="font-size: 0.5659rem; font-weight: 600; color: #111827;">0</span>
+                <span id="conversationsCountLoader" style="display: none; margin-left: 0.25rem;">
+                    <svg style="width: 0.75rem; height: 0.75rem; animation: spin 1s linear infinite;" class="inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" style="color: #6b7280;"></path>
+                    </svg>
+                </span>
+            </div>
+            
+            <div style="background: white; border-radius: 0.3234rem; overflow: hidden; border: 0.0304rem solid #e5e7eb; max-height: 60vh; overflow-y: auto; position: relative;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb;">
+                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Client</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Conversation ID</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Subject</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Product Type</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Rating</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">State</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Created</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="conversationsTableBody">
+                        <!-- Rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div id="conversationsPagination" style="display: none; padding: 0.6469rem; border-top: 0.0304rem solid #e5e7eb; background: #f9fafb; margin-top: 0.6469rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6469rem;">
+                    <div style="font-size: 0.4447rem; color: #6b7280;">
+                        Showing <span id="conversationsPaginationStart" style="font-weight: 600; color: #111827;">0</span> to <span id="conversationsPaginationEnd" style="font-weight: 600; color: #111827;">0</span> of <span id="conversationsPaginationTotal" style="font-weight: 600; color: #111827;">0</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                        <button id="conversationsPaginationPrev" onclick="conversationsGoToPage(currentConversationsPage - 1)" disabled style="padding: 0.1617rem 0.3234rem; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4043rem; cursor: pointer; color: #6b7280; transition: all 0.2s;">Prev</button>
+                        <div id="conversationsPaginationPages" style="display: flex; gap: 0.1617rem;">
+                            <!-- Page numbers will be inserted here -->
+                        </div>
+                        <button id="conversationsPaginationNext" onclick="conversationsGoToPage(currentConversationsPage + 1)" style="padding: 0.1617rem 0.3234rem; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4043rem; cursor: pointer; color: #6b7280; transition: all 0.2s;">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversations Filter Dialog Modal -->
+    <div id="conversationsFilterModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif;">
+        <div id="conversationsFilterModalContent" onclick="event.stopPropagation();" style="background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 32rem; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.625rem 1.5625rem rgba(0, 0, 0, 0.2); animation: modalSlideIn 0.3s ease-out;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 0.0625rem solid #e5e7eb; padding-bottom: 1rem;">
+                <h2 style="font-size: 1.25rem; font-weight: 600; color: #111827; margin: 0;">Filter Conversations</h2>
+                <button onclick="closeConversationsFilterDialog()" style="background: transparent; border: none; cursor: pointer; padding: 0.25rem; color: #6b7280; transition: color 0.2s;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#6b7280'" title="Close">
+                    <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="conversationsFilterForm" onsubmit="event.preventDefault(); applyConversationsFilters();">
+                <!-- Status Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Status</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationStatus" value="all" id="statusAll" checked style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>All</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationStatus" value="open" id="statusOpen" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>Open</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationStatus" value="closed" id="statusClosed" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>Closed</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Read Status Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Read Status</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationReadStatus" value="all" id="readStatusAll" checked style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>All</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationReadStatus" value="unread" id="readStatusUnread" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>Unread</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationReadStatus" value="read" id="readStatusRead" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>Read</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sort By -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="conversationSortBy" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Sort By</label>
+                    <select id="conversationSortBy" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        <option value="updated_at">Updated At</option>
+                        <option value="created_at">Created At</option>
+                        <option value="waiting_since">Waiting Since</option>
+                    </select>
+                </div>
+
+                <!-- Sort Order -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Sort Order</label>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationSortOrder" value="desc" id="sortOrderDesc" checked style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>Descending (Newest First)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: #6b7280;">
+                            <input type="radio" name="conversationSortOrder" value="asc" id="sortOrderAsc" style="width: 1rem; height: 1rem; cursor: pointer; accent-color: #1A733E;">
+                            <span>Ascending (Oldest First)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                <div id="activeFiltersDisplay" style="margin-bottom: 1.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.375rem; display: none;">
+                    <div style="font-size: 0.75rem; font-weight: 500; color: #6b7280; margin-bottom: 0.5rem;">Active Filters:</div>
+                    <div id="activeFiltersBadges" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <!-- Active filter badges will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 0.0625rem solid #e5e7eb; padding-top: 1rem;">
+                    <button type="button" onclick="resetConversationsFilters()" style="padding: 0.5rem 1rem; background-color: #f3f4f6; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                        Reset All
+                    </button>
+                    <button type="button" onclick="closeConversationsFilterDialog()" style="padding: 0.5rem 1rem; background-color: #f3f4f6; color: #374151; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                        Cancel
+                    </button>
+                    <button type="submit" style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1346,6 +1599,15 @@ function displayPendingAudits() {
             </div>
             <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
                 ${statusBadge}
+                <button 
+                    onclick="event.stopPropagation(); viewEmployeeConversations('${escapeHtml(displayEmail)}', '${escapeHtml(displayName)}')" 
+                    style="padding: 0.3234rem 0.6469rem; background-color: #f3f4f6; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    onmouseover="this.style.backgroundColor='#e5e7eb'; this.style.borderColor='#9ca3af'"
+                    onmouseout="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                    title="View conversations for ${escapeHtml(displayName)}"
+                >
+                    View conversations
+                </button>
                 ${actionButton}
             </div>
         `;
@@ -1911,6 +2173,1325 @@ window.createManualAudit = async function() {
 
 // Start an assigned audit - update status and pre-fill form
 // Navigate to assignment URL (creates unique URL for each audit)
+// Conversations state
+let currentEmployeeEmail = null;
+let currentEmployeeName = null;
+let currentAdminId = null;
+let allEmployeeConversations = [];
+let currentConversationsPage = 1;
+const conversationsItemsPerPage = 20; // Display 20 conversations per page
+const maxConversationsToFetch = 150; // Maximum conversations to fetch from API
+let isLoadingEmployeeConversations = false;
+
+/**
+ * Cache an admin to Supabase cache table (async, non-blocking)
+ * This is called when an admin is found via Intercom API fallback
+ */
+async function cacheAdminAsync(supabaseClient, admin) {
+    try {
+        const adminId = admin.id;
+        const adminEmail = admin.email || '';
+        const adminName = admin.name || '';
+        
+        if (!adminId) {
+            return; // Skip if no ID
+        }
+        
+        const cacheData = {
+            id: adminId,
+            email: adminEmail.toLowerCase().trim(), // Normalize email
+            name: adminName,
+            admin_data: admin, // Store all admin fields as JSON
+            last_synced_at: new Date().toISOString()
+        };
+        
+        // Upsert (insert or update if exists)
+        const { error: upsertError } = await supabaseClient
+            .from('intercom_admin_cache')
+            .upsert(cacheData, {
+                onConflict: 'id',
+                ignoreDuplicates: false
+            });
+        
+        if (upsertError) {
+            console.warn('Failed to cache admin:', upsertError);
+        } else {
+            console.log('✅ Cached admin for future use:', adminEmail);
+        }
+    } catch (error) {
+        console.warn('Error caching admin:', error);
+        // Non-critical, so we don't throw
+    }
+}
+
+// View employee conversations - show conversations on the same page
+window.viewEmployeeConversations = async function(employeeEmail, employeeName) {
+    if (!employeeEmail || !employeeEmail.trim()) {
+        alert('Employee email is required to view conversations.');
+        return;
+    }
+    
+    try {
+        // Get Supabase configuration
+        const supabaseUrl = window.SupabaseConfig?.url || '';
+        const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+            alert('Configuration error: Supabase credentials not found.');
+            return;
+        }
+        
+        // Store current employee info
+        currentEmployeeEmail = employeeEmail.trim();
+        currentEmployeeName = employeeName || employeeEmail;
+        
+        // Show conversations section
+        const conversationsSection = document.getElementById('conversationsSection');
+        const conversationsEmployeeName = document.getElementById('conversationsEmployeeName');
+        if (conversationsSection) {
+            conversationsSection.style.display = 'block';
+            if (conversationsEmployeeName) {
+                conversationsEmployeeName.textContent = currentEmployeeName;
+            }
+            
+            // Scroll to conversations section
+            conversationsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Set default dates immediately after showing section (use requestAnimationFrame to ensure DOM is ready)
+            requestAnimationFrame(() => {
+                setDefaultConversationsDateRange();
+            });
+        }
+        
+        // Normalize email for lookup (case-insensitive)
+        const normalizedEmail = currentEmployeeEmail.toLowerCase().trim();
+        
+        let adminId = null;
+        let adminFound = false;
+        
+        // First, try to find admin in Supabase cache
+        const supabaseClient = window.SupabaseConfig?.getClient?.();
+        if (supabaseClient) {
+            try {
+                console.log('🔍 Looking up admin in Supabase cache...');
+                const { data: cachedAdmins, error: queryError } = await supabaseClient
+                    .from('intercom_admin_cache')
+                    .select('id, email, name, admin_data')
+                    .eq('email', normalizedEmail)
+                    .limit(1);
+                
+                if (!queryError && cachedAdmins && cachedAdmins.length > 0) {
+                    const cachedAdmin = cachedAdmins[0];
+                    adminId = cachedAdmin.id || cachedAdmin.admin_data?.id;
+                    if (adminId) {
+                        console.log('✅ Admin found in Supabase cache');
+                        adminFound = true;
+                    }
+                } else if (queryError) {
+                    console.warn('⚠️ Error querying admin cache:', queryError);
+                    // Continue to fallback
+                }
+            } catch (cacheError) {
+                console.warn('⚠️ Error accessing Supabase cache:', cacheError);
+                // Continue to fallback
+            }
+        }
+        
+        // Fallback: If not found in cache, fetch from Intercom API
+        if (!adminFound) {
+            console.log('🔄 Admin not in cache, fetching from Intercom API...');
+            try {
+                // Fetch admins from Intercom API via Supabase Edge Function
+                const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=admins`;
+                
+                const response = await fetch(edgeFunctionUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseAnonKey}`,
+                        'apikey': supabaseAnonKey,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const admins = data.admins || data || [];
+                
+                // Find admin with matching email (case-insensitive)
+                const admin = admins.find(a => a.email && a.email.toLowerCase() === normalizedEmail);
+                
+                if (!admin || !admin.id) {
+                    showConversationsError(`Admin not found for email: ${employeeEmail}`);
+                    return;
+                }
+                
+                adminId = admin.id;
+                console.log('✅ Admin found via Intercom API fallback');
+                
+                // Optionally cache this admin for future use (async, don't wait)
+                if (supabaseClient && admin) {
+                    cacheAdminAsync(supabaseClient, admin).catch(err => {
+                        console.warn('⚠️ Failed to cache admin (non-critical):', err);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('❌ Error fetching admin from Intercom API:', error);
+                showConversationsError(`Failed to find admin: ${error.message}`);
+                return;
+            }
+        }
+        
+        if (!adminId) {
+            showConversationsError(`Admin ID not found for email: ${employeeEmail}`);
+            return;
+        }
+        
+        // Store admin ID
+        currentAdminId = adminId;
+        
+        // Initialize active filters count
+        updateActiveFiltersCount();
+        
+        // Ensure dates are set - wait a bit for DOM to be ready, then verify
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Verify dates are set, if not set them again
+        const startDateInput = document.getElementById('conversationsStartDate');
+        const endDateInput = document.getElementById('conversationsEndDate');
+        if (startDateInput && endDateInput && (!startDateInput.value || !endDateInput.value)) {
+            console.log('⚠️ Dates not set, setting defaults again...');
+            setDefaultConversationsDateRange();
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Load conversations
+        await loadConversationsForEmployee();
+        
+    } catch (error) {
+        console.error('Error finding admin for conversations:', error);
+        showConversationsError('Failed to load conversations. Please try again later.');
+    }
+};
+
+// Close conversations section
+window.closeConversationsSection = function() {
+    const conversationsSection = document.getElementById('conversationsSection');
+    if (conversationsSection) {
+        conversationsSection.style.display = 'none';
+    }
+    // Reset state
+    currentEmployeeEmail = null;
+    currentEmployeeName = null;
+    currentAdminId = null;
+    allEmployeeConversations = [];
+    currentConversationsPage = 1;
+};
+
+// Set default date range (previous day - one day)
+function setDefaultConversationsDateRange() {
+    const today = new Date();
+    // Set end date to yesterday (previous day)
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() - 1);
+    endDate.setHours(23, 59, 59, 999); // End of day
+    // Set start date to yesterday (same as end date for one day range)
+    const startDate = new Date(endDate);
+    startDate.setHours(0, 0, 0, 0); // Start of day
+
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+
+    const startDateInput = document.getElementById('conversationsStartDate');
+    const endDateInput = document.getElementById('conversationsEndDate');
+    
+    if (!startDateInput || !endDateInput) {
+        console.warn('⚠️ Date inputs not found, will retry...');
+        // Retry after a short delay
+        setTimeout(() => {
+            setDefaultConversationsDateRange();
+        }, 200);
+        return;
+    }
+    
+    // Set the values directly
+    startDateInput.value = formattedStartDate;
+    endDateInput.value = formattedEndDate;
+    
+    // Trigger input event to ensure any listeners are notified
+    startDateInput.dispatchEvent(new Event('input', { bubbles: true }));
+    endDateInput.dispatchEvent(new Event('input', { bubbles: true }));
+    startDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+    endDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    console.log('✅ Set default date range:', formattedStartDate, 'to', formattedEndDate);
+    
+    // Verify they were set, if not retry
+    if (startDateInput.value !== formattedStartDate || endDateInput.value !== formattedEndDate) {
+        console.warn('⚠️ Date values not set correctly, retrying...');
+        setTimeout(() => {
+            if (startDateInput) {
+                startDateInput.value = formattedStartDate;
+                startDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if (endDateInput) {
+                endDateInput.value = formattedEndDate;
+                endDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            console.log('🔄 Retry: Set default dates:', formattedStartDate, 'to', formattedEndDate);
+        }, 200);
+    }
+}
+
+// Reset date range to default
+window.resetConversationsDateRange = function() {
+    setDefaultConversationsDateRange();
+    resetConversationsFilters();
+    if (currentAdminId) {
+        loadConversationsForEmployee();
+    }
+};
+
+// Filter state management
+let currentConversationFilters = {
+    open: null,
+    unread: null,
+    sort: 'updated_at',
+    order: 'desc'
+};
+
+// Open conversations filter dialog
+window.openConversationsFilterDialog = function() {
+    const modal = document.getElementById('conversationsFilterModal');
+    if (!modal) return;
+    
+    // Set current filter values in the form
+    const statusRadio = document.querySelector(`input[name="conversationStatus"][value="${currentConversationFilters.open === null ? 'all' : (currentConversationFilters.open ? 'open' : 'closed')}"]`);
+    if (statusRadio) statusRadio.checked = true;
+    
+    const readStatusRadio = document.querySelector(`input[name="conversationReadStatus"][value="${currentConversationFilters.unread === null ? 'all' : (currentConversationFilters.unread ? 'unread' : 'read')}"]`);
+    if (readStatusRadio) readStatusRadio.checked = true;
+    
+    const sortSelect = document.getElementById('conversationSortBy');
+    if (sortSelect) sortSelect.value = currentConversationFilters.sort || 'updated_at';
+    
+    const sortOrderRadio = document.querySelector(`input[name="conversationSortOrder"][value="${currentConversationFilters.order || 'desc'}"]`);
+    if (sortOrderRadio) sortOrderRadio.checked = true;
+    
+    // Update active filters display
+    updateActiveFiltersDisplay();
+    
+    // Show modal
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Close on Escape key
+    let escapeHandler = null;
+    escapeHandler = (e) => {
+        if (e.key === 'Escape') {
+            closeConversationsFilterDialog();
+            if (escapeHandler) {
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
+    
+    // Close on backdrop click (prevent event propagation)
+    const backdropClickHandler = (e) => {
+        if (e.target === modal) {
+            closeConversationsFilterDialog();
+            modal.removeEventListener('click', backdropClickHandler);
+        }
+    };
+    modal.addEventListener('click', backdropClickHandler);
+};
+
+// Close conversations filter dialog
+window.closeConversationsFilterDialog = function() {
+    const modal = document.getElementById('conversationsFilterModal');
+    if (!modal) return;
+    
+    const modalContent = document.getElementById('conversationsFilterModalContent');
+    if (modalContent) {
+        modalContent.style.animation = 'modalSlideOut 0.3s ease-out';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+            if (modalContent) {
+                modalContent.style.animation = 'modalSlideIn 0.3s ease-out';
+            }
+        }, 300);
+    } else {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+};
+
+// Apply conversations filters
+window.applyConversationsFilters = function() {
+    // Get filter values from form
+    const statusRadio = document.querySelector('input[name="conversationStatus"]:checked');
+    const readStatusRadio = document.querySelector('input[name="conversationReadStatus"]:checked');
+    const sortSelect = document.getElementById('conversationSortBy');
+    const sortOrderRadio = document.querySelector('input[name="conversationSortOrder"]:checked');
+    
+    // Update filter state
+    if (statusRadio) {
+        if (statusRadio.value === 'all') {
+            currentConversationFilters.open = null;
+        } else {
+            currentConversationFilters.open = statusRadio.value === 'open';
+        }
+    }
+    
+    if (readStatusRadio) {
+        if (readStatusRadio.value === 'all') {
+            currentConversationFilters.unread = null;
+        } else {
+            currentConversationFilters.unread = readStatusRadio.value === 'unread';
+        }
+    }
+    
+    if (sortSelect) {
+        currentConversationFilters.sort = sortSelect.value;
+    }
+    
+    if (sortOrderRadio) {
+        currentConversationFilters.order = sortOrderRadio.value;
+    }
+    
+    // Update active filters display
+    updateActiveFiltersDisplay();
+    updateActiveFiltersCount();
+    
+    // Close dialog
+    closeConversationsFilterDialog();
+    
+    // Reload conversations with new filters
+    if (currentAdminId) {
+        loadConversationsForEmployee();
+    }
+};
+
+// Reset all conversations filters
+window.resetConversationsFilters = function() {
+    // Reset filter state to defaults
+    currentConversationFilters = {
+        open: null,
+        unread: null,
+        sort: 'updated_at',
+        order: 'desc'
+    };
+    
+    // Reset form values
+    const statusAll = document.getElementById('statusAll');
+    if (statusAll) statusAll.checked = true;
+    
+    const readStatusAll = document.getElementById('readStatusAll');
+    if (readStatusAll) readStatusAll.checked = true;
+    
+    const sortSelect = document.getElementById('conversationSortBy');
+    if (sortSelect) sortSelect.value = 'updated_at';
+    
+    const sortOrderDesc = document.getElementById('sortOrderDesc');
+    if (sortOrderDesc) sortOrderDesc.checked = true;
+    
+    // Update displays
+    updateActiveFiltersDisplay();
+    updateActiveFiltersCount();
+};
+
+// Update active filters display in dialog
+function updateActiveFiltersDisplay() {
+    const activeFiltersDisplay = document.getElementById('activeFiltersDisplay');
+    const activeFiltersBadges = document.getElementById('activeFiltersBadges');
+    
+    if (!activeFiltersDisplay || !activeFiltersBadges) return;
+    
+    const badges = [];
+    
+    if (currentConversationFilters.open !== null) {
+        badges.push({
+            label: currentConversationFilters.open ? 'Open' : 'Closed',
+            value: currentConversationFilters.open
+        });
+    }
+    
+    if (currentConversationFilters.unread !== null) {
+        badges.push({
+            label: currentConversationFilters.unread ? 'Unread' : 'Read',
+            value: currentConversationFilters.unread
+        });
+    }
+    
+    if (currentConversationFilters.sort && currentConversationFilters.sort !== 'updated_at') {
+        const sortLabels = {
+            'created_at': 'Created At',
+            'waiting_since': 'Waiting Since'
+        };
+        badges.push({
+            label: `Sort: ${sortLabels[currentConversationFilters.sort] || currentConversationFilters.sort}`,
+            value: currentConversationFilters.sort
+        });
+    }
+    
+    if (currentConversationFilters.order && currentConversationFilters.order !== 'desc') {
+        badges.push({
+            label: 'Order: Ascending',
+            value: currentConversationFilters.order
+        });
+    }
+    
+    if (badges.length > 0) {
+        activeFiltersBadges.innerHTML = badges.map(badge => 
+            `<span style="background-color: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500;">${escapeHtml(badge.label)}</span>`
+        ).join('');
+        activeFiltersDisplay.style.display = 'block';
+    } else {
+        activeFiltersBadges.innerHTML = '';
+        activeFiltersDisplay.style.display = 'none';
+    }
+}
+
+// Update active filters count badge on filter button
+function updateActiveFiltersCount() {
+    const activeFiltersCount = document.getElementById('activeFiltersCount');
+    if (!activeFiltersCount) return;
+    
+    let count = 0;
+    if (currentConversationFilters.open !== null) count++;
+    if (currentConversationFilters.unread !== null) count++;
+    if (currentConversationFilters.sort && currentConversationFilters.sort !== 'updated_at') count++;
+    if (currentConversationFilters.order && currentConversationFilters.order !== 'desc') count++;
+    
+    if (count > 0) {
+        activeFiltersCount.textContent = count;
+        activeFiltersCount.style.display = 'inline-block';
+    } else {
+        activeFiltersCount.style.display = 'none';
+    }
+}
+
+// Apply client-side filters and sorting to conversations
+function applyClientSideFilters(conversations, filters) {
+    if (!conversations || !Array.isArray(conversations)) {
+        return [];
+    }
+    
+    let filtered = [...conversations]; // Create a copy to avoid mutating original
+    
+    // Filter by open/closed status
+    if (filters.open !== null && filters.open !== undefined) {
+        filtered = filtered.filter(conv => {
+            // Check both 'open' property and 'state' property
+            const isOpen = conv.open === true || conv.state === 'open';
+            return filters.open ? isOpen : !isOpen;
+        });
+    }
+    
+    // Filter by read/unread status
+    if (filters.unread !== null && filters.unread !== undefined) {
+        filtered = filtered.filter(conv => {
+            const isUnread = conv.read === false;
+            return filters.unread ? isUnread : !isUnread;
+        });
+    }
+    
+    // Sort conversations
+    const sortField = filters.sort || 'updated_at';
+    const sortOrder = filters.order || 'desc';
+    
+    filtered.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortField) {
+            case 'created_at':
+                aValue = a.created_at || 0;
+                bValue = b.created_at || 0;
+                break;
+            case 'waiting_since':
+                aValue = a.waiting_since || 0;
+                bValue = b.waiting_since || 0;
+                break;
+            case 'updated_at':
+            default:
+                aValue = a.updated_at || 0;
+                bValue = b.updated_at || 0;
+                break;
+        }
+        
+        // Ensure we're comparing numbers
+        aValue = typeof aValue === 'number' ? aValue : (aValue ? new Date(aValue).getTime() : 0);
+        bValue = typeof bValue === 'number' ? bValue : (bValue ? new Date(bValue).getTime() : 0);
+        
+        // Handle Unix timestamps (seconds vs milliseconds)
+        if (aValue < 10000000000) aValue = aValue * 1000;
+        if (bValue < 10000000000) bValue = bValue * 1000;
+        
+        if (sortOrder === 'asc') {
+            return aValue - bValue;
+        } else {
+            return bValue - aValue;
+        }
+    });
+    
+    return filtered;
+}
+
+// Format date for API
+function formatDateForAPI(dateStr) {
+    return `${dateStr} 00:00:00`;
+}
+
+// Format date for API end date
+function formatEndDateForAPI(dateStr) {
+    return `${dateStr} 23:59:59`;
+}
+
+// Format date for display (DD/MM/YYYY HH:MM)
+function formatConversationDateForDisplay(timestamp) {
+    if (!timestamp) return 'N/A';
+    const date = typeof timestamp === 'number' 
+        ? new Date(timestamp < 10000000000 ? timestamp * 1000 : timestamp)
+        : new Date(timestamp);
+    if (isNaN(date.getTime())) return 'N/A';
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+// Show error message
+function showConversationsError(message) {
+    const errorDiv = document.getElementById('conversationsError');
+    const errorMessage = document.getElementById('conversationsErrorMessage');
+    const loadingDiv = document.getElementById('conversationsLoading');
+    const listDiv = document.getElementById('conversationsList');
+    
+    if (errorDiv && errorMessage) {
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    if (listDiv) listDiv.style.display = 'none';
+}
+
+// Fetch conversations progressively: fast initial load + complete data fetching
+// Helper function to fetch with retry logic
+async function fetchWithRetry(url, options, maxRetries = 3, retryDelay = 1000, timeoutMs = 60000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const controller = new AbortController();
+            // Increase timeout on retries (exponential backoff for timeout too)
+            const currentTimeout = timeoutMs * (1 + (attempt - 1) * 0.5); // 60s, 90s, 120s
+            const timeoutId = setTimeout(() => controller.abort(), currentTimeout);
+            
+            console.log(`🔄 Fetch attempt ${attempt}/${maxRetries} (timeout: ${currentTimeout/1000}s)...`);
+            
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            // Check if response is ok
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+                throw new Error(errorMsg);
+            }
+            
+            return response;
+        } catch (error) {
+            const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
+            const isLastAttempt = attempt === maxRetries;
+            
+            if (isLastAttempt) {
+                if (isTimeout) {
+                    throw new Error(`Request timeout after ${maxRetries} attempts. The server may be processing a large dataset. Please try a smaller date range or try again later.`);
+                }
+                throw error;
+            }
+            
+            // Wait before retrying with exponential backoff
+            const delay = retryDelay * Math.pow(2, attempt - 1);
+            if (isTimeout) {
+                console.warn(`⚠️ Request timeout on attempt ${attempt}, retrying in ${delay}ms with longer timeout...`);
+            } else {
+                console.warn(`⚠️ Fetch attempt ${attempt} failed, retrying in ${delay}ms...`, error.message);
+            }
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+async function fetchEmployeeConversationsProgressively(adminId, updatedSince, updatedBefore, filters = null) {
+    isLoadingEmployeeConversations = true;
+    allEmployeeConversations = [];
+    
+    // Keep raw unfiltered conversations separate during fetching
+    let rawConversations = [];
+
+    // Use provided filters or current filter state (always use currentConversationFilters as fallback)
+    const activeFilters = filters !== null ? filters : currentConversationFilters;
+    
+    console.log('📊 Using filters for client-side filtering:', activeFilters);
+
+    // Show loading indicator next to count
+    const countLoader = document.getElementById('conversationsCountLoader');
+    if (countLoader) {
+        countLoader.style.display = 'inline-block';
+    }
+
+    try {
+        // Step 1: Fast initial load - fetch first 150 conversations immediately
+        let startingAfter = null;
+        let hasMore = true;
+        let pageCount = 0;
+        const maxPages = 100; // Safety limit
+
+        while (hasMore && pageCount < maxPages) {
+            pageCount++;
+            
+            // Build API URL - only include date range and per_page limit (no filters - done client-side)
+            let edgeFunctionUrl = `${window.SupabaseConfig?.url || ''}/functions/v1/intercom-proxy?endpoint=conversations&admin_id=${encodeURIComponent(adminId)}&updated_since=${encodeURIComponent(updatedSince)}&updated_before=${encodeURIComponent(updatedBefore)}&per_page=${maxConversationsToFetch}`;
+            
+            // Add pagination cursor if we have one (validate and encode properly)
+            if (startingAfter) {
+                // Ensure cursor is a valid string and properly encoded
+                const cursorValue = String(startingAfter).trim();
+                if (cursorValue && cursorValue.length > 0) {
+                    edgeFunctionUrl += `&starting_after=${encodeURIComponent(cursorValue)}`;
+                } else {
+                    console.warn('⚠️ Invalid cursor value, skipping pagination');
+                    hasMore = false;
+                    break;
+                }
+            }
+
+            if (pageCount === 1) {
+                console.log('═══════════════════════════════════════════════════════');
+                console.log('🚀 FETCHING CONVERSATIONS (Client-side filtering)');
+                console.log('═══════════════════════════════════════════════════════');
+                console.log('📋 Active filters (will apply after fetch):', JSON.stringify(activeFilters, null, 2));
+                console.log('🔗 API URL:', edgeFunctionUrl);
+                console.log('📅 Date range:', updatedSince, 'to', updatedBefore);
+                console.log('👤 Admin ID:', adminId);
+                console.log('═══════════════════════════════════════════════════════');
+            } else {
+                console.log(`🔄 Background fetch: Loading page ${pageCount}...`);
+            }
+
+            let response;
+            try {
+                // Use longer timeout for conversation fetching (60 seconds, with retries up to 120s)
+                response = await fetchWithRetry(edgeFunctionUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${window.SupabaseConfig?.anonKey || ''}`,
+                        'apikey': window.SupabaseConfig?.anonKey || '',
+                        'Accept': 'application/json'
+                    }
+                }, 3, 2000, 60000); // maxRetries=3, retryDelay=2s, timeout=60s
+            } catch (fetchError) {
+                // If it's a network error on subsequent pages, log but don't fail completely
+                if (pageCount > 1) {
+                    console.warn(`⚠️ Failed to fetch page ${pageCount}, but continuing with ${allEmployeeConversations.length} conversations already loaded:`, fetchError.message);
+                    hasMore = false;
+                    break;
+                }
+                throw fetchError;
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+                
+                // If it's a 400/404 on subsequent pages, might be invalid cursor - stop pagination
+                if (pageCount > 1 && (response.status === 400 || response.status === 404)) {
+                    console.warn(`⚠️ Invalid cursor on page ${pageCount}, stopping pagination. Loaded ${allEmployeeConversations.length} conversations.`);
+                    hasMore = false;
+                    break;
+                }
+                
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+            
+            // Extract conversations from response
+            let pageConversations = [];
+            if (data && Array.isArray(data.conversations)) {
+                pageConversations = data.conversations;
+            } else if (data && data.type === 'conversation.list' && Array.isArray(data.conversations)) {
+                pageConversations = data.conversations;
+            } else if (data && data.conversations && Array.isArray(data.conversations)) {
+                pageConversations = data.conversations;
+            }
+
+            if (pageConversations.length > 0) {
+                // Add conversations to raw array (unfiltered)
+                rawConversations = rawConversations.concat(pageConversations);
+                
+                // Apply filters to all raw conversations so far
+                const filteredConversations = applyClientSideFilters(rawConversations, activeFilters);
+                allEmployeeConversations = filteredConversations;
+                
+                // Update count with filtered count
+                const countSpan = document.getElementById('conversationsCount');
+                if (countSpan) {
+                    countSpan.textContent = filteredConversations.length;
+                }
+                
+                // For first page: Show results immediately (fast initial display)
+                if (pageCount === 1) {
+                    const loadingDiv = document.getElementById('conversationsLoading');
+                    const listDiv = document.getElementById('conversationsList');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                    if (listDiv) listDiv.style.display = 'block';
+                    displayEmployeeConversations();
+                    console.log(`✅ Fast initial load complete: ${rawConversations.length} conversations fetched, ${filteredConversations.length} after filtering`);
+                } else {
+                    // For subsequent pages: Update UI in background
+                    displayEmployeeConversations();
+                    console.log(`✅ Background fetch complete: Added ${pageConversations.length} more conversations (Total fetched: ${rawConversations.length}, After filtering: ${filteredConversations.length})`);
+                }
+            }
+
+            // Check if there are more pages to fetch
+            hasMore = false;
+            startingAfter = null;
+
+            if (data.pages && data.pages.next) {
+                const next = data.pages.next;
+                if (typeof next === 'string') {
+                    try {
+                        if (next.includes('?')) {
+                            const urlParts = next.split('?');
+                            const urlParams = new URLSearchParams(urlParts[1]);
+                            startingAfter = urlParams.get('starting_after');
+                        } else {
+                            // If it's just a cursor string, use it directly
+                            startingAfter = next;
+                        }
+                        
+                        // Validate cursor value
+                        if (startingAfter && typeof startingAfter === 'string' && startingAfter.trim().length > 0) {
+                            startingAfter = startingAfter.trim();
+                        } else {
+                            startingAfter = null;
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Error parsing next URL:', e);
+                        startingAfter = null;
+                    }
+                } else if (next && typeof next === 'object') {
+                    startingAfter = next.starting_after || next.cursor || null;
+                    // Validate cursor value
+                    if (startingAfter && typeof startingAfter === 'string' && startingAfter.trim().length > 0) {
+                        startingAfter = startingAfter.trim();
+                    } else {
+                        startingAfter = null;
+                    }
+                }
+                hasMore = !!startingAfter;
+            }
+
+            // Stop if no more conversations or invalid cursor
+            if (pageConversations.length === 0 || !startingAfter) {
+                hasMore = false;
+                break;
+            }
+        }
+
+        console.log(`✅ All conversations loaded: ${rawConversations.length} total conversations fetched`);
+        
+        // Apply final client-side filtering and sorting to all raw conversations
+        const filteredConversations = applyClientSideFilters(rawConversations, activeFilters);
+        allEmployeeConversations = filteredConversations;
+        console.log(`🔍 After filtering: ${filteredConversations.length} conversations`);
+        
+        // Update count with final filtered count
+        const countSpan = document.getElementById('conversationsCount');
+        if (countSpan) {
+            countSpan.textContent = filteredConversations.length;
+        }
+        
+        displayEmployeeConversations();
+        
+    } catch (error) {
+        console.error('❌ Error fetching conversations:', error);
+        throw error;
+    } finally {
+        isLoadingEmployeeConversations = false;
+        
+        // Hide loading indicator when done
+        const countLoader = document.getElementById('conversationsCountLoader');
+        if (countLoader) {
+            countLoader.style.display = 'none';
+        }
+    }
+}
+
+// Load conversations for employee
+window.loadConversationsForEmployee = async function() {
+    if (!currentAdminId) {
+        showConversationsError('Admin ID is missing.');
+        return;
+    }
+
+    const startDateInput = document.getElementById('conversationsStartDate');
+    const endDateInput = document.getElementById('conversationsEndDate');
+    
+    // If dates are not set, set default dates first
+    if (!startDateInput || !endDateInput) {
+        showConversationsError('Date inputs not found. Please refresh the page.');
+        return;
+    }
+    
+    // If dates are empty, set default dates
+    if (!startDateInput.value || !endDateInput.value) {
+        console.log('⚠️ Date inputs are empty, setting default dates...');
+        setDefaultConversationsDateRange();
+        // Wait a bit for dates to be set
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check again after setting defaults
+        if (!startDateInput.value || !endDateInput.value) {
+            showConversationsError('Please select both start and end dates.');
+            return;
+        }
+    }
+
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+
+    if (new Date(startDate) > new Date(endDate)) {
+        showConversationsError('Start date must be before end date.');
+        return;
+    }
+
+    const loadingDiv = document.getElementById('conversationsLoading');
+    const errorDiv = document.getElementById('conversationsError');
+    const listDiv = document.getElementById('conversationsList');
+    
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (listDiv) listDiv.style.display = 'none';
+
+    const updatedSince = formatDateForAPI(startDate);
+    const updatedBefore = formatEndDateForAPI(endDate);
+
+    try {
+        allEmployeeConversations = [];
+        currentConversationsPage = 1;
+        
+        // Pass current filters for client-side filtering
+        await fetchEmployeeConversationsProgressively(currentAdminId, updatedSince, updatedBefore, currentConversationFilters);
+    } catch (error) {
+        console.error('Error loading conversations:', error);
+        
+        // Provide more helpful error messages
+        let errorMessage = 'Failed to fetch conversations.';
+        if (error.message) {
+            if (error.message.includes('timeout')) {
+                errorMessage = 'Request timed out. The server may be processing a large dataset. Please try:\n\n' +
+                              '• Selecting a smaller date range\n' +
+                              '• Waiting a few moments and trying again\n' +
+                              '• Checking your internet connection';
+            } else if (error.message.includes('Failed to fetch') || error.message.includes('ERR_QUIC') || error.message.includes('ERR_')) {
+                errorMessage = 'Network error. Please check your internet connection and try again.';
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        
+        showConversationsError(errorMessage);
+    } finally {
+        if (loadingDiv) loadingDiv.style.display = 'none';
+    }
+};
+
+// Extract client name from conversation
+function extractClientName(conversation) {
+    if (conversation.source?.author?.name) {
+        return conversation.source.author.name;
+    }
+    if (conversation.source?.author?.email) {
+        return conversation.source.author.email;
+    }
+    if (conversation.contacts?.contacts && conversation.contacts.contacts.length > 0) {
+        const contact = conversation.contacts.contacts[0];
+        return contact.name || contact.email || 'Unknown';
+    }
+    return 'Unknown';
+}
+
+// Extract client email from conversation
+function extractClientEmail(conversation) {
+    if (conversation.source?.author?.email) {
+        return conversation.source.author.email;
+    }
+    if (conversation.contacts?.contacts && conversation.contacts.contacts.length > 0) {
+        const contact = conversation.contacts.contacts[0];
+        return contact.email || null;
+    }
+    return null;
+}
+
+// Get rating from conversation
+function getConversationRating(conversation) {
+    if (conversation.conversation_rating?.rating) {
+        const rating = parseInt(conversation.conversation_rating.rating, 10);
+        if (!isNaN(rating) && rating >= 1 && rating <= 5) {
+            return rating;
+        }
+    }
+    return null;
+}
+
+// Extract product type from conversation
+function extractProductType(conversation) {
+    // Priority 1: Check ticket custom_attributes for Product Type
+    if (conversation.ticket?.custom_attributes?.["Product Type"]) {
+        const productType = conversation.ticket.custom_attributes["Product Type"];
+        // Handle object with value property
+        if (productType && typeof productType === 'object' && productType.value) {
+            return productType.value;
+        }
+        // Sometimes it's a direct string value
+        if (typeof productType === 'string' && productType.trim()) {
+            return productType;
+        }
+    }
+    
+    // Priority 2: Check tags for product type indicators
+    if (conversation.tags?.tags && Array.isArray(conversation.tags.tags)) {
+        for (const tag of conversation.tags.tags) {
+            const tagName = tag.name || '';
+            // Check for CFD indicators
+            if (tagName.includes('CFD') || tagName === 'CFD Conversation' || tagName.includes('CFD FIN')) {
+                return 'CFD';
+            }
+            // Check for Futures indicators
+            if (tagName.includes('Futures') || tagName === 'Future Conversations' || tagName.includes('Futures FIN')) {
+                return 'Futures';
+            }
+        }
+    }
+    
+    // Priority 3: Check source body for user-selected product type
+    if (conversation.source?.body) {
+        const body = conversation.source.body.toLowerCase();
+        // Check for CFD / Forex (handle HTML tags)
+        if (body.includes('cfd / forex') || body.includes('cfd/forex') || body.includes('<p>cfd / forex</p>')) {
+            return 'CFD / Forex';
+        }
+        // Check for Futures (handle HTML tags)
+        if (body.includes('<p>futures</p>') || (body.includes('futures') && !body.includes('cfd'))) {
+            return 'Futures';
+        }
+    }
+    
+    // Priority 4: Check topics for product type indicators
+    if (conversation.topics?.topics && Array.isArray(conversation.topics.topics)) {
+        for (const topic of conversation.topics.topics) {
+            const topicName = topic.name || '';
+            if (topicName.includes('Futures')) {
+                return 'Futures';
+            }
+            if (topicName.includes('CFD')) {
+                return 'CFD';
+            }
+        }
+    }
+    
+    // Priority 5: Check team names in statistics
+    if (conversation.statistics?.assigned_team_first_response_time && Array.isArray(conversation.statistics.assigned_team_first_response_time)) {
+        for (const team of conversation.statistics.assigned_team_first_response_time) {
+            const teamName = team.team_name || '';
+            if (teamName.includes('(CFD)')) {
+                return 'CFD';
+            }
+            if (teamName.includes('(FUT)')) {
+                return 'Futures';
+            }
+        }
+    }
+    
+    return null;
+}
+
+// Generate star rating HTML
+function generateStarRating(rating) {
+    const maxStars = 5;
+    const filledStars = rating || 0;
+    const emptyStars = maxStars - filledStars;
+    
+    let starsHtml = '<div style="display: flex; align-items: center; gap: 0.125rem;">';
+    
+    for (let i = 0; i < filledStars; i++) {
+        starsHtml += `
+            <svg aria-hidden="true" style="width: 1rem; height: 1rem; color: #fbbf24;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+        `;
+    }
+    
+    for (let i = 0; i < emptyStars; i++) {
+        starsHtml += `
+            <svg aria-hidden="true" style="width: 1rem; height: 1rem; color: #d1d5db;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+        `;
+    }
+    
+    starsHtml += '</div>';
+    return starsHtml;
+}
+
+// Copy conversation ID to clipboard
+window.copyConversationId = function(conversationId, buttonElement) {
+    if (!conversationId || conversationId === 'N/A') {
+        return;
+    }
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(conversationId).then(() => {
+        // Visual feedback
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.classList.add('copy-success');
+        buttonElement.innerHTML = `
+            <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        `;
+        buttonElement.title = 'Copied!';
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+            buttonElement.classList.remove('copy-success');
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.title = 'Copy conversation ID';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy conversation ID:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = conversationId;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            const originalHTML = buttonElement.innerHTML;
+            buttonElement.innerHTML = '✓';
+            setTimeout(() => {
+                buttonElement.innerHTML = originalHTML;
+            }, 2000);
+        } catch (fallbackErr) {
+            console.error('Fallback copy failed:', fallbackErr);
+        }
+        document.body.removeChild(textArea);
+    });
+};
+
+// Display conversations in table
+function displayEmployeeConversations() {
+    const tableBody = document.getElementById('conversationsTableBody');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+
+    if (allEmployeeConversations.length === 0) {
+        const listDiv = document.getElementById('conversationsList');
+        if (listDiv) listDiv.style.display = 'block';
+        const paginationDiv = document.getElementById('conversationsPagination');
+        if (paginationDiv) paginationDiv.style.display = 'none';
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for this date range.</td></tr>';
+        return;
+    }
+
+    const totalPages = Math.ceil(allEmployeeConversations.length / conversationsItemsPerPage);
+    const startIndex = (currentConversationsPage - 1) * conversationsItemsPerPage;
+    const endIndex = Math.min(startIndex + conversationsItemsPerPage, allEmployeeConversations.length);
+    const pageConversations = allEmployeeConversations.slice(startIndex, endIndex);
+
+    const paginationStart = document.getElementById('conversationsPaginationStart');
+    const paginationEnd = document.getElementById('conversationsPaginationEnd');
+    const paginationTotal = document.getElementById('conversationsPaginationTotal');
+    
+    if (paginationStart) paginationStart.textContent = allEmployeeConversations.length > 0 ? startIndex + 1 : 0;
+    if (paginationEnd) paginationEnd.textContent = endIndex;
+    if (paginationTotal) {
+        paginationTotal.textContent = allEmployeeConversations.length;
+        if (isLoadingEmployeeConversations) {
+            paginationTotal.textContent = `${allEmployeeConversations.length}+`;
+        }
+    }
+
+    pageConversations.forEach(conversation => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '0.0625rem solid #e5e7eb';
+        row.style.cursor = 'pointer';
+        row.onmouseenter = () => {
+            row.style.backgroundColor = '#f9fafb';
+        };
+        row.onmouseleave = () => {
+            row.style.backgroundColor = 'transparent';
+        };
+        
+        const clientName = extractClientName(conversation);
+        const clientEmail = extractClientEmail(conversation);
+        const createdDate = formatConversationDateForDisplay(conversation.created_at || conversation.created_at_time);
+        const subject = conversation.source?.subject || 
+                       conversation.conversation_parts?.[0]?.body?.substring(0, 100) || 
+                       'No subject';
+        const subjectDisplay = subject.length > 50 ? subject.substring(0, 50) + '...' : subject;
+        const state = conversation.state || 'unknown';
+        const stateBadge = state === 'open' 
+            ? '<span style="background-color: #fef3c7; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">Open</span>'
+            : state === 'closed'
+            ? '<span style="background-color: #dcfce7; color: #166534; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">Closed</span>'
+            : '<span style="background-color: #fee2e2; color: #991b1b; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">' + escapeHtml(state) + '</span>';
+        const rating = getConversationRating(conversation);
+        const ratingHtml = generateStarRating(rating);
+        const conversationId = conversation.id || 'N/A';
+        
+        // Extract product type
+        const productType = extractProductType(conversation);
+        let productTypeBadge = '';
+        if (productType) {
+            const isCFD = productType.toLowerCase().includes('cfd') || productType === 'CFD / Forex';
+            const isFutures = productType.toLowerCase().includes('futures');
+            const bgColor = isCFD ? '#dbeafe' : isFutures ? '#fef3c7' : '#f3f4f6';
+            const textColor = isCFD ? '#1e40af' : isFutures ? '#92400e' : '#374151';
+            productTypeBadge = `<span style="background-color: ${bgColor}; color: ${textColor}; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">${escapeHtml(productType)}</span>`;
+        } else {
+            productTypeBadge = '<span style="color: #9ca3af; font-size: 0.75rem;">—</span>';
+        }
+
+        row.innerHTML = `
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <div style="font-weight: 500; color: #111827; font-size: 0.875rem; line-height: 1.4;">${escapeHtml(clientName)}</div>
+                ${clientEmail ? `<div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">${escapeHtml(clientEmail)}</div>` : ''}
+            </td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="font-family: 'Courier New', monospace; font-size: 0.8125rem; color: #4b5563; font-weight: 500;">${conversationId}</div>
+                    <button 
+                        class="copy-button"
+                        onclick="event.stopPropagation(); copyConversationId('${conversationId}', this);"
+                        title="Copy conversation ID"
+                        style="display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem; background: transparent; border: none; border-radius: 0.25rem; cursor: pointer; color: #6b7280; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#374151'"
+                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280'"
+                    >
+                        <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1rem; height: 1rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <div style="max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; color: #374151; line-height: 1.4;" title="${escapeHtml(subject)}">${escapeHtml(subjectDisplay)}</div>
+            </td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${productTypeBadge}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${ratingHtml}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${stateBadge}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #6b7280; white-space: nowrap;">${createdDate}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <button 
+                    onclick="event.stopPropagation(); window.open('audit-view.html?conversation_id=${conversation.id}', '_blank');"
+                    style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                    onmouseover="this.style.background='#a7f3d0'"
+                    onmouseout="this.style.background='#d1fae5'"
+                >
+                    Audit
+                </button>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+    });
+
+    updateConversationsPaginationControls(totalPages);
+    const paginationDiv = document.getElementById('conversationsPagination');
+    if (paginationDiv) paginationDiv.style.display = totalPages > 1 ? 'block' : 'none';
+}
+
+// Update pagination controls
+function updateConversationsPaginationControls(totalPages) {
+    const paginationPages = document.getElementById('conversationsPaginationPages');
+    const paginationPrev = document.getElementById('conversationsPaginationPrev');
+    const paginationNext = document.getElementById('conversationsPaginationNext');
+    
+    if (!paginationPages || !paginationPrev || !paginationNext) return;
+    
+    paginationPages.innerHTML = '';
+    
+    if (totalPages <= 1) {
+        paginationPrev.disabled = true;
+        paginationNext.disabled = true;
+        return;
+    }
+    
+    paginationPrev.disabled = currentConversationsPage === 1;
+    paginationNext.disabled = currentConversationsPage === totalPages;
+    
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentConversationsPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.type = 'button';
+        pageBtn.style.cssText = 'padding: 0.1617rem 0.3234rem; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4043rem; cursor: pointer; color: #6b7280; transition: all 0.2s;';
+        if (i === currentConversationsPage) {
+            pageBtn.style.background = '#1A733E';
+            pageBtn.style.color = 'white';
+            pageBtn.style.borderColor = '#1A733E';
+        }
+        pageBtn.textContent = i;
+        pageBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            conversationsGoToPage(i);
+        };
+        paginationPages.appendChild(pageBtn);
+    }
+}
+
+// Go to specific page
+window.conversationsGoToPage = function(page) {
+    const totalPages = Math.ceil(allEmployeeConversations.length / conversationsItemsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentConversationsPage = page;
+    displayEmployeeConversations();
+};
+
 window.navigateToAssignment = function(assignmentId) {
     // Update URL with assignment parameter
     const newUrl = `${window.location.pathname}?assignment=${assignmentId}`;
