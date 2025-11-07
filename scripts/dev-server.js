@@ -11,6 +11,35 @@ const path = require('path');
 const url = require('url');
 const net = require('net');
 
+// Global logger instance
+let loggerInstance = null;
+
+// Initialize logger helper
+async function initializeLogger() {
+  if (loggerInstance) {
+    return loggerInstance;
+  }
+  
+  try {
+    const loggerModule = await import('@rharkor/logger');
+    loggerInstance = loggerModule.logger;
+    await loggerInstance.init();
+    return loggerInstance;
+  } catch (err) {
+    console.error('Failed to initialize logger:', err.message);
+    // Fallback to console if logger fails
+    loggerInstance = {
+      log: console.log,
+      info: console.info,
+      warn: console.warn,
+      error: console.error,
+      success: (msg) => console.log(`✅ ${msg}`),
+      debug: console.debug
+    };
+    return loggerInstance;
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || 'localhost';
 
@@ -189,86 +218,101 @@ const server = http.createServer((req, res) => {
 });
 
 // Start HTTP server
-server.listen(PORT, HOST, async () => {
-  console.log('\n🚀 Development Server Started!');
-  console.log(`📍 Server running at http://${HOST}:${PORT}`);
-  console.log(`📁 Serving files from: ${projectRoot}`);
-  console.log(`🚫 Cache disabled for all files`);
+async function startServer() {
+  const logger = await initializeLogger();
+  
+  server.listen(PORT, HOST, async () => {
+    logger.success('\n🚀 Development Server Started!');
+    logger.info(`📍 Server running at http://${HOST}:${PORT}`);
+    logger.info(`📁 Serving files from: ${projectRoot}`);
+    logger.info(`🚫 Cache disabled for all files`);
 
-  // Try to start WebSocket server for live reload
-  try {
-    wsPort = await findAvailablePort(PORT + 1);
-    const WebSocket = require('ws');
-    wss = new WebSocket.Server({ port: wsPort, host: HOST });
-    
-    wss.on('listening', () => {
-      console.log(`🔄 Live reload enabled (WebSocket on port ${wsPort})`);
-    });
+    // Try to start WebSocket server for live reload
+    try {
+      wsPort = await findAvailablePort(PORT + 1);
+      const WebSocket = require('ws');
+      wss = new WebSocket.Server({ port: wsPort, host: HOST });
+      
+      wss.on('listening', () => {
+        logger.success(`🔄 Live reload enabled (WebSocket on port ${wsPort})`);
+      });
 
-    wss.on('error', (err) => {
-      console.log(`⚠️  WebSocket server error: ${err.message}`);
-      console.log(`   Live reload will be disabled, but server is still running`);
+      wss.on('error', (err) => {
+        logger.warn(`⚠️  WebSocket server error: ${err.message}`);
+        logger.warn(`   Live reload will be disabled, but server is still running`);
+        wss = null;
+        wsPort = null;
+      });
+    } catch (err) {
+      logger.warn(`⚠️  Could not start WebSocket server: ${err.message}`);
+      logger.warn(`   Live reload will be disabled, but server is still running`);
       wss = null;
       wsPort = null;
-    });
-  } catch (err) {
-    console.log(`⚠️  Could not start WebSocket server: ${err.message}`);
-    console.log(`   Live reload will be disabled, but server is still running`);
-    wss = null;
-    wsPort = null;
-  }
+    }
 
-  // Watch for file changes
-  try {
-    const chokidar = require('chokidar');
-    watcher = chokidar.watch(projectRoot, {
-      ignored: [
-        /(^|[\/\\])\../, // ignore dotfiles
-        /node_modules/,
-        /\.git/,
-        /\.vscode/,
-        /\.idea/
-      ],
-      persistent: true,
-      ignoreInitial: true
-    });
+    // Watch for file changes
+    try {
+      const chokidar = require('chokidar');
+      watcher = chokidar.watch(projectRoot, {
+        ignored: [
+          /(^|[\/\\])\../, // ignore dotfiles
+          /node_modules/,
+          /\.git/,
+          /\.vscode/,
+          /\.idea/
+        ],
+        persistent: true,
+        ignoreInitial: true
+      });
 
-    watcher.on('change', (filePath) => {
-      const relativePath = path.relative(projectRoot, filePath);
-      console.log(`[File Changed] ${relativePath}`);
-      
-      // Notify all connected clients to reload if WebSocket is available
-      if (wss) {
-        const WebSocket = require('ws');
-        wss.clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send('reload');
-          }
-        });
-      }
-    });
+      watcher.on('change', (filePath) => {
+        const relativePath = path.relative(projectRoot, filePath);
+        logger.debug(`[File Changed] ${relativePath}`);
+        
+        // Notify all connected clients to reload if WebSocket is available
+        if (wss) {
+          const WebSocket = require('ws');
+          wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send('reload');
+            }
+          });
+        }
+      });
 
-    watcher.on('error', (err) => {
-      console.log(`⚠️  File watcher error: ${err.message}`);
-    });
-  } catch (err) {
-    console.log(`⚠️  Could not start file watcher: ${err.message}`);
-    watcher = null;
-  }
+      watcher.on('error', (err) => {
+        logger.error(`⚠️  File watcher error: ${err.message}`);
+      });
+    } catch (err) {
+      logger.error(`⚠️  Could not start file watcher: ${err.message}`);
+      watcher = null;
+    }
 
-  console.log('\n💡 Tips:');
-  console.log('   - Press Ctrl+C to stop the server');
-  if (wss) {
-    console.log('   - Changes to files will trigger automatic reload');
-  } else {
-    console.log('   - Manual refresh: Ctrl+Shift+R (live reload unavailable)');
-  }
-  console.log('   - Hard refresh: Ctrl+Shift+R (if needed)\n');
+    logger.info('\n💡 Tips:');
+    logger.info('   - Press Ctrl+C to stop the server');
+    if (wss) {
+      logger.info('   - Changes to files will trigger automatic reload');
+    } else {
+      logger.info('   - Manual refresh: Ctrl+Shift+R (live reload unavailable)');
+    }
+    logger.info('   - Hard refresh: Ctrl+Shift+R (if needed)\n');
+  });
+}
+
+// Initialize logger and start server
+startServer().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
 
 // Handle server shutdown
 process.on('SIGINT', () => {
-  console.log('\n\n🛑 Shutting down development server...');
+  const logger = loggerInstance || {
+    warn: console.log,
+    success: console.log
+  };
+  
+  logger.warn('\n\n🛑 Shutting down development server...');
   if (watcher) {
     watcher.close();
   }
@@ -276,7 +320,7 @@ process.on('SIGINT', () => {
     wss.close();
   }
   server.close(() => {
-    console.log('✅ Server stopped.\n');
+    logger.success('✅ Server stopped.\n');
     process.exit(0);
   });
 });
