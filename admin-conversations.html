@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Conversations | QMS</title>
+<meta name="description" content="View Admin Conversations">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary: '#1a733e',
+          'primary-dark': '#0d5e3a',
+          'dark-forest': '#032816',
+          'success': '#10b981',
+          'warning': '#f59e0b',
+          'error': '#ef4444',
+        },
+        fontFamily: {
+          sans: ['Poppins', 'sans-serif'],
+        },
+      },
+    },
+  }
+</script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="env-config.js"></script>
+<script src="supabase-config.js"></script>
+<script src="intercom-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js" defer></script>
+    <script src="load-sidebar.js" defer></script>
+    <script src="form-validation.js" defer></script>
+    <script src="keyboard-shortcuts.js" defer></script>
+    <script src="admin-conversations.js" defer></script>
+<style>
+  .main-content {
+    background-color: #f8f7f2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-range-picker {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .date-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .date-input:focus {
+    outline: none;
+    border-color: #1a733e;
+    box-shadow: 0 0 0 3px rgba(26, 115, 62, 0.1);
+  }
+
+  .conversations-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .conversations-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .conversations-table thead {
+    background-color: #f9fafb;
+  }
+
+  .conversations-table th {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+  }
+
+  .conversations-table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+    color: #111827;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .conversations-table tbody tr {
+    transition: background-color 0.15s;
+  }
+
+  .conversations-table tbody tr:hover {
+    background-color: #f9fafb;
+    cursor: pointer;
+  }
+
+  .conversations-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .conversation-id {
+    font-family: monospace;
+    font-size: 0.6875rem;
+    color: #6b7280;
+  }
+
+  .conversation-id-container {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .copy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.2s;
+  }
+
+  .copy-button:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+
+  .copy-button:active {
+    transform: scale(0.95);
+  }
+
+  .copy-button svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .copy-success {
+    color: #10b981;
+  }
+
+  .client-name {
+    font-weight: 500;
+    color: #111827;
+    font-size: 0.75rem;
+  }
+
+  .client-email {
+    font-size: 0.6875rem;
+    color: #6b7280;
+    margin-top: 0.125rem;
+  }
+
+  .conversation-subject {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  .rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .rating-star {
+    width: 0.875rem;
+    height: 0.875rem;
+    color: #fbbf24;
+  }
+
+  .rating-star-empty {
+    color: #d1d5db;
+  }
+
+  .pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .pagination {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .pagination-info {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .pagination-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pagination-button:hover:not(:disabled) {
+    background: #f9fafb;
+    color: #111827;
+  }
+
+  .pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pagination-button.active {
+    background: #1a733e;
+    color: white;
+    border-color: #1a733e;
+  }
+
+  .pagination-button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid #e5e7eb;
+    border-top-color: #1a733e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .error-message {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.1875rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .badge-success {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  .badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+</style>
+</head>
+<body>
+    <div class="main-content">
+        <!-- Sidebar will be loaded here -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 p-6 ml-64">
+            <div class="max-w-7xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <button 
+                            onclick="window.history.back()" 
+                            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Go back"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <h1 class="text-3xl font-bold text-gray-900">Admin Conversations</h1>
+                    </div>
+                    <p class="text-gray-600" id="adminInfo">Loading admin information...</p>
+                </div>
+
+                <!-- Date Range Picker -->
+                <div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                    <div class="date-range-picker">
+                        <div class="flex items-center gap-2">
+                            <label for="startDate" class="text-sm font-medium text-gray-700">From Date:</label>
+                            <input 
+                                type="date" 
+                                id="startDate" 
+                                class="date-input"
+                            />
+                            <span class="text-gray-500 text-sm" id="startDateDisplay"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label for="endDate" class="text-sm font-medium text-gray-700">To Date:</label>
+                            <input 
+                                type="date" 
+                                id="endDate" 
+                                class="date-input"
+                            />
+                            <span class="text-gray-500 text-sm" id="endDateDisplay"></span>
+                        </div>
+                        <button 
+                            id="applyFilterBtn"
+                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
+                        >
+                            Apply Filter
+                        </button>
+                        <button 
+                            id="resetFilterBtn"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                        >
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-12">
+                    <div class="loading-spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading conversations...</p>
+                    <p id="loadingProgress" class="text-sm text-gray-500 mt-2"></p>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorState" class="error-message" style="display: none;">
+                    <strong>Error:</strong> <span id="errorMessage"></span>
+                </div>
+
+                <!-- Conversations Container -->
+                <div id="conversationsContainer" style="display: none;">
+                    <!-- Summary Stats -->
+                    <div class="mb-4 bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex items-center space-x-6">
+                            <div>
+                                <span class="text-sm text-gray-500">Total Conversations:</span>
+                                <span class="ml-2 text-lg font-semibold text-gray-900" id="conversationCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conversations Table -->
+                    <div class="conversations-table-wrapper">
+                        <table class="conversations-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="w-4">
+                                        <div class="flex items-center">
+                                            <input id="checkbox-all" type="checkbox" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 focus:ring-2">
+                                            <label for="checkbox-all" class="sr-only">Select all</label>
+                                        </div>
+                                    </th>
+                                    <th scope="col" style="min-width: 120px;">Client</th>
+                                    <th scope="col" style="min-width: 140px;">Conversation ID</th>
+                                    <th scope="col" style="min-width: 150px;">Subject</th>
+                                    <th scope="col" style="min-width: 80px;">Rating</th>
+                                    <th scope="col" style="min-width: 70px;">State</th>
+                                    <th scope="col" style="min-width: 120px;">Created</th>
+                                    <th scope="col" style="min-width: 120px;">Updated</th>
+                                    <th scope="col" style="min-width: 70px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="conversationsTableBody">
+                                <!-- Conversations will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- No Results Message -->
+                    <div id="noResults" class="text-center py-12 text-gray-500" style="display: none;">
+                        <p>No conversations found for this date range.</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav id="pagination" class="pagination" style="display: none;">
+                        <div class="pagination-info">
+                            <span>Showing</span>
+                            <span class="font-semibold text-gray-900" id="paginationStart">0</span>
+                            <span>to</span>
+                            <span class="font-semibold text-gray-900" id="paginationEnd">0</span>
+                            <span>of</span>
+                            <span class="font-semibold text-gray-900" id="paginationTotal">0</span>
+                        </div>
+                        <div class="pagination-controls">
+                            <button id="paginationPrev" class="pagination-button" disabled>
+                                <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <div id="paginationPages" class="flex items-center gap-1">
+                                <!-- Page numbers will be inserted here -->
+                            </div>
+                            <button id="paginationNext" class="pagination-button">
+                                <svg aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
