@@ -2043,6 +2043,18 @@ async function autoAssignBySupervisor() {
         
         if (error) throw error;
         
+        // Send ClickUp notifications to employees (non-blocking)
+        sendClickUpNotifications(auditsToCreate).catch(err => {
+            console.error('Failed to send ClickUp notifications:', err);
+            // Show a warning to the user (non-blocking)
+            setTimeout(() => {
+                console.warn('ClickUp notification failed. This might be because:');
+                console.warn('1. The edge function is not deployed');
+                console.warn('2. The CLICKUP_API_TOKEN secret is not set');
+                console.warn('3. Check browser console for detailed error');
+            }, 1000);
+        });
+        
         await window.confirmationDialog.show({
             title: 'Success!',
             message: `Successfully created ${auditsToCreate.length} audit assignment${auditsToCreate.length !== 1 ? 's' : ''} across ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}!`,
@@ -2233,6 +2245,18 @@ async function distributeToSelectedQAs() {
         .insert(auditsToCreate);
     
     if (error) throw error;
+    
+    // Send ClickUp notifications to employees (non-blocking)
+    sendClickUpNotifications(auditsToCreate).catch(err => {
+        console.error('Failed to send ClickUp notifications:', err);
+        // Show a warning to the user (non-blocking)
+        setTimeout(() => {
+            console.warn('ClickUp notification failed. This might be because:');
+            console.warn('1. The edge function is not deployed');
+            console.warn('2. The CLICKUP_API_TOKEN secret is not set');
+            console.warn('3. Check browser console for detailed error');
+        }, 1000);
+    });
 }
 
 // ============================================================================
@@ -2679,6 +2703,138 @@ function toggleManualSection() {
     } else {
         content.style.display = 'none';
         icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// ============================================================================
+// ClickUp Notifications
+// ============================================================================
+// ClickUp channel ID for audit notifications - can be configured
+const CLICKUP_AUDIT_NOTIFICATION_CHANNEL_ID = '3a7cb-974418'; // CQMS Feedback
+
+/**
+ * Send ClickUp chat notification to employees who were audited
+ * @param {Array} auditsToCreate - Array of audit assignment objects with employee_email, employee_name, auditor_email
+ */
+async function sendClickUpNotifications(auditsToCreate) {
+    if (!auditsToCreate || auditsToCreate.length === 0) {
+        return;
+    }
+    
+    try {
+        // Group audits by employee email to send one notification per employee
+        const auditsByEmployee = new Map();
+        auditsToCreate.forEach(audit => {
+            if (!auditsByEmployee.has(audit.employee_email)) {
+                auditsByEmployee.set(audit.employee_email, {
+                    employee_email: audit.employee_email,
+                    employee_name: audit.employee_name,
+                    auditor_emails: new Set(),
+                    audit_count: 0
+                });
+            }
+            const employeeData = auditsByEmployee.get(audit.employee_email);
+            if (audit.auditor_email) {
+                employeeData.auditor_emails.add(audit.auditor_email);
+            }
+            employeeData.audit_count++;
+        });
+        
+        // Prepare notification data
+        const notificationData = {
+            channel_id: CLICKUP_AUDIT_NOTIFICATION_CHANNEL_ID,
+            audits: Array.from(auditsByEmployee.entries()).map(([email, data]) => ({
+                employee_email: email,
+                employee_name: data.employee_name,
+                auditor_emails: Array.from(data.auditor_emails),
+                audit_count: data.audit_count,
+                week: getWeekNumber()
+            })),
+            all_users: allUsers.map(u => ({ email: u.email, name: u.name }))
+        };
+        
+        // Call Supabase Edge Function to send ClickUp notifications
+        const supabaseUrl = window.env?.SUPABASE_URL || window.SUPABASE_URL;
+        const supabaseAnonKey = window.env?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.warn('Supabase configuration not found. ClickUp notifications skipped.');
+            return;
+        }
+        
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/smart-action`;
+        console.log('Sending ClickUp notifications to:', edgeFunctionUrl);
+        console.log('Notification data:', notificationData);
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(notificationData)
+        });
+        
+        console.log('ClickUp notification response status:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            let errorData = {};
+            try {
+                const text = await response.text();
+                errorData = text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.warn('Could not parse error response as JSON');
+            }
+            
+            const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+            console.error('ClickUp notification API error:', errorMessage);
+            console.error('Full error response:', errorData);
+            
+            // If function not found, provide helpful message
+            if (response.status === 404) {
+                throw new Error(`Edge function not found (404). Please check that the smart-action function is deployed in Supabase. Go to: https://supabase.com/dashboard/project/xijmkmvsumeoqarpmpvi/functions`);
+            } else if (response.status === 500) {
+                throw new Error(`Edge function error: ${errorMessage}. Check function logs in Supabase dashboard.`);
+            } else if (response.status === 0 || response.type === 'opaque') {
+                throw new Error(`CORS error or network failure. The edge function may not be deployed. Check: https://supabase.com/dashboard/project/xijmkmvsumeoqarpmpvi/functions`);
+            } else {
+                throw new Error(`ClickUp notification failed: ${errorMessage} (Status: ${response.status})`);
+            }
+        }
+        
+        const result = await response.json();
+        console.log('ClickUp notifications sent successfully:', result);
+        
+        // Log summary
+        if (result.results) {
+            const sent = result.sent || 0;
+            const failed = result.failed || 0;
+            const skipped = result.skipped || 0;
+            console.log(`Notifications: ${sent} sent, ${failed} failed, ${skipped} skipped`);
+            
+            if (failed > 0 || skipped > 0) {
+                console.warn('Some notifications failed or were skipped. Details:', result.results);
+                // Log each failed/skipped result with details
+                result.results.forEach((r, index) => {
+                    if (r.status === 'error') {
+                        console.error(`Failed notification ${index + 1} for ${r.employee_email}:`, r.error || r.reason || 'Unknown error');
+                    } else if (r.status === 'skipped') {
+                        console.warn(`Skipped notification ${index + 1} for ${r.employee_email}:`, r.reason || 'Unknown reason');
+                    }
+                });
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error sending ClickUp notifications:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        // Don't throw - notifications are non-critical, don't fail the assignment
     }
 }
 
