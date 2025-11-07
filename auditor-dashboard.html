@@ -114,14 +114,15 @@
             <!-- Data Table -->
             <div id="performanceTable" style="background-color: var(--white); border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 80%; width: fit-content; min-width: 100%;">
                 <div style="background-color: #f8f9fa; padding: 0.5625rem 0.75rem; border-bottom: 0.0469rem solid #e5e7eb;">
-                    <h3 style="font-size: 0.8438rem; font-weight: 600; color: var(--text-color);">Performance Overview</h3>
+                    <h3 style="font-size: 0.8438rem; font-weight: 600; color: var(--text-color);">Progress Overview</h3>
                 </div>
                 <div style="padding: 0.75rem; overflow-x: auto;">
-                    <div id="tableHeader" style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0 0.5625rem 0; font-weight: 700; font-size: 0.6562rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; min-width: fit-content;">
+                    <div id="tableHeader" style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0 0.5625rem 0; font-weight: 700; font-size: 0.6562rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; min-width: fit-content;">
                         <div>Name</div>
                         <div>Assigned</div>
                         <div>Completed</div>
                         <div>Remaining</div>
+                        <div>Avg Duration</div>
                         <div>Progress Meter</div>
                     </div>
                     <div id="performanceTableBody" style="min-width: fit-content;">
@@ -457,7 +458,7 @@ async function updateTeamStats() {
         
         // Update table header
         const tableHeader = document.getElementById('tableHeader');
-        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr)';
+        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr)';
         tableHeader.style.display = 'grid';
         tableHeader.style.gap = '0.75rem';
         tableHeader.style.alignItems = 'center';
@@ -466,18 +467,92 @@ async function updateTeamStats() {
             <div>Assigned</div>
             <div>Completed</div>
             <div>Remaining</div>
+            <div>Avg Duration</div>
             <div>Progress Meter</div>
         `;
         
         // Calculate stats for each Quality Analyst
         const auditorStats = [];
-        qualityAnalysts.forEach(qa => {
+        for (const qa of qualityAnalysts) {
             const qaAssignments = teamAssignments.filter(a => a.auditor_email === qa.email);
             const qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
             const qaInProgress = qaAssignments.filter(a => a.status === 'in_progress').length;
             const qaPending = qaAssignments.filter(a => a.status === 'pending').length;
             const qaRemaining = qaPending + qaInProgress;
             const qaPercentage = qaAssignments.length > 0 ? Math.round((qaCompleted / qaAssignments.length) * 100) : 0;
+            
+            // Calculate average duration for this auditor
+            let avgDurationText = '-';
+            try {
+                const { data: scorecards, error: scError } = await window.supabaseClient
+                    .from('scorecards')
+                    .select('table_name')
+                    .eq('is_active', true);
+                
+                if (!scError && scorecards) {
+                    let totalDuration = 0; // Total in minutes
+                    let auditCount = 0;
+                    
+                    // Query each scorecard table for audits by this auditor
+                    for (const scorecard of scorecards) {
+                        try {
+                            const { data: audits, error } = await window.supabaseClient
+                                .from(scorecard.table_name)
+                                .select('audit_duration')
+                                .eq('auditor_email', qa.email)
+                                .not('audit_duration', 'is', null);
+                            
+                            if (!error && audits) {
+                                audits.forEach(audit => {
+                                    // Handle duration conversion (new format: seconds, legacy format: minutes)
+                                    let durationInMinutes = 0;
+                                    if (typeof audit.audit_duration === 'number') {
+                                        const value = audit.audit_duration;
+                                        // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
+                                        // Otherwise, assume it's already in minutes (legacy format)
+                                        if (value >= 1440) {
+                                            durationInMinutes = value / 60; // Convert seconds to minutes
+                                        } else {
+                                            durationInMinutes = value; // Already in minutes
+                                        }
+                                    } else if (typeof audit.audit_duration === 'string') {
+                                        const asInt = parseInt(audit.audit_duration);
+                                        if (!isNaN(asInt)) {
+                                            if (asInt >= 1440) {
+                                                durationInMinutes = asInt / 60; // Convert seconds to minutes
+                                            } else {
+                                                durationInMinutes = asInt; // Already in minutes
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (durationInMinutes > 0) {
+                                        totalDuration += durationInMinutes;
+                                        auditCount++;
+                                    }
+                                });
+                            }
+                        } catch (err) {
+                            console.warn(`Error getting duration from ${scorecard.table_name} for ${qa.email}:`, err);
+                        }
+                    }
+                    
+                    if (auditCount > 0) {
+                        const avgDuration = totalDuration / auditCount; // Average in minutes
+                        
+                        // Format duration (avgDuration is in minutes)
+                        if (avgDuration >= 60) {
+                            const hours = Math.floor(avgDuration / 60);
+                            const minutes = Math.round(avgDuration % 60);
+                            avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+                        } else {
+                            avgDurationText = `${Math.round(avgDuration)}m`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`Error calculating average duration for ${qa.email}:`, error);
+            }
             
             auditorStats.push({
                 name: qa.name || qa.email,
@@ -486,9 +561,10 @@ async function updateTeamStats() {
                 completed: qaCompleted,
                 remaining: qaRemaining,
                 percentage: qaPercentage,
+                avgDuration: avgDurationText,
                 isCurrentUser: qa.email === currentUserEmail
             });
-        });
+        }
         
         // Sort by assigned count (descending) and then by name
         auditorStats.sort((a, b) => {
@@ -501,13 +577,14 @@ async function updateTeamStats() {
         // Update table with all Quality Analysts
         const tableBody = document.getElementById('performanceTableBody');
         tableBody.innerHTML = auditorStats.map(stats => `
-            <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
+            <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
                 <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Name">
                     ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.5625rem;">(You)</span>' : ''}
                 </div>
                 <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
                 <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
                 <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Avg Duration">${stats.avgDuration}</div>
                 <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage}%</span>
