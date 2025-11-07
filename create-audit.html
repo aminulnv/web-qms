@@ -98,22 +98,29 @@
                 </svg>
                 <span id="auditsViewTitle">My Assigned Audits</span>
                 <span id="pendingCount" style="background-color: #1A733E; color: white; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 600; min-width: 0.9704rem; text-align: center;">0</span>
-                <div style="position: relative; display: inline-block;">
-                    <button id="sortIconBtn" onclick="toggleSortMenu()" style="background: none; border: none; padding: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1A733E; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Sort audits">
+                <div style="display: flex; align-items: center; gap: 0.1617rem;">
+                    <div style="position: relative; display: inline-block;">
+                        <button id="sortIconBtn" onclick="toggleSortMenu()" style="background: none; border: none; padding: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1A733E; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Sort audits">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M7 12h10M11 18h2"/>
+                            </svg>
+                        </button>
+                        <div id="sortMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.1617rem; background: white; border: 0.0405rem solid #e5e7eb; border-radius: 0.2425rem; box-shadow: 0 0.1617rem 0.3234rem rgba(0,0,0,0.1); z-index: 1000; min-width: 7.7625rem; padding: 0.3234rem 0;">
+                            <select id="auditSortBy" onchange="sortPendingAudits(); toggleSortMenu();" style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
+                                <option value="name_asc">Name (A-Z)</option>
+                                <option value="name_desc">Name (Z-A)</option>
+                                <option value="status_asc">Status (Pending → In Progress)</option>
+                                <option value="status_desc">Status (In Progress → Pending)</option>
+                                <option value="priority_asc">Priority (Low → High)</option>
+                                <option value="priority_desc">Priority (High → Low)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="showFiltersBtn" onclick="toggleFilters()" style="background: none; border: none; padding: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #1A733E; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'" title="Show/Hide Filters">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M7 12h10M11 18h2"/>
+                            <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
                     </button>
-                    <div id="sortMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.1617rem; background: white; border: 0.0405rem solid #e5e7eb; border-radius: 0.2425rem; box-shadow: 0 0.1617rem 0.3234rem rgba(0,0,0,0.1); z-index: 1000; min-width: 7.7625rem; padding: 0.3234rem 0;">
-                        <select id="auditSortBy" onchange="sortPendingAudits(); toggleSortMenu();" style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
-                            <option value="name_asc">Name (A-Z)</option>
-                            <option value="name_desc">Name (Z-A)</option>
-                            <option value="status_asc">Status (Pending → In Progress)</option>
-                            <option value="status_desc">Status (In Progress → Pending)</option>
-                            <option value="priority_asc">Priority (Low → High)</option>
-                            <option value="priority_desc">Priority (High → Low)</option>
-                        </select>
-                    </div>
                 </div>
             </h3>
             <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
@@ -135,6 +142,49 @@
                 </button>
             </div>
         </div>
+        
+        <!-- Filters Section -->
+        <div id="filtersSection" style="display: none; background: #f9fafb; border: 0.0405rem solid #e5e7eb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.6469rem; margin-bottom: 0.6469rem;">
+                <!-- Date Range Filter -->
+                <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
+                    <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Start Date</label>
+                    <input type="date" id="filterStartDate" class="filter-input" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151;">
+                </div>
+                <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
+                    <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">End Date</label>
+                    <input type="date" id="filterEndDate" class="filter-input" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151;">
+                </div>
+                <!-- Status Filter -->
+                <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
+                    <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Status</label>
+                    <select id="filterStatus" class="filter-select" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151; cursor: pointer;">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <!-- Scorecard Filter -->
+                <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
+                    <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Scorecard</label>
+                    <select id="filterScorecard" class="filter-select" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151; cursor: pointer;">
+                        <option value="">All Scorecards</option>
+                    </select>
+                </div>
+                <!-- Search Filter -->
+                <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
+                    <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Search</label>
+                    <input type="text" id="filterSearch" class="filter-input" placeholder="Search by name..." style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151;">
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.3234rem; align-items: center; justify-content: flex-end;">
+                <button onclick="clearFilters()" style="padding: 0.2425rem 0.4852rem; background-color: #f9fafb; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='#f9fafb'">
+                    Clear
+                </button>
+            </div>
+        </div>
+        
         <div id="pendingAuditsList" style="display: flex; flex-direction: column; gap: 0.3234rem;">
             <div style="text-align: center; padding: 1.9406rem 0.9704rem; color: #6b7280;">
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 0.6469rem; opacity: 0.4;">
@@ -927,6 +977,16 @@ let isEditingExistingAudit = false; // Flag for editing from audit reports
 let currentEditingTableName = null; // Table name for the audit being edited
 let currentSortOrder = 'name_asc'; // Current sort order for pending audits
 
+// Filter state
+let activeFilters = {
+    startDate: null,
+    endDate: null,
+    status: '',
+    scorecard: '',
+    search: ''
+};
+let allPendingAudits = []; // Store all audits before filtering
+
 // Toggle sort menu
 function toggleSortMenu() {
     const sortMenu = document.getElementById('sortMenu');
@@ -1105,7 +1165,10 @@ async function loadPendingAudits() {
         });
         
         console.log('Loaded audits:', filteredData.length, 'out of', (data || []).length);
-        pendingAudits = filteredData;
+        allPendingAudits = filteredData; // Store all audits
+        
+        // Apply filters
+        applyFiltersToAudits();
         
         // Apply sorting
         sortPendingAudits();
@@ -1321,6 +1384,182 @@ function getPaginatedPendingAudits() {
     const endIndex = startIndex + pendingItemsPerPage;
     return pendingAudits.slice(startIndex, endIndex);
 }
+
+// ============================================================================
+// Filter Functions
+// ============================================================================
+
+// Apply filters to audits
+function applyFiltersToAudits() {
+    let filtered = [...allPendingAudits];
+    
+    // Date range filter
+    if (activeFilters.startDate) {
+        const startDate = new Date(activeFilters.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        filtered = filtered.filter(audit => {
+            const auditDate = new Date(audit.created_at);
+            auditDate.setHours(0, 0, 0, 0);
+            return auditDate >= startDate;
+        });
+    }
+    
+    if (activeFilters.endDate) {
+        const endDate = new Date(activeFilters.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        filtered = filtered.filter(audit => {
+            const auditDate = new Date(audit.created_at);
+            return auditDate <= endDate;
+        });
+    }
+    
+    // Status filter
+    if (activeFilters.status) {
+        filtered = filtered.filter(audit => audit.status === activeFilters.status);
+    }
+    
+    // Scorecard filter
+    if (activeFilters.scorecard) {
+        filtered = filtered.filter(audit => audit.scorecard_id === activeFilters.scorecard);
+    }
+    
+    // Search filter
+    if (activeFilters.search) {
+        const searchTerm = activeFilters.search.toLowerCase().trim();
+        filtered = filtered.filter(audit => {
+            const employeeName = (audit.employee_name || '').toLowerCase();
+            const employeeEmail = (audit.employee_email || '').toLowerCase();
+            const auditorEmail = (audit.auditor_email || '').toLowerCase();
+            const scorecardName = (audit.scorecards?.name || '').toLowerCase();
+            return employeeName.includes(searchTerm) || 
+                   employeeEmail.includes(searchTerm) || 
+                   auditorEmail.includes(searchTerm) ||
+                   scorecardName.includes(searchTerm);
+        });
+    }
+    
+    pendingAudits = filtered;
+}
+
+// Apply filters from UI
+function applyFilters() {
+    const startDateInput = document.getElementById('filterStartDate');
+    const endDateInput = document.getElementById('filterEndDate');
+    const statusSelect = document.getElementById('filterStatus');
+    const scorecardSelect = document.getElementById('filterScorecard');
+    const searchInput = document.getElementById('filterSearch');
+    
+    // Update active filters
+    activeFilters.startDate = startDateInput?.value || null;
+    activeFilters.endDate = endDateInput?.value || null;
+    activeFilters.status = statusSelect?.value || '';
+    activeFilters.scorecard = scorecardSelect?.value || '';
+    activeFilters.search = searchInput?.value || '';
+    
+    // Apply filters
+    applyFiltersToAudits();
+    
+    // Reset pagination
+    pendingCurrentPage = 1;
+    
+    // Apply sorting and display
+    sortPendingAudits();
+    displayPendingAudits();
+}
+
+// Clear all filters
+function clearFilters() {
+    const startDateInput = document.getElementById('filterStartDate');
+    const endDateInput = document.getElementById('filterEndDate');
+    const statusSelect = document.getElementById('filterStatus');
+    const scorecardSelect = document.getElementById('filterScorecard');
+    const searchInput = document.getElementById('filterSearch');
+    
+    // Clear filter inputs
+    if (startDateInput) startDateInput.value = '';
+    if (endDateInput) endDateInput.value = '';
+    if (statusSelect) statusSelect.value = '';
+    if (scorecardSelect) scorecardSelect.value = '';
+    if (searchInput) searchInput.value = '';
+    
+    // Reset active filters
+    activeFilters = {
+        startDate: null,
+        endDate: null,
+        status: '',
+        scorecard: '',
+        search: ''
+    };
+    
+    // Apply filters (will reset to all audits)
+    applyFiltersToAudits();
+    
+    // Reset pagination
+    pendingCurrentPage = 1;
+    
+    // Apply sorting and display
+    sortPendingAudits();
+    displayPendingAudits();
+}
+
+// Toggle filters visibility
+function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    const showFiltersBtn = document.getElementById('showFiltersBtn');
+    
+    if (filtersSection && showFiltersBtn) {
+        const isCurrentlyHidden = filtersSection.style.display === 'none';
+        filtersSection.style.display = isCurrentlyHidden ? 'block' : 'none';
+        
+        // Update button opacity to indicate active state
+        if (isCurrentlyHidden) {
+            showFiltersBtn.style.opacity = '1';
+            showFiltersBtn.title = 'Hide Filters';
+        } else {
+            showFiltersBtn.style.opacity = '0.7';
+            showFiltersBtn.title = 'Show Filters';
+        }
+    }
+}
+
+// Populate scorecard filter dropdown
+async function populateScorecardFilter() {
+    const scorecardSelect = document.getElementById('filterScorecard');
+    if (!scorecardSelect) return;
+    
+    try {
+        const { data: scorecards, error } = await window.supabaseClient
+            .from('scorecards')
+            .select('id, name')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) {
+            console.error('Error loading scorecards for filter:', error);
+            return;
+        }
+        
+        // Clear existing options except "All Scorecards"
+        scorecardSelect.innerHTML = '<option value="">All Scorecards</option>';
+        
+        // Add scorecard options
+        if (scorecards && scorecards.length > 0) {
+            scorecards.forEach(scorecard => {
+                const option = document.createElement('option');
+                option.value = scorecard.id;
+                option.textContent = scorecard.name;
+                scorecardSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error populating scorecard filter:', error);
+    }
+}
+
+// Make filter functions globally accessible
+window.applyFilters = applyFilters;
+window.clearFilters = clearFilters;
+window.toggleFilters = toggleFilters;
 
 // Update pagination UI for pending audits
 function updatePendingPaginationUI() {
@@ -3679,6 +3918,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Load pending audits when page loads (all assigned audits)
         loadPendingAudits();
+        
+        // Initialize filters
+        populateScorecardFilter();
+        
+        // Add event listener for search input (real-time filtering with debounce)
+        const searchInput = document.getElementById('filterSearch');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    applyFilters();
+                }, 300); // Debounce search by 300ms
+            });
+        }
+        
+        // All other filters (date, status, scorecard) already have onchange="applyFilters()" in HTML
         
         // Load your stats when page loads
         updateYourStats();

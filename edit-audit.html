@@ -1296,6 +1296,12 @@ async function populateEditFormFields(audit) {
     if (auditTypeInput) {
         auditTypeInput.value = audit.auditType || audit.audit_type || '';
     }
+    
+    // Populate recommendations field
+    const recommendationsTextarea = document.getElementById('recommendations');
+    if (recommendationsTextarea) {
+        recommendationsTextarea.value = audit.recommendations || '';
+    }
 }
 
 // Helper function to copy conversation ID
@@ -1415,6 +1421,8 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
     // Helper functions are now in audit-template.js
     // Use them from the global scope (formatDate, getCountryFlag, escapeHtml)
 
+    const isEditMode = mode === 'edit';
+
     // Check for passing status (handle both "Passing" and "Passed", but exclude "Not Passing")
     const passingStatus = audit.passingStatus ? audit.passingStatus.toLowerCase() : '';
     const isPassing = passingStatus && passingStatus.includes('pass') && !passingStatus.includes('not');
@@ -1477,15 +1485,18 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
     }
 
     // Generate recommendations HTML
-    const isEditMode = mode === 'edit';
+    // In edit mode, show editable textarea; otherwise show read-only div
     const recommendationsHtml = isEditMode
-        ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><textarea id="recommendations" name="recommendations" placeholder="Enter recommendations / next steps..." rows="6" style="font-family: 'Poppins', sans-serif; font-size: 0.5257rem; line-height: 1.6; border: 0.0304rem solid #d1d5db; border-radius: 0.2425rem; padding: 0.5659rem; width: 100%; resize: vertical; min-height: 6rem; background: white; color: #374151; box-sizing: border-box;">${escapeHtml(audit.recommendations || '')}</textarea></div>`
+        ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><textarea id="recommendations" name="recommendations" rows="4" placeholder="Enter recommendations and next steps for the employee..." style="width: 100%; padding: 0.5659rem; border: 0.0304rem solid #e5e7eb; border-radius: 0.2425rem; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; background-color: white; resize: vertical; box-sizing: border-box;">${escapeHtml(audit.recommendations || '')}</textarea></div>`
         : (audit.recommendations 
-            ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.5659rem; border-radius: 0.2425rem; border: 0.0304rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>`
+            ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.5659rem; border-radius: 0.2425rem; border: 0.0304rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${escapeHtml(audit.recommendations)}</div></div>`
             : '');
 
     // Check if current user is the audited employee (for showing acknowledge button)
     const showAcknowledgeButton = isCurrentUserAuditedEmployee();
+    
+    // Check if edit button should be shown (only for Quality Analysts when reversal is pending)
+    const showEditButton = shouldShowEditButton();
     
     // Check if reversal button should be shown (hide after 48 hours from audit submission)
     const auditSubmissionTime = audit.submittedAt || audit.auditTimestamp || audit.submitted_at || audit.audit_timestamp;
@@ -1558,8 +1569,19 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
         }
     }
     
-    // Edit button removed - no longer needed
+    // Generate edit button HTML (only if pending reversal and user is Quality Analyst)
     let editButtonHtml = '';
+    if (showEditButton) {
+        editButtonHtml = `
+                <button id="editAuditBtn" onclick="editCurrentAudit()" style="padding: 0.4852rem 1.2937rem; background-color: #f59e0b; color: white; border: none; border-radius: 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem;">
+                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit Audit
+                </button>
+        `;
+    }
     
     // Generate save button HTML for edit mode
     let saveButtonHtml = '';
@@ -6045,6 +6067,12 @@ async function saveAuditChanges() {
             auditData[`feedback_${fieldId}`] = feedbacks.length > 0 ? feedbacks : null;
         });
         
+        // Collect recommendations field
+        const recommendationsTextarea = document.getElementById('recommendations');
+        if (recommendationsTextarea) {
+            auditData.recommendations = recommendationsTextarea.value.trim() || null;
+        }
+        
         // Important: If error count is 0, ensure feedback is cleared and count is 0
         errorInputs.forEach(input => {
             // For radio buttons, use name; for number inputs, use id
@@ -6063,12 +6091,6 @@ async function saveAuditChanges() {
                 auditData[fieldId] = 0;
             }
         });
-        
-        // Collect recommendations value
-        const recommendationsTextarea = document.getElementById('recommendations');
-        if (recommendationsTextarea) {
-            auditData.recommendations = recommendationsTextarea.value.trim() || null;
-        }
         
         // Build update payload
         const updatePayload = {};
