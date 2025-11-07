@@ -576,17 +576,19 @@
                 <table class="performance-table">
                     <thead>
                         <tr>
-                            <th>Agent ID</th>
-                            <th>Agent Name</th>
+                            <th>Employee ID</th>
+                            <th>Full Name</th>
                             <th>Total Audits</th>
                             <th>Completed</th>
                             <th>Avg Score</th>
+                            <th>Total Error Count</th>
+                            <th>Top Error Parameter</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="performanceTableBody">
                         <tr>
-                            <td colspan="6" class="loading">Loading performance data...</td>
+                            <td colspan="8" class="loading">Loading performance data...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -668,6 +670,8 @@ let charts = {};
 let allAssignments = [];
 let allAudits = [];
 let filteredAssignments = [];
+let allUsers = [];
+let allScorecardParameters = {}; // Map of scorecard_id -> parameters
 let dateFilter = { start: null, end: null };
 let currentFilters = { channel: '', status: '', agent: '' };
 
@@ -730,6 +734,15 @@ function setupEventListeners() {
 // ============================================================================
 async function loadAllData() {
     try {
+        // Load all users for employee info
+        const { data: users, error: usersError } = await window.supabaseClient
+            .from('users')
+            .select('email, name, employee_id')
+            .eq('is_active', true);
+
+        if (usersError) throw usersError;
+        allUsers = users || [];
+
         // Load all audit assignments
         const { data: assignments, error: assignError } = await window.supabaseClient
             .from('audit_assignments')
@@ -738,6 +751,9 @@ async function loadAllData() {
 
         if (assignError) throw assignError;
         allAssignments = assignments || [];
+
+        // Load scorecard parameters for error parameter mapping
+        await loadScorecardParameters();
 
         // Load all audits from scorecard tables
         await loadAuditsData();
@@ -754,16 +770,56 @@ async function loadAllData() {
     } catch (error) {
         console.error('Error loading data:', error);
         document.getElementById('performanceTableBody').innerHTML = 
-            '<tr><td colspan="6" class="loading" style="color: var(--error-color);">Error loading data. Please refresh.</td></tr>';
+            '<tr><td colspan="8" class="loading" style="color: var(--error-color);">Error loading data. Please refresh.</td></tr>';
+    }
+}
+
+async function loadScorecardParameters() {
+    try {
+        const { data: scorecards, error: scError } = await window.supabaseClient
+            .from('scorecards')
+            .select('id')
+            .eq('is_active', true);
+
+        if (scError || !scorecards) return;
+
+        allScorecardParameters = {};
+        
+        for (const scorecard of scorecards) {
+            try {
+                const { data: parameters, error } = await window.supabaseClient
+                    .from('scorecard_parameters')
+                    .select('field_id, error_name, scorecard_id, parameter_type, field_type')
+                    .eq('scorecard_id', scorecard.id)
+                    .eq('is_active', true);
+
+                if (!error && parameters) {
+                    if (!allScorecardParameters[scorecard.id]) {
+                        allScorecardParameters[scorecard.id] = {};
+                    }
+                    parameters.forEach(param => {
+                        allScorecardParameters[scorecard.id][param.field_id] = {
+                            name: param.error_name,
+                            parameter_type: param.parameter_type || 'error',
+                            field_type: param.field_type || 'counter'
+                        };
+                    });
+                }
+            } catch (err) {
+                console.warn(`Error loading parameters for scorecard ${scorecard.id}:`, err);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading scorecard parameters:', error);
     }
 }
 
 async function loadAuditsData() {
     try {
-        // Get all active scorecards
+        // Get all active scorecards with their IDs
         const { data: scorecards, error: scError } = await window.supabaseClient
             .from('scorecards')
-            .select('table_name')
+            .select('id, table_name')
             .eq('is_active', true);
 
         if (scError || !scorecards) return;
@@ -773,15 +829,18 @@ async function loadAuditsData() {
         // Load audits from each scorecard table
         for (const scorecard of scorecards) {
             try {
+                // First, get all column names to load all parameter fields
+                // We'll load total_errors_count and all fields that might be parameters
                 const { data: audits, error } = await window.supabaseClient
                     .from(scorecard.table_name)
-                    .select('id, employee_email, auditor_email, average_score, submitted_at, channel')
+                    .select('*')
                     .not('average_score', 'is', null);
 
                 if (!error && audits) {
                     allAudits = allAudits.concat(audits.map(a => ({
                         ...a,
-                        scorecard_table: scorecard.table_name
+                        scorecard_table: scorecard.table_name,
+                        scorecard_id: scorecard.id
                     })));
                 }
             } catch (err) {
@@ -1065,7 +1124,8 @@ function updateAgentPerformance() {
                 email: agentEmail,
                 total: 0,
                 completed: 0,
-                scores: []
+                scores: [],
+                audits: [] // Store full audit objects for error analysis
             };
         }
         
@@ -1079,40 +1139,67 @@ function updateAgentPerformance() {
             a.employee_email === assignment.employee_email &&
             a.auditor_email === assignment.auditor_email
         );
-        if (audit && audit.average_score) {
-            agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
+        if (audit) {
+            if (audit.average_score) {
+                agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
+            }
+            // Store full audit for error analysis
+            agentMap[agentEmail].audits.push(audit);
         }
     });
 
-    // Calculate averages
+    // Calculate averages and error data
     const agentData = Object.values(agentMap).map(agent => {
         const avgScore = agent.scores.length > 0 
             ? Math.round(agent.scores.reduce((a, b) => a + b, 0) / agent.scores.length)
             : 0;
         
+        // Calculate total error count
+        const totalErrorCount = agent.audits.reduce((sum, audit) => {
+            return sum + (parseInt(audit.total_errors_count) || 0);
+        }, 0);
+        
+        // Calculate top error parameter
+        const topErrorParameter = getTopErrorParameter(agent.audits);
+        
+        // Get user info
+        const user = allUsers.find(u => u.email && agent.email && 
+            u.email.toLowerCase() === agent.email.toLowerCase());
+        const employeeId = user?.employee_id || '-';
+        const fullName = user?.name || formatAgentName(agent.email);
+        
+        // Status based primarily on average score
+        // Excellent: avgScore >= 80 OR (avgScore >= 70 AND completion rate >= 80%)
+        // Needs Improvement: otherwise
+        const completionRate = agent.total > 0 ? agent.completed / agent.total : 0;
+        const status = (avgScore >= 80) || (avgScore >= 70 && completionRate >= 0.8) ? 'available' : 'restock';
+        
         return {
             ...agent,
             avgScore,
-            status: agent.completed / agent.total >= 0.8 && avgScore >= 70 ? 'available' : 'restock'
+            totalErrorCount,
+            topErrorParameter,
+            employeeId,
+            fullName,
+            status
         };
     }).sort((a, b) => b.avgScore - a.avgScore);
 
     // Update table
     const tbody = document.getElementById('performanceTableBody');
     if (agentData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">No performance data available</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="loading">No performance data available</td></tr>';
     } else {
-        tbody.innerHTML = agentData.map((agent, idx) => {
-            const agentId = `AGT-${String(idx + 1).padStart(3, '0')}`;
-            const agentName = formatAgentName(agent.email);
-            
+        tbody.innerHTML = agentData.map((agent) => {
             return `
                 <tr>
-                    <td>${agentId}</td>
-                    <td>${agentName}</td>
+                    <td>${escapeHtml(agent.employeeId)}</td>
+                    <td>${escapeHtml(agent.fullName)}</td>
                     <td>${agent.total}</td>
                     <td>${agent.completed}</td>
                     <td>${agent.avgScore}%</td>
+                    <td>${agent.totalErrorCount}</td>
+                    <td>${escapeHtml(agent.topErrorParameter)}</td>
                     <td>
                         <span class="status-badge ${agent.status}">
                             <span class="status-dot ${agent.status}"></span>
@@ -1126,6 +1213,92 @@ function updateAgentPerformance() {
 
     // Update top performers chart
     updateTopPerformersChart(agentData.slice(0, 3));
+}
+
+function getTopErrorParameter(audits) {
+    if (!audits || audits.length === 0) return '-';
+    
+    // Count errors by parameter field_id
+    const errorCounts = {};
+    
+    audits.forEach(audit => {
+        if (!audit.scorecard_id) return;
+        
+        const parameters = allScorecardParameters[audit.scorecard_id];
+        if (!parameters) return;
+        
+        // Check each parameter field in the audit
+        Object.keys(parameters).forEach(fieldId => {
+            const paramInfo = parameters[fieldId];
+            const value = audit[fieldId];
+            let errorCount = 0;
+            
+            if (value !== null && value !== undefined && value !== '') {
+                const paramType = paramInfo.parameter_type || 'error';
+                const fieldType = paramInfo.field_type || 'counter';
+                
+                // For radio buttons
+                if (fieldType === 'radio') {
+                    let numValue = 0;
+                    if (typeof value === 'boolean') {
+                        numValue = value ? 1 : 0;
+                    } else if (typeof value === 'number') {
+                        numValue = value;
+                    } else if (typeof value === 'string') {
+                        const parsed = parseInt(value);
+                        if (!isNaN(parsed)) {
+                            numValue = parsed;
+                        } else if (value === 'true' || value === '1') {
+                            numValue = 1;
+                        }
+                    }
+                    
+                    // For achievement/bonus: NO (0) = not achieved = error
+                    // For error parameters: YES (1) = error occurred = error
+                    if (paramType === 'achievement' || paramType === 'bonus') {
+                        errorCount = numValue === 0 ? 1 : 0; // NO = error, YES = no error
+                    } else {
+                        errorCount = numValue; // YES = error, NO = no error
+                    }
+                } else {
+                    // For counters: the value itself is the error count
+                    if (typeof value === 'boolean') {
+                        errorCount = value ? 1 : 0;
+                    } else if (typeof value === 'number') {
+                        errorCount = value;
+                    } else if (typeof value === 'string') {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                            errorCount = numValue;
+                        } else if (value === 'true' || value === '1') {
+                            errorCount = 1;
+                        }
+                    }
+                }
+            }
+            
+            if (errorCount > 0) {
+                const paramName = paramInfo.name;
+                if (!errorCounts[paramName]) {
+                    errorCounts[paramName] = 0;
+                }
+                errorCounts[paramName] += errorCount;
+            }
+        });
+    });
+    
+    // Find the parameter with the highest error count
+    let topParameter = '-';
+    let maxCount = 0;
+    
+    Object.keys(errorCounts).forEach(paramName => {
+        if (errorCounts[paramName] > maxCount) {
+            maxCount = errorCounts[paramName];
+            topParameter = paramName;
+        }
+    });
+    
+    return topParameter;
 }
 
 function formatAgentName(email) {
@@ -1151,7 +1324,7 @@ function updateTopPerformersChart(data) {
     charts.topPerformers = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: data.map(a => formatAgentName(a.email)),
+            labels: data.map(a => a.fullName || formatAgentName(a.email)),
             datasets: [{
                 label: 'Score %',
                 data: data.map(a => a.avgScore),
@@ -1456,7 +1629,8 @@ function exportToCSV() {
                     email: agentEmail,
                     total: 0,
                     completed: 0,
-                    scores: []
+                    scores: [],
+                    audits: [] // Store full audit objects for error analysis
                 };
             }
             agentMap[agentEmail].total++;
@@ -1467,32 +1641,63 @@ function exportToCSV() {
                 a.employee_email === assignment.employee_email &&
                 a.auditor_email === assignment.auditor_email
             );
-            if (audit && audit.average_score) {
-                agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
+            if (audit) {
+                if (audit.average_score) {
+                    agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
+                }
+                // Store full audit for error analysis
+                agentMap[agentEmail].audits.push(audit);
             }
         });
 
-        // Calculate averages and sort same way as table
+        // Calculate averages and error data
         const agentData = Object.values(agentMap).map(agent => {
             const avgScore = agent.scores.length > 0 
                 ? agent.scores.reduce((a, b) => a + b, 0) / agent.scores.length
                 : 0;
+            
+            // Calculate total error count
+            const totalErrorCount = agent.audits.reduce((sum, audit) => {
+                return sum + (parseInt(audit.total_errors_count) || 0);
+            }, 0);
+            
+            // Calculate top error parameter
+            const topErrorParameter = getTopErrorParameter(agent.audits);
+            
+            // Get user info
+            const user = allUsers.find(u => u.email && agent.email && 
+                u.email.toLowerCase() === agent.email.toLowerCase());
+            const employeeId = user?.employee_id || '-';
+            const fullName = user?.name || formatAgentName(agent.email);
+            
+            // Status based primarily on average score
+            // Excellent: avgScore >= 80 OR (avgScore >= 70 AND completion rate >= 80%)
+            // Needs Improvement: otherwise
+            const completionRate = agent.total > 0 ? agent.completed / agent.total : 0;
+            const status = (avgScore >= 80) || (avgScore >= 70 && completionRate >= 0.8) ? 'available' : 'restock';
+            
             return {
                 ...agent,
                 avgScore,
-                status: agent.completed / agent.total >= 0.8 && avgScore >= 70 ? 'available' : 'restock'
+                totalErrorCount,
+                topErrorParameter,
+                employeeId,
+                fullName,
+                status
             };
         }).sort((a, b) => b.avgScore - a.avgScore);
 
         // Format for CSV export
-        const csvData = agentData.map((agent, idx) => {
+        const csvData = agentData.map((agent) => {
             const avgScore = agent.avgScore.toFixed(2);
             return {
-                'Agent ID': `AGT-${String(idx + 1).padStart(3, '0')}`,
-                'Agent Name': formatAgentName(agent.email),
+                'Employee ID': agent.employeeId || '-',
+                'Full Name': agent.fullName || formatAgentName(agent.email),
                 'Total Audits': agent.total,
                 'Completed': agent.completed,
                 'Average Score': `${avgScore}%`,
+                'Total Error Count': agent.totalErrorCount || 0,
+                'Top Error Parameter': agent.topErrorParameter || '-',
                 'Status': agent.status === 'available' ? 'Excellent' : 'Needs Improvement'
             };
         });
@@ -1536,7 +1741,7 @@ function exportToCSV() {
 // ============================================================================
 function refreshData() {
     const tbody = document.getElementById('performanceTableBody');
-    tbody.innerHTML = '<tr><td colspan="6" class="loading">Refreshing data...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="loading">Refreshing data...</td></tr>';
     loadAllData();
 }
 

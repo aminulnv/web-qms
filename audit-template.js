@@ -328,6 +328,23 @@ window.generateTranscriptSection = function(options = {}) {
             <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 0; transition: height 0.3s ease; overflow: hidden;">
                 <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.4852rem;">
                     ${transcriptInfoHtml}
+                    <!-- Third Row: Collapsible Information Grid -->
+                    <div id="conversationInfoGrid" style="display: none; padding-top: 0.3234rem; border-top: 0.0304rem solid #e5e7eb; margin-top: 0.3234rem;">
+                        <button id="toggleInfoGridBtn" type="button" onclick="toggleConversationInfoGrid()" style="width: 100%; padding: 0.3234rem 0.4852rem; background: #f9fafb; border: 0.0304rem solid #e5e7eb; border-radius: 0.2425rem; font-family: 'Poppins', sans-serif; font-size: 0.4447rem; font-weight: 600; color: #1A733E; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; margin-bottom: 0.3234rem;" onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#1A733E';" onmouseout="this.style.background='#f9fafb'; this.style.borderColor='#e5e7eb';">
+                            <span style="display: flex; align-items: center; gap: 0.2425rem;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>Conversation Details</span>
+                            </span>
+                            <svg id="toggleInfoGridIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem; transition: transform 0.2s; transform: rotate(0deg);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="conversationInfoGridContent" style="display: none; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.3234rem; font-family: 'Poppins', sans-serif;">
+                            <!-- Information cards will be populated here -->
+                        </div>
+                    </div>
                 </div>
                 <!-- Chat Interface View -->
                 <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
