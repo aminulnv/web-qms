@@ -17,7 +17,7 @@ let loadingState, errorState, errorMessage, conversationsContainer, conversation
 let startDateInput, endDateInput, applyFilterBtn, resetFilterBtn, adminInfo;
 let startDateDisplay, endDateDisplay;
 let pagination, paginationStart, paginationEnd, paginationTotal, paginationPrev, paginationNext, paginationPages;
-let loadingProgress;
+let loadingProgress, loadingStatus, progressBar;
 
 // Current date range
 let currentStartDate = null;
@@ -55,6 +55,8 @@ function initializeDOMElements() {
     paginationNext = document.getElementById('paginationNext');
     paginationPages = document.getElementById('paginationPages');
     loadingProgress = document.getElementById('loadingProgress');
+    loadingStatus = document.getElementById('loadingStatus');
+    progressBar = document.getElementById('progressBar');
 }
 
 /**
@@ -74,9 +76,9 @@ function formatEndDateForAPI(dateStr) {
 }
 
 /**
- * Format date for display (DD/MM/YYYY)
+ * Format date string for display (DD/MM/YYYY) - for date input values
  */
-function formatDateForDisplay(dateStr) {
+function formatDateStringForDisplay(dateStr) {
     if (!dateStr) return '';
     // dateStr is in YYYY-MM-DD format
     const [year, month, day] = dateStr.split('-');
@@ -84,15 +86,12 @@ function formatDateForDisplay(dateStr) {
 }
 
 /**
- * Set default date range (5 days from current date)
+ * Set default date range (today's date)
  */
 function setDefaultDateRange() {
     const today = new Date();
-    const endDate = new Date(today);
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 5);
 
-    // Format dates as YYYY-MM-DD for input
+    // Format date as YYYY-MM-DD for input
     const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -100,42 +99,88 @@ function setDefaultDateRange() {
         return `${year}-${month}-${day}`;
     };
 
-    currentStartDate = formatDate(startDate);
-    currentEndDate = formatDate(endDate);
+    const todayStr = formatDate(today);
+    currentStartDate = todayStr;
+    currentEndDate = todayStr;
 
-    startDateInput.value = currentStartDate;
-    endDateInput.value = currentEndDate;
+    // Set date selector if it exists
+    const dateSelector = document.getElementById('dateSelector');
+    if (dateSelector) {
+        dateSelector.value = todayStr;
+    }
+    
+    // Set old date inputs if they exist (for backward compatibility)
+    if (startDateInput) {
+        startDateInput.value = currentStartDate;
+    }
+    if (endDateInput) {
+        endDateInput.value = currentEndDate;
+    }
     
     // Update display
     updateDateDisplays();
 }
 
 /**
+ * Update progress indicator
+ */
+function updateProgressIndicator(percentage, message) {
+    if (loadingStatus) {
+        loadingStatus.textContent = message || 'Pulling from Intercom...';
+    }
+    
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
+    
+    if (loadingProgress && percentage === 100) {
+        loadingProgress.textContent = `✅ Loaded ${allConversations.length} conversations`;
+        setTimeout(() => {
+            if (loadingProgress) {
+                loadingProgress.textContent = '';
+            }
+        }, 3000);
+    }
+}
+
+/**
  * Update date displays
  */
 function updateDateDisplays() {
-    if (startDateDisplay && startDateInput.value) {
-        startDateDisplay.textContent = `(${formatDateForDisplay(startDateInput.value)})`;
+    // Update old date displays if they exist
+    if (startDateDisplay && startDateInput && startDateInput.value) {
+        startDateDisplay.textContent = `(${formatDateStringForDisplay(startDateInput.value)})`;
     }
-    if (endDateDisplay && endDateInput.value) {
-        endDateDisplay.textContent = `(${formatDateForDisplay(endDateInput.value)})`;
+    if (endDateDisplay && endDateInput && endDateInput.value) {
+        endDateDisplay.textContent = `(${formatDateStringForDisplay(endDateInput.value)})`;
+    }
+    
+    // Update new date selector display if it exists
+    const dateSelector = document.getElementById('dateSelector');
+    const selectedDateText = document.getElementById('selectedDateText');
+    if (dateSelector && dateSelector.value && selectedDateText) {
+        selectedDateText.textContent = formatDateStringForDisplay(dateSelector.value);
     }
 }
 
 /**
  * Fetch conversations page by page and update UI progressively
  */
-async function fetchConversationsProgressively(adminId, updatedSince, updatedBefore) {
+async function fetchConversationsProgressively(adminId, selectedDate) {
     let startingAfter = null;
     let hasMore = true;
     let pageCount = 0;
     const maxPages = 100; // Safety limit to prevent infinite loops
     isLoadingMore = true;
 
+    // Update progress: Initial
+    updateProgressIndicator(10, 'Pulling from Intercom...');
+
     // Fetch first page immediately
     while (hasMore && pageCount < maxPages) {
         pageCount++;
-        let edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=conversations&admin_id=${encodeURIComponent(adminId)}&updated_since=${encodeURIComponent(updatedSince)}&updated_before=${encodeURIComponent(updatedBefore)}`;
+        // Use updated_date parameter (single date in YYYY-MM-DD format)
+        let edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=conversations&admin_id=${encodeURIComponent(adminId)}&updated_date=${encodeURIComponent(selectedDate)}`;
         
         // Add pagination parameter if we have a cursor
         if (startingAfter) {
@@ -144,7 +189,14 @@ async function fetchConversationsProgressively(adminId, updatedSince, updatedBef
 
         console.log(`Fetching page ${pageCount}...`);
         
-        // Update loading progress
+        // Update progress: Searching
+        if (pageCount === 1) {
+            updateProgressIndicator(20, 'Searching conversations in Intercom...');
+        } else {
+            updateProgressIndicator(40 + (pageCount * 5), 'Pulling from Intercom...');
+        }
+        
+        // Update loading progress text
         if (loadingProgress) {
             const currentTotal = allConversations.length;
             const currentPages = Math.ceil(currentTotal / itemsPerPage);
@@ -166,7 +218,17 @@ async function fetchConversationsProgressively(adminId, updatedSince, updatedBef
             throw new Error(errorMsg);
         }
 
+        // Update progress: Pulling data
+        if (pageCount === 1) {
+            updateProgressIndicator(40, 'Pulling from Intercom...');
+        }
+        
         const data = await response.json();
+        
+        // Update progress: Processing
+        if (pageCount === 1) {
+            updateProgressIndicator(70, 'Processing participation data...');
+        }
         
         // Extract conversations from response
         let pageConversations = [];
@@ -177,7 +239,25 @@ async function fetchConversationsProgressively(adminId, updatedSince, updatedBef
         } else if (data && data.conversations && Array.isArray(data.conversations)) {
             pageConversations = data.conversations;
         }
+        
+        // Update analytics from edge function response (if available)
+        if (pageCount === 1 && data) {
+            updateAnalytics(data);
+        }
 
+        // Log response structure for debugging (only on first page)
+        if (pageCount === 1) {
+            console.log('📋 Response structure:', {
+                hasConversations: !!data.conversations,
+                conversationsType: Array.isArray(data.conversations) ? 'array' : typeof data.conversations,
+                conversationsLength: Array.isArray(data.conversations) ? data.conversations.length : 'N/A',
+                totalCount: data.total_count,
+                participationCount: data.participation_count,
+                hasMore: data.has_more,
+                nextCursor: data.next_cursor
+            });
+        }
+        
         // Add to all conversations
         if (pageConversations.length > 0) {
             allConversations = allConversations.concat(pageConversations);
@@ -215,13 +295,16 @@ async function fetchConversationsProgressively(adminId, updatedSince, updatedBef
                 console.log('═══════════════════════════════════════════════════════');
             }
             
-            // Update total count
-            conversationCount.textContent = allConversations.length;
+            // Update total count (with null check)
+            if (conversationCount) {
+                conversationCount.textContent = allConversations.length;
+            }
             
             // If this is the first page, hide loading and show results immediately
             if (pageCount === 1) {
-                loadingState.style.display = 'none';
-                conversationsContainer.style.display = 'block';
+                updateProgressIndicator(90, 'Almost done...');
+                if (loadingState) loadingState.style.display = 'none';
+                if (conversationsContainer) conversationsContainer.style.display = 'block';
                 displayConversations();
             } else {
                 // For subsequent pages, just update the display if we're on a page that's now available
@@ -230,15 +313,15 @@ async function fetchConversationsProgressively(adminId, updatedSince, updatedBef
         }
 
         // Check if there are more pages
-        hasMore = false;
-        startingAfter = null;
-
-        if (data.pages) {
+        // Edge function returns next_cursor and has_more
+        hasMore = data.has_more === true;
+        startingAfter = data.next_cursor || null;
+        
+        // Also check for old format (pages.next) for backward compatibility
+        if (!startingAfter && data.pages) {
             const pages = data.pages;
-            
             if (pages.next) {
                 const next = pages.next;
-                
                 if (typeof next === 'string') {
                     try {
                         if (next.includes('?')) {
@@ -255,24 +338,36 @@ async function fetchConversationsProgressively(adminId, updatedSince, updatedBef
                 } else if (next && typeof next === 'object') {
                     startingAfter = next.starting_after || next.cursor || null;
                 }
-                
-                hasMore = !!startingAfter;
             }
         }
 
-        // If we got no conversations, we're done
+        // If we got no conversations on first page, show message and stop
         if (pageConversations.length === 0) {
+            if (pageCount === 1) {
+                console.log('⚠️ No conversations found for the selected date');
+                if (loadingState) loadingState.style.display = 'none';
+                if (conversationsContainer) conversationsContainer.style.display = 'block';
+                const noResults = document.getElementById('noResults');
+                if (noResults) noResults.style.display = 'block';
+            }
             hasMore = false;
             break;
         }
 
-        // If we didn't get a starting_after value, we're done
-        if (!startingAfter) {
+        // If we didn't get a next_cursor and has_more is false, we're done
+        if (!startingAfter && !hasMore) {
             hasMore = false;
         }
     }
 
     isLoadingMore = false;
+    
+    // Update progress: Complete
+    updateProgressIndicator(100, 'Almost done...');
+    
+    // Small delay to show completion
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
     if (loadingProgress) {
         loadingProgress.textContent = `✅ All conversations loaded (${allConversations.length} total)`;
         setTimeout(() => {
@@ -296,41 +391,50 @@ async function loadConversations() {
     }
 
     // Show loading state
-    loadingState.style.display = 'block';
-    errorState.style.display = 'none';
-    conversationsContainer.style.display = 'none';
+    if (loadingState) loadingState.style.display = 'block';
+    if (errorState) errorState.style.display = 'none';
+    if (conversationsContainer) conversationsContainer.style.display = 'none';
+    
+    // Reset progress indicator
+    updateProgressIndicator(0, 'Initializing...');
 
-    // Get date range from inputs
-    const startDate = startDateInput.value;
-    const endDate = endDateInput.value;
+    // Get date from date selector (new) or date inputs (old)
+    const dateSelector = document.getElementById('dateSelector');
+    let selectedDate = null;
+    
+    if (dateSelector && dateSelector.value) {
+        selectedDate = dateSelector.value;
+    } else if (startDateInput && startDateInput.value) {
+        selectedDate = startDateInput.value;
+    } else if (endDateInput && endDateInput.value) {
+        selectedDate = endDateInput.value;
+    }
 
-    if (!startDate || !endDate) {
-        showError('Please select both start and end dates.');
-        loadingState.style.display = 'none';
+    if (!selectedDate) {
+        showError('Please select a date.');
+        if (loadingState) loadingState.style.display = 'none';
         return;
     }
 
-    currentStartDate = startDate;
-    currentEndDate = endDate;
+    // Use the same date for both start and end (single date selection)
+    currentStartDate = selectedDate;
+    currentEndDate = selectedDate;
 
     try {
-        // Format dates for API (YYYY-MM-DD HH:MM:SS)
-        const updatedSince = formatDateForAPI(startDate);
-        const updatedBefore = formatEndDateForAPI(endDate);
-
         console.log('═══════════════════════════════════════════════════════');
         console.log('🚀 FETCHING CONVERSATIONS (Progressive Loading)');
         console.log('═══════════════════════════════════════════════════════');
         console.log('Admin ID:', adminId);
-        console.log('Date Range (Display):', formatDateForDisplay(startDate), 'to', formatDateForDisplay(endDate));
-        console.log('Date Range (API):', updatedSince, 'to', updatedBefore);
+        console.log('Selected Date:', selectedDate);
+        console.log('Date (Display):', formatDateStringForDisplay(selectedDate));
 
         // Reset state
         allConversations = [];
         currentPage = 1;
         
         // Start fetching conversations progressively (shows first 20 immediately)
-        await fetchConversationsProgressively(adminId, updatedSince, updatedBefore);
+        // Use updated_date parameter (single date) instead of updated_since/updated_before
+        await fetchConversationsProgressively(adminId, selectedDate);
 
     } catch (error) {
         console.error('═══════════════════════════════════════════════════════');
@@ -476,16 +580,23 @@ function generateStarRating(rating) {
  * Display conversations in the table with pagination
  */
 function displayConversations() {
+    if (!conversationsTableBody) {
+        console.error('conversationsTableBody element not found');
+        return;
+    }
+    
     conversationsTableBody.innerHTML = '';
 
     if (allConversations.length === 0) {
-        document.getElementById('noResults').style.display = 'block';
-        conversationsContainer.style.display = 'block';
-        pagination.style.display = 'none';
+        const noResults = document.getElementById('noResults');
+        if (noResults) noResults.style.display = 'block';
+        if (conversationsContainer) conversationsContainer.style.display = 'block';
+        if (pagination) pagination.style.display = 'none';
         return;
     }
 
-    document.getElementById('noResults').style.display = 'none';
+    const noResults = document.getElementById('noResults');
+    if (noResults) noResults.style.display = 'none';
 
     // Calculate pagination
     const totalPages = Math.ceil(allConversations.length / itemsPerPage);
@@ -493,14 +604,20 @@ function displayConversations() {
     const endIndex = Math.min(startIndex + itemsPerPage, allConversations.length);
     const pageConversations = allConversations.slice(startIndex, endIndex);
 
-    // Update pagination info
-    paginationStart.textContent = allConversations.length > 0 ? startIndex + 1 : 0;
-    paginationEnd.textContent = endIndex;
-    paginationTotal.textContent = allConversations.length;
+    // Update pagination info (with null checks)
+    if (paginationStart) paginationStart.textContent = allConversations.length > 0 ? startIndex + 1 : 0;
+    if (paginationEnd) paginationEnd.textContent = endIndex;
+    if (paginationTotal) {
+        paginationTotal.textContent = allConversations.length;
+        // Show loading indicator in pagination info if still loading
+        if (isLoadingMore) {
+            paginationTotal.textContent = `${allConversations.length}+`;
+        }
+    }
     
-    // Show loading indicator in pagination info if still loading
-    if (isLoadingMore && paginationTotal) {
-        paginationTotal.textContent = `${allConversations.length}+`;
+    // Show pagination if we have conversations
+    if (pagination) {
+        pagination.style.display = totalPages > 1 ? 'flex' : 'none';
     }
 
     // Display conversations for current page
@@ -516,9 +633,26 @@ function displayConversations() {
         const updatedDate = formatDateForDisplay(conversation.updated_at);
         
         // Get subject/preview
-        const subject = conversation.source?.subject || 
-                       conversation.conversation_parts?.[0]?.body?.substring(0, 100) || 
-                       'No subject';
+        let subject = 'No subject';
+        if (conversation.source?.subject) {
+            subject = conversation.source.subject;
+        } else if (conversation.source?.body) {
+            // Remove HTML tags and get first 100 chars
+            const bodyText = conversation.source.body.replace(/<[^>]*>/g, '').trim();
+            subject = bodyText || 'No subject';
+        } else if (conversation.conversation_parts) {
+            // Try to get from conversation parts
+            let parts = [];
+            if (Array.isArray(conversation.conversation_parts)) {
+                parts = conversation.conversation_parts;
+            } else if (conversation.conversation_parts.conversation_parts && Array.isArray(conversation.conversation_parts.conversation_parts)) {
+                parts = conversation.conversation_parts.conversation_parts;
+            }
+            if (parts.length > 0 && parts[0].body) {
+                const bodyText = parts[0].body.replace(/<[^>]*>/g, '').trim();
+                subject = bodyText || 'No subject';
+            }
+        }
         const subjectDisplay = subject.length > 100 ? subject.substring(0, 100) + '...' : subject;
         
         // Get conversation state
@@ -563,6 +697,9 @@ function displayConversations() {
             </td>
             <td>${ratingHtml}</td>
             <td>${stateBadge}</td>
+            <td>
+                ${conversation.participation_part_count ? `<span class="badge badge-success">${conversation.participation_part_count}</span>` : '-'}
+            </td>
             <td>${createdDate}</td>
             <td>${updatedDate}</td>
             <td>
@@ -747,12 +884,60 @@ window.copyConversationId = function(conversationId, buttonElement) {
 }
 
 /**
+ * Update analytics cards with data from edge function response
+ */
+function updateAnalytics(data) {
+    const analyticsDiv = document.getElementById('participationAnalytics');
+    if (!analyticsDiv) return;
+    
+    // Show analytics section
+    analyticsDiv.style.display = 'block';
+    
+    // Update participated conversations count
+    const participatedCountEl = document.getElementById('participatedConversations');
+    if (participatedCountEl) {
+        const count = data.total_count || (data.conversations ? data.conversations.length : 0);
+        participatedCountEl.textContent = count;
+    }
+    
+    // Update total parts created (participation parts)
+    const participationPartsEl = document.getElementById('participationParts');
+    if (participationPartsEl && data.participation_count !== undefined) {
+        participationPartsEl.textContent = data.participation_count;
+    }
+    
+    // Update intercom total count
+    const intercomTotalEl = document.getElementById('intercomTotalCount');
+    if (intercomTotalEl && data.intercom_total_count !== undefined) {
+        intercomTotalEl.textContent = data.intercom_total_count;
+    }
+    
+    // Update processed count
+    const processedCountEl = document.getElementById('processedCount');
+    if (processedCountEl && data.processed_count !== undefined) {
+        processedCountEl.textContent = data.processed_count;
+    }
+    
+    // Show warning if there are more conversations
+    const warningDiv = document.getElementById('moreConversationsWarning');
+    const warningCountEl = document.getElementById('warningCount');
+    if (warningDiv && data.has_more) {
+        warningDiv.style.display = 'block';
+        if (warningCountEl) {
+            warningCountEl.textContent = data.total_count || 0;
+        }
+    } else if (warningDiv) {
+        warningDiv.style.display = 'none';
+    }
+}
+
+/**
  * Show error message
  */
 function showError(message) {
-    errorMessage.textContent = message;
-    errorState.style.display = 'block';
-    loadingState.style.display = 'none';
+    if (errorMessage) errorMessage.textContent = message;
+    if (errorState) errorState.style.display = 'block';
+    if (loadingState) loadingState.style.display = 'none';
 }
 
 /**
@@ -769,22 +954,63 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeDOMElements();
     
-    // Set admin info
-    adminInfo.textContent = `Viewing conversations for: ${escapeHtml(adminName)} (ID: ${adminId})`;
+    // Set owner information in header
+    const ownerNameEl = document.getElementById('ownerName');
+    const ownerInitialEl = document.getElementById('ownerInitial');
+    const adminNameFilterEl = document.getElementById('adminNameFilter');
+    
+    if (ownerNameEl && adminName) {
+        ownerNameEl.textContent = adminName;
+    }
+    
+    if (ownerInitialEl && adminName) {
+        // Get initials from admin name
+        const initials = adminName
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase())
+            .slice(0, 2)
+            .join('');
+        ownerInitialEl.textContent = initials || '?';
+    }
+    
+    if (adminNameFilterEl && adminName) {
+        adminNameFilterEl.textContent = adminName;
+    }
+    
+    // Set admin info (if element exists)
+    if (adminInfo) {
+        adminInfo.textContent = `Viewing conversations for: ${escapeHtml(adminName)} (ID: ${adminId})`;
+    }
     
     // Set default date range
     setDefaultDateRange();
     
-    // Add event listeners
-    applyFilterBtn.addEventListener('click', loadConversations);
-    resetFilterBtn.addEventListener('click', () => {
-        setDefaultDateRange();
-        loadConversations();
-    });
+    // Add event listeners (with null checks)
+    if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', loadConversations);
+    }
+    if (resetFilterBtn) {
+        resetFilterBtn.addEventListener('click', () => {
+            setDefaultDateRange();
+            loadConversations();
+        });
+    }
     
     // Update displays when dates change
-    startDateInput.addEventListener('change', updateDateDisplays);
-    endDateInput.addEventListener('change', updateDateDisplays);
+    if (startDateInput) {
+        startDateInput.addEventListener('change', updateDateDisplays);
+    }
+    if (endDateInput) {
+        endDateInput.addEventListener('change', updateDateDisplays);
+    }
+    
+    // Add event listener for date selector (new single date picker)
+    const dateSelector = document.getElementById('dateSelector');
+    if (dateSelector) {
+        dateSelector.addEventListener('change', () => {
+            loadConversations();
+        });
+    }
     
     // Select all checkbox functionality
     const selectAllCheckbox = document.getElementById('checkbox-all');
