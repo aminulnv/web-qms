@@ -67,6 +67,51 @@
                 transform: translateY(-1.25rem) scale(0.95);
             }
         }
+        
+        /* Shimmer effect for loading states */
+        .shimmer-text {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shimmer-text::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        .shimmer-overlay {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -291,6 +336,83 @@
         </div>
     </div>
 
+    <!-- Pull Conversations from Intercom Section -->
+    <div id="pullConversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem;">
+            <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Conversations from Intercom
+            </h3>
+            <button onclick="closePullConversationsSection()" style="background: #f3f4f6; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; color: #374151; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                Close
+            </button>
+        </div>
+        
+        <!-- Date Selector and Count -->
+        <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
+            <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <label for="pullConversationsDate" style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; white-space: nowrap;">Select Date:</label>
+                    <input type="date" id="pullConversationsDate" style="padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <span style="font-size: 0.4852rem; color: #6b7280;">Participated Conversations:</span>
+                    <span id="pullConversationsCount" style="font-size: 0.5659rem; font-weight: 600; color: #1A733E;">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading State with Progress Indicator -->
+        <div id="pullConversationsLoading" style="display: none; text-align: center; padding: 1.9406rem; color: #6b7280;">
+            <div style="max-width: 28rem; margin: 0 auto;">
+                <div class="shimmer-text" style="margin-bottom: 0.6469rem;">
+                    <p id="pullConversationsStatus" style="font-size: 0.5659rem; margin: 0; color: #374151; font-weight: 500;">Pulling from Intercom...</p>
+                </div>
+                <div style="width: 100%; background: #e5e7eb; border-radius: 0.125rem; height: 0.4043rem; margin-bottom: 0.3234rem; overflow: hidden; position: relative;">
+                    <div id="pullConversationsProgressBar" style="background: #1A733E; height: 0.4043rem; border-radius: 0.125rem; transition: width 0.3s ease-out; width: 0%; position: relative;">
+                        <div class="shimmer-overlay"></div>
+                    </div>
+                </div>
+                <div class="shimmer-text">
+                    <p id="pullConversationsProgress" style="font-size: 0.4447rem; color: #6b7280; margin-top: 0.3234rem; margin: 0;"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error State -->
+        <div id="pullConversationsError" style="display: none; background: #fee2e2; color: #991b1b; padding: 0.6469rem; border-radius: 0.3234rem; margin-bottom: 0.6469rem; font-size: 0.4852rem;">
+            <strong>Error:</strong> <span id="pullConversationsErrorMessage"></span>
+        </div>
+        
+        <!-- Conversations List -->
+        <div id="pullConversationsList" style="display: none;">
+            <div style="background: white; border-radius: 0.3234rem; overflow: hidden; border: 0.0304rem solid #e5e7eb; max-height: 60vh; overflow-y: auto; position: relative;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb;">
+                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Client</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Conversation ID</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Subject</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Product Type</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Rating</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">State</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Created</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Updated</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pullConversationsTableBody">
+                        <!-- Rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Conversations Section (Hidden by default, shown when View conversations is clicked) -->
     <div id="conversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem;">
@@ -464,6 +586,33 @@
                             <span>Ascending (Oldest First)</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Product Type Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="conversationProductType" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Product Type</label>
+                    <select id="conversationProductType" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        <option value="all">All</option>
+                        <option value="Futures">Futures</option>
+                        <option value="CFD">CFD</option>
+                        <option value="CFD / Forex">CFD / Forex</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Date Range (Filter loaded conversations)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label for="filterDateStart" style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Start Date</label>
+                            <input type="date" id="filterDateStart" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        </div>
+                        <div>
+                            <label for="filterDateEnd" style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">End Date</label>
+                            <input type="date" id="filterDateEnd" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        </div>
+                    </div>
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; margin-bottom: 0;">Note: This filters the already-loaded conversations by their date. Use the main date picker above to change the fetch range.</p>
                 </div>
 
                 <!-- Active Filters Display -->
@@ -1597,20 +1746,48 @@ function displayPendingAudits() {
                     </p>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-shrink: 0;">
                 ${statusBadge}
-                <button 
-                    onclick="event.stopPropagation(); viewEmployeeConversations('${escapeHtml(displayEmail)}', '${escapeHtml(displayName)}')" 
-                    style="padding: 0.3234rem 0.6469rem; background-color: #f3f4f6; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
-                    onmouseover="this.style.backgroundColor='#e5e7eb'; this.style.borderColor='#9ca3af'"
-                    onmouseout="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
-                    title="View conversations for ${escapeHtml(displayName)}"
-                >
-                    View conversations
-                </button>
                 ${actionButton}
+                ${displayEmail && displayEmail !== 'No email' ? `
+                    <button 
+                        class="pull-conversations-btn"
+                        data-email="${escapeHtml(displayEmail)}"
+                        data-name="${escapeHtml(displayName)}"
+                        style="padding: 0.2425rem 0.4852rem; background-color: #f0fdf4; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.2425rem;"
+                        onmouseover="this.style.backgroundColor='#dcfce7'; this.style.borderColor='#15582E'; this.style.color='#15582E';"
+                        onmouseout="this.style.backgroundColor='#f0fdf4'; this.style.borderColor='#1A733E'; this.style.color='#1A733E';"
+                        title="Pull conversations for ${escapeHtml(displayName)}"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>Pull Conversations</span>
+                    </button>
+                ` : ''}
             </div>
         `;
+        
+        // Add event listener to pull conversations button
+        if (displayEmail && displayEmail !== 'No email') {
+            const pullBtn = auditCard.querySelector('.pull-conversations-btn');
+            if (pullBtn) {
+                pullBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const email = this.getAttribute('data-email');
+                    const name = this.getAttribute('data-name');
+                    console.log('🔘 Button clicked - Email:', email, 'Name:', name);
+                    if (window.pullConversationsForEmployee && typeof window.pullConversationsForEmployee === 'function') {
+                        window.pullConversationsForEmployee(email, name);
+                    } else {
+                        console.error('❌ pullConversationsForEmployee function not found on window');
+                        alert('Function not loaded. Please refresh the page.');
+                    }
+                });
+            }
+        }
         
         auditCard.onmouseenter = () => {
             auditCard.style.borderColor = '#1A733E';
@@ -2177,7 +2354,8 @@ window.createManualAudit = async function() {
 let currentEmployeeEmail = null;
 let currentEmployeeName = null;
 let currentAdminId = null;
-let allEmployeeConversations = [];
+let allEmployeeConversations = []; // Filtered conversations for display
+let rawEmployeeConversations = []; // All unfiltered conversations (persistent)
 let currentConversationsPage = 1;
 const conversationsItemsPerPage = 20; // Display 20 conversations per page
 const maxConversationsToFetch = 150; // Maximum conversations to fetch from API
@@ -2389,8 +2567,612 @@ window.closeConversationsSection = function() {
     currentEmployeeName = null;
     currentAdminId = null;
     allEmployeeConversations = [];
+    rawEmployeeConversations = []; // Clear raw conversations too
     currentConversationsPage = 1;
 };
+
+// ============================================================================
+// Pull Conversations from Intercom Functions
+// ============================================================================
+
+let pullConversationsAdminId = null;
+let pullConversationsList = [];
+
+// Pull conversations from Intercom - main function (for current user)
+window.pullConversationsFromIntercom = async function() {
+    try {
+        // Get current user's email from localStorage
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
+        
+        if (!currentUserEmail) {
+            showPullConversationsError('User email not found. Please log in again.');
+            return;
+        }
+        
+        // Show the section
+        const section = document.getElementById('pullConversationsSection');
+        if (section) {
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Set default date to today
+        const dateInput = document.getElementById('pullConversationsDate');
+        if (dateInput && !dateInput.value) {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            dateInput.value = todayStr;
+        }
+        
+        // Find admin ID for current user
+        await findAdminIdForCurrentUser(currentUserEmail);
+        
+        // If admin ID found, load conversations
+        if (pullConversationsAdminId) {
+            const selectedDate = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+            await fetchConversationsForCurrentUser(selectedDate);
+        }
+        
+    } catch (error) {
+        console.error('Error pulling conversations:', error);
+        showPullConversationsError(`Failed to pull conversations: ${error.message}`);
+    }
+};
+
+// Pull conversations for a specific employee (from audit card)
+window.pullConversationsForEmployee = async function(employeeEmail, employeeName) {
+    try {
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🚀 PULL CONVERSATIONS FOR EMPLOYEE');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('Email:', employeeEmail);
+        console.log('Name:', employeeName);
+        
+        if (!employeeEmail || !employeeEmail.trim()) {
+            console.error('❌ Employee email is required');
+            showPullConversationsError('Employee email is required.');
+            return;
+        }
+        
+        // Show the section immediately
+        const section = document.getElementById('pullConversationsSection');
+        if (!section) {
+            console.error('❌ pullConversationsSection element not found!');
+            alert('Error: Conversations section not found. Please refresh the page.');
+            return;
+        }
+        
+        console.log('✅ Showing conversations section');
+        section.style.display = 'block';
+        
+        // Hide error and list initially
+        const errorDiv = document.getElementById('pullConversationsError');
+        const listDiv = document.getElementById('pullConversationsList');
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (listDiv) listDiv.style.display = 'none';
+        
+        // Show loading immediately
+        const loadingDiv = document.getElementById('pullConversationsLoading');
+        if (loadingDiv) {
+            loadingDiv.style.display = 'block';
+            updateProgressIndicator(10, 'Initializing...');
+        }
+        
+        // Scroll to section
+        setTimeout(() => {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        
+        // Set default date to today
+        const dateInput = document.getElementById('pullConversationsDate');
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        if (dateInput) {
+            dateInput.value = todayStr;
+            console.log('✅ Date set to:', todayStr);
+        }
+        
+        // Reset admin ID
+        pullConversationsAdminId = null;
+        
+        // Find admin ID for the employee email (look in Supabase cache first)
+        console.log('🔍 Looking up admin ID for email:', employeeEmail);
+        await findAdminIdForEmployee(employeeEmail);
+        
+        // If admin ID found, load conversations
+        if (pullConversationsAdminId) {
+            const selectedDate = dateInput ? dateInput.value : todayStr;
+            console.log('✅ Admin ID found:', pullConversationsAdminId);
+            console.log('📅 Fetching conversations for date:', selectedDate);
+            await fetchConversationsForCurrentUser(selectedDate);
+        } else {
+            console.error('❌ Admin ID not found for email:', employeeEmail);
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            showPullConversationsError(`Admin ID not found for email: ${employeeEmail}. Please ensure the admin exists in Intercom.`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error pulling conversations for employee:', error);
+        console.error('Error stack:', error.stack);
+        const loadingDiv = document.getElementById('pullConversationsLoading');
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        showPullConversationsError(`Failed to pull conversations: ${error.message}`);
+    }
+};
+
+// Find admin ID for a specific employee email (looks in Supabase cache first)
+async function findAdminIdForEmployee(employeeEmail) {
+    const normalizedEmail = employeeEmail.toLowerCase().trim();
+    let adminId = null;
+    let adminFound = false;
+    
+    // Get Supabase configuration
+    const supabaseUrl = window.SupabaseConfig?.url || '';
+    const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        showPullConversationsError('Configuration error: Supabase credentials not found.');
+        return;
+    }
+    
+    // First, try to find admin in Supabase cache
+    const supabaseClient = window.SupabaseConfig?.getClient?.();
+    if (supabaseClient) {
+        try {
+            console.log('🔍 Looking up admin in Supabase cache for email:', normalizedEmail);
+            const { data: cachedAdmins, error: queryError } = await supabaseClient
+                .from('intercom_admin_cache')
+                .select('id, email, name, admin_data')
+                .eq('email', normalizedEmail)
+                .limit(1);
+            
+            if (!queryError && cachedAdmins && cachedAdmins.length > 0) {
+                const cachedAdmin = cachedAdmins[0];
+                adminId = cachedAdmin.id || cachedAdmin.admin_data?.id;
+                if (adminId) {
+                    console.log('✅ Admin found in Supabase cache:', adminId);
+                    adminFound = true;
+                }
+            } else if (queryError) {
+                console.warn('⚠️ Error querying admin cache:', queryError);
+            }
+        } catch (cacheError) {
+            console.warn('⚠️ Error accessing Supabase cache:', cacheError);
+        }
+    }
+    
+    // Fallback: If not found in cache, fetch from Intercom API
+    if (!adminFound) {
+        console.log('🔄 Admin not in cache, fetching from Intercom API...');
+        try {
+            const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=admins`;
+            
+            const response = await fetch(edgeFunctionUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${supabaseAnonKey}`,
+                    'apikey': supabaseAnonKey,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const admins = data.admins || data || [];
+            
+            // Find admin with matching email (case-insensitive)
+            const admin = admins.find(a => a.email && a.email.toLowerCase() === normalizedEmail);
+            
+            if (!admin || !admin.id) {
+                showPullConversationsError(`Admin not found for email: ${employeeEmail}`);
+                return;
+            }
+            
+            adminId = admin.id;
+            console.log('✅ Admin found via Intercom API fallback:', adminId);
+            
+            // Cache this admin for future use (async, don't wait)
+            if (supabaseClient && admin) {
+                cacheAdminAsync(supabaseClient, admin).catch(err => {
+                    console.warn('⚠️ Failed to cache admin (non-critical):', err);
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ Error fetching admin from Intercom API:', error);
+            showPullConversationsError(`Failed to find admin: ${error.message}`);
+            return;
+        }
+    }
+    
+    if (!adminId) {
+        showPullConversationsError(`Admin ID not found for email: ${employeeEmail}`);
+        return;
+    }
+    
+    pullConversationsAdminId = adminId;
+}
+
+// Find admin ID for current user
+async function findAdminIdForCurrentUser(userEmail) {
+    const normalizedEmail = userEmail.toLowerCase().trim();
+    let adminId = null;
+    let adminFound = false;
+    
+    // Get Supabase configuration
+    const supabaseUrl = window.SupabaseConfig?.url || '';
+    const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        showPullConversationsError('Configuration error: Supabase credentials not found.');
+        return;
+    }
+    
+    // First, try to find admin in Supabase cache
+    const supabaseClient = window.SupabaseConfig?.getClient?.();
+    if (supabaseClient) {
+        try {
+            console.log('🔍 Looking up admin in Supabase cache...');
+            const { data: cachedAdmins, error: queryError } = await supabaseClient
+                .from('intercom_admin_cache')
+                .select('id, email, name, admin_data')
+                .eq('email', normalizedEmail)
+                .limit(1);
+            
+            if (!queryError && cachedAdmins && cachedAdmins.length > 0) {
+                const cachedAdmin = cachedAdmins[0];
+                adminId = cachedAdmin.id || cachedAdmin.admin_data?.id;
+                if (adminId) {
+                    console.log('✅ Admin found in Supabase cache');
+                    adminFound = true;
+                }
+            }
+        } catch (cacheError) {
+            console.warn('⚠️ Error accessing Supabase cache:', cacheError);
+        }
+    }
+    
+    // Fallback: If not found in cache, fetch from Intercom API
+    if (!adminFound) {
+        console.log('🔄 Admin not in cache, fetching from Intercom API...');
+        try {
+            const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=admins`;
+            
+            const response = await fetch(edgeFunctionUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${supabaseAnonKey}`,
+                    'apikey': supabaseAnonKey,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const admins = data.admins || data || [];
+            
+            // Find admin with matching email (case-insensitive)
+            const admin = admins.find(a => a.email && a.email.toLowerCase() === normalizedEmail);
+            
+            if (!admin || !admin.id) {
+                showPullConversationsError(`Admin not found for email: ${employeeEmail}`);
+                return;
+            }
+            
+            adminId = admin.id;
+            console.log('✅ Admin found via Intercom API fallback:', adminId);
+            
+            // Cache this admin for future use (async, don't wait)
+            if (supabaseClient && admin) {
+                cacheAdminAsync(supabaseClient, admin).catch(err => {
+                    console.warn('⚠️ Failed to cache admin (non-critical):', err);
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ Error fetching admin from Intercom API:', error);
+            showPullConversationsError(`Failed to find admin: ${error.message}`);
+            return;
+        }
+    }
+    
+    if (!adminId) {
+        showPullConversationsError(`Admin ID not found for email: ${employeeEmail}`);
+        return;
+    }
+    
+    pullConversationsAdminId = adminId;
+    console.log('✅ Admin ID set:', pullConversationsAdminId);
+};
+
+// Fetch conversations for current user
+async function fetchConversationsForCurrentUser(selectedDate) {
+    if (!pullConversationsAdminId) {
+        showPullConversationsError('Admin ID not found. Please try again.');
+        return;
+    }
+    
+    // Hide elements during loading
+    hideElementsDuringLoading();
+    
+    // Show loading state
+    const loadingDiv = document.getElementById('pullConversationsLoading');
+    const errorDiv = document.getElementById('pullConversationsError');
+    const listDiv = document.getElementById('pullConversationsList');
+    
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (listDiv) listDiv.style.display = 'none';
+    
+    // Get Supabase configuration
+    const supabaseUrl = window.SupabaseConfig?.url || '';
+    const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+    
+    // Update progress: Initial
+    updateProgressIndicator(10, 'Pulling from Intercom...');
+    
+    try {
+        // Build edge function URL
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=conversations&admin_id=${encodeURIComponent(pullConversationsAdminId)}&updated_date=${encodeURIComponent(selectedDate)}`;
+        
+        console.log('📡 Calling:', edgeFunctionUrl);
+        
+        // Update progress: Searching
+        updateProgressIndicator(20, 'Searching conversations in Intercom...');
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+            throw new Error(errorMsg);
+        }
+
+        // Update progress: Processing
+        updateProgressIndicator(70, 'Processing participation data...');
+        
+        const data = await response.json();
+        
+        // Extract conversations from response
+        let conversations = [];
+        if (data && Array.isArray(data.conversations)) {
+            conversations = data.conversations;
+        } else if (data && data.type === 'conversation.list' && Array.isArray(data.conversations)) {
+            conversations = data.conversations;
+        }
+        
+        const participationCount = data.participation_count || 0;
+        
+        console.log(`✅ Fetched ${conversations.length} participated conversations`);
+        
+        // Update progress: Complete
+        updateProgressIndicator(100, 'Almost done...');
+        
+        // Small delay to show completion
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Store conversations
+        pullConversationsList = conversations;
+        
+        // Update count
+        const countElement = document.getElementById('pullConversationsCount');
+        if (countElement) {
+            countElement.textContent = conversations.length;
+        }
+        
+        // Hide loading and show results
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (listDiv) listDiv.style.display = 'block';
+        
+        // Show elements after loading
+        showElementsAfterLoading();
+        
+        // Display conversations
+        displayPullConversationsList(conversations);
+        
+    } catch (error) {
+        console.error('❌ Error fetching conversations:', error);
+        showPullConversationsError(`Failed to fetch conversations: ${error.message}`);
+        if (loadingDiv) loadingDiv.style.display = 'none';
+    }
+}
+
+// Update progress indicator
+function updateProgressIndicator(percentage, message) {
+    const statusElement = document.getElementById('pullConversationsStatus');
+    const progressBar = document.getElementById('pullConversationsProgressBar');
+    const progressText = document.getElementById('pullConversationsProgress');
+    
+    if (statusElement) {
+        statusElement.textContent = message || 'Pulling from Intercom...';
+    }
+    
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
+    
+    if (progressText && percentage === 100) {
+        progressText.textContent = `✅ Loaded ${pullConversationsList.length} conversations`;
+        setTimeout(() => {
+            if (progressText) {
+                progressText.textContent = '';
+            }
+        }, 3000);
+    }
+}
+
+// Hide elements during loading
+function hideElementsDuringLoading() {
+    const dateSelector = document.getElementById('pullConversationsDate');
+    const countDisplay = document.querySelector('#pullConversationsSection > div:nth-child(2)');
+    
+    if (dateSelector) {
+        dateSelector.style.opacity = '0.5';
+        dateSelector.disabled = true;
+    }
+    if (countDisplay) {
+        countDisplay.style.opacity = '0.5';
+    }
+}
+
+// Show elements after loading
+function showElementsAfterLoading() {
+    const dateSelector = document.getElementById('pullConversationsDate');
+    const countDisplay = document.querySelector('#pullConversationsSection > div:nth-child(2)');
+    
+    if (dateSelector) {
+        dateSelector.style.opacity = '1';
+        dateSelector.disabled = false;
+    }
+    if (countDisplay) {
+        countDisplay.style.opacity = '1';
+    }
+}
+
+// Display conversations list
+function displayPullConversationsList(conversations) {
+    const tableBody = document.getElementById('pullConversationsTableBody');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    if (conversations.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
+        return;
+    }
+    
+    conversations.forEach(conversation => {
+        const row = document.createElement('tr');
+        row.style.cursor = 'pointer';
+        row.onclick = () => {
+            window.open(`audit-view.html?conversation_id=${conversation.id}`, '_blank');
+        };
+        
+        // Extract data
+        const clientName = extractClientName(conversation);
+        const clientEmail = extractClientEmail(conversation);
+        const conversationId = conversation.id || 'N/A';
+        const subject = conversation.source?.subject || conversation.source?.body?.substring(0, 50) || 'No subject';
+        const productType = conversation.custom_attributes?.['Product Type'] || conversation.custom_attributes?.['product_type'] || '-';
+        const rating = conversation.conversation_rating?.rating || '-';
+        const state = conversation.state || 'unknown';
+        const createdDate = conversation.created_at_iso || (conversation.created_at ? new Date(conversation.created_at * 1000).toLocaleDateString() : '-');
+        const updatedDate = conversation.updated_at_iso || (conversation.updated_at ? new Date(conversation.updated_at * 1000).toLocaleDateString() : '-');
+        
+        // Format rating
+        let ratingHtml = '-';
+        if (rating && rating !== '-') {
+            const ratingColor = rating >= 4 ? '#10b981' : rating >= 3 ? '#f59e0b' : '#ef4444';
+            ratingHtml = `<span style="color: ${ratingColor}; font-weight: 600;">${rating}/5</span>`;
+        }
+        
+        // Format state
+        const stateColor = state === 'closed' ? '#10b981' : state === 'open' ? '#f59e0b' : '#6b7280';
+        const stateBadge = `<span style="background: ${stateColor === '#10b981' ? '#d1fae5' : stateColor === '#f59e0b' ? '#fef3c7' : '#f3f4f6'}; color: ${stateColor}; padding: 0.1875rem 0.375rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 500;">${state}</span>`;
+        
+        row.innerHTML = `
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <div style="font-weight: 500; color: #111827; font-size: 0.875rem;">${escapeHtml(clientName)}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(clientEmail)}</div>
+            </td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <span style="font-family: monospace; font-size: 0.6875rem; color: #6b7280;">${conversationId}</span>
+                    <button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.25rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
+                        <svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <div style="max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+            </td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #374151;">${escapeHtml(productType)}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${ratingHtml}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${stateBadge}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #6b7280; white-space: nowrap;">${createdDate}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #6b7280; white-space: nowrap;">${updatedDate}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+                <button 
+                    onclick="event.stopPropagation(); window.open('audit-view.html?conversation_id=${conversation.id}', '_blank');"
+                    style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                    onmouseover="this.style.background='#a7f3d0'"
+                    onmouseout="this.style.background='#d1fae5'"
+                >
+                    Audit
+                </button>
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
+// Show error message
+function showPullConversationsError(message) {
+    const errorDiv = document.getElementById('pullConversationsError');
+    const errorMessage = document.getElementById('pullConversationsErrorMessage');
+    const loadingDiv = document.getElementById('pullConversationsLoading');
+    const listDiv = document.getElementById('pullConversationsList');
+    
+    if (errorDiv && errorMessage) {
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    if (listDiv) listDiv.style.display = 'none';
+}
+
+// Close pull conversations section
+window.closePullConversationsSection = function() {
+    const section = document.getElementById('pullConversationsSection');
+    if (section) {
+        section.style.display = 'none';
+    }
+    // Reset state
+    pullConversationsAdminId = null;
+    pullConversationsList = [];
+};
+
+// Copy to clipboard helper
+function copyToClipboard(text, buttonElement) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+        buttonElement.style.color = '#10b981';
+        setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.style.color = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+// Escape HTML helper
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // Set default date range (previous day - one day)
 function setDefaultConversationsDateRange() {
@@ -2468,7 +3250,10 @@ let currentConversationFilters = {
     open: null,
     unread: null,
     sort: 'updated_at',
-    order: 'desc'
+    order: 'desc',
+    productType: null, // 'Futures', 'CFD', 'CFD / Forex', or null for all
+    dateStart: null, // Date string (YYYY-MM-DD) or null
+    dateEnd: null // Date string (YYYY-MM-DD) or null
 };
 
 // Open conversations filter dialog
@@ -2488,6 +3273,21 @@ window.openConversationsFilterDialog = function() {
     
     const sortOrderRadio = document.querySelector(`input[name="conversationSortOrder"][value="${currentConversationFilters.order || 'desc'}"]`);
     if (sortOrderRadio) sortOrderRadio.checked = true;
+    
+    const productTypeSelect = document.getElementById('conversationProductType');
+    if (productTypeSelect) {
+        productTypeSelect.value = currentConversationFilters.productType || 'all';
+    }
+    
+    const filterDateStart = document.getElementById('filterDateStart');
+    if (filterDateStart) {
+        filterDateStart.value = currentConversationFilters.dateStart || '';
+    }
+    
+    const filterDateEnd = document.getElementById('filterDateEnd');
+    if (filterDateEnd) {
+        filterDateEnd.value = currentConversationFilters.dateEnd || '';
+    }
     
     // Update active filters display
     updateActiveFiltersDisplay();
@@ -2539,6 +3339,32 @@ window.closeConversationsFilterDialog = function() {
     }
 };
 
+// Re-apply filters to already-loaded raw conversations (no re-fetch)
+function reapplyFilters() {
+    if (rawEmployeeConversations.length === 0) {
+        console.warn('⚠️ No raw conversations to filter. Please load conversations first.');
+        return;
+    }
+    
+    // Apply filters to raw conversations
+    const filteredConversations = applyClientSideFilters(rawEmployeeConversations, currentConversationFilters);
+    allEmployeeConversations = filteredConversations;
+    
+    // Reset to first page
+    currentConversationsPage = 1;
+    
+    // Update count
+    const countSpan = document.getElementById('conversationsCount');
+    if (countSpan) {
+        countSpan.textContent = filteredConversations.length;
+    }
+    
+    // Update display
+    displayEmployeeConversations();
+    
+    console.log(`🔍 Filters reapplied: ${rawEmployeeConversations.length} raw conversations → ${filteredConversations.length} filtered conversations`);
+}
+
 // Apply conversations filters
 window.applyConversationsFilters = function() {
     // Get filter values from form
@@ -2546,6 +3372,9 @@ window.applyConversationsFilters = function() {
     const readStatusRadio = document.querySelector('input[name="conversationReadStatus"]:checked');
     const sortSelect = document.getElementById('conversationSortBy');
     const sortOrderRadio = document.querySelector('input[name="conversationSortOrder"]:checked');
+    const productTypeSelect = document.getElementById('conversationProductType');
+    const filterDateStart = document.getElementById('filterDateStart');
+    const filterDateEnd = document.getElementById('filterDateEnd');
     
     // Update filter state
     if (statusRadio) {
@@ -2572,6 +3401,23 @@ window.applyConversationsFilters = function() {
         currentConversationFilters.order = sortOrderRadio.value;
     }
     
+    // Product type filter
+    if (productTypeSelect) {
+        if (productTypeSelect.value === 'all') {
+            currentConversationFilters.productType = null;
+        } else {
+            currentConversationFilters.productType = productTypeSelect.value;
+        }
+    }
+    
+    // Date range filters
+    if (filterDateStart) {
+        currentConversationFilters.dateStart = filterDateStart.value || null;
+    }
+    if (filterDateEnd) {
+        currentConversationFilters.dateEnd = filterDateEnd.value || null;
+    }
+    
     // Update active filters display
     updateActiveFiltersDisplay();
     updateActiveFiltersCount();
@@ -2579,10 +3425,8 @@ window.applyConversationsFilters = function() {
     // Close dialog
     closeConversationsFilterDialog();
     
-    // Reload conversations with new filters
-    if (currentAdminId) {
-        loadConversationsForEmployee();
-    }
+    // Re-apply filters to already-loaded data (no re-fetch)
+    reapplyFilters();
 };
 
 // Reset all conversations filters
@@ -2592,7 +3436,10 @@ window.resetConversationsFilters = function() {
         open: null,
         unread: null,
         sort: 'updated_at',
-        order: 'desc'
+        order: 'desc',
+        productType: null,
+        dateStart: null,
+        dateEnd: null
     };
     
     // Reset form values
@@ -2607,6 +3454,18 @@ window.resetConversationsFilters = function() {
     
     const sortOrderDesc = document.getElementById('sortOrderDesc');
     if (sortOrderDesc) sortOrderDesc.checked = true;
+    
+    const productTypeSelect = document.getElementById('conversationProductType');
+    if (productTypeSelect) productTypeSelect.value = 'all';
+    
+    const filterDateStart = document.getElementById('filterDateStart');
+    if (filterDateStart) filterDateStart.value = '';
+    
+    const filterDateEnd = document.getElementById('filterDateEnd');
+    if (filterDateEnd) filterDateEnd.value = '';
+    
+    // Re-apply filters (will show all conversations)
+    reapplyFilters();
     
     // Update displays
     updateActiveFiltersDisplay();
@@ -2654,6 +3513,23 @@ function updateActiveFiltersDisplay() {
         });
     }
     
+    if (currentConversationFilters.productType) {
+        badges.push({
+            label: `Product: ${currentConversationFilters.productType}`,
+            value: currentConversationFilters.productType
+        });
+    }
+    
+    if (currentConversationFilters.dateStart || currentConversationFilters.dateEnd) {
+        const dateRange = [];
+        if (currentConversationFilters.dateStart) dateRange.push(currentConversationFilters.dateStart);
+        if (currentConversationFilters.dateEnd) dateRange.push(currentConversationFilters.dateEnd);
+        badges.push({
+            label: `Date: ${dateRange.join(' to ')}`,
+            value: dateRange.join(' to ')
+        });
+    }
+    
     if (badges.length > 0) {
         activeFiltersBadges.innerHTML = badges.map(badge => 
             `<span style="background-color: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500;">${escapeHtml(badge.label)}</span>`
@@ -2675,6 +3551,8 @@ function updateActiveFiltersCount() {
     if (currentConversationFilters.unread !== null) count++;
     if (currentConversationFilters.sort && currentConversationFilters.sort !== 'updated_at') count++;
     if (currentConversationFilters.order && currentConversationFilters.order !== 'desc') count++;
+    if (currentConversationFilters.productType) count++;
+    if (currentConversationFilters.dateStart || currentConversationFilters.dateEnd) count++;
     
     if (count > 0) {
         activeFiltersCount.textContent = count;
@@ -2706,6 +3584,53 @@ function applyClientSideFilters(conversations, filters) {
         filtered = filtered.filter(conv => {
             const isUnread = conv.read === false;
             return filters.unread ? isUnread : !isUnread;
+        });
+    }
+    
+    // Filter by product type
+    if (filters.productType && filters.productType !== 'all') {
+        filtered = filtered.filter(conv => {
+            const productType = extractProductType(conv);
+            if (!productType) return false;
+            
+            const productTypeLower = productType.toLowerCase();
+            const filterLower = filters.productType.toLowerCase();
+            
+            // Handle different variations
+            if (filterLower === 'cfd') {
+                return productTypeLower.includes('cfd');
+            } else if (filterLower === 'futures') {
+                return productTypeLower.includes('futures') && !productTypeLower.includes('cfd');
+            } else if (filterLower === 'cfd / forex' || filterLower === 'cfd/forex') {
+                return productTypeLower.includes('cfd') && (productTypeLower.includes('forex') || productTypeLower.includes('/'));
+            }
+            
+            return productTypeLower === filterLower;
+        });
+    }
+    
+    // Filter by date range (filter conversations by their created_at or updated_at)
+    if (filters.dateStart || filters.dateEnd) {
+        filtered = filtered.filter(conv => {
+            // Use updated_at as primary, fallback to created_at
+            const convDate = conv.updated_at || conv.created_at;
+            if (!convDate) return false;
+            
+            // Convert to timestamp (handle both seconds and milliseconds)
+            let timestamp = typeof convDate === 'number' ? convDate : new Date(convDate).getTime();
+            if (timestamp < 10000000000) timestamp = timestamp * 1000;
+            
+            const convDateObj = new Date(timestamp);
+            const convDateStr = convDateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+            
+            if (filters.dateStart && convDateStr < filters.dateStart) {
+                return false;
+            }
+            if (filters.dateEnd && convDateStr > filters.dateEnd) {
+                return false;
+            }
+            
+            return true;
         });
     }
     
@@ -2844,9 +3769,7 @@ async function fetchWithRetry(url, options, maxRetries = 3, retryDelay = 1000, t
 async function fetchEmployeeConversationsProgressively(adminId, updatedSince, updatedBefore, filters = null) {
     isLoadingEmployeeConversations = true;
     allEmployeeConversations = [];
-    
-    // Keep raw unfiltered conversations separate during fetching
-    let rawConversations = [];
+    rawEmployeeConversations = []; // Clear and store fresh raw data
 
     // Use provided filters or current filter state (always use currentConversationFilters as fallback)
     const activeFilters = filters !== null ? filters : currentConversationFilters;
@@ -2946,32 +3869,17 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
             }
 
             if (pageConversations.length > 0) {
-                // Add conversations to raw array (unfiltered)
-                rawConversations = rawConversations.concat(pageConversations);
+                // Add conversations to raw array (unfiltered) - store in global variable
+                rawEmployeeConversations = rawEmployeeConversations.concat(pageConversations);
                 
-                // Apply filters to all raw conversations so far
-                const filteredConversations = applyClientSideFilters(rawConversations, activeFilters);
-                allEmployeeConversations = filteredConversations;
-                
-                // Update count with filtered count
+                // Update count to show progress (raw count during loading)
                 const countSpan = document.getElementById('conversationsCount');
                 if (countSpan) {
-                    countSpan.textContent = filteredConversations.length;
+                    countSpan.textContent = rawEmployeeConversations.length;
                 }
                 
-                // For first page: Show results immediately (fast initial display)
-                if (pageCount === 1) {
-                    const loadingDiv = document.getElementById('conversationsLoading');
-                    const listDiv = document.getElementById('conversationsList');
-                    if (loadingDiv) loadingDiv.style.display = 'none';
-                    if (listDiv) listDiv.style.display = 'block';
-                    displayEmployeeConversations();
-                    console.log(`✅ Fast initial load complete: ${rawConversations.length} conversations fetched, ${filteredConversations.length} after filtering`);
-                } else {
-                    // For subsequent pages: Update UI in background
-                    displayEmployeeConversations();
-                    console.log(`✅ Background fetch complete: Added ${pageConversations.length} more conversations (Total fetched: ${rawConversations.length}, After filtering: ${filteredConversations.length})`);
-                }
+                // Don't display during progressive loading - wait until all data is fetched
+                console.log(`📥 Page ${pageCount} loaded: ${pageConversations.length} conversations (Total fetched: ${rawEmployeeConversations.length})`);
             }
 
             // Check if there are more pages to fetch
@@ -3020,10 +3928,10 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
             }
         }
 
-        console.log(`✅ All conversations loaded: ${rawConversations.length} total conversations fetched`);
+        console.log(`✅ All conversations loaded: ${rawEmployeeConversations.length} total conversations fetched`);
         
         // Apply final client-side filtering and sorting to all raw conversations
-        const filteredConversations = applyClientSideFilters(rawConversations, activeFilters);
+        const filteredConversations = applyClientSideFilters(rawEmployeeConversations, activeFilters);
         allEmployeeConversations = filteredConversations;
         console.log(`🔍 After filtering: ${filteredConversations.length} conversations`);
         
@@ -3032,6 +3940,12 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
         if (countSpan) {
             countSpan.textContent = filteredConversations.length;
         }
+        
+        // Hide loading and show results
+        const loadingDiv = document.getElementById('conversationsLoading');
+        const listDiv = document.getElementById('conversationsList');
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (listDiv) listDiv.style.display = 'block';
         
         displayEmployeeConversations();
         
@@ -5500,6 +6414,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Load pending audits when page loads (all assigned audits)
         loadPendingAudits();
         
+        // Initialize date selector for pull conversations
+        const pullConversationsDateInput = document.getElementById('pullConversationsDate');
+        if (pullConversationsDateInput) {
+            pullConversationsDateInput.addEventListener('change', async function() {
+                if (pullConversationsAdminId && this.value) {
+                    await fetchConversationsForCurrentUser(this.value);
+                }
+            });
+        }
+        
         // Initialize filters
         populateScorecardFilter();
         
@@ -5705,6 +6629,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Attaching submit event listener to form...');
         
+        // Guard to prevent duplicate submissions
+        let isSubmitting = false;
+        
         // Handler function
         const handleSubmit = async function(e) {
             console.log('DEBUG: Form submit event fired!'); // Debug log only
@@ -5712,6 +6639,14 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            // Prevent duplicate submissions
+            if (isSubmitting) {
+                console.log('Submission already in progress, ignoring duplicate submit event');
+                return;
+            }
+            
+            isSubmitting = true;
             
             console.log('===== FORM SUBMISSION STARTED =====');
             
@@ -5723,6 +6658,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmText: 'OK',
                     type: 'warning'
                 });
+                isSubmitting = false;
                 return;
             }
             
@@ -5743,6 +6679,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'error'
                 });
                 console.error('Supabase client not available after waiting');
+                isSubmitting = false;
                 return;
             }
             
@@ -5796,6 +6733,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (interactionIdField) {
                     interactionIdField.focus();
                 }
+                isSubmitting = false;
                 return;
             }
             
@@ -5845,6 +6783,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmText: 'OK',
                     type: 'error'
                 });
+                isSubmitting = false;
                 return;
             }
             
@@ -6277,13 +7216,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     cancelText: 'Close',
                     type: 'error'
                 });
-                return;
+            } finally {
+                // Always reset the submitting flag
+                isSubmitting = false;
             }
         };
         
-        // Attach the handler in multiple phases to ensure it runs
-        auditForm.addEventListener('submit', handleSubmit, true); // Capture phase
-        auditForm.addEventListener('submit', handleSubmit, false); // Bubble phase
+        // Attach the handler to the form submit event
+        auditForm.addEventListener('submit', handleSubmit);
         
         console.log('Event listeners attached successfully');
         

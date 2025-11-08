@@ -1,5 +1,5 @@
 /**
- * Intercom Admins Management
+ * Intercom Admin Report
  * Handles fetching and displaying Intercom administrators
  * Uses Supabase Edge Function to avoid CORS issues
  */
