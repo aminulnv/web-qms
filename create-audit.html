@@ -466,6 +466,33 @@
                     </div>
                 </div>
 
+                <!-- Product Type Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="conversationProductType" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Product Type</label>
+                    <select id="conversationProductType" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        <option value="all">All</option>
+                        <option value="Futures">Futures</option>
+                        <option value="CFD">CFD</option>
+                        <option value="CFD / Forex">CFD / Forex</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Date Range (Filter loaded conversations)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label for="filterDateStart" style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Start Date</label>
+                            <input type="date" id="filterDateStart" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        </div>
+                        <div>
+                            <label for="filterDateEnd" style="display: block; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">End Date</label>
+                            <input type="date" id="filterDateEnd" style="width: 100%; padding: 0.5rem 0.75rem; border: 0.0625rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; color: #374151; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#1A733E'; this.style.outline='none';" onblur="this.style.borderColor='#d1d5db';">
+                        </div>
+                    </div>
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; margin-bottom: 0;">Note: This filters the already-loaded conversations by their date. Use the main date picker above to change the fetch range.</p>
+                </div>
+
                 <!-- Active Filters Display -->
                 <div id="activeFiltersDisplay" style="margin-bottom: 1.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.375rem; display: none;">
                     <div style="font-size: 0.75rem; font-weight: 500; color: #6b7280; margin-bottom: 0.5rem;">Active Filters:</div>
@@ -2177,7 +2204,8 @@ window.createManualAudit = async function() {
 let currentEmployeeEmail = null;
 let currentEmployeeName = null;
 let currentAdminId = null;
-let allEmployeeConversations = [];
+let allEmployeeConversations = []; // Filtered conversations for display
+let rawEmployeeConversations = []; // All unfiltered conversations (persistent)
 let currentConversationsPage = 1;
 const conversationsItemsPerPage = 20; // Display 20 conversations per page
 const maxConversationsToFetch = 150; // Maximum conversations to fetch from API
@@ -2389,6 +2417,7 @@ window.closeConversationsSection = function() {
     currentEmployeeName = null;
     currentAdminId = null;
     allEmployeeConversations = [];
+    rawEmployeeConversations = []; // Clear raw conversations too
     currentConversationsPage = 1;
 };
 
@@ -2468,7 +2497,10 @@ let currentConversationFilters = {
     open: null,
     unread: null,
     sort: 'updated_at',
-    order: 'desc'
+    order: 'desc',
+    productType: null, // 'Futures', 'CFD', 'CFD / Forex', or null for all
+    dateStart: null, // Date string (YYYY-MM-DD) or null
+    dateEnd: null // Date string (YYYY-MM-DD) or null
 };
 
 // Open conversations filter dialog
@@ -2488,6 +2520,21 @@ window.openConversationsFilterDialog = function() {
     
     const sortOrderRadio = document.querySelector(`input[name="conversationSortOrder"][value="${currentConversationFilters.order || 'desc'}"]`);
     if (sortOrderRadio) sortOrderRadio.checked = true;
+    
+    const productTypeSelect = document.getElementById('conversationProductType');
+    if (productTypeSelect) {
+        productTypeSelect.value = currentConversationFilters.productType || 'all';
+    }
+    
+    const filterDateStart = document.getElementById('filterDateStart');
+    if (filterDateStart) {
+        filterDateStart.value = currentConversationFilters.dateStart || '';
+    }
+    
+    const filterDateEnd = document.getElementById('filterDateEnd');
+    if (filterDateEnd) {
+        filterDateEnd.value = currentConversationFilters.dateEnd || '';
+    }
     
     // Update active filters display
     updateActiveFiltersDisplay();
@@ -2539,6 +2586,32 @@ window.closeConversationsFilterDialog = function() {
     }
 };
 
+// Re-apply filters to already-loaded raw conversations (no re-fetch)
+function reapplyFilters() {
+    if (rawEmployeeConversations.length === 0) {
+        console.warn('⚠️ No raw conversations to filter. Please load conversations first.');
+        return;
+    }
+    
+    // Apply filters to raw conversations
+    const filteredConversations = applyClientSideFilters(rawEmployeeConversations, currentConversationFilters);
+    allEmployeeConversations = filteredConversations;
+    
+    // Reset to first page
+    currentConversationsPage = 1;
+    
+    // Update count
+    const countSpan = document.getElementById('conversationsCount');
+    if (countSpan) {
+        countSpan.textContent = filteredConversations.length;
+    }
+    
+    // Update display
+    displayEmployeeConversations();
+    
+    console.log(`🔍 Filters reapplied: ${rawEmployeeConversations.length} raw conversations → ${filteredConversations.length} filtered conversations`);
+}
+
 // Apply conversations filters
 window.applyConversationsFilters = function() {
     // Get filter values from form
@@ -2546,6 +2619,9 @@ window.applyConversationsFilters = function() {
     const readStatusRadio = document.querySelector('input[name="conversationReadStatus"]:checked');
     const sortSelect = document.getElementById('conversationSortBy');
     const sortOrderRadio = document.querySelector('input[name="conversationSortOrder"]:checked');
+    const productTypeSelect = document.getElementById('conversationProductType');
+    const filterDateStart = document.getElementById('filterDateStart');
+    const filterDateEnd = document.getElementById('filterDateEnd');
     
     // Update filter state
     if (statusRadio) {
@@ -2572,6 +2648,23 @@ window.applyConversationsFilters = function() {
         currentConversationFilters.order = sortOrderRadio.value;
     }
     
+    // Product type filter
+    if (productTypeSelect) {
+        if (productTypeSelect.value === 'all') {
+            currentConversationFilters.productType = null;
+        } else {
+            currentConversationFilters.productType = productTypeSelect.value;
+        }
+    }
+    
+    // Date range filters
+    if (filterDateStart) {
+        currentConversationFilters.dateStart = filterDateStart.value || null;
+    }
+    if (filterDateEnd) {
+        currentConversationFilters.dateEnd = filterDateEnd.value || null;
+    }
+    
     // Update active filters display
     updateActiveFiltersDisplay();
     updateActiveFiltersCount();
@@ -2579,10 +2672,8 @@ window.applyConversationsFilters = function() {
     // Close dialog
     closeConversationsFilterDialog();
     
-    // Reload conversations with new filters
-    if (currentAdminId) {
-        loadConversationsForEmployee();
-    }
+    // Re-apply filters to already-loaded data (no re-fetch)
+    reapplyFilters();
 };
 
 // Reset all conversations filters
@@ -2592,7 +2683,10 @@ window.resetConversationsFilters = function() {
         open: null,
         unread: null,
         sort: 'updated_at',
-        order: 'desc'
+        order: 'desc',
+        productType: null,
+        dateStart: null,
+        dateEnd: null
     };
     
     // Reset form values
@@ -2607,6 +2701,18 @@ window.resetConversationsFilters = function() {
     
     const sortOrderDesc = document.getElementById('sortOrderDesc');
     if (sortOrderDesc) sortOrderDesc.checked = true;
+    
+    const productTypeSelect = document.getElementById('conversationProductType');
+    if (productTypeSelect) productTypeSelect.value = 'all';
+    
+    const filterDateStart = document.getElementById('filterDateStart');
+    if (filterDateStart) filterDateStart.value = '';
+    
+    const filterDateEnd = document.getElementById('filterDateEnd');
+    if (filterDateEnd) filterDateEnd.value = '';
+    
+    // Re-apply filters (will show all conversations)
+    reapplyFilters();
     
     // Update displays
     updateActiveFiltersDisplay();
@@ -2654,6 +2760,23 @@ function updateActiveFiltersDisplay() {
         });
     }
     
+    if (currentConversationFilters.productType) {
+        badges.push({
+            label: `Product: ${currentConversationFilters.productType}`,
+            value: currentConversationFilters.productType
+        });
+    }
+    
+    if (currentConversationFilters.dateStart || currentConversationFilters.dateEnd) {
+        const dateRange = [];
+        if (currentConversationFilters.dateStart) dateRange.push(currentConversationFilters.dateStart);
+        if (currentConversationFilters.dateEnd) dateRange.push(currentConversationFilters.dateEnd);
+        badges.push({
+            label: `Date: ${dateRange.join(' to ')}`,
+            value: dateRange.join(' to ')
+        });
+    }
+    
     if (badges.length > 0) {
         activeFiltersBadges.innerHTML = badges.map(badge => 
             `<span style="background-color: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500;">${escapeHtml(badge.label)}</span>`
@@ -2675,6 +2798,8 @@ function updateActiveFiltersCount() {
     if (currentConversationFilters.unread !== null) count++;
     if (currentConversationFilters.sort && currentConversationFilters.sort !== 'updated_at') count++;
     if (currentConversationFilters.order && currentConversationFilters.order !== 'desc') count++;
+    if (currentConversationFilters.productType) count++;
+    if (currentConversationFilters.dateStart || currentConversationFilters.dateEnd) count++;
     
     if (count > 0) {
         activeFiltersCount.textContent = count;
@@ -2706,6 +2831,53 @@ function applyClientSideFilters(conversations, filters) {
         filtered = filtered.filter(conv => {
             const isUnread = conv.read === false;
             return filters.unread ? isUnread : !isUnread;
+        });
+    }
+    
+    // Filter by product type
+    if (filters.productType && filters.productType !== 'all') {
+        filtered = filtered.filter(conv => {
+            const productType = extractProductType(conv);
+            if (!productType) return false;
+            
+            const productTypeLower = productType.toLowerCase();
+            const filterLower = filters.productType.toLowerCase();
+            
+            // Handle different variations
+            if (filterLower === 'cfd') {
+                return productTypeLower.includes('cfd');
+            } else if (filterLower === 'futures') {
+                return productTypeLower.includes('futures') && !productTypeLower.includes('cfd');
+            } else if (filterLower === 'cfd / forex' || filterLower === 'cfd/forex') {
+                return productTypeLower.includes('cfd') && (productTypeLower.includes('forex') || productTypeLower.includes('/'));
+            }
+            
+            return productTypeLower === filterLower;
+        });
+    }
+    
+    // Filter by date range (filter conversations by their created_at or updated_at)
+    if (filters.dateStart || filters.dateEnd) {
+        filtered = filtered.filter(conv => {
+            // Use updated_at as primary, fallback to created_at
+            const convDate = conv.updated_at || conv.created_at;
+            if (!convDate) return false;
+            
+            // Convert to timestamp (handle both seconds and milliseconds)
+            let timestamp = typeof convDate === 'number' ? convDate : new Date(convDate).getTime();
+            if (timestamp < 10000000000) timestamp = timestamp * 1000;
+            
+            const convDateObj = new Date(timestamp);
+            const convDateStr = convDateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+            
+            if (filters.dateStart && convDateStr < filters.dateStart) {
+                return false;
+            }
+            if (filters.dateEnd && convDateStr > filters.dateEnd) {
+                return false;
+            }
+            
+            return true;
         });
     }
     
@@ -2844,9 +3016,7 @@ async function fetchWithRetry(url, options, maxRetries = 3, retryDelay = 1000, t
 async function fetchEmployeeConversationsProgressively(adminId, updatedSince, updatedBefore, filters = null) {
     isLoadingEmployeeConversations = true;
     allEmployeeConversations = [];
-    
-    // Keep raw unfiltered conversations separate during fetching
-    let rawConversations = [];
+    rawEmployeeConversations = []; // Clear and store fresh raw data
 
     // Use provided filters or current filter state (always use currentConversationFilters as fallback)
     const activeFilters = filters !== null ? filters : currentConversationFilters;
@@ -2946,32 +3116,17 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
             }
 
             if (pageConversations.length > 0) {
-                // Add conversations to raw array (unfiltered)
-                rawConversations = rawConversations.concat(pageConversations);
+                // Add conversations to raw array (unfiltered) - store in global variable
+                rawEmployeeConversations = rawEmployeeConversations.concat(pageConversations);
                 
-                // Apply filters to all raw conversations so far
-                const filteredConversations = applyClientSideFilters(rawConversations, activeFilters);
-                allEmployeeConversations = filteredConversations;
-                
-                // Update count with filtered count
+                // Update count to show progress (raw count during loading)
                 const countSpan = document.getElementById('conversationsCount');
                 if (countSpan) {
-                    countSpan.textContent = filteredConversations.length;
+                    countSpan.textContent = rawEmployeeConversations.length;
                 }
                 
-                // For first page: Show results immediately (fast initial display)
-                if (pageCount === 1) {
-                    const loadingDiv = document.getElementById('conversationsLoading');
-                    const listDiv = document.getElementById('conversationsList');
-                    if (loadingDiv) loadingDiv.style.display = 'none';
-                    if (listDiv) listDiv.style.display = 'block';
-                    displayEmployeeConversations();
-                    console.log(`✅ Fast initial load complete: ${rawConversations.length} conversations fetched, ${filteredConversations.length} after filtering`);
-                } else {
-                    // For subsequent pages: Update UI in background
-                    displayEmployeeConversations();
-                    console.log(`✅ Background fetch complete: Added ${pageConversations.length} more conversations (Total fetched: ${rawConversations.length}, After filtering: ${filteredConversations.length})`);
-                }
+                // Don't display during progressive loading - wait until all data is fetched
+                console.log(`📥 Page ${pageCount} loaded: ${pageConversations.length} conversations (Total fetched: ${rawEmployeeConversations.length})`);
             }
 
             // Check if there are more pages to fetch
@@ -3020,10 +3175,10 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
             }
         }
 
-        console.log(`✅ All conversations loaded: ${rawConversations.length} total conversations fetched`);
+        console.log(`✅ All conversations loaded: ${rawEmployeeConversations.length} total conversations fetched`);
         
         // Apply final client-side filtering and sorting to all raw conversations
-        const filteredConversations = applyClientSideFilters(rawConversations, activeFilters);
+        const filteredConversations = applyClientSideFilters(rawEmployeeConversations, activeFilters);
         allEmployeeConversations = filteredConversations;
         console.log(`🔍 After filtering: ${filteredConversations.length} conversations`);
         
@@ -3032,6 +3187,12 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
         if (countSpan) {
             countSpan.textContent = filteredConversations.length;
         }
+        
+        // Hide loading and show results
+        const loadingDiv = document.getElementById('conversationsLoading');
+        const listDiv = document.getElementById('conversationsList');
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (listDiv) listDiv.style.display = 'block';
         
         displayEmployeeConversations();
         
@@ -5705,6 +5866,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Attaching submit event listener to form...');
         
+        // Guard to prevent duplicate submissions
+        let isSubmitting = false;
+        
         // Handler function
         const handleSubmit = async function(e) {
             console.log('DEBUG: Form submit event fired!'); // Debug log only
@@ -5712,6 +5876,14 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+            
+            // Prevent duplicate submissions
+            if (isSubmitting) {
+                console.log('Submission already in progress, ignoring duplicate submit event');
+                return;
+            }
+            
+            isSubmitting = true;
             
             console.log('===== FORM SUBMISSION STARTED =====');
             
@@ -5723,6 +5895,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmText: 'OK',
                     type: 'warning'
                 });
+                isSubmitting = false;
                 return;
             }
             
@@ -5743,6 +5916,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'error'
                 });
                 console.error('Supabase client not available after waiting');
+                isSubmitting = false;
                 return;
             }
             
@@ -5796,6 +5970,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (interactionIdField) {
                     interactionIdField.focus();
                 }
+                isSubmitting = false;
                 return;
             }
             
@@ -5845,6 +6020,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     confirmText: 'OK',
                     type: 'error'
                 });
+                isSubmitting = false;
                 return;
             }
             
@@ -6277,13 +6453,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     cancelText: 'Close',
                     type: 'error'
                 });
-                return;
+            } finally {
+                // Always reset the submitting flag
+                isSubmitting = false;
             }
         };
         
-        // Attach the handler in multiple phases to ensure it runs
-        auditForm.addEventListener('submit', handleSubmit, true); // Capture phase
-        auditForm.addEventListener('submit', handleSubmit, false); // Bubble phase
+        // Attach the handler to the form submit event
+        auditForm.addEventListener('submit', handleSubmit);
         
         console.log('Event listeners attached successfully');
         
