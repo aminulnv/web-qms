@@ -799,6 +799,7 @@ let allAudits = [];
 let filteredAssignments = [];
 let allUsers = [];
 let allScorecardParameters = {}; // Map of scorecard_id -> parameters
+let allScorecards = []; // Store all scorecards for mapping scorecard_id to table_name
 let dateFilter = { start: null, end: null };
 let currentFilters = { channel: '', status: '', agent: '' };
 
@@ -914,11 +915,13 @@ async function loadScorecardParameters() {
     try {
         const { data: scorecards, error: scError } = await window.supabaseClient
             .from('scorecards')
-            .select('id')
+            .select('id, table_name')
             .eq('is_active', true);
 
         if (scError || !scorecards) return;
 
+        // Store scorecards for mapping scorecard_id to table_name
+        allScorecards = scorecards || [];
         allScorecardParameters = {};
         
         for (const scorecard of scorecards) {
@@ -1172,28 +1175,47 @@ function updateKPIs() {
         : (completedAudits > 0 ? 100 : 0);
 
     // Error count trend - calculate using same logic as agent performance table
-    // Group by employee_email and sum errors (same as table calculation)
+    // Count all audits submitted in the current period (like expert-audits does)
     const agentMapForErrors = {};
+    const agentAuditIdsForErrors = {}; // Track unique audit IDs
     
-    filteredAssignments.forEach(assignment => {
-        const agentEmail = assignment.employee_email || 'Unknown';
+    // Get employee emails to include (same logic as agent performance table)
+    // Use all assignments, not just filtered, to ensure we don't miss audits
+    let employeeEmailsForErrors = new Set();
+    if (currentFilters.agent) {
+        employeeEmailsForErrors.add(currentFilters.agent);
+    } else {
+        allAssignments.forEach(a => {
+            if (a.employee_email) employeeEmailsForErrors.add(a.employee_email);
+        });
+    }
+    
+    // Count all audits submitted in the current period for these employees
+    allAudits.forEach(audit => {
+        const agentEmail = audit.employee_email || 'Unknown';
+        
+        // Only process audits for employees we care about
+        if (!employeeEmailsForErrors.has(agentEmail)) return;
+        
+        // Only include audits submitted within the current period
+        const submitted = new Date(audit.submitted_at);
+        if (submitted < currentPeriodStart || submitted > currentPeriodEnd) return;
+        
+        // Apply channel filter if set (check audit's channel field)
+        if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
+        
         if (!agentMapForErrors[agentEmail]) {
             agentMapForErrors[agentEmail] = {
                 audits: []
             };
+            agentAuditIdsForErrors[agentEmail] = new Set(); // Track unique audit IDs
         }
         
-        // Find matching audit
-        const audit = allAudits.find(a => 
-            a.employee_email === assignment.employee_email &&
-            a.auditor_email === assignment.auditor_email
-        );
-        if (audit) {
-            // Only include audits submitted within the current period (same as table)
-            const submitted = new Date(audit.submitted_at);
-            if (submitted >= currentPeriodStart && submitted <= currentPeriodEnd) {
-                agentMapForErrors[agentEmail].audits.push(audit);
-            }
+        // Use Set to ensure we never count the same audit twice
+        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+        if (!agentAuditIdsForErrors[agentEmail].has(auditKey)) {
+            agentAuditIdsForErrors[agentEmail].add(auditKey);
+            agentMapForErrors[agentEmail].audits.push(audit);
         }
     });
     
@@ -1207,30 +1229,34 @@ function updateKPIs() {
 
     // Calculate total errors for previous period (using same logic)
     const previousAgentMapForErrors = {};
+    const previousAgentAuditIdsForErrors = {}; // Track unique audit IDs
     
-    // Get previous period assignments
-    const previousPeriodAssignments = allAssignments.filter(a => {
-        const created = new Date(a.created_at);
-        return created >= previousPeriodStart && created <= previousPeriodEnd;
-    });
+    // Get employee emails from all assignments (for previous period comparison)
+    const allEmployeeEmails = new Set(allAssignments.map(a => a.employee_email).filter(Boolean));
     
-    previousPeriodAssignments.forEach(assignment => {
-        const agentEmail = assignment.employee_email || 'Unknown';
+    // Count all audits submitted in the previous period for these employees
+    allAudits.forEach(audit => {
+        const agentEmail = audit.employee_email || 'Unknown';
+        
+        // Only process audits for employees we care about
+        if (!allEmployeeEmails.has(agentEmail)) return;
+        
+        // Only include audits submitted within the previous period
+        const submitted = new Date(audit.submitted_at);
+        if (submitted < previousPeriodStart || submitted > previousPeriodEnd) return;
+        
         if (!previousAgentMapForErrors[agentEmail]) {
             previousAgentMapForErrors[agentEmail] = {
                 audits: []
             };
+            previousAgentAuditIdsForErrors[agentEmail] = new Set(); // Track unique audit IDs
         }
         
-        const audit = allAudits.find(a => 
-            a.employee_email === assignment.employee_email &&
-            a.auditor_email === assignment.auditor_email
-        );
-        if (audit) {
-            const submitted = new Date(audit.submitted_at);
-            if (submitted >= previousPeriodStart && submitted <= previousPeriodEnd) {
-                previousAgentMapForErrors[agentEmail].audits.push(audit);
-            }
+        // Use Set to ensure we never count the same audit twice
+        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+        if (!previousAgentAuditIdsForErrors[agentEmail].has(auditKey)) {
+            previousAgentAuditIdsForErrors[agentEmail].add(auditKey);
+            previousAgentMapForErrors[agentEmail].audits.push(audit);
         }
     });
     
@@ -1247,17 +1273,37 @@ function updateKPIs() {
         : (currentPeriodErrorCount > 0 ? 100 : 0);
     // Note: Negative change (fewer errors) is positive, positive change (more errors) is negative
 
-    // Average quality score
-    const auditsWithScores = allAudits.filter(a => {
-        const assignment = filteredAssignments.find(as => 
-            as.employee_email === a.employee_email && 
-            as.auditor_email === a.auditor_email
-        );
-        return assignment !== undefined;
+    // Average quality score - use same logic as agent performance table
+    // Group audits by employee and ensure we're using the same unique audit tracking
+    const agentMapForScores = {};
+    const agentAuditIdsForScores = {};
+    
+    filteredAssignments.forEach(assignment => {
+        const agentEmail = assignment.employee_email || 'Unknown';
+        if (!agentMapForScores[agentEmail]) {
+            agentMapForScores[agentEmail] = [];
+            agentAuditIdsForScores[agentEmail] = new Set();
+        }
+        
+        const audit = findAuditForAssignment(assignment);
+        if (audit) {
+            const submitted = new Date(audit.submitted_at);
+            if (submitted >= currentPeriodStart && submitted <= currentPeriodEnd) {
+                const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+                if (!agentAuditIdsForScores[agentEmail].has(auditKey)) {
+                    agentAuditIdsForScores[agentEmail].add(auditKey);
+                    if (audit.average_score) {
+                        agentMapForScores[agentEmail].push(parseFloat(audit.average_score));
+                    }
+                }
+            }
+        }
     });
+    
+    const auditsWithScores = Object.values(agentMapForScores).flat();
     let avgScore = 0;
     if (auditsWithScores.length > 0) {
-        const totalScore = auditsWithScores.reduce((sum, a) => sum + (parseFloat(a.average_score) || 0), 0);
+        const totalScore = auditsWithScores.reduce((sum, score) => sum + score, 0);
         avgScore = Math.round(totalScore / auditsWithScores.length);
     }
 
@@ -1393,6 +1439,65 @@ function initializeKPIChats() {
 }
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+// Helper function to find audit by assignment (uses audit_id if available, otherwise email matching)
+function findAuditForAssignment(assignment) {
+    let audit = null;
+    
+    // First, try to use audit_id if available (most accurate)
+    if (assignment.audit_id && assignment.scorecard_id) {
+        const scorecard = allScorecards.find(s => s.id === assignment.scorecard_id);
+        if (scorecard) {
+            // Find audit in the correct scorecard table by audit_id
+            audit = allAudits.find(a => 
+                a.id === assignment.audit_id &&
+                a.scorecard_id === assignment.scorecard_id
+            );
+        }
+    }
+    
+    // Fall back to email matching if audit_id is not available (for backward compatibility)
+    // But be more selective: only match if scorecard_id matches and dates are reasonable
+    if (!audit) {
+        // First, try to find audits that match email AND scorecard_id
+        let candidateAudits = allAudits.filter(a => 
+            a.employee_email === assignment.employee_email &&
+            a.auditor_email === assignment.auditor_email &&
+            (assignment.scorecard_id ? a.scorecard_id === assignment.scorecard_id : true)
+        );
+        
+        // If we have scorecard_id, prefer audits from that scorecard
+        if (assignment.scorecard_id && candidateAudits.length > 0) {
+            const scorecardMatches = candidateAudits.filter(a => a.scorecard_id === assignment.scorecard_id);
+            if (scorecardMatches.length > 0) {
+                candidateAudits = scorecardMatches;
+            }
+        }
+        
+        // If multiple candidates, prefer the one closest to assignment creation date
+        if (candidateAudits.length > 0) {
+            if (candidateAudits.length === 1) {
+                audit = candidateAudits[0];
+            } else {
+                // Multiple matches - find the one closest to assignment.created_at
+                const assignmentDate = new Date(assignment.created_at);
+                candidateAudits.sort((a, b) => {
+                    const dateA = new Date(a.submitted_at || a.created_at || 0);
+                    const dateB = new Date(b.submitted_at || b.created_at || 0);
+                    const diffA = Math.abs(dateA - assignmentDate);
+                    const diffB = Math.abs(dateB - assignmentDate);
+                    return diffA - diffB;
+                });
+                audit = candidateAudits[0];
+            }
+        }
+    }
+    
+    return audit;
+}
+
+// ============================================================================
 // Agent Performance Table
 // ============================================================================
 function updateAgentPerformance() {
@@ -1418,10 +1523,40 @@ function updateAgentPerformance() {
     }
     
     // Group by employee_email
+    // First, collect all unique audits for employees that were submitted in the current period
+    // This ensures we count all audits like expert-audits does, not just those linked to assignments in the period
     const agentMap = {};
+    const agentAuditIds = {}; // Track unique audit IDs per agent to prevent double-counting
     
-    filteredAssignments.forEach(assignment => {
-        const agentEmail = assignment.employee_email || 'Unknown';
+    // Step 1: Get list of employees to include
+    // If agent filter is set, use that. Otherwise, get all employees who have ANY assignments
+    // (not just in filtered period) so we don't miss audits due to assignment date filtering
+    let employeeEmailsToInclude = new Set();
+    if (currentFilters.agent) {
+        // If filtering by specific agent, only include that agent
+        employeeEmailsToInclude.add(currentFilters.agent);
+    } else {
+        // Include all employees who have assignments (to ensure we catch all their audits)
+        allAssignments.forEach(a => {
+            if (a.employee_email) employeeEmailsToInclude.add(a.employee_email);
+        });
+    }
+    
+    // Step 2: Find all audits submitted in the current period for these employees
+    allAudits.forEach(audit => {
+        const agentEmail = audit.employee_email || 'Unknown';
+        
+        // Only process audits for employees we care about
+        if (!employeeEmailsToInclude.has(agentEmail)) return;
+        
+        // Only include audits submitted within the current period
+        const submitted = new Date(audit.submitted_at);
+        if (submitted < currentPeriodStart || submitted > currentPeriodEnd) return;
+        
+        // Apply channel filter if set (check audit's channel field)
+        if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
+        
+        // Initialize agent map if needed
         if (!agentMap[agentEmail]) {
             agentMap[agentEmail] = {
                 email: agentEmail,
@@ -1430,28 +1565,37 @@ function updateAgentPerformance() {
                 scores: [],
                 audits: [] // Store full audit objects for error analysis
             };
+            agentAuditIds[agentEmail] = new Set(); // Track unique audit IDs
+        }
+        
+        // Use Set to ensure we never count the same audit twice
+        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+        if (!agentAuditIds[agentEmail].has(auditKey)) {
+            agentAuditIds[agentEmail].add(auditKey);
+            if (audit.average_score) {
+                agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
+            }
+            // Store full audit for error analysis
+            agentMap[agentEmail].audits.push(audit);
+        }
+    });
+    
+    // Step 2: Count assignments for each agent (for "Total Audits" and "Completed" columns)
+    filteredAssignments.forEach(assignment => {
+        const agentEmail = assignment.employee_email || 'Unknown';
+        if (!agentMap[agentEmail]) {
+            agentMap[agentEmail] = {
+                email: agentEmail,
+                total: 0,
+                completed: 0,
+                scores: [],
+                audits: []
+            };
         }
         
         agentMap[agentEmail].total++;
         if (assignment.status === 'completed') {
             agentMap[agentEmail].completed++;
-        }
-        
-        // Find matching audit scores
-        const audit = allAudits.find(a => 
-            a.employee_email === assignment.employee_email &&
-            a.auditor_email === assignment.auditor_email
-        );
-        if (audit) {
-            // Only include audits submitted within the current period
-            const submitted = new Date(audit.submitted_at);
-            if (submitted >= currentPeriodStart && submitted <= currentPeriodEnd) {
-                if (audit.average_score) {
-            agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
-                }
-                // Store full audit for error analysis
-                agentMap[agentEmail].audits.push(audit);
-            }
         }
     });
 
@@ -1969,6 +2113,57 @@ function exportToCSV() {
         
         // Prepare data using same logic as updateAgentPerformance
         const agentMap = {};
+        const agentAuditIdsExport = {}; // Track unique audit IDs for export
+        
+        // Step 1: Find all audits submitted in the current period (like expert-audits)
+        // Use all assignments, not just filtered, to ensure we don't miss audits
+        let employeeEmailsExport = new Set();
+        if (currentFilters.agent) {
+            employeeEmailsExport.add(currentFilters.agent);
+        } else {
+            allAssignments.forEach(a => {
+                if (a.employee_email) employeeEmailsExport.add(a.employee_email);
+            });
+        }
+        
+        allAudits.forEach(audit => {
+            const agentEmail = audit.employee_email || 'Unknown';
+            
+            // Only process audits for employees we care about
+            if (!employeeEmailsExport.has(agentEmail)) return;
+            
+            // Only include audits submitted within the current period
+            const submitted = new Date(audit.submitted_at);
+            if (submitted < currentPeriodStart || submitted > currentPeriodEnd) return;
+            
+            // Apply channel filter if set (check audit's channel field)
+            if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
+            
+            // Initialize agent map if needed
+            if (!agentMap[agentEmail]) {
+                agentMap[agentEmail] = {
+                    email: agentEmail,
+                    total: 0,
+                    completed: 0,
+                    scores: [],
+                    audits: []
+                };
+                agentAuditIdsExport[agentEmail] = new Set();
+            }
+            
+            // Use Set to ensure we never count the same audit twice
+            const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+            if (!agentAuditIdsExport[agentEmail].has(auditKey)) {
+                agentAuditIdsExport[agentEmail].add(auditKey);
+                if (audit.average_score) {
+                    agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
+                }
+                // Store full audit for error analysis
+                agentMap[agentEmail].audits.push(audit);
+            }
+        });
+        
+        // Step 2: Count assignments for each agent (for "Total Audits" and "Completed" columns)
         filteredAssignments.forEach(assignment => {
             const agentEmail = assignment.employee_email || 'Unknown';
             if (!agentMap[agentEmail]) {
@@ -1977,27 +2172,12 @@ function exportToCSV() {
                     total: 0,
                     completed: 0,
                     scores: [],
-                    audits: [] // Store full audit objects for error analysis
+                    audits: []
                 };
             }
             agentMap[agentEmail].total++;
             if (assignment.status === 'completed') {
                 agentMap[agentEmail].completed++;
-            }
-            const audit = allAudits.find(a => 
-                a.employee_email === assignment.employee_email &&
-                a.auditor_email === assignment.auditor_email
-            );
-            if (audit) {
-                // Only include audits submitted within the current period
-                const submitted = new Date(audit.submitted_at);
-                if (submitted >= currentPeriodStart && submitted <= currentPeriodEnd) {
-                    if (audit.average_score) {
-                agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
-                    }
-                    // Store full audit for error analysis
-                    agentMap[agentEmail].audits.push(audit);
-                }
             }
         });
 
