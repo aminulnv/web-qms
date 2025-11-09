@@ -312,6 +312,10 @@
             box-shadow: 0 0.1875rem 0.2812rem -0.0469rem rgba(0, 0, 0, 0.1);
         }
 
+        .modal-content.create-user-modal {
+            max-width: 35rem;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -983,7 +987,7 @@
 
 <!-- Create User Modal -->
 <div id="createUserModal" class="modal" style="display: none;">
-    <div class="modal-content">
+    <div class="modal-content create-user-modal">
         <div class="modal-header">
             <h3>Create New User</h3>
             <button class="modal-close" onclick="closeCreateModal()">&times;</button>
@@ -1597,8 +1601,12 @@ async function saveUserChanges() {
         // Close modal
         closeEditModal();
         
-        // Show success message
-        alert('User updated successfully!');
+        // Show success dialog
+        await showUserUpdatedSuccessDialog({
+            name: formData.name,
+            email: userEmail,
+            role: formData.role
+        });
         
     } catch (error) {
         console.error('Error updating user:', error);
@@ -1614,6 +1622,75 @@ async function hashPassword(password) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
+}
+
+// Show success dialog with user credentials
+async function showUserCreatedSuccessDialog(userData) {
+    const credentials = `Email: ${userData.email}\nPassword: ${userData.password}`;
+    
+    // Create custom message with credentials
+    const message = `User created successfully!\n\nName: ${userData.name}\nEmail: ${userData.email}\nRole: ${userData.role}\n\nDefault Password: ${userData.password}\n\nClick "Copy Credentials" to copy login details to share with the user.`;
+    
+    // Show confirmation dialog with success type
+    const confirmed = await window.confirmationDialog.show({
+        title: 'User Created Successfully',
+        message: message,
+        confirmText: 'Copy Credentials',
+        cancelText: 'Close',
+        type: 'success'
+    });
+    
+    if (confirmed) {
+        // Copy credentials to clipboard
+        try {
+            await navigator.clipboard.writeText(credentials);
+            
+            // Show a brief success message
+            await window.confirmationDialog.show({
+                title: 'Credentials Copied',
+                message: 'User credentials have been copied to clipboard!\n\n' + credentials,
+                confirmText: 'OK',
+                cancelText: 'Close',
+                type: 'success'
+            });
+        } catch (err) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = credentials;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                await window.confirmationDialog.show({
+                    title: 'Credentials Copied',
+                    message: 'User credentials have been copied to clipboard!\n\n' + credentials,
+                    confirmText: 'OK',
+                    cancelText: 'Close',
+                    type: 'success'
+                });
+            } catch (fallbackErr) {
+                alert('Failed to copy credentials. Please copy manually:\n\n' + credentials);
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+}
+
+// Show success dialog for user update
+async function showUserUpdatedSuccessDialog(userData) {
+    // Create custom message with updated user info
+    const message = `User updated successfully!\n\nName: ${userData.name}\nEmail: ${userData.email}\nRole: ${userData.role}\n\nChanges have been saved.`;
+    
+    // Show confirmation dialog with success type
+    await window.confirmationDialog.show({
+        title: 'User Updated Successfully',
+        message: message,
+        confirmText: 'OK',
+        cancelText: 'Close',
+        type: 'success'
+    });
 }
 
 // Create User Functions
@@ -1741,8 +1818,13 @@ async function createNewUser() {
         // Close modal
         closeCreateModal();
         
-        // Show success message
-        alert(`User created successfully!\n\nName: ${formData.name}\nEmail: ${formData.email}\nRole: ${formData.role}\n\nDefault password has been set to the email address.`);
+        // Show success dialog with credentials
+        await showUserCreatedSuccessDialog({
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+            password: defaultPassword
+        });
         
     } catch (error) {
         console.error('Error creating user:', error);
@@ -2223,7 +2305,13 @@ async function applyBulkEdit() {
     }
     if (role) message += `• Role: ${role}\n`;
     
-    const confirmed = confirm(message);
+    const confirmed = await window.confirmationDialog.show({
+        title: 'Confirm Bulk Update',
+        message: message,
+        confirmText: 'Apply Changes',
+        cancelText: 'Cancel',
+        type: 'warning'
+    });
     if (!confirmed) return;
     
     try {
@@ -2268,13 +2356,21 @@ async function applyBulkEdit() {
         
         // Show result message
         let resultMessage = `Successfully updated ${successCount} user${successCount !== 1 ? 's' : ''}.`;
+        const dialogType = errorCount > 0 ? 'warning' : 'success';
         if (errorCount > 0) {
             resultMessage += `\n\n${errorCount} user${errorCount !== 1 ? 's' : ''} failed to update:\n${errors.slice(0, 5).join('\n')}`;
             if (errors.length > 5) {
                 resultMessage += `\n... and ${errors.length - 5} more errors`;
             }
         }
-        alert(resultMessage);
+        
+        await window.confirmationDialog.show({
+            title: errorCount > 0 ? 'Bulk Update Completed with Errors' : 'Bulk Update Successful',
+            message: resultMessage,
+            confirmText: 'OK',
+            cancelText: 'Close',
+            type: dialogType
+        });
         
         // Reset bulk edit dropdowns
         document.getElementById('bulkEditTeam').value = '';
