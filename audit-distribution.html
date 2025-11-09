@@ -2845,11 +2845,27 @@ function getWeekNumber(date = new Date()) {
     // Get the first day of the year
     const startOfYear = new Date(date.getFullYear(), 0, 1);
     
-    // Calculate the number of days since the start of the year
-    const daysSinceStart = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
+    // Calculate the Monday of week 1 (the Monday of the week containing Jan 1)
+    // If Jan 1 is Sunday (getDay() === 0), Monday is 6 days before (previous Monday)
+    // Otherwise, Monday is (getDay() - 1) days before Jan 1
+    const dayOfWeek = startOfYear.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mondayOfWeek1 = new Date(startOfYear);
+    mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+    mondayOfWeek1.setHours(0, 0, 0, 0);
+    
+    // Calculate the Monday of the week containing the given date
+    const dateDay = date.getDay();
+    const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
+    const mondayOfDateWeek = new Date(date);
+    mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
+    mondayOfDateWeek.setHours(0, 0, 0, 0);
+    
+    // Calculate the number of days from Monday of week 1 to Monday of date's week
+    const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
     
     // Calculate the week number (starting from 1)
-    const weekNumber = Math.ceil((daysSinceStart + startOfYear.getDay() + 1) / 7);
+    const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
     
     return weekNumber;
 }
