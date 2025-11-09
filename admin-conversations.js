@@ -8,25 +8,161 @@ const supabaseUrl = window.SupabaseConfig?.url || '';
 const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
 
 // ============================================================================
-// Local Caching Utilities for Conversations
+// Local Caching Utilities for Conversations (IndexedDB)
 // ============================================================================
 
 const CONVERSATION_CACHE_PREFIX = 'admin_conversations_cache_';
 const CACHE_EXPIRY_HOURS = 24; // Cache expires after 24 hours
+const INDEXEDDB_DB_NAME = 'QMSConversationCache';
+const INDEXEDDB_STORE_NAME = 'conversations';
+const INDEXEDDB_VERSION = 1;
+
+// Check if IndexedDB is available
+const INDEXEDDB_AVAILABLE = typeof indexedDB !== 'undefined';
 
 // Generate cache key from admin ID and date
 function getConversationCacheKey(adminId, date) {
-    return `${CONVERSATION_CACHE_PREFIX}${adminId}_${date}`;
+    // Normalize adminId to string to ensure consistency
+    const normalizedAdminId = String(adminId || '').trim();
+    // Normalize date to YYYY-MM-DD format
+    let normalizedDate = '';
+    if (date) {
+        if (typeof date === 'string') {
+            normalizedDate = date.trim();
+            if (normalizedDate.includes('T')) {
+                normalizedDate = normalizedDate.split('T')[0];
+            }
+        } else if (date instanceof Date) {
+            normalizedDate = date.toISOString().split('T')[0];
+        }
+    }
+    return `${normalizedAdminId}_${normalizedDate}`;
 }
 
-// Get cached conversations
-function getCachedConversations(adminId, date) {
+// Initialize IndexedDB database
+function initConversationCacheDB() {
+    return new Promise((resolve, reject) => {
+        if (!INDEXEDDB_AVAILABLE) {
+            console.warn('⚠️ IndexedDB not available, will use localStorage fallback');
+            resolve(null);
+            return;
+        }
+
+        const request = indexedDB.open(INDEXEDDB_DB_NAME, INDEXEDDB_VERSION);
+
+        request.onerror = () => {
+            console.error('❌ IndexedDB open error:', request.error);
+            reject(request.error);
+        };
+
+        request.onsuccess = () => {
+            console.log('✅ IndexedDB database opened successfully');
+            resolve(request.result);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // Create object store if it doesn't exist
+            if (!db.objectStoreNames.contains(INDEXEDDB_STORE_NAME)) {
+                const objectStore = db.createObjectStore(INDEXEDDB_STORE_NAME, { keyPath: 'cacheKey' });
+                
+                // Create indexes
+                objectStore.createIndex('adminId', 'adminId', { unique: false });
+                objectStore.createIndex('date', 'date', { unique: false });
+                objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+                objectStore.createIndex('expiresAt', 'expiresAt', { unique: false });
+                
+                console.log('✅ IndexedDB object store and indexes created');
+            }
+        };
+    });
+}
+
+// Get database instance (with initialization)
+let dbInstance = null;
+async function getConversationCacheDB() {
+    if (!INDEXEDDB_AVAILABLE) {
+        return null;
+    }
+    
+    if (dbInstance) {
+        return dbInstance;
+    }
+    
     try {
-        const cacheKey = getConversationCacheKey(adminId, date);
-        const cachedData = localStorage.getItem(cacheKey);
+        dbInstance = await initConversationCacheDB();
+        return dbInstance;
+    } catch (error) {
+        console.error('❌ Failed to initialize IndexedDB:', error);
+        return null;
+    }
+}
+
+// Get cached conversations from IndexedDB (with localStorage fallback)
+async function getCachedConversations(adminId, date) {
+    const cacheKey = getConversationCacheKey(adminId, date);
+    console.log('🔍 Checking cache with key:', cacheKey, 'for adminId:', adminId, 'date:', date);
+    
+    // Try IndexedDB first
+    const db = await getConversationCacheDB();
+    if (db) {
+        try {
+            return new Promise((resolve) => {
+                const transaction = db.transaction([INDEXEDDB_STORE_NAME], 'readonly');
+                const store = transaction.objectStore(INDEXEDDB_STORE_NAME);
+                const request = store.get(cacheKey);
+                
+                request.onsuccess = () => {
+                    const cachedData = request.result;
+                    
+                    if (!cachedData) {
+                        console.log('📦 No cache found in IndexedDB for:', cacheKey);
+                        resolve(null);
+                        return;
+                    }
+                    
+                    const now = Date.now();
+                    
+                    // Check if cache is expired
+                    if (cachedData.expiresAt && now > cachedData.expiresAt) {
+                        console.log('⏰ Cache expired for:', cacheKey, 'Expired at:', new Date(cachedData.expiresAt).toISOString());
+                        deleteCachedConversation(cacheKey);
+                        resolve(null);
+                        return;
+                    }
+                    
+                    // Validate cache data structure
+                    if (!cachedData.data) {
+                        console.warn('⚠️ Cache data structure invalid, missing data field:', cacheKey);
+                        deleteCachedConversation(cacheKey);
+                        resolve(null);
+                        return;
+                    }
+                    
+                    const conversationCount = cachedData.data.conversations?.length || 0;
+                    console.log('✅ Cache hit in IndexedDB for:', cacheKey, `(${conversationCount} conversations)`, 'Cached at:', new Date(cachedData.timestamp).toISOString());
+                    resolve(cachedData.data);
+                };
+                
+                request.onerror = () => {
+                    console.warn('⚠️ Error reading from IndexedDB:', request.error);
+                    resolve(null);
+                };
+            });
+        } catch (error) {
+            console.warn('⚠️ Error accessing IndexedDB:', error);
+            // Fall through to localStorage fallback
+        }
+    }
+    
+    // Fallback to localStorage
+    try {
+        const localStorageKey = CONVERSATION_CACHE_PREFIX + cacheKey;
+        const cachedData = localStorage.getItem(localStorageKey);
         
         if (!cachedData) {
-            console.log('📦 No cache found for:', cacheKey);
+            console.log('📦 No cache found in localStorage for:', localStorageKey);
             return null;
         }
         
@@ -35,68 +171,233 @@ function getCachedConversations(adminId, date) {
         
         // Check if cache is expired
         if (parsed.expiresAt && now > parsed.expiresAt) {
-            console.log('⏰ Cache expired for:', cacheKey);
-            localStorage.removeItem(cacheKey);
+            console.log('⏰ Cache expired for:', localStorageKey, 'Expired at:', new Date(parsed.expiresAt).toISOString());
+            localStorage.removeItem(localStorageKey);
             return null;
         }
         
-        console.log('✅ Cache hit for:', cacheKey, `(${parsed.data.conversations?.length || 0} conversations)`);
+        // Validate cache data structure
+        if (!parsed.data) {
+            console.warn('⚠️ Cache data structure invalid, missing data field:', localStorageKey);
+            localStorage.removeItem(localStorageKey);
+            return null;
+        }
+        
+        const conversationCount = parsed.data.conversations?.length || 0;
+        console.log('✅ Cache hit in localStorage for:', localStorageKey, `(${conversationCount} conversations)`, 'Cached at:', new Date(parsed.timestamp).toISOString());
         return parsed.data;
         
     } catch (error) {
-        console.warn('⚠️ Error reading cache:', error);
+        console.warn('⚠️ Error reading from localStorage:', error);
         return null;
     }
 }
 
-// Store conversations in cache
-function cacheConversations(adminId, date, data) {
+// Delete a cached conversation
+async function deleteCachedConversation(cacheKey) {
+    const db = await getConversationCacheDB();
+    if (db) {
+        try {
+            const transaction = db.transaction([INDEXEDDB_STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(INDEXEDDB_STORE_NAME);
+            store.delete(cacheKey);
+        } catch (error) {
+            console.warn('⚠️ Error deleting from IndexedDB:', error);
+        }
+    }
+    
+    // Also try localStorage
     try {
-        const cacheKey = getConversationCacheKey(adminId, date);
-        const expiresAt = Date.now() + (CACHE_EXPIRY_HOURS * 60 * 60 * 1000); // 24 hours from now
-        
-        const cacheData = {
-            data: data,
-            timestamp: Date.now(),
-            expiresAt: expiresAt,
-            adminId: adminId,
-            date: date
-        };
-        
+        localStorage.removeItem(CONVERSATION_CACHE_PREFIX + cacheKey);
+    } catch (error) {
+        // Ignore
+    }
+}
+
+// Store conversations in cache (IndexedDB with localStorage fallback)
+async function cacheConversations(adminId, date, data) {
+    // Validate inputs
+    if (!adminId || !date || !data) {
+        console.warn('⚠️ Cannot cache: missing required parameters', { adminId, date, hasData: !!data });
+        return false;
+    }
+    
+    const cacheKey = getConversationCacheKey(adminId, date);
+    console.log('💾 Cache save attempt - Key:', cacheKey, 'AdminId:', adminId, 'Date:', date);
+    
+    const expiresAt = Date.now() + (CACHE_EXPIRY_HOURS * 60 * 60 * 1000); // 24 hours from now
+    
+    const cacheData = {
+        cacheKey: cacheKey,
+        adminId: String(adminId), // Normalize to string
+        date: String(date), // Normalize to string
+        data: data,
+        timestamp: Date.now(),
+        expiresAt: expiresAt,
+        conversationCount: data.conversations?.length || 0
+    };
+    
+    // Try IndexedDB first
+    const db = await getConversationCacheDB();
+    if (db) {
+        try {
+            return new Promise((resolve) => {
+                const transaction = db.transaction([INDEXEDDB_STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(INDEXEDDB_STORE_NAME);
+                const request = store.put(cacheData);
+                
+                request.onsuccess = () => {
+                    const sizeInMB = (JSON.stringify(cacheData).length / (1024 * 1024)).toFixed(2);
+                    console.log('✅ Successfully cached conversations in IndexedDB for:', cacheKey, `(${cacheData.conversationCount} conversations, ${sizeInMB}MB)`, 'Expires:', new Date(expiresAt).toISOString());
+                    resolve(true);
+                };
+                
+                request.onerror = async () => {
+                    console.warn('⚠️ Error saving to IndexedDB:', request.error);
+                    // Fall through to localStorage fallback
+                    const result = await cacheToLocalStorage(cacheKey, cacheData);
+                    resolve(result);
+                };
+            });
+        } catch (error) {
+            console.warn('⚠️ Error accessing IndexedDB:', error);
+            // Fall through to localStorage fallback
+            return await cacheToLocalStorage(cacheKey, cacheData);
+        }
+    }
+    
+    // Fallback to localStorage
+    return await cacheToLocalStorage(cacheKey, cacheData);
+}
+
+// Helper function to cache to localStorage (fallback)
+async function cacheToLocalStorage(cacheKey, cacheData) {
+    try {
+        const localStorageKey = CONVERSATION_CACHE_PREFIX + cacheKey;
         const cacheString = JSON.stringify(cacheData);
+        const sizeInMB = (cacheString.length / (1024 * 1024)).toFixed(2);
         
-        // Check if data is too large for localStorage (limit is ~5-10MB)
-        if (cacheString.length > 4 * 1024 * 1024) { // 4MB limit
-            console.warn('⚠️ Cache data too large, skipping cache storage');
+        // Check if data is too large for localStorage (limit is ~5-10MB, but be conservative)
+        if (cacheString.length > 2 * 1024 * 1024) { // 2MB limit per entry (more conservative)
+            console.warn('⚠️ Cache data too large for localStorage (' + sizeInMB + 'MB), skipping cache storage.');
             return false;
         }
         
-        localStorage.setItem(cacheKey, cacheString);
-        console.log('💾 Cached conversations for:', cacheKey, `(${data.conversations?.length || 0} conversations)`);
+        localStorage.setItem(localStorageKey, cacheString);
+        
+        // Verify it was saved
+        const verifyCache = localStorage.getItem(localStorageKey);
+        if (!verifyCache) {
+            console.error('❌ Cache save failed: Item not found after save attempt');
+            return false;
+        }
+        
+        console.log('✅ Successfully cached conversations in localStorage for:', localStorageKey, `(${cacheData.conversationCount} conversations, ${sizeInMB}MB)`, 'Expires:', new Date(cacheData.expiresAt).toISOString());
         return true;
         
     } catch (error) {
         // Handle quota exceeded error
         if (error.name === 'QuotaExceededError' || error.code === 22) {
             console.warn('⚠️ localStorage quota exceeded, clearing old cache entries...');
-            clearOldCacheEntries();
+            await clearOldCacheEntries();
+            
             // Try once more after clearing
             try {
-                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-                console.log('💾 Cached after clearing old entries');
-                return true;
+                const localStorageKey = CONVERSATION_CACHE_PREFIX + cacheKey;
+                localStorage.setItem(localStorageKey, JSON.stringify(cacheData));
+                const verifyCache = localStorage.getItem(localStorageKey);
+                if (verifyCache) {
+                    console.log('✅ Cached to localStorage after clearing old entries');
+                    return true;
+                }
             } catch (retryError) {
-                console.warn('⚠️ Still unable to cache after clearing:', retryError);
-                return false;
+                console.warn('⚠️ Still unable to cache to localStorage after clearing:', retryError);
             }
         }
-        console.warn('⚠️ Error caching conversations:', error);
+        console.warn('⚠️ Error caching to localStorage:', error);
         return false;
     }
 }
 
-// Clear old cache entries (keep only last 10 entries)
-function clearOldCacheEntries() {
+// Clear old cache entries (keep only last 50 entries for IndexedDB, or last 5 for localStorage)
+async function clearOldCacheEntries() {
+    const db = await getConversationCacheDB();
+    
+    if (db) {
+        // Use IndexedDB cleanup
+        try {
+            return new Promise((resolve) => {
+                const transaction = db.transaction([INDEXEDDB_STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(INDEXEDDB_STORE_NAME);
+                const index = store.index('timestamp');
+                const request = index.openCursor(null, 'prev'); // Descending order (newest first)
+                
+                const entries = [];
+                
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        entries.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        // All entries loaded, now process
+                        if (entries.length === 0) {
+                            console.log('📦 No cache entries to clear in IndexedDB');
+                            resolve();
+                            return;
+                        }
+                        
+                        // Calculate total size
+                        const totalSize = entries.reduce((sum, entry) => {
+                            return sum + (JSON.stringify(entry).length || 0);
+                        }, 0);
+                        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+                        console.log(`📊 IndexedDB cache stats: ${entries.length} entries, ${totalSizeMB}MB total`);
+                        
+                        // Keep last 50 entries (IndexedDB can handle much more)
+                        const maxEntries = 50;
+                        if (entries.length > maxEntries) {
+                            const toRemove = entries.slice(maxEntries);
+                            const deleteTransaction = db.transaction([INDEXEDDB_STORE_NAME], 'readwrite');
+                            const deleteStore = deleteTransaction.objectStore(INDEXEDDB_STORE_NAME);
+                            
+                            let deletedCount = 0;
+                            toRemove.forEach(entry => {
+                                deleteStore.delete(entry.cacheKey);
+                                deletedCount++;
+                                console.log(`🗑️ Removed old cache from IndexedDB: ${entry.cacheKey} (${entry.conversationCount || 0} conversations)`);
+                            });
+                            
+                            console.log(`🗑️ Removed ${deletedCount} old cache entries from IndexedDB`);
+                        }
+                        
+                        // If still too large (more than 500MB), be more aggressive - keep only last 30
+                        if (totalSize > 500 * 1024 * 1024 && entries.length > 30) {
+                            console.warn('⚠️ IndexedDB cache still too large, keeping only last 30 entries');
+                            const toRemove = entries.slice(30);
+                            const deleteTransaction = db.transaction([INDEXEDDB_STORE_NAME], 'readwrite');
+                            const deleteStore = deleteTransaction.objectStore(INDEXEDDB_STORE_NAME);
+                            
+                            toRemove.forEach(entry => {
+                                deleteStore.delete(entry.cacheKey);
+                            });
+                        }
+                        
+                        resolve();
+                    }
+                };
+                
+                request.onerror = () => {
+                    console.warn('⚠️ Error reading from IndexedDB for cleanup:', request.error);
+                    resolve();
+                };
+            });
+        } catch (error) {
+            console.warn('⚠️ Error clearing IndexedDB cache:', error);
+        }
+    }
+    
+    // Fallback to localStorage cleanup
     try {
         const cacheKeys = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -106,26 +407,45 @@ function clearOldCacheEntries() {
             }
         }
         
-        // Sort by timestamp (newest first)
+        if (cacheKeys.length === 0) {
+            console.log('📦 No cache entries to clear in localStorage');
+            return;
+        }
+        
+        // Sort by timestamp (newest first) and calculate sizes
         const cacheEntries = cacheKeys.map(key => {
             try {
-                const data = JSON.parse(localStorage.getItem(key));
-                return { key, timestamp: data.timestamp || 0 };
+                const data = localStorage.getItem(key);
+                const parsed = JSON.parse(data);
+                const size = new Blob([data]).size;
+                return { 
+                    key, 
+                    timestamp: parsed.timestamp || 0,
+                    size: size,
+                    conversationCount: parsed.data?.conversations?.length || 0
+                };
             } catch {
-                return { key, timestamp: 0 };
+                return { key, timestamp: 0, size: 0, conversationCount: 0 };
             }
         }).sort((a, b) => b.timestamp - a.timestamp);
         
-        // Remove oldest entries, keep only last 10
-        if (cacheEntries.length > 10) {
-            const toRemove = cacheEntries.slice(10);
+        // Calculate total cache size
+        const totalSize = cacheEntries.reduce((sum, entry) => sum + entry.size, 0);
+        const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+        console.log(`📊 localStorage cache stats: ${cacheEntries.length} entries, ${totalSizeMB}MB total`);
+        
+        // If we have more than 5 entries, remove oldest ones
+        if (cacheEntries.length > 5) {
+            const toRemove = cacheEntries.slice(5);
+            const removedSize = toRemove.reduce((sum, entry) => sum + entry.size, 0);
             toRemove.forEach(entry => {
                 localStorage.removeItem(entry.key);
-                console.log('🗑️ Removed old cache:', entry.key);
+                console.log(`🗑️ Removed old cache from localStorage: ${entry.key} (${entry.conversationCount} conversations, ${(entry.size / 1024).toFixed(1)}KB)`);
             });
+            console.log(`🗑️ Removed ${toRemove.length} old cache entries from localStorage, freed ${(removedSize / (1024 * 1024)).toFixed(2)}MB`);
         }
     } catch (error) {
-        console.warn('⚠️ Error clearing old cache:', error);
+        console.warn('⚠️ Error clearing localStorage cache:', error);
     }
 }
 
@@ -290,7 +610,7 @@ function updateDateDisplays() {
  */
 async function fetchConversationsProgressively(adminId, selectedDate) {
     // Check cache first
-    const cachedData = getCachedConversations(adminId, selectedDate);
+    const cachedData = await getCachedConversations(adminId, selectedDate);
     if (cachedData) {
         console.log('📦 Using cached data');
         updateProgressIndicator(10, 'Loading from cache...');
@@ -552,7 +872,7 @@ async function fetchConversationsProgressively(adminId, selectedDate) {
     // Cache the complete result
     allFetchedData.conversations = allConversations;
     allFetchedData.has_more = hasMore;
-    cacheConversations(adminId, selectedDate, allFetchedData);
+    await cacheConversations(adminId, selectedDate, allFetchedData);
     
     // Update progress: Complete
     updateProgressIndicator(100, 'Almost done...');
