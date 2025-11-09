@@ -1606,6 +1606,16 @@ async function saveUserChanges() {
     }
 }
 
+// Hash password using SHA-256 (same as login and profile pages)
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
 // Create User Functions
 function openCreateUserModal() {
     // Populate dropdowns
@@ -1706,6 +1716,10 @@ async function createNewUser() {
             throw new Error('Supabase not initialized');
         }
 
+        // Set default password as the email address (hashed)
+        const defaultPassword = formData.email;
+        formData.password_hash = await hashPassword(defaultPassword);
+
         // Insert new user into Supabase
         const { data, error } = await window.supabaseClient
             .from('users')
@@ -1728,7 +1742,7 @@ async function createNewUser() {
         closeCreateModal();
         
         // Show success message
-        alert(`User created successfully!\n\nName: ${formData.name}\nEmail: ${formData.email}\nRole: ${formData.role}`);
+        alert(`User created successfully!\n\nName: ${formData.name}\nEmail: ${formData.email}\nRole: ${formData.role}\n\nDefault password has been set to the email address.`);
         
     } catch (error) {
         console.error('Error creating user:', error);
@@ -1957,6 +1971,15 @@ async function processBulkUpload() {
             }
             
             usersToInsert.push(userData);
+        }
+        
+        uploadStatus.textContent = `Setting default passwords...`;
+        progressBar.style.width = '50%';
+        
+        // Set default password as email address (hashed) for each user
+        for (let i = 0; i < usersToInsert.length; i++) {
+            const defaultPassword = usersToInsert[i].email;
+            usersToInsert[i].password_hash = await hashPassword(defaultPassword);
         }
         
         uploadStatus.textContent = `Uploading ${usersToInsert.length} users...`;
