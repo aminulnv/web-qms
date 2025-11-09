@@ -1047,6 +1047,15 @@ class SidebarLoader {
           parentLi.style.display = 'none'
         }
       }
+
+      // Hide Intercom Admin Report
+      const intercomAdminsLink = document.querySelector('[aria-label="Intercom Admin Report"]')
+      if (intercomAdminsLink) {
+        const parentLi = intercomAdminsLink.closest('li[role="none"]')
+        if (parentLi) {
+          parentLi.style.display = 'none'
+        }
+      }
     } catch (error) {
       console.error('Error hiding employee menu items:', error)
     }

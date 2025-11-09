@@ -345,8 +345,26 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Average Quality Score</div>
-        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsAvgQualityScore">
-          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        <div class="flex items-start gap-2 mb-1">
+          <div class="text-3xl font-bold text-gray-900" id="statsAvgQualityScore">
+            <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-semibold bg-green-100 text-green-800" id="statsPassingCount">
+              <svg style="width: 0.5rem; height: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              <span class="inline-block h-3 w-4 bg-gray-200 rounded animate-pulse"></span>
+              <span>Passed</span>
+            </div>
+            <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-semibold bg-red-100 text-red-800" id="statsNotPassingCount">
+              <svg style="width: 0.5rem; height: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <span class="inline-block h-3 w-4 bg-gray-200 rounded animate-pulse"></span>
+              <span>Not Passed</span>
+            </div>
+          </div>
         </div>
         <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgScoreSubtitle">
           <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
@@ -399,7 +417,7 @@
         <div class="text-3xl font-bold text-gray-900 mb-2" id="statsReversalTotalCount">
           <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
         </div>
-        <div class="flex items-center gap-3 text-xs">
+        <div class="flex items-center gap-3 text-xs flex-wrap">
           <div class="flex items-center gap-1">
             <span class="text-gray-600">Active:</span>
             <span class="font-semibold text-warning" id="statsReversalActiveCount">
@@ -413,6 +431,22 @@
             </span>
           </div>
         </div>
+      </div>
+
+      <!-- Requires Acknowledgment Card (Agents Only) -->
+      <div id="requiresAcknowledgmentCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="display: none;">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Requires Acknowledgment</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsRequiresAcknowledgmentCount">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div class="text-xs font-medium text-gray-600 mt-1">reports pending</div>
       </div>
 
       <!-- Avg Duration Card -->
@@ -819,7 +853,13 @@ async function initializeDashboard() {
       if (inProgressCard) inProgressCard.style.display = 'none';
       const avgDurationCard = document.getElementById('avgDurationCard');
       if (avgDurationCard) avgDurationCard.style.display = 'none';
+      // Show acknowledgment card for agents
+      const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
+      if (requiresAcknowledgmentCard) requiresAcknowledgmentCard.style.display = 'block';
     } else {
+      // Hide acknowledgment card for non-agents
+      const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
+      if (requiresAcknowledgmentCard) requiresAcknowledgmentCard.style.display = 'none';
       const auditsTitle = document.getElementById('auditsSectionTitle');
       if (auditsTitle) auditsTitle.textContent = 'My Assigned Audits';
       const viewAllBtn = document.getElementById('viewAllBtn');
@@ -1781,6 +1821,7 @@ function renderAssignedAudits() {
       }
       
       const reversalStatusChip = getReversalStatusChip(audit);
+      const acknowledgmentStatusChip = getAcknowledgmentStatusChip(audit);
 
       return `
         <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')">
@@ -1809,7 +1850,12 @@ function renderAssignedAudits() {
                     <span class="text-gray-300">•</span>
                     <span>${escapeHtml(channel)}</span>
                     <span class="text-gray-300">•</span>
-                    <span class="font-medium text-gray-700">${averageScore}%</span>
+                    <span class="flex flex-col items-start">
+                      <span class="font-medium text-gray-700">${averageScore}%</span>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold ${statusColor} mt-0.5">
+                        ${statusIcon} ${normalizedStatus}
+                      </span>
+                    </span>
                     <span class="text-gray-300">•</span>
                     <span>${totalErrors} errors</span>
                     <span class="text-gray-300">•</span>
@@ -1834,7 +1880,12 @@ function renderAssignedAudits() {
                     <span class="text-gray-300">•</span>
                     <span>${escapeHtml(channel)}</span>
                     <span class="text-gray-300">•</span>
-                    <span class="font-medium text-gray-700">${averageScore}%</span>
+                    <span class="flex flex-col items-start">
+                      <span class="font-medium text-gray-700">${averageScore}%</span>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold ${statusColor} mt-0.5">
+                        ${statusIcon} ${normalizedStatus}
+                      </span>
+                    </span>
                     <span class="text-gray-300">•</span>
                     <span>${totalErrors} errors</span>
                     <span class="text-gray-300">•</span>
@@ -1844,9 +1895,7 @@ function renderAssignedAudits() {
               </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${statusColor}">
-                ${statusIcon} ${normalizedStatus}
-              </span>
+              ${acknowledgmentStatusChip}
               ${reversalStatusChip}
               <button onclick="event.stopPropagation(); viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
                 View Details
@@ -2060,6 +2109,8 @@ async function updateYourStats() {
     let totalAuditsWithScore = 0;
     let avgQualityScore = 0;
     let avgQualityScoreText = '-';
+    let passingCount = 0;
+    let notPassingCount = 0;
     
     if (isAgent) {
       // For employees: Count completed audits from scorecard tables
@@ -2093,7 +2144,13 @@ async function updateYourStats() {
                 
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
-                  return { score: !isNaN(score) ? score : null };
+                  const passingStatus = audit.passing_status || audit.passingStatus || '';
+                  const normalizedStatus = passingStatus === 'Passing' ? 'Passed' : (passingStatus === 'Not Passing' ? 'Not Passed' : passingStatus);
+                  
+                  return { 
+                    score: !isNaN(score) ? score : null,
+                    passingStatus: normalizedStatus
+                  };
                 });
               }
               return [];
@@ -2111,6 +2168,12 @@ async function updateYourStats() {
               totalScoreSum += audit.score;
               totalAuditsWithScore++;
             }
+            // Count passing/not passing
+            if (audit.passingStatus === 'Passed' || audit.passingStatus === 'Passing') {
+              passingCount++;
+            } else if (audit.passingStatus === 'Not Passed' || audit.passingStatus === 'Not Passing') {
+              notPassingCount++;
+            }
           });
           
           if (totalAuditsWithScore > 0) {
@@ -2118,7 +2181,7 @@ async function updateYourStats() {
             avgQualityScoreText = `${Math.round(avgQualityScore)}%`;
           }
           
-          console.log(`Stats for employee: ${totalAuditsConducted} audits conducted, ${avgQualityScoreText} average score`);
+          console.log(`Stats for employee: ${totalAuditsConducted} audits conducted, ${avgQualityScoreText} average score, ${passingCount} passing, ${notPassingCount} not passing`);
         }
       } catch (error) {
         console.error('Error calculating audits conducted and average score:', error);
@@ -2143,7 +2206,7 @@ async function updateYourStats() {
             try {
               const { data: audits, error } = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('average_score, averageScore, ' + auditFilterField);
+                .select('average_score, averageScore, passing_status, passingStatus, ' + auditFilterField);
               
               if (!error && audits && audits.length > 0) {
                 const filteredAudits = audits.filter(audit => {
@@ -2154,8 +2217,14 @@ async function updateYourStats() {
                 
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
-                  return !isNaN(score) ? score : null;
-                }).filter(score => score !== null);
+                  const passingStatus = audit.passing_status || audit.passingStatus || '';
+                  const normalizedStatus = passingStatus === 'Passing' ? 'Passed' : (passingStatus === 'Not Passing' ? 'Not Passed' : passingStatus);
+                  
+                  return {
+                    score: !isNaN(score) ? score : null,
+                    passingStatus: normalizedStatus
+                  };
+                });
               }
               return [];
             } catch (err) {
@@ -2165,10 +2234,18 @@ async function updateYourStats() {
           });
           
           const auditResults = await Promise.all(auditPromises);
-          const allScores = auditResults.flat();
-          allScores.forEach(score => {
-            totalScoreSum += score;
-            totalAuditsWithScore++;
+          const allAudits = auditResults.flat();
+          allAudits.forEach(audit => {
+            if (audit.score !== null) {
+              totalScoreSum += audit.score;
+              totalAuditsWithScore++;
+            }
+            // Count passing/not passing
+            if (audit.passingStatus === 'Passed' || audit.passingStatus === 'Passing') {
+              passingCount++;
+            } else if (audit.passingStatus === 'Not Passed' || audit.passingStatus === 'Not Passing') {
+              notPassingCount++;
+            }
           });
           
           if (totalAuditsWithScore > 0) {
@@ -2185,7 +2262,66 @@ async function updateYourStats() {
     let activeReversals = 0;
     let resolvedReversals = 0;
     let totalReversals = 0;
+    let requiresAcknowledgment = 0;
     
+    // For agents: Count audits with acknowledgement_status = 'pending'
+    if (isAgent) {
+      try {
+        const { data: scorecards, error: scError } = await window.supabaseClient
+          .from('scorecards')
+          .select('table_name')
+          .eq('is_active', true);
+        
+        if (!scError && scorecards) {
+          const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+          
+          // Parallelize all audit count queries
+          const auditPromises = scorecards.map(async (scorecard) => {
+            try {
+              // Get all audits for this employee and filter client-side
+              const { data: allAudits, error: auditError } = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('id, employee_email, acknowledgement_status')
+                .limit(1000);
+              
+              if (!auditError && allAudits) {
+                // Filter by email (case-insensitive) and acknowledgement_status = 'pending'
+                const pendingAudits = allAudits.filter(audit => {
+                  const emailToCheck = audit.employee_email;
+                  if (!emailToCheck) return false;
+                  const emailMatches = emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+                  
+                  const ackStatus = audit.acknowledgement_status || audit.acknowledgementStatus || '';
+                  const isPending = ackStatus && (
+                    ackStatus.toLowerCase() === 'pending' || 
+                    ackStatus === 'Pending'
+                  );
+                  
+                  return emailMatches && isPending;
+                });
+                
+                console.log(`Found ${pendingAudits.length} pending audits in ${scorecard.table_name} for ${currentUserEmail}`);
+                
+                return pendingAudits.length;
+              }
+              return 0;
+            } catch (err) {
+              console.warn(`Error counting pending audits in ${scorecard.table_name}:`, err);
+              return 0;
+            }
+          });
+          
+          const auditCounts = await Promise.all(auditPromises);
+          requiresAcknowledgment = auditCounts.reduce((sum, count) => sum + count, 0);
+          
+          console.log(`Total audits requiring acknowledgment for agent ${currentUserEmail}:`, requiresAcknowledgment);
+        }
+      } catch (error) {
+        console.error('Error calculating acknowledgment count:', error);
+      }
+    }
+    
+    // Calculate reversal counts (for reversal card stats)
     try {
       const { data: scorecards, error: scError } = await window.supabaseClient
         .from('scorecards')
@@ -2200,16 +2336,24 @@ async function updateYourStats() {
           try {
             const { data: allReversals, error: allError } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('reversal_requested_at, reversal_responded_at')
-              .eq(reversalFilterField, currentUserEmail)
-              .not('reversal_requested_at', 'is', null);
+              .select('reversal_requested_at, reversal_responded_at, ' + reversalFilterField)
+              .not('reversal_requested_at', 'is', null)
+              .limit(500);
             
             if (!allError && allReversals) {
-              return allReversals.map(reversal => {
-                return {
-                  active: reversal.reversal_requested_at && !reversal.reversal_responded_at,
-                  resolved: !!reversal.reversal_responded_at
-                };
+              const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+              
+              // Filter by email (case-insensitive)
+              const filteredReversals = allReversals.filter(reversal => {
+                const emailToCheck = reversal[reversalFilterField];
+                if (!emailToCheck) return false;
+                return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+              });
+              
+              return filteredReversals.map(reversal => {
+                const active = reversal.reversal_requested_at && !reversal.reversal_responded_at;
+                const resolved = !!reversal.reversal_responded_at;
+                return { active, resolved };
               });
             }
             return [];
@@ -2221,6 +2365,8 @@ async function updateYourStats() {
         
         const reversalResults = await Promise.all(reversalPromises);
         const allReversalsData = reversalResults.flat();
+        
+        // Count all reversals for total/active/resolved stats
         allReversalsData.forEach(reversal => {
           totalReversals++;
           if (reversal.active) activeReversals++;
@@ -2237,12 +2383,16 @@ async function updateYourStats() {
     const statsRemainingProgress = document.getElementById('statsRemainingProgress');
     const statsAvgQualityScore = document.getElementById('statsAvgQualityScore');
     const statsAvgScoreSubtitle = document.getElementById('statsAvgScoreSubtitle');
+    const statsPassingCount = document.getElementById('statsPassingCount');
+    const statsNotPassingCount = document.getElementById('statsNotPassingCount');
     const statsRemainingCount = document.getElementById('statsRemainingCount');
     const statsInProgressCount = document.getElementById('statsInProgressCount');
     const statsDaysRemaining = document.getElementById('statsDaysRemaining');
     const statsReversalTotalCount = document.getElementById('statsReversalTotalCount');
     const statsReversalActiveCount = document.getElementById('statsReversalActiveCount');
     const statsReversalResolvedCount = document.getElementById('statsReversalResolvedCount');
+    const statsRequiresAcknowledgmentCount = document.getElementById('statsRequiresAcknowledgmentCount');
+    const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
     const statsAvgDuration = document.getElementById('statsAvgDuration');
     const statsAvgDurationSubtitle = document.getElementById('statsAvgDurationSubtitle');
     
@@ -2272,6 +2422,50 @@ async function updateYourStats() {
       statsAvgScoreSubtitle.textContent = totalAuditsWithScore > 0 ? `from ${totalAuditsWithScore} audits` : 'No audits yet';
     }
     
+    // Update passing and not passing count chips
+    if (statsPassingCount) {
+      // Remove loading placeholder
+      const loadingSpan = statsPassingCount.querySelector('span.inline-block');
+      if (loadingSpan) {
+        loadingSpan.remove();
+      }
+      // Update count text with label
+      const svg = statsPassingCount.querySelector('svg');
+      const textSpan = statsPassingCount.querySelector('span:last-child');
+      if (svg && textSpan) {
+        // Remove all nodes between SVG and the last span (including any existing numbers)
+        let nextSibling = svg.nextSibling;
+        while (nextSibling && nextSibling !== textSpan) {
+          const toRemove = nextSibling;
+          nextSibling = nextSibling.nextSibling;
+          toRemove.remove();
+        }
+        // Update the text span to include the count
+        textSpan.textContent = `${passingCount} Passed`;
+      }
+    }
+    if (statsNotPassingCount) {
+      // Remove loading placeholder
+      const loadingSpan = statsNotPassingCount.querySelector('span.inline-block');
+      if (loadingSpan) {
+        loadingSpan.remove();
+      }
+      // Update count text with label
+      const svg = statsNotPassingCount.querySelector('svg');
+      const textSpan = statsNotPassingCount.querySelector('span:last-child');
+      if (svg && textSpan) {
+        // Remove all nodes between SVG and the last span (including any existing numbers)
+        let nextSibling = svg.nextSibling;
+        while (nextSibling && nextSibling !== textSpan) {
+          const toRemove = nextSibling;
+          nextSibling = nextSibling.nextSibling;
+          toRemove.remove();
+        }
+        // Update the text span to include the count
+        textSpan.textContent = `${notPassingCount} Not Passed`;
+      }
+    }
+    
     // Update other cards
     if (statsRemainingCount) statsRemainingCount.textContent = remaining;
     if (statsInProgressCount) statsInProgressCount.textContent = inProgress;
@@ -2281,6 +2475,15 @@ async function updateYourStats() {
     if (statsReversalTotalCount) statsReversalTotalCount.textContent = totalReversals;
     if (statsReversalActiveCount) statsReversalActiveCount.textContent = activeReversals;
     if (statsReversalResolvedCount) statsReversalResolvedCount.textContent = resolvedReversals;
+    
+    // Update Requires Acknowledgment card (agents only)
+    if (isAgent && statsRequiresAcknowledgmentCount && requiresAcknowledgmentCard) {
+      statsRequiresAcknowledgmentCount.textContent = requiresAcknowledgment;
+      requiresAcknowledgmentCard.style.display = 'block';
+      console.log('Updated Requires Acknowledgment card:', { requiresAcknowledgment, isAgent });
+    } else if (requiresAcknowledgmentCard) {
+      requiresAcknowledgmentCard.style.display = 'none';
+    }
     
     if (statsAvgDuration) statsAvgDuration.textContent = avgDurationText;
     if (statsAvgDurationSubtitle) statsAvgDurationSubtitle.textContent = 'per audit';
@@ -2349,6 +2552,58 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function getAcknowledgmentStatusChip(audit) {
+  const acknowledgementStatus = audit.acknowledgement_status || audit.acknowledgementStatus || '';
+  
+  // Check if acknowledged
+  const isAcknowledged = acknowledgementStatus && (
+    acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+    acknowledgementStatus === 'Acknowledged'
+  );
+  
+  // Check if pending
+  const isPending = acknowledgementStatus && (
+    acknowledgementStatus.toLowerCase() === 'pending' || 
+    acknowledgementStatus === 'Pending'
+  );
+  
+  // If no status or empty, default to pending (since audits are created with pending by default)
+  if (!acknowledgementStatus || acknowledgementStatus.trim() === '') {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: #fef3c7; color: #92400e;">
+      <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Acknowledgement Pending
+    </span>`;
+  }
+  
+  if (isAcknowledged) {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: #dcfce7; color: #166534;">
+      <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      Acknowledged
+    </span>`;
+  }
+  
+  if (isPending) {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: #fef3c7; color: #92400e;">
+      <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Acknowledgement Pending
+    </span>`;
+  }
+  
+  // Default: show pending if status is unknown
+  return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: #fef3c7; color: #92400e;">
+    <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    Acknowledgement Pending
+  </span>`;
+}
+
 function getReversalStatusChip(audit) {
   // Check if audit has reversal request
   const reversalRequestedAt = audit.reversal_requested_at || audit.reversalRequestedAt;
@@ -2387,30 +2642,44 @@ function getReversalStatusChip(audit) {
   if (!status) return '';
   
   // Determine chip styling based on status
-  let statusBgColor, statusTextColor, statusText;
+  let statusBgColor, statusTextColor, statusIcon;
   if (status === 'Pending') {
     statusBgColor = '#fef3c7';
     statusTextColor = '#92400e';
-    statusText = '⏳ Pending';
+    statusIcon = `<svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>`;
+    statusText = 'Pending';
   } else if (status === 'Approved') {
     statusBgColor = '#dcfce7';
     statusTextColor = '#166534';
-    statusText = '✓ Approved';
+    statusIcon = `<svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>`;
+    statusText = 'Approved';
   } else if (status === 'Rejected') {
     statusBgColor = '#fee2e2';
     statusTextColor = '#991b1b';
-    statusText = '✗ Rejected';
+    statusIcon = `<svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>`;
+    statusText = 'Rejected';
   } else if (status === 'Acknowledged') {
     statusBgColor = '#dbeafe';
     statusTextColor = '#1e40af';
-    statusText = '✓ Acknowledged';
+    statusIcon = `<svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>`;
+    statusText = 'Acknowledged';
   } else {
     statusBgColor = '#f3f4f6';
     statusTextColor = '#374151';
+    statusIcon = '';
     statusText = status;
   }
   
-  return `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: ${statusBgColor}; color: ${statusTextColor};">
+  return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold" style="background-color: ${statusBgColor}; color: ${statusTextColor};">
+    ${statusIcon}
     ${statusText}
   </span>`;
 }

@@ -1793,9 +1793,9 @@ async function createNewUser() {
             throw new Error('Supabase not initialized');
         }
 
-        // Set default password as the email address (hashed)
-        const defaultPassword = formData.email;
-        formData.password_hash = await hashPassword(defaultPassword);
+        // Set default password as the email address (stored as plain text)
+        const plainPassword = formData.email;
+        formData.password_hash = plainPassword;
 
         // Insert new user into Supabase
         const { data, error } = await window.supabaseClient
@@ -1818,12 +1818,12 @@ async function createNewUser() {
         // Close modal
         closeCreateModal();
         
-        // Show success dialog with credentials
+        // Show success dialog with credentials (use plain password, not hash)
         await showUserCreatedSuccessDialog({
             name: formData.name,
             email: formData.email,
             role: formData.role,
-            password: defaultPassword
+            password: plainPassword  // Plain email address for user to see
         });
         
     } catch (error) {
@@ -2058,10 +2058,10 @@ async function processBulkUpload() {
         uploadStatus.textContent = `Setting default passwords...`;
         progressBar.style.width = '50%';
         
-        // Set default password as email address (hashed) for each user
+        // Set default password as email address (stored as plain text) for each user
         for (let i = 0; i < usersToInsert.length; i++) {
             const defaultPassword = usersToInsert[i].email;
-            usersToInsert[i].password_hash = await hashPassword(defaultPassword);
+            usersToInsert[i].password_hash = defaultPassword;
         }
         
         uploadStatus.textContent = `Uploading ${usersToInsert.length} users...`;

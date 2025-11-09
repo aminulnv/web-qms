@@ -342,6 +342,21 @@ function escapeHtml(text) {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is an Employee - Employees should not be able to access intercom-admins page
+    try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userRole = userInfo.role || '';
+        
+        if (userRole === 'Employee') {
+            // Redirect Employee users to home page
+            alert('You do not have permission to access this page.');
+            window.location.href = 'home.html';
+            return;
+        }
+    } catch (error) {
+        console.error('Error checking user role:', error);
+    }
+    
     initializeDOMElements();
     
     // Add search event listener

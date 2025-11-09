@@ -1121,6 +1121,59 @@ document.addEventListener('DOMContentLoaded', function() {
         return div.innerHTML;
     }
     
+    // Helper function to get acknowledgment status chip
+    function getAcknowledgmentStatusChip(audit) {
+        const acknowledgementStatus = audit.acknowledgementStatus || audit.acknowledgement_status || '';
+        
+        // Check if acknowledged
+        const isAcknowledged = acknowledgementStatus && (
+            acknowledgementStatus.toLowerCase().includes('acknowledged') || 
+            acknowledgementStatus === 'Acknowledged'
+        );
+        
+        // Check if pending
+        const isPending = acknowledgementStatus && (
+            acknowledgementStatus.toLowerCase() === 'pending' || 
+            acknowledgementStatus === 'Pending'
+        );
+        
+        // If no status or empty, default to pending (since audits are created with pending by default)
+        if (!acknowledgementStatus || acknowledgementStatus.trim() === '') {
+            return `<span style="background-color: #fef3c7; color: #92400e; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem;">
+                <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Acknowledgement Pending
+            </span>`;
+        }
+        
+        if (isAcknowledged) {
+            return `<span style="background-color: #dcfce7; color: #166534; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem;">
+                <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Acknowledged
+            </span>`;
+        }
+        
+        if (isPending) {
+            return `<span style="background-color: #fef3c7; color: #92400e; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem;">
+                <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Acknowledgement Pending
+            </span>`;
+        }
+        
+        // Default: show pending if status is unknown
+        return `<span style="background-color: #fef3c7; color: #92400e; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem;">
+            <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Acknowledgement Pending
+        </span>`;
+    }
+    
     // Date formatting helper
     function formatCardDate(dateString) {
         if (!dateString) return 'N/A';
@@ -1153,6 +1206,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const reversalRespondedAt = audit.reversalRespondedAt || audit.reversal_responded_at;
         const isReversalPending = reversalRequestedAt && !reversalRespondedAt;
         
+        // Get acknowledgment status chip
+        const acknowledgmentStatusChip = getAcknowledgmentStatusChip(audit);
+        
         // Create card element
         const cardHtml = `
             <div class="audit-card" style="background: #f9fafb; border: 0.0469rem solid ${isReversalPending ? '#fbbf24' : '#e5e7eb'}; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer;" 
@@ -1172,9 +1228,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <h4 style="margin: 0; font-size: 0.6562rem; font-weight: 600; color: #1f2937;">
                                 ${escapeHtml(audit.employeeName || 'Unknown Employee')}
                             </h4>
-                            <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600;">
-                                ${statusIcon} ${normalizedStatus || 'Unknown'}
-                            </span>
                             ${isReversalPending ? `
                                 <span style="background-color: #fef3c7; color: #92400e; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; border: 0.0469rem solid #fbbf24; display: flex; align-items: center; gap: 0.1875rem;">
                                     <svg style="width: 0.5625rem; height: 0.5625rem;" viewBox="0 0 24 24" fill="currentColor">
@@ -1194,7 +1247,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span style="color: #d1d5db;">•</span>
                             <span>${escapeHtml(audit.channel || 'No channel')}</span>
                             <span style="color: #d1d5db;">•</span>
-                            <span style="font-weight: 500;">${audit.averageScore || '0'}%</span>
+                            <span style="display: flex; flex-direction: column; align-items: flex-start;">
+                                <span style="font-weight: 500;">${audit.averageScore || '0'}%</span>
+                                <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0625rem 0.25rem; border-radius: 0.125rem; font-size: 0.4688rem; font-weight: 600; margin-top: 0.125rem;">
+                                    ${statusIcon} ${normalizedStatus || 'Unknown'}
+                                </span>
+                            </span>
                             <span style="color: #d1d5db;">•</span>
                             <span>${audit.totalErrorsCount || '0'} errors</span>
                             <span style="color: #d1d5db;">•</span>
@@ -1206,7 +1264,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <!-- Action buttons -->
-                <div style="display: flex; gap: 0.375rem; flex-shrink: 0;">
+                <div style="display: flex; gap: 0.375rem; flex-shrink: 0; align-items: center;">
+                    ${acknowledgmentStatusChip}
                     <button 
                         onclick="event.stopPropagation(); viewAuditDetails('${audit.id}')"
                         style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
