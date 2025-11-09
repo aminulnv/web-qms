@@ -112,6 +112,23 @@
                 left: 100%;
             }
         }
+
+        /* Parts tooltip hover effect */
+        .parts-tooltip-container:hover .parts-info-icon {
+            background: #9ca3af !important;
+        }
+
+        /* Ensure tooltip positioning works correctly */
+        .parts-tooltip-container,
+        .column-tooltip-container {
+            overflow: visible !important;
+        }
+
+        /* Column tooltip hover effect */
+        .column-tooltip-container:hover .info-icon {
+            background: #9ca3af !important;
+        }
+
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -390,19 +407,317 @@
         
         <!-- Conversations List -->
         <div id="pullConversationsList" style="display: none;">
-            <div style="background: white; border-radius: 0.3234rem; overflow: hidden; border: 0.0304rem solid #e5e7eb; max-height: 60vh; overflow-y: auto; position: relative;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb;">
+            <div style="background: white; border-radius: 0.3234rem; border: 0.0304rem solid #e5e7eb; max-height: 60vh; overflow: auto; position: relative;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 0.75rem;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
                         <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Client</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Conversation ID</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Subject</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Product Type</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Rating</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">State</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Created</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Updated</th>
-                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Actions</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
+                                    <span>Client</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Client</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">The customer's name and email address who initiated the conversation.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">John Doe<br><span style="color: #9ca3af; font-size: 0.6875rem;">john.doe@example.com</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
+                                    <span>ID</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Conversation ID</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Unique identifier for the conversation in Intercom. Click the copy icon to copy the full ID.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af; font-family: monospace; font-size: 0.6875rem;">215471675148327</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
+                                    <span>Subject</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Subject</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">The subject line or first line of the conversation message from the customer.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">"CFD / Forex" or "Account balance issue"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Source</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Source/Channel</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">The communication channel through which the customer contacted support.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Examples:</div>
+                                                <p style="margin: 0; color: #9ca3af;">✉️ Email, 💬 Chat, 📘 Facebook, 🐦 Twitter, 💚 WhatsApp</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Product</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Product Type</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">The product or service type associated with the conversation (from custom attributes).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">"CFD / Forex", "Futures", "Challenge Phase"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Lang</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Language</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">The language in which the conversation was conducted (from custom attributes).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">"English", "Arabic", "Spanish"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>⭐</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Rating</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Customer satisfaction rating given after the conversation (1-5 scale).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Examples:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #10b981;">5/5</span> (Excellent), <span style="color: #f59e0b;">3/5</span> (Average), <span style="color: #ef4444;">1/5</span> (Poor)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Status</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Conversation Status</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Current state of the conversation in Intercom.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Examples:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #10b981;">closed</span> (Resolved), <span style="color: #f59e0b;">open</span> (Active), <span style="color: #6b7280;">snoozed</span> (Paused)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>🔴</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Priority</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Whether the conversation has been marked as high priority by the team.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">🔴 shows when conversation is marked as <span style="color: white; font-weight: 600;">priority</span>, otherwise shows "-"</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Parts</span>
+                                    <div class="info-icon parts-info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip parts-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Parts</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Number of conversation parts (messages/replies) created by the admin in this conversation on the selected date.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">If the admin sent 3 messages in this conversation on Nov 4, 2025, the Parts count is <span style="color: white; font-weight: 600;">3</span>.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Total</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Total Parts</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Total number of all conversation parts (messages) in this conversation from all participants (admin, customer, system).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">If a conversation has 20 total messages (5 from admin, 10 from customer, 5 from system), Total Parts shows <span style="color: white; font-weight: 600;">20</span>.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Reply</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Time to First Reply</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Time taken for the admin to send the first reply after the conversation was assigned or created. Color-coded by response speed.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Examples:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #10b981;">5m</span> (Fast, ≤5 min), <span style="color: #f59e0b;">25m</span> (Moderate, 6-30 min), <span style="color: #ef4444;">2h15m</span> (Slow, >30 min)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>↻</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Reopens</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Number of times the conversation was reopened after being closed. Higher numbers may indicate unresolved issues.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">If a conversation was closed and reopened 2 times, it shows <span style="color: #d97706; font-weight: 600;">2</span>. <span style="color: #dc2626;">3+</span> indicates potential issues.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>SLA</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">SLA Status</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Service Level Agreement (SLA) compliance status for this conversation. Shows if SLA targets were met or missed.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Examples:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #10b981;">✅</span> active (SLA met), <span style="color: #ef4444;">❌</span> missed (SLA violated)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
+                                    <span>Tags</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Tags</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Labels or categories applied to the conversation for organization and filtering. Shows first 2 tags, with count of additional tags.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">"GS CFD FIN Chats", "Lingpad" <span style="color: #6b7280;">+2</span> (shows 2 more tags on hover)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Created</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Created Date</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Date and time when the conversation was first created by the customer. Displayed in compact format (month day).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">"Nov 4" (hover to see full date: Nov 4, 2025, 10:30 AM)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Updated</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Updated Date</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Date and time when the conversation was last updated (new message, status change, etc.). Displayed in compact format (month day).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">"Nov 5" (hover to see full date: Nov 5, 2025, 3:45 PM)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="pullConversationsTableBody">
@@ -3050,10 +3365,10 @@ function displayPullConversationsList(conversations) {
     const tableBody = document.getElementById('pullConversationsTableBody');
     if (!tableBody) return;
     
-    tableBody.innerHTML = '';
+        tableBody.innerHTML = '';
     
     if (conversations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="17" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
         return;
     }
     
@@ -3072,47 +3387,130 @@ function displayPullConversationsList(conversations) {
         const productType = conversation.custom_attributes?.['Product Type'] || conversation.custom_attributes?.['product_type'] || '-';
         const rating = conversation.conversation_rating?.rating || '-';
         const state = conversation.state || 'unknown';
+        const partsCount = conversation.participation_part_count || 0;
         const createdDate = conversation.created_at_iso || (conversation.created_at ? new Date(conversation.created_at * 1000).toLocaleDateString() : '-');
         const updatedDate = conversation.updated_at_iso || (conversation.updated_at ? new Date(conversation.updated_at * 1000).toLocaleDateString() : '-');
         
-        // Format rating
+        // Extract additional attributes
+        const sourceType = conversation.source?.type || '-';
+        const language = conversation.custom_attributes?.['Language'] || '-';
+        const priority = conversation.priority || 'not_priority';
+        const totalParts = conversation.statistics?.count_conversation_parts || 0;
+        const timeToReply = conversation.statistics?.time_to_admin_reply;
+        const reopens = conversation.statistics?.count_reopens || 0;
+        const slaStatus = conversation.sla_applied?.sla_status || '-';
+        const slaName = conversation.sla_applied?.sla_name || '';
+        const tags = conversation.tags?.tags || [];
+        
+        // Format rating (compact)
         let ratingHtml = '-';
         if (rating && rating !== '-') {
             const ratingColor = rating >= 4 ? '#10b981' : rating >= 3 ? '#f59e0b' : '#ef4444';
-            ratingHtml = `<span style="color: ${ratingColor}; font-weight: 600;">${rating}/5</span>`;
+            ratingHtml = `<span style="color: ${ratingColor}; font-weight: 600; font-size: 0.6875rem;">${rating}/5</span>`;
         }
         
-        // Format state
+        // Format state (compact badge)
         const stateColor = state === 'closed' ? '#10b981' : state === 'open' ? '#f59e0b' : '#6b7280';
-        const stateBadge = `<span style="background: ${stateColor === '#10b981' ? '#d1fae5' : stateColor === '#f59e0b' ? '#fef3c7' : '#f3f4f6'}; color: ${stateColor}; padding: 0.1875rem 0.375rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 500;">${state}</span>`;
+        const stateBadge = `<span style="background: ${stateColor === '#10b981' ? '#d1fae5' : stateColor === '#f59e0b' ? '#fef3c7' : '#f3f4f6'}; color: ${stateColor}; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 500;">${state}</span>`;
+        
+        // Format source (icon only)
+        const sourceIcons = {
+            'email': '✉️',
+            'conversation': '💬',
+            'chat': '💬',
+            'facebook': '📘',
+            'twitter': '🐦',
+            'whatsapp': '💚'
+        };
+        const sourceIcon = sourceIcons[sourceType.toLowerCase()] || '📧';
+        const sourceDisplay = sourceType !== '-' ? sourceIcon : '-';
+        
+        // Format priority (icon only)
+        const priorityBadge = priority === 'priority' 
+            ? `<span style="color: #dc2626; font-size: 0.875rem;" title="Priority">🔴</span>`
+            : `<span style="color: #9ca3af; font-size: 0.6875rem;">-</span>`;
+        
+        // Format time to reply (compact)
+        let timeToReplyHtml = '-';
+        if (timeToReply !== null && timeToReply !== undefined) {
+            const minutes = Math.round(timeToReply / 60);
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            let timeDisplay = '';
+            if (hours > 0) {
+                timeDisplay = `${hours}h${mins > 0 ? mins + 'm' : ''}`;
+            } else {
+                timeDisplay = `${mins}m`;
+            }
+            const timeColor = minutes <= 5 ? '#10b981' : minutes <= 30 ? '#f59e0b' : '#ef4444';
+            timeToReplyHtml = `<span style="color: ${timeColor}; font-weight: 600; font-size: 0.6875rem;" title="${timeDisplay}">${timeDisplay}</span>`;
+        }
+        
+        // Format reopens (compact)
+        const reopensBadge = reopens > 0
+            ? `<span style="color: ${reopens >= 3 ? '#dc2626' : '#d97706'}; font-weight: 600; font-size: 0.6875rem;" title="${reopens} reopen${reopens > 1 ? 's' : ''}">${reopens}</span>`
+            : '<span style="color: #9ca3af; font-size: 0.6875rem;">-</span>';
+        
+        // Format SLA status (icon only)
+        let slaStatusHtml = '-';
+        if (slaStatus !== '-') {
+            const slaIcon = slaStatus === 'active' ? '✅' : slaStatus === 'missed' ? '❌' : '⚪';
+            const slaColor = slaStatus === 'active' ? '#10b981' : slaStatus === 'missed' ? '#ef4444' : '#6b7280';
+            slaStatusHtml = `<span style="color: ${slaColor}; font-size: 0.75rem;" title="${slaName} - ${slaStatus}">${slaIcon}</span>`;
+        }
+        
+        // Format tags (compact, show first 2)
+        let tagsHtml = '-';
+        if (tags.length > 0) {
+            const displayTags = tags.slice(0, 2).map(tag => tag.name || tag);
+            tagsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 0.125rem; max-width: 8rem;">
+                ${displayTags.map(tag => `<span style="background: #e0e7ff; color: #4338ca; padding: 0.0625rem 0.25rem; border-radius: 0.125rem; font-size: 0.5625rem; font-weight: 500;">${escapeHtml(tag.substring(0, 8))}</span>`).join('')}
+                ${tags.length > 2 ? `<span style="color: #6b7280; font-size: 0.5625rem;" title="${tags.slice(2).map(t => t.name || t).join(', ')}">+${tags.length - 2}</span>` : ''}
+            </div>`;
+        }
+        
+        // Format dates (compact)
+        const createdDateShort = createdDate !== '-' ? new Date(createdDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-';
+        const updatedDateShort = updatedDate !== '-' ? new Date(updatedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-';
         
         row.innerHTML = `
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
-                <div style="font-weight: 500; color: #111827; font-size: 0.875rem;">${escapeHtml(clientName)}</div>
-                <div style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(clientEmail)}</div>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
+                <div style="font-weight: 500; color: #111827; font-size: 0.75rem; line-height: 1.2;">${escapeHtml(clientName)}</div>
+                <div style="font-size: 0.625rem; color: #6b7280; line-height: 1.2;">${escapeHtml(clientEmail.substring(0, 20))}${clientEmail.length > 20 ? '...' : ''}</div>
             </td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
-                <div style="display: flex; align-items: center; gap: 0.375rem;">
-                    <span style="font-family: monospace; font-size: 0.6875rem; color: #6b7280;">${conversationId}</span>
-                    <button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.25rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
-                        <svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <span style="font-family: monospace; font-size: 0.625rem; color: #6b7280;">${conversationId.substring(0, 8)}...</span>
+                    <button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.125rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
+                        <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                     </button>
                 </div>
             </td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
-                <div style="max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
+                <div style="max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
             </td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #374151;">${escapeHtml(productType)}</td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${ratingHtml}</td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${stateBadge}</td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #6b7280; white-space: nowrap;">${createdDate}</td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #6b7280; white-space: nowrap;">${updatedDate}</td>
-            <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center; font-size: 0.875rem;" title="${sourceType}">${sourceDisplay}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center; font-size: 0.6875rem; color: #374151; max-width: 5rem; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(productType)}">${escapeHtml(productType)}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center; font-size: 0.6875rem; color: #6b7280;">${escapeHtml(language.substring(0, 3))}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${stateBadge}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${priorityBadge}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
+                ${partsCount > 0 ? `<span style="background: #dbeafe; color: #1e40af; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.6875rem; font-weight: 600; display: inline-block;">${partsCount}</span>` : '<span style="color: #9ca3af; font-size: 0.6875rem;">-</span>'}
+            </td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center; font-size: 0.6875rem; color: #374151; font-weight: 500;">${totalParts > 0 ? totalParts : '-'}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center; white-space: nowrap;">${timeToReplyHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${reopensBadge}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${slaStatusHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; max-width: 8rem;">${tagsHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${createdDate}">${createdDateShort}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${updatedDate}">${updatedDateShort}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
                 <button 
                     onclick="event.stopPropagation(); window.open('audit-view.html?conversation_id=${conversation.id}', '_blank');"
-                    style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                    style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
                     onmouseover="this.style.background='#a7f3d0'"
                     onmouseout="this.style.background='#d1fae5'"
                 >
@@ -6422,6 +6820,77 @@ document.addEventListener('DOMContentLoaded', function() {
                     await fetchConversationsForCurrentUser(this.value);
                 }
             });
+        }
+
+        // Setup tooltip positioning for all column headers
+        function setupColumnTooltips() {
+            const tooltipContainers = document.querySelectorAll('.column-tooltip-container');
+            tooltipContainers.forEach(container => {
+                const infoIcon = container.querySelector('.info-icon');
+                const tooltip = container.querySelector('.column-tooltip');
+                
+                if (infoIcon && tooltip) {
+                    // Remove existing listeners by cloning
+                    const newInfoIcon = infoIcon.cloneNode(true);
+                    const newTooltip = tooltip.cloneNode(true);
+                    infoIcon.parentNode.replaceChild(newInfoIcon, infoIcon);
+                    tooltip.parentNode.replaceChild(newTooltip, tooltip);
+                    
+                    newInfoIcon.addEventListener('mouseenter', function(e) {
+                        const rect = newInfoIcon.getBoundingClientRect();
+                        
+                        // Position tooltip above the icon, aligned to the right
+                        let top = rect.top - 10; // Start above, will adjust if needed
+                        let left = rect.right - 320; // 20rem = 320px, align right edge
+                        
+                        // If tooltip would go off screen to the left, align to icon's left edge
+                        if (left < 8) {
+                            left = rect.left;
+                        }
+                        
+                        // Temporarily show tooltip to measure its height
+                        newTooltip.style.position = 'fixed';
+                        newTooltip.style.top = '-9999px';
+                        newTooltip.style.left = left + 'px';
+                        newTooltip.style.opacity = '1';
+                        newTooltip.style.visibility = 'visible';
+                        const tooltipHeight = newTooltip.offsetHeight;
+                        
+                        // Now position it correctly above the icon
+                        top = rect.top - tooltipHeight - 8;
+                        
+                        // If tooltip would go off screen to the top, position below instead
+                        if (top < 8) {
+                            top = rect.bottom + 8;
+                        }
+                        
+                        newTooltip.style.top = top + 'px';
+                        newTooltip.style.right = 'auto';
+                        newTooltip.style.bottom = 'auto';
+                        newTooltip.style.transform = 'none';
+                        newTooltip.style.zIndex = '9999';
+                    });
+                    
+                    newInfoIcon.addEventListener('mouseleave', function() {
+                        newTooltip.style.opacity = '0';
+                        newTooltip.style.visibility = 'hidden';
+                    });
+                }
+            });
+        }
+
+        // Setup tooltip after page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupColumnTooltips();
+        });
+
+        // Also setup after conversations are displayed
+        const originalDisplayPullConversationsList = window.displayPullConversationsList;
+        if (originalDisplayPullConversationsList) {
+            window.displayPullConversationsList = function(conversations) {
+                originalDisplayPullConversationsList(conversations);
+                setTimeout(setupColumnTooltips, 100);
+            };
         }
         
         // Initialize filters
