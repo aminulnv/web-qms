@@ -3209,6 +3209,147 @@ async function findAdminIdForCurrentUser(userEmail) {
     console.log('✅ Admin ID set:', pullConversationsAdminId);
 };
 
+// ============================================================================
+// Local Caching Utilities for Conversations
+// ============================================================================
+
+const CONVERSATION_CACHE_PREFIX = 'conversations_cache_';
+const CACHE_EXPIRY_HOURS = 24; // Cache expires after 24 hours
+
+// Generate cache key from admin ID and date
+function getConversationCacheKey(adminId, date) {
+    return `${CONVERSATION_CACHE_PREFIX}${adminId}_${date}`;
+}
+
+// Get cached conversations
+function getCachedConversations(adminId, date) {
+    try {
+        const cacheKey = getConversationCacheKey(adminId, date);
+        const cachedData = localStorage.getItem(cacheKey);
+        
+        if (!cachedData) {
+            console.log('📦 No cache found for:', cacheKey);
+            return null;
+        }
+        
+        const parsed = JSON.parse(cachedData);
+        const now = Date.now();
+        
+        // Check if cache is expired
+        if (parsed.expiresAt && now > parsed.expiresAt) {
+            console.log('⏰ Cache expired for:', cacheKey);
+            localStorage.removeItem(cacheKey);
+            return null;
+        }
+        
+        console.log('✅ Cache hit for:', cacheKey, `(${parsed.data.conversations?.length || 0} conversations)`);
+        return parsed.data;
+        
+    } catch (error) {
+        console.warn('⚠️ Error reading cache:', error);
+        return null;
+    }
+}
+
+// Store conversations in cache
+function cacheConversations(adminId, date, data) {
+    try {
+        const cacheKey = getConversationCacheKey(adminId, date);
+        const expiresAt = Date.now() + (CACHE_EXPIRY_HOURS * 60 * 60 * 1000); // 24 hours from now
+        
+        const cacheData = {
+            data: data,
+            timestamp: Date.now(),
+            expiresAt: expiresAt,
+            adminId: adminId,
+            date: date
+        };
+        
+        const cacheString = JSON.stringify(cacheData);
+        
+        // Check if data is too large for localStorage (limit is ~5-10MB)
+        if (cacheString.length > 4 * 1024 * 1024) { // 4MB limit
+            console.warn('⚠️ Cache data too large, skipping cache storage');
+            return false;
+        }
+        
+        localStorage.setItem(cacheKey, cacheString);
+        console.log('💾 Cached conversations for:', cacheKey, `(${data.conversations?.length || 0} conversations)`);
+        return true;
+        
+    } catch (error) {
+        // Handle quota exceeded error
+        if (error.name === 'QuotaExceededError' || error.code === 22) {
+            console.warn('⚠️ localStorage quota exceeded, clearing old cache entries...');
+            clearOldCacheEntries();
+            // Try once more after clearing
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                console.log('💾 Cached after clearing old entries');
+                return true;
+            } catch (retryError) {
+                console.warn('⚠️ Still unable to cache after clearing:', retryError);
+                return false;
+            }
+        }
+        console.warn('⚠️ Error caching conversations:', error);
+        return false;
+    }
+}
+
+// Clear old cache entries (keep only last 10 entries)
+function clearOldCacheEntries() {
+    try {
+        const cacheKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(CONVERSATION_CACHE_PREFIX)) {
+                cacheKeys.push(key);
+            }
+        }
+        
+        // Sort by timestamp (newest first)
+        const cacheEntries = cacheKeys.map(key => {
+            try {
+                const data = JSON.parse(localStorage.getItem(key));
+                return { key, timestamp: data.timestamp || 0 };
+            } catch {
+                return { key, timestamp: 0 };
+            }
+        }).sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Remove oldest entries, keep only last 10
+        if (cacheEntries.length > 10) {
+            const toRemove = cacheEntries.slice(10);
+            toRemove.forEach(entry => {
+                localStorage.removeItem(entry.key);
+                console.log('🗑️ Removed old cache:', entry.key);
+            });
+        }
+    } catch (error) {
+        console.warn('⚠️ Error clearing old cache:', error);
+    }
+}
+
+// Clear all conversation caches
+function clearAllConversationCaches() {
+    try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(CONVERSATION_CACHE_PREFIX)) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log(`🗑️ Cleared ${keysToRemove.length} cache entries`);
+        return keysToRemove.length;
+    } catch (error) {
+        console.warn('⚠️ Error clearing caches:', error);
+        return 0;
+    }
+}
+
 // Fetch conversations for current user
 async function fetchConversationsForCurrentUser(selectedDate) {
     if (!pullConversationsAdminId) {
@@ -3231,6 +3372,57 @@ async function fetchConversationsForCurrentUser(selectedDate) {
     // Get Supabase configuration
     const supabaseUrl = window.SupabaseConfig?.url || '';
     const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+    
+    // Check cache first
+    const cachedData = getCachedConversations(pullConversationsAdminId, selectedDate);
+    if (cachedData) {
+        console.log('📦 Using cached data');
+        updateProgressIndicator(10, 'Loading from cache...');
+        
+        // Small delay to show cache loading
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Extract conversations from cached data
+        let conversations = [];
+        if (cachedData && Array.isArray(cachedData.conversations)) {
+            conversations = cachedData.conversations;
+        } else if (cachedData && cachedData.type === 'conversation.list' && Array.isArray(cachedData.conversations)) {
+            conversations = cachedData.conversations;
+        }
+        
+        const participationCount = cachedData.participation_count || 0;
+        
+        console.log(`✅ Loaded ${conversations.length} conversations from cache`);
+        
+        // Update progress: Complete
+        updateProgressIndicator(100, 'Loaded from cache');
+        
+        // Small delay to show completion
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Store conversations
+        pullConversationsList = conversations;
+        
+        // Update count
+        const countElement = document.getElementById('pullConversationsCount');
+        if (countElement) {
+            countElement.textContent = conversations.length;
+        }
+        
+        // Hide loading and show results
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (listDiv) listDiv.style.display = 'block';
+        
+        // Show elements after loading
+        showElementsAfterLoading();
+        
+        // Display conversations
+        displayPullConversationsList(conversations);
+        return;
+    }
+    
+    // No cache found, fetch from API
+    console.log('🌐 Fetching from API (no cache found)');
     
     // Update progress: Initial
     updateProgressIndicator(10, 'Pulling from Intercom...');
@@ -3263,6 +3455,9 @@ async function fetchConversationsForCurrentUser(selectedDate) {
         updateProgressIndicator(70, 'Processing participation data...');
         
         const data = await response.json();
+        
+        // Cache the response
+        cacheConversations(pullConversationsAdminId, selectedDate, data);
         
         // Extract conversations from response
         let conversations = [];

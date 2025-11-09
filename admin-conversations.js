@@ -7,6 +7,128 @@
 const supabaseUrl = window.SupabaseConfig?.url || '';
 const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
 
+// ============================================================================
+// Local Caching Utilities for Conversations
+// ============================================================================
+
+const CONVERSATION_CACHE_PREFIX = 'admin_conversations_cache_';
+const CACHE_EXPIRY_HOURS = 24; // Cache expires after 24 hours
+
+// Generate cache key from admin ID and date
+function getConversationCacheKey(adminId, date) {
+    return `${CONVERSATION_CACHE_PREFIX}${adminId}_${date}`;
+}
+
+// Get cached conversations
+function getCachedConversations(adminId, date) {
+    try {
+        const cacheKey = getConversationCacheKey(adminId, date);
+        const cachedData = localStorage.getItem(cacheKey);
+        
+        if (!cachedData) {
+            console.log('📦 No cache found for:', cacheKey);
+            return null;
+        }
+        
+        const parsed = JSON.parse(cachedData);
+        const now = Date.now();
+        
+        // Check if cache is expired
+        if (parsed.expiresAt && now > parsed.expiresAt) {
+            console.log('⏰ Cache expired for:', cacheKey);
+            localStorage.removeItem(cacheKey);
+            return null;
+        }
+        
+        console.log('✅ Cache hit for:', cacheKey, `(${parsed.data.conversations?.length || 0} conversations)`);
+        return parsed.data;
+        
+    } catch (error) {
+        console.warn('⚠️ Error reading cache:', error);
+        return null;
+    }
+}
+
+// Store conversations in cache
+function cacheConversations(adminId, date, data) {
+    try {
+        const cacheKey = getConversationCacheKey(adminId, date);
+        const expiresAt = Date.now() + (CACHE_EXPIRY_HOURS * 60 * 60 * 1000); // 24 hours from now
+        
+        const cacheData = {
+            data: data,
+            timestamp: Date.now(),
+            expiresAt: expiresAt,
+            adminId: adminId,
+            date: date
+        };
+        
+        const cacheString = JSON.stringify(cacheData);
+        
+        // Check if data is too large for localStorage (limit is ~5-10MB)
+        if (cacheString.length > 4 * 1024 * 1024) { // 4MB limit
+            console.warn('⚠️ Cache data too large, skipping cache storage');
+            return false;
+        }
+        
+        localStorage.setItem(cacheKey, cacheString);
+        console.log('💾 Cached conversations for:', cacheKey, `(${data.conversations?.length || 0} conversations)`);
+        return true;
+        
+    } catch (error) {
+        // Handle quota exceeded error
+        if (error.name === 'QuotaExceededError' || error.code === 22) {
+            console.warn('⚠️ localStorage quota exceeded, clearing old cache entries...');
+            clearOldCacheEntries();
+            // Try once more after clearing
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                console.log('💾 Cached after clearing old entries');
+                return true;
+            } catch (retryError) {
+                console.warn('⚠️ Still unable to cache after clearing:', retryError);
+                return false;
+            }
+        }
+        console.warn('⚠️ Error caching conversations:', error);
+        return false;
+    }
+}
+
+// Clear old cache entries (keep only last 10 entries)
+function clearOldCacheEntries() {
+    try {
+        const cacheKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith(CONVERSATION_CACHE_PREFIX) || key.startsWith('conversations_cache_'))) {
+                cacheKeys.push(key);
+            }
+        }
+        
+        // Sort by timestamp (newest first)
+        const cacheEntries = cacheKeys.map(key => {
+            try {
+                const data = JSON.parse(localStorage.getItem(key));
+                return { key, timestamp: data.timestamp || 0 };
+            } catch {
+                return { key, timestamp: 0 };
+            }
+        }).sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Remove oldest entries, keep only last 10
+        if (cacheEntries.length > 10) {
+            const toRemove = cacheEntries.slice(10);
+            toRemove.forEach(entry => {
+                localStorage.removeItem(entry.key);
+                console.log('🗑️ Removed old cache:', entry.key);
+            });
+        }
+    } catch (error) {
+        console.warn('⚠️ Error clearing old cache:', error);
+    }
+}
+
 // Get admin info from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
 const adminId = urlParams.get('admin_id');
@@ -167,11 +289,72 @@ function updateDateDisplays() {
  * Fetch conversations page by page and update UI progressively
  */
 async function fetchConversationsProgressively(adminId, selectedDate) {
+    // Check cache first
+    const cachedData = getCachedConversations(adminId, selectedDate);
+    if (cachedData) {
+        console.log('📦 Using cached data');
+        updateProgressIndicator(10, 'Loading from cache...');
+        
+        // Small delay to show cache loading
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Extract conversations from cached data
+        let conversations = [];
+        if (cachedData && Array.isArray(cachedData.conversations)) {
+            conversations = cachedData.conversations;
+        } else if (cachedData && cachedData.type === 'conversation.list' && Array.isArray(cachedData.conversations)) {
+            conversations = cachedData.conversations;
+        }
+        
+        // Update analytics from cached data
+        if (cachedData) {
+            updateAnalytics(cachedData);
+        }
+        
+        console.log(`✅ Loaded ${conversations.length} conversations from cache`);
+        
+        // Store conversations
+        allConversations = conversations;
+        
+        // Update count
+        if (conversationCount) {
+            conversationCount.textContent = conversations.length;
+        }
+        
+        // Update progress: Complete
+        updateProgressIndicator(100, 'Loaded from cache');
+        
+        // Small delay to show completion
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Hide loading and show results
+        if (loadingState) loadingState.style.display = 'none';
+        if (conversationsContainer) conversationsContainer.style.display = 'block';
+        
+        // Display conversations
+        displayConversations();
+        
+        isLoadingMore = false;
+        return;
+    }
+    
+    // No cache found, fetch from API
+    console.log('🌐 Fetching from API (no cache found)');
+    
     let startingAfter = null;
     let hasMore = true;
     let pageCount = 0;
     const maxPages = 100; // Safety limit to prevent infinite loops
     isLoadingMore = true;
+    
+    // Store all fetched data for caching
+    let allFetchedData = {
+        conversations: [],
+        participation_count: 0,
+        intercom_total_count: 0,
+        processed_count: 0,
+        has_more: false
+    };
 
     // Update progress: Initial
     updateProgressIndicator(10, 'Pulling from Intercom...');
@@ -243,6 +426,10 @@ async function fetchConversationsProgressively(adminId, selectedDate) {
         // Update analytics from edge function response (if available)
         if (pageCount === 1 && data) {
             updateAnalytics(data);
+            // Store analytics data for caching
+            allFetchedData.participation_count = data.participation_count || 0;
+            allFetchedData.intercom_total_count = data.intercom_total_count || 0;
+            allFetchedData.processed_count = data.processed_count || 0;
         }
 
         // Log response structure for debugging (only on first page)
@@ -361,6 +548,11 @@ async function fetchConversationsProgressively(adminId, selectedDate) {
     }
 
     isLoadingMore = false;
+    
+    // Cache the complete result
+    allFetchedData.conversations = allConversations;
+    allFetchedData.has_more = hasMore;
+    cacheConversations(adminId, selectedDate, allFetchedData);
     
     // Update progress: Complete
     updateProgressIndicator(100, 'Almost done...');
