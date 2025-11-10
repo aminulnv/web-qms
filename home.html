@@ -2041,7 +2041,16 @@ async function updateYourStats() {
       return;
     }
     
-    const allAssignments = assignments || [];
+    // Apply date filter to assignments
+    let allAssignments = assignments || [];
+    if (dateFilter.start || dateFilter.end) {
+      allAssignments = allAssignments.filter(assignment => {
+        const assignmentDate = assignment.created_at;
+        if (!assignmentDate) return false;
+        return isDateInRange(assignmentDate, dateFilter.start, dateFilter.end);
+      });
+    }
+    
     const totalAssigned = allAssignments.length;
     const completed = allAssignments.filter(a => a.status === 'completed').length;
     const inProgress = allAssignments.filter(a => a.status === 'in_progress').length;
@@ -2076,12 +2085,22 @@ async function updateYourStats() {
           try {
             const { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('audit_duration')
+              .select('audit_duration, submitted_at, audit_timestamp')
               .eq(auditFilterField, currentUserEmail)
               .not('audit_duration', 'is', null);
             
             if (!error && audits) {
-              return audits.map(audit => {
+              // Apply date filter
+              let filteredAudits = audits;
+              if (dateFilter.start || dateFilter.end) {
+                filteredAudits = audits.filter(audit => {
+                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  if (!auditDate) return false;
+                  return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
+                });
+              }
+              
+              return filteredAudits.map(audit => {
                 // Handle duration conversion (new format: seconds, legacy format: minutes)
                 let durationInMinutes = 0;
                 if (typeof audit.audit_duration === 'number') {
@@ -2177,12 +2196,21 @@ async function updateYourStats() {
                 .limit(500);
               
               if (!error && audits && audits.length > 0) {
-                const filteredAudits = audits.filter(audit => {
+                let filteredAudits = audits.filter(audit => {
                   const emailToCheck = audit[auditFilterField];
                   if (!emailToCheck) return false;
                   const normalizedEmailToCheck = emailToCheck.toLowerCase().trim();
                   return normalizedEmailToCheck === normalizedCurrentEmail;
                 });
+                
+                // Apply date filter
+                if (dateFilter.start || dateFilter.end) {
+                  filteredAudits = filteredAudits.filter(audit => {
+                    const auditDate = audit.submitted_at || audit.audit_timestamp;
+                    if (!auditDate) return false;
+                    return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
+                  });
+                }
                 
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
@@ -2248,14 +2276,23 @@ async function updateYourStats() {
             try {
               const { data: audits, error } = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('average_score, averageScore, passing_status, passingStatus, ' + auditFilterField);
+                .select('average_score, averageScore, passing_status, passingStatus, submitted_at, audit_timestamp, ' + auditFilterField);
               
               if (!error && audits && audits.length > 0) {
-                const filteredAudits = audits.filter(audit => {
+                let filteredAudits = audits.filter(audit => {
                   const emailToCheck = audit[auditFilterField];
                   if (!emailToCheck) return false;
                   return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
                 });
+                
+                // Apply date filter
+                if (dateFilter.start || dateFilter.end) {
+                  filteredAudits = filteredAudits.filter(audit => {
+                    const auditDate = audit.submitted_at || audit.audit_timestamp;
+                    if (!auditDate) return false;
+                    return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
+                  });
+                }
                 
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
@@ -2323,12 +2360,12 @@ async function updateYourStats() {
               // Get all audits for this employee and filter client-side
               const { data: allAudits, error: auditError } = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('id, employee_email, acknowledgement_status')
+                .select('id, employee_email, acknowledgement_status, submitted_at, audit_timestamp')
                 .limit(1000);
               
               if (!auditError && allAudits) {
                 // Filter by email (case-insensitive) and acknowledgement_status = 'pending'
-                const pendingAudits = allAudits.filter(audit => {
+                let pendingAudits = allAudits.filter(audit => {
                   const emailToCheck = audit.employee_email;
                   if (!emailToCheck) return false;
                   const emailMatches = emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
@@ -2341,6 +2378,15 @@ async function updateYourStats() {
                   
                   return emailMatches && isPending;
                 });
+                
+                // Apply date filter
+                if (dateFilter.start || dateFilter.end) {
+                  pendingAudits = pendingAudits.filter(audit => {
+                    const auditDate = audit.submitted_at || audit.audit_timestamp;
+                    if (!auditDate) return false;
+                    return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
+                  });
+                }
                 
                 console.log(`Found ${pendingAudits.length} pending audits in ${scorecard.table_name} for ${currentUserEmail}`);
                 
@@ -2386,11 +2432,20 @@ async function updateYourStats() {
               const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
               
               // Filter by email (case-insensitive)
-              const filteredReversals = allReversals.filter(reversal => {
+              let filteredReversals = allReversals.filter(reversal => {
                 const emailToCheck = reversal[reversalFilterField];
                 if (!emailToCheck) return false;
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
+              
+              // Apply date filter based on reversal_requested_at
+              if (dateFilter.start || dateFilter.end) {
+                filteredReversals = filteredReversals.filter(reversal => {
+                  const reversalDate = reversal.reversal_requested_at;
+                  if (!reversalDate) return false;
+                  return isDateInRange(reversalDate, dateFilter.start, dateFilter.end);
+                });
+              }
               
               return filteredReversals.map(reversal => {
                 const active = reversal.reversal_requested_at && !reversal.reversal_responded_at;

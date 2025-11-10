@@ -1987,17 +1987,6 @@ async function loadPendingAudits() {
         
         console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole);
         
-        // Load assigned audits from audit tables instead of audit_assignments
-        const filterField = isAgent ? 'employee_email' : 'auditor_email';
-        
-        // Get all active scorecards
-        const { data: scorecards, error: scError } = await window.supabaseClient
-            .from('scorecards')
-            .select('id, name, table_name')
-            .eq('is_active', true);
-        
-        if (scError) throw scError;
-        
         // Determine status filter
         const statusFilter = showAllAudits ? ['completed'] : ['pending', 'in_progress'];
         
@@ -2034,18 +2023,13 @@ async function loadPendingAudits() {
             throw error;
         }
         
-        // Normalize and filter client-side for exact match
+        // Normalize and filter client-side for exact match (case-insensitive)
+        // This ensures we match emails correctly regardless of case differences
         const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
-        let filteredData = (data || []).filter(assignment => {
+        const finalFiltered = (data || []).filter(assignment => {
             const emailToCheck = isAgent ? assignment.employee_email : assignment.auditor_email;
             if (!emailToCheck) return false;
             return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
-        });
-        
-        // Additional client-side filtering to ensure exact match (case-insensitive)
-        const finalFiltered = filteredData.filter(assignment => {
-            const emailToCheck = isAgent ? assignment.employee_email : assignment.auditor_email;
-            return emailToCheck && emailToCheck.toLowerCase().trim() === currentUserEmail;
         });
         
         console.log('Loaded audits:', finalFiltered.length);
