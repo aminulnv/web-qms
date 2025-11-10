@@ -2611,12 +2611,8 @@ async function fetchAndCacheStats(cacheKey, period) {
         console.error('Error calculating audits conducted and average score:', error);
       }
     } else {
-      // For auditors: Count completed assignments from audit_assignments table
-      totalAuditsConducted = completed; // Use the completed count from assignments
-      
-      // Calculate average quality score from all audits conducted by this auditor
-      // Similar to agents, but filtered by auditor_email instead of employee_email
-      // This shows the average score the auditor has given to all employees they've audited
+      // For auditors: Count completed audits from scorecard tables (same as average quality score calculation)
+      // This ensures we count all audits, even if they don't exist in audit_assignments table
       try {
         const { data: scorecards, error: scError } = await window.supabaseClient
           .from('scorecards')
@@ -2675,6 +2671,9 @@ async function fetchAndCacheStats(cacheKey, period) {
           const auditResults = await Promise.all(auditPromises);
           const allAudits = auditResults.flat();
           
+          // Count total audits conducted from scorecard tables
+          totalAuditsConducted = allAudits.length;
+          
           // Calculate average quality score from all audits conducted by this auditor
           allAudits.forEach(audit => {
             if (audit.score !== null) {
@@ -2694,10 +2693,10 @@ async function fetchAndCacheStats(cacheKey, period) {
             avgQualityScoreText = `${Math.round(avgQualityScore)}%`;
           }
           
-          console.log(`Stats for auditor: ${totalAuditsConducted} audits conducted (from assignments), ${avgQualityScoreText} average quality score (from ${totalAuditsWithScore} scored audits filtered by auditor_email), ${passingCount} passed, ${notPassingCount} not passed`);
+          console.log(`Stats for auditor: ${totalAuditsConducted} audits conducted (from scorecard tables), ${avgQualityScoreText} average quality score (from ${totalAuditsWithScore} scored audits filtered by auditor_email), ${passingCount} passed, ${notPassingCount} not passed`);
         }
       } catch (error) {
-        console.error('Error calculating average quality score for auditor:', error);
+        console.error('Error calculating audits conducted and average quality score for auditor:', error);
       }
     }
     
