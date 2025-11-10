@@ -506,6 +506,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const clearFilters = document.getElementById('clearFilters');
         const scorecardSelector = document.getElementById('scorecardSelector');
         const auditsCount = document.getElementById('auditsCount');
+        
+        // Verify critical elements exist
+        if (!auditList) {
+            console.error('auditList element not found!');
+            return;
+        }
+        if (!scorecardSelector) {
+            console.error('scorecardSelector element not found!');
+            return;
+        }
+        
+        console.log('DOM elements found, initializing...');
     
     let allAudits = [];
     let filteredAudits = [];
@@ -600,6 +612,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading scorecards:', error);
             scorecardSelector.innerHTML = '<option value="all">All Scorecards</option><option value="">Error loading scorecards</option>';
+            // Still try to load audits even if scorecards failed
+            // The loadAudits function can use RPC to find tables directly
+            await loadAudits();
         }
     }
     
@@ -644,8 +659,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize user info first
     initializeUserInfo();
     
-    // Initialize scorecards (which will trigger loadAudits)
-    loadScorecards();
+    // Wait for Supabase client to be ready, then initialize
+    async function initializePage() {
+        console.log('Initializing page...');
+        
+        // Wait for Supabase to be ready
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+
+        if (!window.supabaseClient) {
+            console.error('Supabase client not available after waiting');
+            // Show error message to user
+            if (auditList) {
+                auditList.innerHTML = '<div style="padding: 2rem; text-align: center; color: #ef4444;">Error: Could not connect to database. Please refresh the page.</div>';
+            }
+            return;
+        }
+
+        console.log('Supabase client ready, loading scorecards...');
+
+        // Initialize scorecards (which will trigger loadAudits)
+        try {
+            await loadScorecards();
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            if (auditList) {
+                auditList.innerHTML = '<div style="padding: 2rem; text-align: center; color: #ef4444;">Error loading audits. Please check the console for details.</div>';
+            }
+        }
+    }
+    
+    // Start initialization
+    initializePage();
     
     // Load audits from Supabase
     async function loadAudits() {
@@ -653,7 +701,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('===== LOADING AUDITS FROM SUPABASE =====');
             
             if (!window.supabaseClient) {
-                throw new Error('Supabase client not initialized');
+                console.error('Supabase client not initialized');
+                return;
             }
             
             let combinedAudits = [];
@@ -661,6 +710,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // If no specific scorecard is selected, load from ALL scorecard tables
             if (!currentScorecard) {
                 console.log('Loading from ALL scorecards (including deleted ones)');
+                console.log('Available scorecards:', allScorecards.length);
+                
+                let tablesToQuery = [];
                 
                 // Step 1: Get all table names from the database that look like audit tables
                 try {
@@ -669,33 +721,69 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (tablesError) {
                         console.warn('Could not fetch table list via RPC, falling back to scorecard-based loading:', tablesError);
                         // Fallback: use known scorecards
-                        var tablesToQuery = allScorecards.map(s => ({
+                        if (allScorecards && allScorecards.length > 0) {
+                            tablesToQuery = allScorecards.map(s => ({
+                                table_name: s.table_name,
+                                scorecard_id: s.id,
+                                scorecard_name: s.name,
+                                scoring_type: s.scoring_type
+                            }));
+                        } else {
+                            console.warn('No scorecards available and RPC failed. Cannot load audits.');
+                            allAudits = [];
+                            filteredAudits = [];
+                            renderAudits();
+                            return;
+                        }
+                    } else {
+                        console.log('RPC returned tables:', allTables?.length || 0);
+                        // Match tables with scorecards where possible
+                        if (allTables && allTables.length > 0) {
+                            tablesToQuery = allTables.map(t => {
+                                const matchingScorecard = allScorecards.find(s => s.table_name === t.table_name);
+                                return {
+                                    table_name: t.table_name,
+                                    scorecard_id: matchingScorecard?.id || null,
+                                    scorecard_name: matchingScorecard?.name || `Deleted Scorecard (${t.table_name})`,
+                                    scoring_type: matchingScorecard?.scoring_type || 'unknown'
+                                };
+                            });
+                        } else if (allScorecards && allScorecards.length > 0) {
+                            // If RPC returned empty but we have scorecards, use scorecards
+                            console.log('RPC returned no tables, using scorecards instead');
+                            tablesToQuery = allScorecards.map(s => ({
+                                table_name: s.table_name,
+                                scorecard_id: s.id,
+                                scorecard_name: s.name,
+                                scoring_type: s.scoring_type
+                            }));
+                        } else {
+                            console.warn('No tables found via RPC and no scorecards available.');
+                            allAudits = [];
+                            filteredAudits = [];
+                            renderAudits();
+                            return;
+                        }
+                    }
+                } catch (rpcError) {
+                    console.warn('RPC call failed, using scorecard-based loading:', rpcError);
+                    if (allScorecards && allScorecards.length > 0) {
+                        tablesToQuery = allScorecards.map(s => ({
                             table_name: s.table_name,
                             scorecard_id: s.id,
                             scorecard_name: s.name,
                             scoring_type: s.scoring_type
                         }));
                     } else {
-                        // Match tables with scorecards where possible
-                        var tablesToQuery = allTables.map(t => {
-                            const matchingScorecard = allScorecards.find(s => s.table_name === t.table_name);
-                            return {
-                                table_name: t.table_name,
-                                scorecard_id: matchingScorecard?.id || null,
-                                scorecard_name: matchingScorecard?.name || `Deleted Scorecard (${t.table_name})`,
-                                scoring_type: matchingScorecard?.scoring_type || 'unknown'
-                            };
-                        });
+                        console.error('No scorecards available and RPC failed. Cannot load audits.');
+                        allAudits = [];
+                        filteredAudits = [];
+                        renderAudits();
+                        return;
                     }
-                } catch (rpcError) {
-                    console.warn('RPC call failed, using scorecard-based loading:', rpcError);
-                    var tablesToQuery = allScorecards.map(s => ({
-                        table_name: s.table_name,
-                        scorecard_id: s.id,
-                        scorecard_name: s.name,
-                        scoring_type: s.scoring_type
-                    }));
                 }
+                
+                console.log(`Will query ${tablesToQuery.length} tables:`, tablesToQuery.map(t => t.table_name));
                 
                 // Step 2: Load from all discovered tables
                 for (const tableInfo of tablesToQuery) {
@@ -706,20 +794,44 @@ document.addEventListener('DOMContentLoaded', function() {
                             .select('*')
                             .order('submitted_at', { ascending: false });
                         
-                        // Only show completed audits (exclude pending and in_progress)
-                        query = query.or('audit_status.eq.completed,audit_status.is.null');
-                        
                         // If employee and not showing all audits, filter by employee_email
                         if (isAgent && !showAllAudits && currentUserEmail) {
                             query = query.eq('employee_email', currentUserEmail);
                             console.log(`Filtering by employee_email: ${currentUserEmail}`);
                         }
                         
-                        const { data, error } = await query;
+                        // Try to filter by audit_status, but handle errors gracefully
+                        // Some tables may not have audit_status column
+                        let data, error;
+                        const result = await query;
+                        data = result.data;
+                        error = result.error;
                         
+                        // If error and it's related to audit_status, try without the filter
                         if (error) {
-                            console.warn(`Error loading from ${tableInfo.table_name}:`, error);
-                            continue; // Skip this table if error (e.g., table doesn't exist)
+                            // Check if error is about audit_status column
+                            const errorMessage = error.message || JSON.stringify(error);
+                            if (errorMessage.includes('audit_status') || error.code === 'PGRST116' || error.code === '42703') {
+                                console.log(`Table ${tableInfo.table_name} doesn't have audit_status column, loading all records...`);
+                                // Retry without audit_status filter
+                                let retryQuery = window.supabaseClient
+                                    .from(tableInfo.table_name)
+                                    .select('*')
+                                    .order('submitted_at', { ascending: false });
+                                
+                                if (isAgent && !showAllAudits && currentUserEmail) {
+                                    retryQuery = retryQuery.eq('employee_email', currentUserEmail);
+                                }
+                                
+                                const retryResult = await retryQuery;
+                                data = retryResult.data;
+                                error = retryResult.error;
+                            }
+                            
+                            if (error) {
+                                console.warn(`Error loading from ${tableInfo.table_name}:`, error);
+                                continue; // Skip this table if error persists
+                            }
                         }
                         
                         if (data && data.length > 0) {
@@ -773,16 +885,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     .select('*')
                     .order('submitted_at', { ascending: false });
                 
-                // Only show completed audits (exclude pending and in_progress)
-                query = query.or('audit_status.eq.completed,audit_status.is.null');
-                
                 // If employee and not showing all audits, filter by employee_email
                 if (isAgent && !showAllAudits && currentUserEmail) {
                     query = query.eq('employee_email', currentUserEmail);
                     console.log(`Filtering by employee_email: ${currentUserEmail}`);
                 }
                 
-                const { data, error } = await query;
+                // Load data - filter audit_status client-side since some tables may not have this column
+                let data, error;
+                const result = await query;
+                data = result.data;
+                error = result.error;
                 
                 if (error) {
                     console.error('Error loading from Supabase:', error);
@@ -891,14 +1004,25 @@ document.addEventListener('DOMContentLoaded', function() {
             filteredAudits = [...allAudits];
             updateStatistics();
             console.log('Filtered audits count:', filteredAudits.length);
+            console.log('Total audits loaded:', allAudits.length);
             console.log('========================');
             
+            // Always render, even if empty
             renderAudits();
         } catch (error) {
             console.error('Error loading audits:', error);
             console.error('Stack trace:', error.stack);
             allAudits = [];
             filteredAudits = [];
+            
+            // Show error in UI
+            if (auditList) {
+                auditList.innerHTML = `<div style="padding: 2rem; text-align: center; color: #ef4444;">
+                    <p>Error loading audits: ${error.message}</p>
+                    <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">Please check the console for more details.</p>
+                </div>`;
+            }
+            
             renderAudits();
         }
     }
@@ -1262,18 +1386,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                     ${escapeHtml(audit._scorecard_name)}
                                 </span>
                             ` : ''}
+                            <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem;">
+                                ${statusIcon} ${normalizedStatus || 'Unknown'}
+                            </span>
                         </div>
                         <p style="margin: 0; font-size: 0.5625rem; color: #6b7280; display: flex; align-items: center; gap: 0.2812rem; flex-wrap: wrap;">
                             <span>${escapeHtml(audit.interactionId || 'No ID')}</span>
                             <span style="color: #d1d5db;">•</span>
                             <span>${escapeHtml(audit.channel || 'No channel')}</span>
                             <span style="color: #d1d5db;">•</span>
-                            <span style="display: flex; flex-direction: column; align-items: flex-start;">
-                                <span style="font-weight: 500;">${audit.averageScore || '0'}%</span>
-                                <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0625rem 0.25rem; border-radius: 0.125rem; font-size: 0.4688rem; font-weight: 600; margin-top: 0.125rem;">
-                                    ${statusIcon} ${normalizedStatus || 'Unknown'}
-                                </span>
-                            </span>
+                            <span style="font-weight: 500;">${audit.averageScore || '0'}%</span>
                             <span style="color: #d1d5db;">•</span>
                             <span>${audit.totalErrorsCount || '0'} errors</span>
                             <span style="color: #d1d5db;">•</span>
@@ -1971,8 +2093,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Load audits on page load
-    loadAudits();
+    // Note: loadAudits() is called by loadScorecards() after scorecards are loaded
+    // No need to call it again here
     
     } catch (error) {
         console.error('Error in audit reports functionality:', error);
