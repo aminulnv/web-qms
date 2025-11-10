@@ -248,6 +248,22 @@
 
     <!-- Action Buttons -->
     <div class="header-actions">
+      <!-- Week Navigation -->
+      <div style="display: flex; align-items: center; gap: 0.5625rem;">
+        <button class="action-btn" id="prevWeekBtn" style="padding: 0.5rem 0.5625rem;" title="Previous Week">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <div class="action-btn" id="weekDisplay" style="padding: 0.5rem 0.75rem; cursor: default; background-color: #1a733e; color: white; border-color: #1a733e;">
+          <span id="weekText">Week -</span>
+        </div>
+        <button class="action-btn" id="nextWeekBtn" style="padding: 0.5rem 0.5625rem;" title="Next Week">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
       <div class="date-picker-dropdown">
         <button class="action-btn" id="dateBtn">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -567,37 +583,115 @@ let unreadNotificationCount = 0;
 // Date Filter State
 let dateFilter = { start: null, end: null };
 let currentFilters = { channel: '', status: '', agent: '' };
+let currentWeek = null; // Current week number (1-52)
+let currentWeekYear = null; // Year for the current week
+let useWeekFilter = true; // Whether to use week filter (default) or date range filter
 
-// Helper function to get current week (Monday to Sunday)
-function getCurrentWeek() {
-  const today = new Date();
-  const day = today.getDay();
-  const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-  const monday = new Date(today.getFullYear(), today.getMonth(), diff);
-  monday.setHours(0, 0, 0, 0);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return { start: monday, end: sunday };
+// Helper function to get week number (1-52)
+function getWeekNumber(date = new Date()) {
+  // Get the first day of the year
+  const startOfYear = new Date(date.getFullYear(), 0, 1);
+  
+  // Calculate the Monday of week 1 (the Monday of the week containing Jan 1)
+  // If Jan 1 is Sunday (getDay() === 0), Monday is 6 days before (previous Monday)
+  // Otherwise, Monday is (getDay() - 1) days before Jan 1
+  const dayOfWeek = startOfYear.getDay();
+  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const mondayOfWeek1 = new Date(startOfYear);
+  mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+  mondayOfWeek1.setHours(0, 0, 0, 0);
+  
+  // Calculate the Monday of the week containing the given date
+  const dateDay = date.getDay();
+  const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
+  const mondayOfDateWeek = new Date(date);
+  mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
+  mondayOfDateWeek.setHours(0, 0, 0, 0);
+  
+  // Calculate the number of days from Monday of week 1 to Monday of date's week
+  const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
+  
+  // Calculate the week number (starting from 1)
+  const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
+  
+  return weekNumber;
 }
 
-// Initialize date filter to current week
-function initializeDateFilter() {
-  const week = getCurrentWeek();
-  dateFilter.start = week.start;
-  dateFilter.end = week.end;
+// Helper function to get week dates (Monday to Sunday)
+function getWeekDates(weekNumber, year) {
+  // Get the first day of the year
+  const startOfYear = new Date(year, 0, 1);
   
-  // Set date inputs
+  // Calculate the Monday of week 1 (the Monday of the week containing Jan 1)
+  const dayOfWeek = startOfYear.getDay();
+  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const mondayOfWeek1 = new Date(startOfYear);
+  mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+  
+  // Calculate the Monday of the desired week
+  const weekStart = new Date(mondayOfWeek1);
+  weekStart.setDate(mondayOfWeek1.getDate() + (weekNumber - 1) * 7);
+  weekStart.setHours(0, 0, 0, 0);
+  
+  // Calculate the last day of the week (Sunday)
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+  
+  return { start: weekStart, end: weekEnd };
+}
+
+// Initialize week filter
+function initializeWeekFilter() {
+  const today = new Date();
+  currentWeek = getWeekNumber(today);
+  currentWeekYear = today.getFullYear();
+  updateWeekDisplay();
+}
+
+// Update week display
+function updateWeekDisplay() {
+  const weekTextEl = document.getElementById('weekText');
+  if (weekTextEl) {
+    weekTextEl.textContent = `Week ${currentWeek}`;
+  }
+}
+
+// Navigate week
+function navigateWeek(direction) {
+  currentWeek += direction;
+  
+  // Handle week overflow/underflow
+  if (currentWeek > 52) {
+    currentWeek = 1;
+    currentWeekYear += 1;
+  } else if (currentWeek < 1) {
+    currentWeek = 52;
+    currentWeekYear -= 1;
+  }
+  
+  updateWeekDisplay();
+  useWeekFilter = true; // Ensure week filter is active
+  dateFilter.start = null;
+  dateFilter.end = null;
   const startDateInput = document.getElementById('startDate');
   const endDateInput = document.getElementById('endDate');
-  if (startDateInput) {
-    startDateInput.value = formatDateForInput(week.start);
-  }
-  if (endDateInput) {
-    endDateInput.value = formatDateForInput(week.end);
-  }
+  if (startDateInput) startDateInput.value = '';
+  if (endDateInput) endDateInput.value = '';
+  updateDateButtonText();
   
-  // Update button text
+  // Reload data with week filter
+  Promise.all([
+    loadRecentUpdates(),
+    updateYourStats(),
+    loadAssignedAudits(),
+    loadNotifications()
+  ]);
+}
+
+// Initialize date filter (now uses week filter by default)
+function initializeDateFilter() {
+  initializeWeekFilter();
   updateDateButtonText();
 }
 
@@ -623,6 +717,24 @@ function updateDateButtonText() {
   }
 }
 
+// Get current period dates (week or date range)
+function getCurrentPeriodDates() {
+  if (dateFilter.start || dateFilter.end) {
+    // Using date range filter
+    return {
+      start: dateFilter.start ? new Date(dateFilter.start) : new Date(0),
+      end: dateFilter.end ? new Date(dateFilter.end) : new Date()
+    };
+  } else if (useWeekFilter && currentWeek !== null) {
+    // Using week filter
+    return getWeekDates(currentWeek, currentWeekYear);
+  } else {
+    // Default to current week
+    const today = new Date();
+    return getWeekDates(getWeekNumber(today), today.getFullYear());
+  }
+}
+
 // Apply date filter
 function applyDateFilter() {
   const startDateInput = document.getElementById('startDate');
@@ -644,7 +756,20 @@ function applyDateFilter() {
     dateFilter.end = null;
   }
   
-  updateDateButtonText();
+  // Update button text
+  if (dateFilter.start || dateFilter.end) {
+    const start = dateFilter.start ? new Date(dateFilter.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
+    const end = dateFilter.end ? new Date(dateFilter.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
+    const dateBtnText = document.getElementById('dateBtnText');
+    if (dateBtnText) {
+      dateBtnText.textContent = `${start} - ${end}`;
+    }
+    useWeekFilter = false; // Date range overrides week filter
+  } else {
+    updateDateButtonText();
+    useWeekFilter = true; // Clear date range, go back to week filter
+  }
+  
   document.getElementById('dateDropdown').classList.remove('active');
   
   // Reload data with filters
@@ -666,8 +791,9 @@ function clearDateFilter() {
   if (endDateInput) endDateInput.value = '';
   updateDateButtonText();
   document.getElementById('dateDropdown').classList.remove('active');
+  useWeekFilter = true; // Go back to week filter
   
-  // Reload data without date filter
+  // Reload data with week filter
   Promise.all([
     loadRecentUpdates(),
     updateYourStats(),
@@ -800,6 +926,13 @@ function formatAgentName(email) {
 
 // Helper function to check if date is within filter range
 function isDateInRange(date, filterStart, filterEnd) {
+  // If no filters, check against current period (week or date range)
+  if (!filterStart && !filterEnd) {
+    const period = getCurrentPeriodDates();
+    filterStart = period.start;
+    filterEnd = period.end;
+  }
+  
   if (!filterStart && !filterEnd) return true;
   const checkDate = new Date(date);
   checkDate.setHours(0, 0, 0, 0);
@@ -932,6 +1065,16 @@ async function initializeDashboard() {
 }
 
 function setupEventListeners() {
+  // Week navigation buttons
+  const prevWeekBtn = document.getElementById('prevWeekBtn');
+  const nextWeekBtn = document.getElementById('nextWeekBtn');
+  if (prevWeekBtn) {
+    prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
+  }
+  if (nextWeekBtn) {
+    nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+  }
+
   // Date button
   const dateBtn = document.getElementById('dateBtn');
   if (dateBtn) {
@@ -1366,24 +1509,24 @@ async function loadRecentUpdates() {
     }
 
     // Apply date filter to updates (but always include recent reversal status updates for agents)
-    if (dateFilter.start || dateFilter.end) {
-      const now = new Date();
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // Use week filter if date range is not set
+    const period = getCurrentPeriodDates();
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    allUpdates = allUpdates.filter(update => {
+      if (!update.timestamp) return false;
       
-      allUpdates = allUpdates.filter(update => {
-        if (!update.timestamp) return false;
-        
-        // For agents, always include reversal status updates from the last 7 days
-        if (isAgent && update.type === 'reversal_status_update') {
-          const updateDate = new Date(update.timestamp);
-          if (updateDate >= sevenDaysAgo) {
-            return true; // Always show recent reversal status updates
-          }
+      // For agents, always include reversal status updates from the last 7 days
+      if (isAgent && update.type === 'reversal_status_update') {
+        const updateDate = new Date(update.timestamp);
+        if (updateDate >= sevenDaysAgo) {
+          return true; // Always show recent reversal status updates
         }
-        
-        return isDateInRange(update.timestamp, dateFilter.start, dateFilter.end);
-      });
-    }
+      }
+      
+      return isDateInRange(update.timestamp, period.start, period.end);
+    });
     
     // Sort all updates by timestamp (most recent first)
     allUpdates.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -1574,14 +1717,13 @@ async function loadCompletedAuditsForEmployee() {
             return matches;
           });
           
-          // Apply date filter
-          if (dateFilter.start || dateFilter.end) {
-            filteredAudits = filteredAudits.filter(audit => {
-              const auditDate = audit.submitted_at || audit.audit_timestamp;
-              if (!auditDate) return false;
-              return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
-            });
-          }
+          // Apply date filter (week or date range)
+          const period = getCurrentPeriodDates();
+          filteredAudits = filteredAudits.filter(audit => {
+            const auditDate = audit.submitted_at || audit.audit_timestamp;
+            if (!auditDate) return false;
+            return isDateInRange(auditDate, period.start, period.end);
+          });
           
           // Apply channel filter
           if (currentFilters.channel) {
@@ -1676,14 +1818,13 @@ async function loadPendingAssignmentsForAuditor() {
     return auditorEmail === normalizedCurrentEmail;
   });
   
-  // Apply date filter
-  if (dateFilter.start || dateFilter.end) {
-    filteredAssignments = filteredAssignments.filter(assignment => {
-      const assignmentDate = assignment.created_at;
-      if (!assignmentDate) return false;
-      return isDateInRange(assignmentDate, dateFilter.start, dateFilter.end);
-    });
-  }
+  // Apply date filter (week or date range)
+  const period = getCurrentPeriodDates();
+  filteredAssignments = filteredAssignments.filter(assignment => {
+    const assignmentDate = assignment.created_at;
+    if (!assignmentDate) return false;
+    return isDateInRange(assignmentDate, period.start, period.end);
+  });
   
   // Apply channel filter
   if (currentFilters.channel) {
@@ -2041,15 +2182,14 @@ async function updateYourStats() {
       return;
     }
     
-    // Apply date filter to assignments
+    // Apply date filter to assignments (week or date range)
     let allAssignments = assignments || [];
-    if (dateFilter.start || dateFilter.end) {
-      allAssignments = allAssignments.filter(assignment => {
-        const assignmentDate = assignment.created_at;
-        if (!assignmentDate) return false;
-        return isDateInRange(assignmentDate, dateFilter.start, dateFilter.end);
-      });
-    }
+    const period = getCurrentPeriodDates();
+    allAssignments = allAssignments.filter(assignment => {
+      const assignmentDate = assignment.created_at;
+      if (!assignmentDate) return false;
+      return isDateInRange(assignmentDate, period.start, period.end);
+    });
     
     const totalAssigned = allAssignments.length;
     const completed = allAssignments.filter(a => a.status === 'completed').length;
@@ -2090,15 +2230,13 @@ async function updateYourStats() {
               .not('audit_duration', 'is', null);
             
             if (!error && audits) {
-              // Apply date filter
-              let filteredAudits = audits;
-              if (dateFilter.start || dateFilter.end) {
-                filteredAudits = audits.filter(audit => {
-                  const auditDate = audit.submitted_at || audit.audit_timestamp;
-                  if (!auditDate) return false;
-                  return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
-                });
-              }
+              // Apply date filter (week or date range)
+              const period = getCurrentPeriodDates();
+              let filteredAudits = audits.filter(audit => {
+                const auditDate = audit.submitted_at || audit.audit_timestamp;
+                if (!auditDate) return false;
+                return isDateInRange(auditDate, period.start, period.end);
+              });
               
               return filteredAudits.map(audit => {
                 // Handle duration conversion (new format: seconds, legacy format: minutes)
@@ -2203,14 +2341,13 @@ async function updateYourStats() {
                   return normalizedEmailToCheck === normalizedCurrentEmail;
                 });
                 
-                // Apply date filter
-                if (dateFilter.start || dateFilter.end) {
-                  filteredAudits = filteredAudits.filter(audit => {
-                    const auditDate = audit.submitted_at || audit.audit_timestamp;
-                    if (!auditDate) return false;
-                    return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
-                  });
-                }
+                // Apply date filter (week or date range)
+                const period = getCurrentPeriodDates();
+                filteredAudits = filteredAudits.filter(audit => {
+                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  if (!auditDate) return false;
+                  return isDateInRange(auditDate, period.start, period.end);
+                });
                 
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
@@ -2260,46 +2397,52 @@ async function updateYourStats() {
       // For auditors: Count completed assignments from audit_assignments table
       totalAuditsConducted = completed; // Use the completed count from assignments
       
-      // Also calculate average quality score from completed audits
+      // Calculate average quality score from all audits conducted by this auditor
+      // Similar to agents, but filtered by auditor_email instead of employee_email
+      // This shows the average score the auditor has given to all employees they've audited
       try {
         const { data: scorecards, error: scError } = await window.supabaseClient
           .from('scorecards')
-          .select('table_name')
+          .select('id, name, table_name, scoring_type')
           .eq('is_active', true);
         
         if (!scError && scorecards) {
           const auditFilterField = 'auditor_email';
           const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+          const period = getCurrentPeriodDates();
           
-          // Parallelize all audit queries
+          // Parallelize all audit queries - get all audits conducted by this auditor
+          // Use the same logic as agents, but filter by auditor_email instead of employee_email
           const auditPromises = scorecards.map(async (scorecard) => {
             try {
               const { data: audits, error } = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('average_score, averageScore, passing_status, passingStatus, submitted_at, audit_timestamp, ' + auditFilterField);
+                .select('*')
+                .order('submitted_at', { ascending: false })
+                .limit(500);
               
               if (!error && audits && audits.length > 0) {
+                // Filter by auditor email (case-insensitive) - same logic as agents use for employee_email
                 let filteredAudits = audits.filter(audit => {
                   const emailToCheck = audit[auditFilterField];
                   if (!emailToCheck) return false;
-                  return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+                  const normalizedEmailToCheck = emailToCheck.toLowerCase().trim();
+                  return normalizedEmailToCheck === normalizedCurrentEmail;
                 });
                 
-                // Apply date filter
-                if (dateFilter.start || dateFilter.end) {
-                  filteredAudits = filteredAudits.filter(audit => {
-                    const auditDate = audit.submitted_at || audit.audit_timestamp;
-                    if (!auditDate) return false;
-                    return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
-                  });
-                }
+                // Apply date filter (week or date range)
+                filteredAudits = filteredAudits.filter(audit => {
+                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  if (!auditDate) return false;
+                  return isDateInRange(auditDate, period.start, period.end);
+                });
                 
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
                   const passingStatus = audit.passing_status || audit.passingStatus || '';
                   const normalizedStatus = passingStatus === 'Passing' ? 'Passed' : (passingStatus === 'Not Passing' ? 'Not Passed' : passingStatus);
                   
-                  return {
+                  return { 
                     score: !isNaN(score) ? score : null,
                     passingStatus: normalizedStatus
                   };
@@ -2314,6 +2457,8 @@ async function updateYourStats() {
           
           const auditResults = await Promise.all(auditPromises);
           const allAudits = auditResults.flat();
+          
+          // Calculate average quality score from all audits conducted by this auditor
           allAudits.forEach(audit => {
             if (audit.score !== null) {
               totalScoreSum += audit.score;
@@ -2331,9 +2476,11 @@ async function updateYourStats() {
             avgQualityScore = totalScoreSum / totalAuditsWithScore;
             avgQualityScoreText = `${Math.round(avgQualityScore)}%`;
           }
+          
+          console.log(`Stats for auditor: ${totalAuditsConducted} audits conducted (from assignments), ${avgQualityScoreText} average quality score (from ${totalAuditsWithScore} scored audits filtered by auditor_email), ${passingCount} passed, ${notPassingCount} not passed`);
         }
       } catch (error) {
-        console.error('Error calculating average quality score:', error);
+        console.error('Error calculating average quality score for auditor:', error);
       }
     }
     
@@ -2379,14 +2526,13 @@ async function updateYourStats() {
                   return emailMatches && isPending;
                 });
                 
-                // Apply date filter
-                if (dateFilter.start || dateFilter.end) {
-                  pendingAudits = pendingAudits.filter(audit => {
-                    const auditDate = audit.submitted_at || audit.audit_timestamp;
-                    if (!auditDate) return false;
-                    return isDateInRange(auditDate, dateFilter.start, dateFilter.end);
-                  });
-                }
+                // Apply date filter (week or date range)
+                const period = getCurrentPeriodDates();
+                pendingAudits = pendingAudits.filter(audit => {
+                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  if (!auditDate) return false;
+                  return isDateInRange(auditDate, period.start, period.end);
+                });
                 
                 console.log(`Found ${pendingAudits.length} pending audits in ${scorecard.table_name} for ${currentUserEmail}`);
                 
@@ -2438,14 +2584,13 @@ async function updateYourStats() {
                 return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
               });
               
-              // Apply date filter based on reversal_requested_at
-              if (dateFilter.start || dateFilter.end) {
-                filteredReversals = filteredReversals.filter(reversal => {
-                  const reversalDate = reversal.reversal_requested_at;
-                  if (!reversalDate) return false;
-                  return isDateInRange(reversalDate, dateFilter.start, dateFilter.end);
-                });
-              }
+              // Apply date filter based on reversal_requested_at (week or date range)
+              const period = getCurrentPeriodDates();
+              filteredReversals = filteredReversals.filter(reversal => {
+                const reversalDate = reversal.reversal_requested_at;
+                if (!reversalDate) return false;
+                return isDateInRange(reversalDate, period.start, period.end);
+              });
               
               return filteredReversals.map(reversal => {
                 const active = reversal.reversal_requested_at && !reversal.reversal_responded_at;
