@@ -9253,10 +9253,17 @@ async function loadAssignmentFromURL(assignmentId) {
             return;
         }
         
-        // Load the assignment from database
+        // Load the assignment from database with scorecard info
         const { data: assignment, error } = await window.supabaseClient
             .from('audit_assignments')
-            .select('*')
+            .select(`
+                *,
+                scorecards:scorecard_id (
+                    id,
+                    name,
+                    table_name
+                )
+            `)
             .eq('id', assignmentId)
             .single();
         
@@ -9296,13 +9303,16 @@ async function loadAssignmentFromURL(assignmentId) {
             return;
         }
         
+        // Get the table name from the scorecard
+        const assignmentTable = assignment.scorecards?.table_name || assignment.scorecard_table_name;
+        const scorecardId = assignment.scorecard_id || assignment._scorecard_id;
+        
         // Check if assignment is already completed
-        if (assignment.audit_status === 'completed') {
+        if (assignment.status === 'completed' || assignment.audit_status === 'completed') {
             // Redirect to view the completed audit
-            const scorecardId = assignment._scorecard_id;
             if (scorecardId && assignmentTable) {
                 window.location.href = `audit-view.html?id=${assignment.id}&scorecard=${scorecardId}&table=${assignmentTable}`;
-                    return;
+                return;
             }
             alert('This assignment has already been completed.');
             // Clean URL
@@ -9316,10 +9326,10 @@ async function loadAssignmentFromURL(assignmentId) {
             employee_email: assignment.employee_email,
             employee_name: assignment.employee_name,
             auditor_email: assignment.auditor_email,
-            scorecard_id: assignment._scorecard_id,
-            status: assignment.audit_status,
+            scorecard_id: scorecardId,
+            status: assignment.status || assignment.audit_status,
             scorecards: {
-                id: assignment._scorecard_id,
+                id: scorecardId,
                 table_name: assignmentTable
             }
         };

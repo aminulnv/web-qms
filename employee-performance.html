@@ -1213,9 +1213,11 @@ function applyDateFilter() {
         const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
         document.getElementById('dateBtnText').textContent = `${start} - ${end}`;
         useWeekFilter = false; // Date range overrides week filter
+        updateWeekDisplay(); // Update week display to show "-"
     } else {
         document.getElementById('dateBtnText').textContent = 'Date Range';
         useWeekFilter = true; // Clear date range, go back to week filter
+        updateWeekDisplay(); // Update week display to show week number
     }
 
     document.getElementById('dateDropdown').classList.remove('active');
@@ -1230,6 +1232,7 @@ function clearDateFilter() {
     document.getElementById('dateBtnText').textContent = 'Date Range';
     document.getElementById('dateDropdown').classList.remove('active');
     useWeekFilter = true; // Go back to week filter
+    updateWeekDisplay(); // Update week display to show week number
     applyAllFilters();
 }
 
@@ -2305,7 +2308,56 @@ function initializeWeekFilter() {
 }
 
 function updateWeekDisplay() {
-    document.getElementById('weekText').textContent = `Week ${currentWeek}`;
+    const weekTextEl = document.getElementById('weekText');
+    const prevWeekBtn = document.getElementById('prevWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+    const weekDisplay = document.getElementById('weekDisplay');
+    
+    if (weekTextEl) {
+        if (useWeekFilter && currentWeek !== null) {
+            weekTextEl.textContent = `Week ${currentWeek}`;
+        } else {
+            weekTextEl.textContent = '-';
+        }
+    }
+    
+    // Disable/enable week navigation buttons based on date range filter
+    if (prevWeekBtn) {
+        if (useWeekFilter) {
+            prevWeekBtn.disabled = false;
+            prevWeekBtn.style.opacity = '1';
+            prevWeekBtn.style.cursor = 'pointer';
+        } else {
+            prevWeekBtn.disabled = true;
+            prevWeekBtn.style.opacity = '0.5';
+            prevWeekBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    if (nextWeekBtn) {
+        if (useWeekFilter) {
+            nextWeekBtn.disabled = false;
+            nextWeekBtn.style.opacity = '1';
+            nextWeekBtn.style.cursor = 'pointer';
+        } else {
+            nextWeekBtn.disabled = true;
+            nextWeekBtn.style.opacity = '0.5';
+            nextWeekBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    // Update week display styling
+    if (weekDisplay) {
+        if (useWeekFilter) {
+            weekDisplay.style.backgroundColor = 'var(--primary-color)';
+            weekDisplay.style.color = 'var(--white)';
+            weekDisplay.style.borderColor = 'var(--primary-color)';
+        } else {
+            weekDisplay.style.backgroundColor = '#f3f4f6';
+            weekDisplay.style.color = '#6b7280';
+            weekDisplay.style.borderColor = '#e5e7eb';
+        }
+    }
 }
 
 function navigateWeek(direction) {

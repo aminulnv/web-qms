@@ -652,8 +652,54 @@ function initializeWeekFilter() {
 // Update week display
 function updateWeekDisplay() {
   const weekTextEl = document.getElementById('weekText');
+  const prevWeekBtn = document.getElementById('prevWeekBtn');
+  const nextWeekBtn = document.getElementById('nextWeekBtn');
+  const weekDisplay = document.getElementById('weekDisplay');
+  
   if (weekTextEl) {
-    weekTextEl.textContent = `Week ${currentWeek}`;
+    if (useWeekFilter && currentWeek !== null) {
+      weekTextEl.textContent = `Week ${currentWeek}`;
+    } else {
+      weekTextEl.textContent = '-';
+    }
+  }
+  
+  // Disable/enable week navigation buttons based on date range filter
+  if (prevWeekBtn) {
+    if (useWeekFilter) {
+      prevWeekBtn.disabled = false;
+      prevWeekBtn.style.opacity = '1';
+      prevWeekBtn.style.cursor = 'pointer';
+    } else {
+      prevWeekBtn.disabled = true;
+      prevWeekBtn.style.opacity = '0.5';
+      prevWeekBtn.style.cursor = 'not-allowed';
+    }
+  }
+  
+  if (nextWeekBtn) {
+    if (useWeekFilter) {
+      nextWeekBtn.disabled = false;
+      nextWeekBtn.style.opacity = '1';
+      nextWeekBtn.style.cursor = 'pointer';
+    } else {
+      nextWeekBtn.disabled = true;
+      nextWeekBtn.style.opacity = '0.5';
+      nextWeekBtn.style.cursor = 'not-allowed';
+    }
+  }
+  
+  // Update week display styling
+  if (weekDisplay) {
+    if (useWeekFilter) {
+      weekDisplay.style.backgroundColor = '#1a733e';
+      weekDisplay.style.color = 'white';
+      weekDisplay.style.borderColor = '#1a733e';
+    } else {
+      weekDisplay.style.backgroundColor = '#f3f4f6';
+      weekDisplay.style.color = '#6b7280';
+      weekDisplay.style.borderColor = '#e5e7eb';
+    }
   }
 }
 
@@ -765,9 +811,11 @@ function applyDateFilter() {
       dateBtnText.textContent = `${start} - ${end}`;
     }
     useWeekFilter = false; // Date range overrides week filter
+    updateWeekDisplay(); // Update week display to show "-"
   } else {
     updateDateButtonText();
     useWeekFilter = true; // Clear date range, go back to week filter
+    updateWeekDisplay(); // Update week display to show week number
   }
   
   document.getElementById('dateDropdown').classList.remove('active');
@@ -792,6 +840,7 @@ function clearDateFilter() {
   updateDateButtonText();
   document.getElementById('dateDropdown').classList.remove('active');
   useWeekFilter = true; // Go back to week filter
+  updateWeekDisplay(); // Update week display to show week number
   
   // Reload data with week filter
   Promise.all([
