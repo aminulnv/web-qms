@@ -57,6 +57,90 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
+        /* Date Range Picker */
+        .date-picker-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .date-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.375rem;
+            background: var(--background-white);
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.375rem;
+            box-shadow: var(--shadow-lg);
+            padding: 0.75rem;
+            z-index: 1000;
+            min-width: 9.8438rem;
+        }
+
+        .date-dropdown-menu.active {
+            display: block;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4688rem 0.75rem;
+            background-color: var(--background-white);
+            color: var(--text-color);
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.375rem;
+            font-size: 0.6562rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+        }
+
+        .action-btn:hover {
+            background-color: var(--gray-50);
+            border-color: var(--primary-color);
+        }
+
+        .action-btn.active {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .action-btn svg {
+            width: 0.75rem;
+            height: 0.75rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .filter-label {
+            font-size: 0.5625rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .filter-input {
+            padding: 0.375rem 0.5625rem;
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.2812rem;
+            font-size: 0.6562rem;
+            font-family: var(--font-family);
+            background-color: var(--background-white);
+            color: var(--text-color);
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
     </style>
 </head>
 
@@ -86,10 +170,52 @@
                 </div>
             </div>
 
-    <!-- Filter Toggle Button -->
-    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; gap: 0.375rem; align-items: center;">
-            <button id="filterToggleBtn" onclick="toggleFilters()" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background-color: var(--primary-color); color: var(--white); border: none; border-radius: 0.2812rem; font-weight: 600; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; font-family: 'Poppins', sans-serif;">
+    <!-- Action Buttons -->
+    <div style="margin-top: 2rem; margin-bottom: 1.125rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5625rem;">
+        <div style="display: flex; gap: 0.5625rem; align-items: center; flex-wrap: wrap;">
+            <!-- Week Navigation -->
+            <div style="display: flex; align-items: center; gap: 0.5625rem;">
+                <button class="action-btn" id="prevWeekBtn" style="padding: 0.4688rem 0.5625rem;" title="Previous Week">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <div class="action-btn" id="weekDisplay" style="padding: 0.4688rem 0.75rem; cursor: default; background-color: var(--primary-color); color: var(--white); border-color: var(--primary-color);">
+                    <span id="weekText">Week -</span>
+                </div>
+                <button class="action-btn" id="nextWeekBtn" style="padding: 0.4688rem 0.5625rem;" title="Next Week">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Date Range Picker -->
+            <div class="date-picker-dropdown">
+                <button class="action-btn" id="dateBtn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span id="dateBtnText">Date Range</span>
+                    <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="date-dropdown-menu" id="dateDropdown">
+                    <div class="filter-group">
+                        <label class="filter-label">Start Date</label>
+                        <input type="date" class="filter-input" id="startDate">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">End Date</label>
+                        <input type="date" class="filter-input" id="endDate">
+                    </div>
+                    <div style="display: flex; gap: 0.375rem; margin-top: 0.375rem;">
+                        <button class="action-btn" style="flex: 1;" onclick="applyDateFilter()">Apply</button>
+                        <button class="action-btn" style="flex: 1;" onclick="clearDateFilter()">Clear</button>
+                    </div>
+                </div>
+            </div>
+            <button id="filterToggleBtn" onclick="toggleFilters()" class="action-btn" style="background-color: var(--primary-color); color: var(--white); border-color: var(--primary-color);">
                 <svg style="width: 0.75rem; height: 0.75rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
                     <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Z"/>
                 </svg>
@@ -182,6 +308,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let allReversalsLoaded = false; // Track if all reversals have been loaded
         let pendingReversalsLoaded = false; // Track if pending reversals have been loaded
         
+        // Week and date filter state
+        let currentWeek = null;
+        let currentWeekYear = null;
+        let useWeekFilter = true;
+        let dateFilter = { start: null, end: null };
+        
         // Load scorecards first
         async function loadScorecards() {
             try {
@@ -210,6 +342,123 @@ document.addEventListener('DOMContentLoaded', function() {
                 return { email: '', role: '', isAgent: false };
             }
         }
+        
+        // Week filter functions
+        function getWeekNumber(date = new Date()) {
+            const startOfYear = new Date(date.getFullYear(), 0, 1);
+            const dayOfWeek = startOfYear.getDay();
+            const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const mondayOfWeek1 = new Date(startOfYear);
+            mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+            mondayOfWeek1.setHours(0, 0, 0, 0);
+            
+            const dateDay = date.getDay();
+            const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
+            const mondayOfDateWeek = new Date(date);
+            mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
+            mondayOfDateWeek.setHours(0, 0, 0, 0);
+            
+            const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
+            const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
+            
+            return weekNumber;
+        }
+
+        function getWeekDates(weekNumber, year) {
+            const startOfYear = new Date(year, 0, 1);
+            const dayOfWeek = startOfYear.getDay();
+            const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+            const mondayOfWeek1 = new Date(startOfYear);
+            mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+            
+            const weekStart = new Date(mondayOfWeek1);
+            weekStart.setDate(mondayOfWeek1.getDate() + (weekNumber - 1) * 7);
+            weekStart.setHours(0, 0, 0, 0);
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+            
+            return { start: weekStart, end: weekEnd };
+        }
+
+        function initializeWeekFilter() {
+            const today = new Date();
+            currentWeek = getWeekNumber(today);
+            currentWeekYear = today.getFullYear();
+            updateWeekDisplay();
+        }
+
+        function updateWeekDisplay() {
+            const weekTextEl = document.getElementById('weekText');
+            if (weekTextEl) {
+                weekTextEl.textContent = `Week ${currentWeek}`;
+            }
+        }
+
+        function navigateWeek(direction) {
+            currentWeek += direction;
+            
+            if (currentWeek > 52) {
+                currentWeek = 1;
+                currentWeekYear += 1;
+            } else if (currentWeek < 1) {
+                currentWeek = 52;
+                currentWeekYear -= 1;
+            }
+            
+            updateWeekDisplay();
+            useWeekFilter = true;
+            dateFilter.start = null;
+            dateFilter.end = null;
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            const dateBtnTextEl = document.getElementById('dateBtnText');
+            if (startDateEl) startDateEl.value = '';
+            if (endDateEl) endDateEl.value = '';
+            if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+            filterReversals();
+        }
+
+        window.applyDateFilter = function() {
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            const startDate = startDateEl?.value || '';
+            const endDate = endDateEl?.value || '';
+            
+            if (startDate) dateFilter.start = startDate;
+            if (endDate) dateFilter.end = endDate;
+
+            const dateBtnTextEl = document.getElementById('dateBtnText');
+            if (startDate || endDate) {
+                const start = startDate ? new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
+                const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
+                if (dateBtnTextEl) dateBtnTextEl.textContent = `${start} - ${end}`;
+                useWeekFilter = false;
+            } else {
+                if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+                useWeekFilter = true;
+            }
+
+            const dateDropdown = document.getElementById('dateDropdown');
+            if (dateDropdown) dateDropdown.classList.remove('active');
+            filterReversals();
+        };
+
+        window.clearDateFilter = function() {
+            dateFilter.start = null;
+            dateFilter.end = null;
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            const dateBtnTextEl = document.getElementById('dateBtnText');
+            const dateDropdown = document.getElementById('dateDropdown');
+            if (startDateEl) startDateEl.value = '';
+            if (endDateEl) endDateEl.value = '';
+            if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+            if (dateDropdown) dateDropdown.classList.remove('active');
+            useWeekFilter = true;
+            filterReversals();
+        };
         
         // Load reversals from all audit tables
         async function loadReversals(onlyPending = true) {
@@ -302,14 +551,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 
+                // Apply submission date filter (week or date range) - filter by submitted_at
+                let dateFilteredReversals = combinedReversals;
+                if (dateFilter.start || dateFilter.end) {
+                    useWeekFilter = false;
+                    dateFilteredReversals = dateFilteredReversals.filter(r => {
+                        const submitted = new Date(r.submitted_at || r.submittedAt || r.reversal_requested_at);
+                        if (dateFilter.start && submitted < new Date(dateFilter.start)) return false;
+                        if (dateFilter.end) {
+                            const endDate = new Date(dateFilter.end);
+                            endDate.setHours(23, 59, 59, 999);
+                            if (submitted > endDate) return false;
+                        }
+                        return true;
+                    });
+                } else if (useWeekFilter && currentWeek !== null) {
+                    const weekDates = getWeekDates(currentWeek, currentWeekYear);
+                    dateFilteredReversals = dateFilteredReversals.filter(r => {
+                        const submitted = new Date(r.submitted_at || r.submittedAt || r.reversal_requested_at);
+                        return submitted >= weekDates.start && submitted <= weekDates.end;
+                    });
+                }
+                
                 // Sort by reversal request date descending
-                combinedReversals.sort((a, b) => {
+                dateFilteredReversals.sort((a, b) => {
                     const dateA = new Date(a.reversal_requested_at);
                     const dateB = new Date(b.reversal_requested_at);
                     return dateB - dateA;
                 });
                 
-                console.log(`Total reversals loaded: ${combinedReversals.length} (${onlyPending ? 'pending only' : 'all'})`);
+                console.log(`Total reversals loaded: ${dateFilteredReversals.length} (${onlyPending ? 'pending only' : 'all'})`);
                 
                 // Update the appropriate array based on what we loaded
                 if (onlyPending) {
@@ -320,10 +591,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                        (r.reversal_approved ? 'Approved' : 'Rejected'));
                         return status !== 'Pending';
                     });
-                    allReversals = [...combinedReversals, ...existingNonPending];
+                    allReversals = [...dateFilteredReversals, ...existingNonPending];
                     pendingReversalsLoaded = true;
                 } else {
-                    allReversals = combinedReversals;
+                    allReversals = dateFilteredReversals;
                     allReversalsLoaded = true;
                 }
                 
@@ -365,15 +636,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Update statistics - show totals from allReversals, but counts for current view
+        // Update statistics - use filteredReversals to respect week/date filter
         function updateStatistics() {
             // Use reversal_status with fallback to reversal_approved for backward compatibility
             const getStatus = (r) => r.reversal_status || 
                                     (r.reversal_approved === null ? 'Pending' : 
                                      (r.reversal_approved ? 'Approved' : 'Rejected'));
             
-            // Calculate totals from allReversals (if loaded) or just show current view
-            const reversalsForStats = allReversalsLoaded ? allReversals : filteredReversals;
+            // Use filteredReversals which already respects week/date filter
+            const reversalsForStats = filteredReversals;
             
             const total = reversalsForStats.length;
             const pending = reversalsForStats.filter(r => getStatus(r) === 'Pending').length;
@@ -683,18 +954,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Type filter
                 const matchesType = !typeValue || reversal.reversal_type === typeValue;
                 
-                // Date range filter
+                // Date range filter - use submission date (submitted_at) for filtering
                 let matchesDateRange = true;
-                if (dateFrom || dateTo) {
-                    const reversalDate = new Date(reversal.reversal_requested_at);
+                // First apply week/date filter from header controls
+                if (dateFilter.start || dateFilter.end) {
+                    const submitted = new Date(reversal.submitted_at || reversal.submittedAt || reversal.reversal_requested_at);
+                    if (dateFilter.start && submitted < new Date(dateFilter.start)) matchesDateRange = false;
+                    if (dateFilter.end) {
+                        const endDate = new Date(dateFilter.end);
+                        endDate.setHours(23, 59, 59, 999);
+                        if (submitted > endDate) matchesDateRange = false;
+                    }
+                } else if (useWeekFilter && currentWeek !== null) {
+                    const weekDates = getWeekDates(currentWeek, currentWeekYear);
+                    const submitted = new Date(reversal.submitted_at || reversal.submittedAt || reversal.reversal_requested_at);
+                    if (submitted < weekDates.start || submitted > weekDates.end) matchesDateRange = false;
+                }
+                // Then apply additional date range filter from filter panel if specified
+                if (matchesDateRange && (dateFrom || dateTo)) {
+                    const submitted = new Date(reversal.submitted_at || reversal.submittedAt || reversal.reversal_requested_at);
                     if (dateFrom) {
                         const fromDate = new Date(dateFrom);
-                        if (reversalDate < fromDate) matchesDateRange = false;
+                        if (submitted < fromDate) matchesDateRange = false;
                     }
                     if (dateTo) {
                         const toDate = new Date(dateTo);
                         toDate.setHours(23, 59, 59, 999);
-                        if (reversalDate > toDate) matchesDateRange = false;
+                        if (submitted > toDate) matchesDateRange = false;
                     }
                 }
                 
@@ -1015,6 +1301,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+        
+        // Setup event listeners for week navigation and date picker
+        function setupHeaderActionListeners() {
+            // Week navigation buttons
+            const prevWeekBtn = document.getElementById('prevWeekBtn');
+            const nextWeekBtn = document.getElementById('nextWeekBtn');
+            if (prevWeekBtn) {
+                prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
+            }
+            if (nextWeekBtn) {
+                nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+            }
+
+            // Date button
+            const dateBtn = document.getElementById('dateBtn');
+            if (dateBtn) {
+                dateBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dropdown = document.getElementById('dateDropdown');
+                    if (dropdown) dropdown.classList.toggle('active');
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.date-picker-dropdown')) {
+                    const dropdown = document.getElementById('dateDropdown');
+                    if (dropdown) dropdown.classList.remove('active');
+                }
+            });
+        }
+        
+        // Setup listeners when DOM is ready
+        setupHeaderActionListeners();
+        
+        // Initialize week filter
+        initializeWeekFilter();
         
         // Initialize - load only pending reversals by default
         loadReversals(true);

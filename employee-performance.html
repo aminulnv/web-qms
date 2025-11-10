@@ -15,6 +15,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
@@ -304,6 +305,25 @@
             grid-column: span 4;
         }
 
+        .dashboard-grid > .dashboard-card:nth-child(6) {
+            /* Top Error Categories */
+            grid-column: 1 / -1;
+        }
+
+        /* Error Categories Responsive Grid */
+        .error-categories-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.125rem;
+            margin-bottom: 1.125rem;
+        }
+
+        @media (max-width: 768px) {
+            .error-categories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .dashboard-card {
             background-color: var(--background-white);
             border: 0.0469rem solid var(--border-light);
@@ -342,7 +362,7 @@
             width: 100%;
             max-width: 100%;
             border-collapse: collapse;
-            margin-top: 0.75rem;
+            margin-top: 0;
             box-sizing: border-box;
         }
         
@@ -351,6 +371,9 @@
             max-width: 100%;
             overflow-x: auto;
             box-sizing: border-box;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            border: 0.0469rem solid var(--border-light);
         }
 
         .performance-table thead {
@@ -371,6 +394,10 @@
             font-size: 0.6562rem;
             color: var(--text-color);
             border-bottom: 0.0469rem solid var(--gray-100);
+        }
+
+        .performance-table tbody tr:last-child td {
+            border-bottom: none;
         }
 
         .performance-table tbody tr:hover {
@@ -785,11 +812,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- Top Error Categories - Full Width -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="card-title">Top Error Categories</div>
+            </div>
+            <div class="error-categories-grid">
+                <!-- Error Type Summary -->
+                <div>
+                    <div style="font-size: 0.6562rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem;">Error Type Distribution</div>
+                    <div id="errorTypeSummary" style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+                <!-- Error Frequency Chart -->
+                <div>
+                    <div style="font-size: 0.6562rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem;">Error Frequency Distribution</div>
+                    <div style="height: 12rem;">
+                        <canvas id="errorFrequencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Top Error Categories List -->
+            <div>
+                <div style="font-size: 0.6562rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem;">Most Common Error Types</div>
+                <div id="topErrorCategoriesList" style="overflow-x: auto;">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </main>
 
 <script>
+// ============================================================================
+// Register Chart.js Plugins
+// ============================================================================
+if (typeof ChartDataLabels !== 'undefined') {
+    Chart.register(ChartDataLabels);
+}
+
 // ============================================================================
 // Global Variables
 // ============================================================================
@@ -928,7 +992,7 @@ async function loadScorecardParameters() {
             try {
                 const { data: parameters, error } = await window.supabaseClient
                     .from('scorecard_parameters')
-                    .select('field_id, error_name, scorecard_id, parameter_type, field_type')
+                    .select('field_id, error_name, scorecard_id, parameter_type, field_type, error_category')
                     .eq('scorecard_id', scorecard.id)
                     .eq('is_active', true);
 
@@ -940,7 +1004,8 @@ async function loadScorecardParameters() {
                         allScorecardParameters[scorecard.id][param.field_id] = {
                             name: param.error_name,
                             parameter_type: param.parameter_type || 'error',
-                            field_type: param.field_type || 'counter'
+                            field_type: param.field_type || 'counter',
+                            error_category: param.error_category || 'Significant Error'
                         };
                     });
                 }
@@ -994,6 +1059,74 @@ async function loadAuditsData() {
 // ============================================================================
 // Filtering
 // ============================================================================
+// Helper function to get current period dates based on week/date filter
+function getCurrentPeriodDates() {
+    let currentPeriodStart, currentPeriodEnd;
+    
+    if (dateFilter.start || dateFilter.end) {
+        currentPeriodStart = dateFilter.start ? new Date(dateFilter.start) : new Date(0);
+        currentPeriodEnd = dateFilter.end ? new Date(dateFilter.end) : new Date();
+        currentPeriodEnd.setHours(23, 59, 59, 999);
+    } else if (useWeekFilter && currentWeek !== null) {
+        const weekDates = getWeekDates(currentWeek, currentWeekYear);
+        currentPeriodStart = weekDates.start;
+        currentPeriodEnd = weekDates.end;
+    } else {
+        const today = new Date();
+        const weekDates = getWeekDates(getWeekNumber(today), today.getFullYear());
+        currentPeriodStart = weekDates.start;
+        currentPeriodEnd = weekDates.end;
+    }
+    
+    return { start: currentPeriodStart, end: currentPeriodEnd };
+}
+
+// Helper function to get filtered audits based on submission date
+function getFilteredAuditsBySubmissionDate() {
+    const { start: periodStart, end: periodEnd } = getCurrentPeriodDates();
+    
+    // Get employee emails to include
+    let employeeEmailsToInclude = new Set();
+    if (currentFilters.agent) {
+        employeeEmailsToInclude.add(currentFilters.agent);
+    } else {
+        allAssignments.forEach(a => {
+            if (a.employee_email) employeeEmailsToInclude.add(a.employee_email);
+        });
+    }
+    
+    // Filter audits by submission date and other filters
+    const agentAuditIds = {};
+    const filteredAudits = [];
+    
+    allAudits.forEach(audit => {
+        const agentEmail = audit.employee_email || 'Unknown';
+        
+        // Filter by employee
+        if (!employeeEmailsToInclude.has(agentEmail)) return;
+        
+        // Filter by submission date
+        const submitted = new Date(audit.submitted_at);
+        if (submitted < periodStart || submitted > periodEnd) return;
+        
+        // Filter by channel if set
+        if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
+        
+        // Track unique audits per agent
+        if (!agentAuditIds[agentEmail]) {
+            agentAuditIds[agentEmail] = new Set();
+        }
+        
+        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+        if (!agentAuditIds[agentEmail].has(auditKey)) {
+            agentAuditIds[agentEmail].add(auditKey);
+            filteredAudits.push(audit);
+        }
+    });
+    
+    return filteredAudits;
+}
+
 function populateFilters() {
     // Populate channels
     const channels = [...new Set(allAssignments.map(a => a.channel).filter(Boolean))].sort();
@@ -1057,6 +1190,7 @@ function applyAllFilters() {
     updateAgentPerformance();
     updateCharts();
     updateRecentAudits();
+    updateErrorCategories();
 }
 
 function applyFilters() {
@@ -1106,21 +1240,23 @@ function updateKPIs() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Interaction count (total assignments in filtered period)
-    const interactionCount = filteredAssignments.length;
+    // Get current period dates
+    const { start: currentPeriodStart, end: currentPeriodEnd } = getCurrentPeriodDates();
     
-    // Completed audits count (from filtered assignments)
-    const completedAudits = filteredAssignments.filter(a => a.status === 'completed').length;
+    // Get filtered audits by submission date
+    const filteredAudits = getFilteredAuditsBySubmissionDate();
+    
+    // Interaction count (total audits submitted in filtered period)
+    const interactionCount = filteredAudits.length;
+    
+    // Completed audits count (all submitted audits are considered completed)
+    const completedAudits = filteredAudits.length;
 
-    // Get the date range for comparison (current period vs previous period)
-    let currentPeriodStart, currentPeriodEnd, previousPeriodStart, previousPeriodEnd;
+    // Get previous period dates for comparison
+    let previousPeriodStart, previousPeriodEnd;
     
     if (dateFilter.start || dateFilter.end) {
-        // Using date range filter
-        currentPeriodStart = dateFilter.start ? new Date(dateFilter.start) : new Date(0);
-        currentPeriodEnd = dateFilter.end ? new Date(dateFilter.end) : new Date();
-        currentPeriodEnd.setHours(23, 59, 59, 999);
-        
+        // Using date range filter - calculate previous period of same length
         const periodDays = Math.ceil((currentPeriodEnd - currentPeriodStart) / (1000 * 60 * 60 * 24));
         previousPeriodStart = new Date(currentPeriodStart);
         previousPeriodStart.setDate(previousPeriodStart.getDate() - periodDays);
@@ -1128,11 +1264,6 @@ function updateKPIs() {
         previousPeriodEnd.setDate(previousPeriodEnd.getDate() - 1);
         previousPeriodEnd.setHours(23, 59, 59, 999);
     } else if (useWeekFilter && currentWeek !== null) {
-        // Using week filter
-        const weekDates = getWeekDates(currentWeek, currentWeekYear);
-        currentPeriodStart = weekDates.start;
-        currentPeriodEnd = weekDates.end;
-        
         // Previous week
         let prevWeek = currentWeek - 1;
         let prevWeekYear = currentWeekYear;
@@ -1144,127 +1275,65 @@ function updateKPIs() {
         previousPeriodStart = prevWeekDates.start;
         previousPeriodEnd = prevWeekDates.end;
     } else {
-        // Default to current week
-        const weekDates = getWeekDates(getWeekNumber(today), today.getFullYear());
-        currentPeriodStart = weekDates.start;
-        currentPeriodEnd = weekDates.end;
-        
+        // Default to previous week
         const prevWeekDates = getWeekDates(getWeekNumber(today) - 1, today.getFullYear());
         previousPeriodStart = prevWeekDates.start;
         previousPeriodEnd = prevWeekDates.end;
     }
     
-    // Previous period interaction count for comparison
-    const previousInteractionCount = allAssignments.filter(a => {
-        const created = new Date(a.created_at);
-        return created >= previousPeriodStart && created <= previousPeriodEnd;
-    }).length;
+    // Get employee emails to include for previous period
+    let employeeEmailsForPrev = new Set();
+    if (currentFilters.agent) {
+        employeeEmailsForPrev.add(currentFilters.agent);
+    } else {
+        allAssignments.forEach(a => {
+            if (a.employee_email) employeeEmailsForPrev.add(a.employee_email);
+        });
+    }
+    
+    // Previous period interaction count (audits submitted in previous period)
+    const previousAgentAuditIds = {};
+    const previousFilteredAudits = [];
+    
+    allAudits.forEach(audit => {
+        const agentEmail = audit.employee_email || 'Unknown';
+        if (!employeeEmailsForPrev.has(agentEmail)) return;
+        
+        const submitted = new Date(audit.submitted_at);
+        if (submitted < previousPeriodStart || submitted > previousPeriodEnd) return;
+        
+        if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
+        
+        if (!previousAgentAuditIds[agentEmail]) {
+            previousAgentAuditIds[agentEmail] = new Set();
+        }
+        
+        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
+        if (!previousAgentAuditIds[agentEmail].has(auditKey)) {
+            previousAgentAuditIds[agentEmail].add(auditKey);
+            previousFilteredAudits.push(audit);
+        }
+    });
+    
+    const previousInteractionCount = previousFilteredAudits.length;
+    const previousCompletedAudits = previousFilteredAudits.length;
 
     const interactionChange = previousInteractionCount > 0 
         ? ((interactionCount - previousInteractionCount) / previousInteractionCount * 100) 
         : (interactionCount > 0 ? 100 : 0);
     
-    // Previous period completed audits for comparison
-    const previousCompletedAudits = allAssignments.filter(a => {
-        const created = new Date(a.created_at);
-        return created >= previousPeriodStart && created <= previousPeriodEnd && a.status === 'completed';
-    }).length;
-    
     const completedChange = previousCompletedAudits > 0 
         ? ((completedAudits - previousCompletedAudits) / previousCompletedAudits * 100) 
         : (completedAudits > 0 ? 100 : 0);
 
-    // Error count trend - calculate using same logic as agent performance table
-    // Count all audits submitted in the current period (like expert-audits does)
-    const agentMapForErrors = {};
-    const agentAuditIdsForErrors = {}; // Track unique audit IDs
-    
-    // Get employee emails to include (same logic as agent performance table)
-    // Use all assignments, not just filtered, to ensure we don't miss audits
-    let employeeEmailsForErrors = new Set();
-    if (currentFilters.agent) {
-        employeeEmailsForErrors.add(currentFilters.agent);
-    } else {
-        allAssignments.forEach(a => {
-            if (a.employee_email) employeeEmailsForErrors.add(a.employee_email);
-        });
-    }
-    
-    // Count all audits submitted in the current period for these employees
-    allAudits.forEach(audit => {
-        const agentEmail = audit.employee_email || 'Unknown';
-        
-        // Only process audits for employees we care about
-        if (!employeeEmailsForErrors.has(agentEmail)) return;
-        
-        // Only include audits submitted within the current period
-        const submitted = new Date(audit.submitted_at);
-        if (submitted < currentPeriodStart || submitted > currentPeriodEnd) return;
-        
-        // Apply channel filter if set (check audit's channel field)
-        if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
-        
-        if (!agentMapForErrors[agentEmail]) {
-            agentMapForErrors[agentEmail] = {
-                audits: []
-            };
-            agentAuditIdsForErrors[agentEmail] = new Set(); // Track unique audit IDs
-        }
-        
-        // Use Set to ensure we never count the same audit twice
-        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
-        if (!agentAuditIdsForErrors[agentEmail].has(auditKey)) {
-            agentAuditIdsForErrors[agentEmail].add(auditKey);
-            agentMapForErrors[agentEmail].audits.push(audit);
-        }
-    });
-    
-    // Sum total error counts from all agents (same as table)
-    const currentPeriodErrorCount = Object.values(agentMapForErrors).reduce((total, agent) => {
-        const agentErrorCount = agent.audits.reduce((sum, audit) => {
-            return sum + (parseInt(audit.total_errors_count) || 0);
-        }, 0);
-        return total + agentErrorCount;
+    // Error count trend - use filtered audits by submission date
+    const currentPeriodErrorCount = filteredAudits.reduce((total, audit) => {
+        return total + (parseInt(audit.total_errors_count) || 0);
     }, 0);
 
-    // Calculate total errors for previous period (using same logic)
-    const previousAgentMapForErrors = {};
-    const previousAgentAuditIdsForErrors = {}; // Track unique audit IDs
-    
-    // Get employee emails from all assignments (for previous period comparison)
-    const allEmployeeEmails = new Set(allAssignments.map(a => a.employee_email).filter(Boolean));
-    
-    // Count all audits submitted in the previous period for these employees
-    allAudits.forEach(audit => {
-        const agentEmail = audit.employee_email || 'Unknown';
-        
-        // Only process audits for employees we care about
-        if (!allEmployeeEmails.has(agentEmail)) return;
-        
-        // Only include audits submitted within the previous period
-        const submitted = new Date(audit.submitted_at);
-        if (submitted < previousPeriodStart || submitted > previousPeriodEnd) return;
-        
-        if (!previousAgentMapForErrors[agentEmail]) {
-            previousAgentMapForErrors[agentEmail] = {
-                audits: []
-            };
-            previousAgentAuditIdsForErrors[agentEmail] = new Set(); // Track unique audit IDs
-        }
-        
-        // Use Set to ensure we never count the same audit twice
-        const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
-        if (!previousAgentAuditIdsForErrors[agentEmail].has(auditKey)) {
-            previousAgentAuditIdsForErrors[agentEmail].add(auditKey);
-            previousAgentMapForErrors[agentEmail].audits.push(audit);
-        }
-    });
-    
-    const previousPeriodErrorCount = Object.values(previousAgentMapForErrors).reduce((total, agent) => {
-        const agentErrorCount = agent.audits.reduce((sum, audit) => {
-            return sum + (parseInt(audit.total_errors_count) || 0);
-        }, 0);
-        return total + agentErrorCount;
+    // Calculate total errors for previous period
+    const previousPeriodErrorCount = previousFilteredAudits.reduce((total, audit) => {
+        return total + (parseInt(audit.total_errors_count) || 0);
     }, 0);
     
     // Calculate percentage change
@@ -1273,34 +1342,10 @@ function updateKPIs() {
         : (currentPeriodErrorCount > 0 ? 100 : 0);
     // Note: Negative change (fewer errors) is positive, positive change (more errors) is negative
 
-    // Average quality score - use same logic as agent performance table
-    // Group audits by employee and ensure we're using the same unique audit tracking
-    const agentMapForScores = {};
-    const agentAuditIdsForScores = {};
-    
-    filteredAssignments.forEach(assignment => {
-        const agentEmail = assignment.employee_email || 'Unknown';
-        if (!agentMapForScores[agentEmail]) {
-            agentMapForScores[agentEmail] = [];
-            agentAuditIdsForScores[agentEmail] = new Set();
-        }
-        
-        const audit = findAuditForAssignment(assignment);
-        if (audit) {
-            const submitted = new Date(audit.submitted_at);
-            if (submitted >= currentPeriodStart && submitted <= currentPeriodEnd) {
-                const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
-                if (!agentAuditIdsForScores[agentEmail].has(auditKey)) {
-                    agentAuditIdsForScores[agentEmail].add(auditKey);
-                    if (audit.average_score) {
-                        agentMapForScores[agentEmail].push(parseFloat(audit.average_score));
-                    }
-                }
-            }
-        }
-    });
-    
-    const auditsWithScores = Object.values(agentMapForScores).flat();
+    // Average quality score - use filtered audits by submission date
+    const auditsWithScores = filteredAudits
+        .filter(audit => audit.average_score)
+        .map(audit => parseFloat(audit.average_score));
     let avgScore = 0;
     if (auditsWithScores.length > 0) {
         const totalScore = auditsWithScores.reduce((sum, score) => sum + score, 0);
@@ -1308,13 +1353,12 @@ function updateKPIs() {
     }
 
     // Previous period average score
-    const previousPeriodAuditScores = allAudits.filter(a => {
-        const submitted = new Date(a.submitted_at);
-        return submitted >= previousPeriodStart && submitted <= previousPeriodEnd;
-    });
+    const previousPeriodAuditScores = previousFilteredAudits
+        .filter(a => a.average_score)
+        .map(a => parseFloat(a.average_score));
     let previousPeriodAvgScore = 0;
     if (previousPeriodAuditScores.length > 0) {
-        const totalScore = previousPeriodAuditScores.reduce((sum, a) => sum + (parseFloat(a.average_score) || 0), 0);
+        const totalScore = previousPeriodAuditScores.reduce((sum, score) => sum + score, 0);
         previousPeriodAvgScore = Math.round(totalScore / previousPeriodAuditScores.length);
     }
     const scoreChange = avgScore - previousPeriodAvgScore;
@@ -1501,60 +1545,16 @@ function findAuditForAssignment(assignment) {
 // Agent Performance Table
 // ============================================================================
 function updateAgentPerformance() {
-    // Get the current period dates for filtering audits
-    let currentPeriodStart, currentPeriodEnd;
-    
-    if (dateFilter.start || dateFilter.end) {
-        // Using date range filter
-        currentPeriodStart = dateFilter.start ? new Date(dateFilter.start) : new Date(0);
-        currentPeriodEnd = dateFilter.end ? new Date(dateFilter.end) : new Date();
-        currentPeriodEnd.setHours(23, 59, 59, 999);
-    } else if (useWeekFilter && currentWeek !== null) {
-        // Using week filter
-        const weekDates = getWeekDates(currentWeek, currentWeekYear);
-        currentPeriodStart = weekDates.start;
-        currentPeriodEnd = weekDates.end;
-    } else {
-        // Default to current week
-        const today = new Date();
-        const weekDates = getWeekDates(getWeekNumber(today), today.getFullYear());
-        currentPeriodStart = weekDates.start;
-        currentPeriodEnd = weekDates.end;
-    }
+    // Get filtered audits by submission date
+    const filteredAudits = getFilteredAuditsBySubmissionDate();
     
     // Group by employee_email
-    // First, collect all unique audits for employees that were submitted in the current period
-    // This ensures we count all audits like expert-audits does, not just those linked to assignments in the period
     const agentMap = {};
     const agentAuditIds = {}; // Track unique audit IDs per agent to prevent double-counting
     
-    // Step 1: Get list of employees to include
-    // If agent filter is set, use that. Otherwise, get all employees who have ANY assignments
-    // (not just in filtered period) so we don't miss audits due to assignment date filtering
-    let employeeEmailsToInclude = new Set();
-    if (currentFilters.agent) {
-        // If filtering by specific agent, only include that agent
-        employeeEmailsToInclude.add(currentFilters.agent);
-    } else {
-        // Include all employees who have assignments (to ensure we catch all their audits)
-        allAssignments.forEach(a => {
-            if (a.employee_email) employeeEmailsToInclude.add(a.employee_email);
-        });
-    }
-    
-    // Step 2: Find all audits submitted in the current period for these employees
-    allAudits.forEach(audit => {
+    // Process all filtered audits
+    filteredAudits.forEach(audit => {
         const agentEmail = audit.employee_email || 'Unknown';
-        
-        // Only process audits for employees we care about
-        if (!employeeEmailsToInclude.has(agentEmail)) return;
-        
-        // Only include audits submitted within the current period
-        const submitted = new Date(audit.submitted_at);
-        if (submitted < currentPeriodStart || submitted > currentPeriodEnd) return;
-        
-        // Apply channel filter if set (check audit's channel field)
-        if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
         
         // Initialize agent map if needed
         if (!agentMap[agentEmail]) {
@@ -1572,30 +1572,16 @@ function updateAgentPerformance() {
         const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
         if (!agentAuditIds[agentEmail].has(auditKey)) {
             agentAuditIds[agentEmail].add(auditKey);
+            
+            // Count total audits (all submitted audits are counted)
+            agentMap[agentEmail].total++;
+            agentMap[agentEmail].completed++; // All submitted audits are completed
+            
             if (audit.average_score) {
                 agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
             }
             // Store full audit for error analysis
             agentMap[agentEmail].audits.push(audit);
-        }
-    });
-    
-    // Step 2: Count assignments for each agent (for "Total Audits" and "Completed" columns)
-    filteredAssignments.forEach(assignment => {
-        const agentEmail = assignment.employee_email || 'Unknown';
-        if (!agentMap[agentEmail]) {
-            agentMap[agentEmail] = {
-                email: agentEmail,
-                total: 0,
-                completed: 0,
-                scores: [],
-                audits: []
-            };
-        }
-        
-        agentMap[agentEmail].total++;
-        if (assignment.status === 'completed') {
-            agentMap[agentEmail].completed++;
         }
     });
 
@@ -1839,30 +1825,20 @@ function updateCharts() {
 }
 
 function updateChannelChart() {
-    // Group by channel
+    // Get filtered audits by submission date
+    const filteredAudits = getFilteredAuditsBySubmissionDate();
+    
+    // Group by channel from audits
     const channelMap = {};
-    filteredAssignments.forEach(a => {
-        const channel = a.channel || 'Unknown';
+    filteredAudits.forEach(audit => {
+        const channel = audit.channel || 'Unknown';
         if (!channelMap[channel]) {
             channelMap[channel] = { total: 0, completed: 0, scores: [] };
         }
         channelMap[channel].total++;
-        if (a.status === 'completed') {
-            channelMap[channel].completed++;
-        }
-    });
-
-    // Match with audit scores
-    filteredAssignments.forEach(a => {
-        const audit = allAudits.find(au => 
-            au.employee_email === a.employee_email &&
-            au.auditor_email === a.auditor_email
-        );
-        if (audit && audit.average_score) {
-            const channel = a.channel || 'Unknown';
-            if (channelMap[channel]) {
-                channelMap[channel].scores.push(parseFloat(audit.average_score));
-            }
+        channelMap[channel].completed++;
+        if (audit.average_score) {
+            channelMap[channel].scores.push(parseFloat(audit.average_score));
         }
     });
 
@@ -1950,6 +1926,16 @@ function updateAnalyticsChart() {
     let data = [];
     const today = new Date();
 
+    // Get employee emails to include
+    let employeeEmailsToInclude = new Set();
+    if (currentFilters.agent) {
+        employeeEmailsToInclude.add(currentFilters.agent);
+    } else {
+        allAssignments.forEach(a => {
+            if (a.employee_email) employeeEmailsToInclude.add(a.employee_email);
+        });
+    }
+
     if (period === 'daily') {
         // Last 7 days
         for (let i = 6; i >= 0; i--) {
@@ -1962,9 +1948,13 @@ function updateAnalyticsChart() {
             const dayEnd = new Date(date);
             dayEnd.setHours(23, 59, 59, 999);
             
-            const dayAudits = filteredAssignments.filter(a => {
-                const created = new Date(a.created_at);
-                return created >= dayStart && created <= dayEnd && a.status === 'completed';
+            // Count audits submitted on this day
+            const dayAudits = allAudits.filter(audit => {
+                const agentEmail = audit.employee_email || 'Unknown';
+                if (!employeeEmailsToInclude.has(agentEmail)) return false;
+                if (currentFilters.channel && audit.channel !== currentFilters.channel) return false;
+                const submitted = new Date(audit.submitted_at);
+                return submitted >= dayStart && submitted <= dayEnd;
             });
             data.push(dayAudits.length);
         }
@@ -1978,9 +1968,13 @@ function updateAnalyticsChart() {
             
             labels.push(`Week ${4 - i}`);
             
-            const weekAudits = filteredAssignments.filter(a => {
-                const created = new Date(a.created_at);
-                return created >= weekStart && created < weekEnd && a.status === 'completed';
+            // Count audits submitted in this week
+            const weekAudits = allAudits.filter(audit => {
+                const agentEmail = audit.employee_email || 'Unknown';
+                if (!employeeEmailsToInclude.has(agentEmail)) return false;
+                if (currentFilters.channel && audit.channel !== currentFilters.channel) return false;
+                const submitted = new Date(audit.submitted_at);
+                return submitted >= weekStart && submitted < weekEnd;
             });
             data.push(weekAudits.length);
         }
@@ -1993,9 +1987,13 @@ function updateAnalyticsChart() {
             
             labels.push(monthStart.toLocaleDateString('en-US', { month: 'short' }));
             
-            const monthAudits = filteredAssignments.filter(a => {
-                const created = new Date(a.created_at);
-                return created >= monthStart && created <= monthEnd && a.status === 'completed';
+            // Count audits submitted in this month
+            const monthAudits = allAudits.filter(audit => {
+                const agentEmail = audit.employee_email || 'Unknown';
+                if (!employeeEmailsToInclude.has(agentEmail)) return false;
+                if (currentFilters.channel && audit.channel !== currentFilters.channel) return false;
+                const submitted = new Date(audit.submitted_at);
+                return submitted >= monthStart && submitted <= monthEnd;
             });
             data.push(monthAudits.length);
         }
@@ -2045,24 +2043,18 @@ function updateAnalyticsChart() {
 // Recent Audits
 // ============================================================================
 function updateRecentAudits() {
-    const recent = filteredAssignments
-        .filter(a => a.status === 'completed')
-        .slice(0, 5)
-        .map(a => {
-            // Find matching audit
-            const audit = allAudits.find(au => 
-                au.employee_email === a.employee_email &&
-                au.auditor_email === a.auditor_email
-            );
-            
-            return {
-                id: a.id,
-                channel: a.channel || 'Unknown',
-                date: new Date(a.created_at),
-                score: audit ? (parseFloat(audit.average_score) || 0) : 0
-            };
-        })
-        .sort((a, b) => b.date - a.date);
+    // Get filtered audits by submission date, sorted by most recent
+    const filteredAudits = getFilteredAuditsBySubmissionDate();
+    
+    const recent = filteredAudits
+        .map(audit => ({
+            id: audit.id,
+            channel: audit.channel || 'Unknown',
+            date: new Date(audit.submitted_at),
+            score: audit.average_score ? parseFloat(audit.average_score) : 0
+        }))
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 5);
 
     const list = document.getElementById('recentAuditsList');
     if (recent.length === 0) {
@@ -2090,54 +2082,16 @@ function updateRecentAudits() {
 // ============================================================================
 function exportToCSV() {
     try {
-        // Get the current period dates for filtering audits
-        let currentPeriodStart, currentPeriodEnd;
+        // Get filtered audits by submission date (same logic as updateAgentPerformance)
+        const filteredAudits = getFilteredAuditsBySubmissionDate();
         
-        if (dateFilter.start || dateFilter.end) {
-            // Using date range filter
-            currentPeriodStart = dateFilter.start ? new Date(dateFilter.start) : new Date(0);
-            currentPeriodEnd = dateFilter.end ? new Date(dateFilter.end) : new Date();
-            currentPeriodEnd.setHours(23, 59, 59, 999);
-        } else if (useWeekFilter && currentWeek !== null) {
-            // Using week filter
-            const weekDates = getWeekDates(currentWeek, currentWeekYear);
-            currentPeriodStart = weekDates.start;
-            currentPeriodEnd = weekDates.end;
-        } else {
-            // Default to current week
-            const today = new Date();
-            const weekDates = getWeekDates(getWeekNumber(today), today.getFullYear());
-            currentPeriodStart = weekDates.start;
-            currentPeriodEnd = weekDates.end;
-        }
-        
-        // Prepare data using same logic as updateAgentPerformance
+        // Group by employee_email
         const agentMap = {};
-        const agentAuditIdsExport = {}; // Track unique audit IDs for export
+        const agentAuditIds = {}; // Track unique audit IDs per agent to prevent double-counting
         
-        // Step 1: Find all audits submitted in the current period (like expert-audits)
-        // Use all assignments, not just filtered, to ensure we don't miss audits
-        let employeeEmailsExport = new Set();
-        if (currentFilters.agent) {
-            employeeEmailsExport.add(currentFilters.agent);
-        } else {
-            allAssignments.forEach(a => {
-                if (a.employee_email) employeeEmailsExport.add(a.employee_email);
-            });
-        }
-        
-        allAudits.forEach(audit => {
+        // Process all filtered audits
+        filteredAudits.forEach(audit => {
             const agentEmail = audit.employee_email || 'Unknown';
-            
-            // Only process audits for employees we care about
-            if (!employeeEmailsExport.has(agentEmail)) return;
-            
-            // Only include audits submitted within the current period
-            const submitted = new Date(audit.submitted_at);
-            if (submitted < currentPeriodStart || submitted > currentPeriodEnd) return;
-            
-            // Apply channel filter if set (check audit's channel field)
-            if (currentFilters.channel && audit.channel !== currentFilters.channel) return;
             
             // Initialize agent map if needed
             if (!agentMap[agentEmail]) {
@@ -2148,36 +2102,23 @@ function exportToCSV() {
                     scores: [],
                     audits: []
                 };
-                agentAuditIdsExport[agentEmail] = new Set();
+                agentAuditIds[agentEmail] = new Set();
             }
             
             // Use Set to ensure we never count the same audit twice
             const auditKey = `${audit.id}_${audit.scorecard_id || 'unknown'}`;
-            if (!agentAuditIdsExport[agentEmail].has(auditKey)) {
-                agentAuditIdsExport[agentEmail].add(auditKey);
+            if (!agentAuditIds[agentEmail].has(auditKey)) {
+                agentAuditIds[agentEmail].add(auditKey);
+                
+                // Count total audits (all submitted audits are counted)
+                agentMap[agentEmail].total++;
+                agentMap[agentEmail].completed++; // All submitted audits are completed
+                
                 if (audit.average_score) {
                     agentMap[agentEmail].scores.push(parseFloat(audit.average_score));
                 }
                 // Store full audit for error analysis
                 agentMap[agentEmail].audits.push(audit);
-            }
-        });
-        
-        // Step 2: Count assignments for each agent (for "Total Audits" and "Completed" columns)
-        filteredAssignments.forEach(assignment => {
-            const agentEmail = assignment.employee_email || 'Unknown';
-            if (!agentMap[agentEmail]) {
-                agentMap[agentEmail] = {
-                    email: agentEmail,
-                    total: 0,
-                    completed: 0,
-                    scores: [],
-                    audits: []
-                };
-            }
-            agentMap[agentEmail].total++;
-            if (assignment.status === 'completed') {
-                agentMap[agentEmail].completed++;
             }
         });
 
@@ -2387,6 +2328,287 @@ function navigateWeek(direction) {
     document.getElementById('endDate').value = '';
     document.getElementById('dateBtnText').textContent = 'Date Range';
     applyAllFilters();
+}
+
+// ============================================================================
+// Error Categories Analysis
+// ============================================================================
+function updateErrorCategories() {
+    // Get filtered audits by submission date
+    const relevantAudits = getFilteredAuditsBySubmissionDate();
+    
+    // Analyze errors by category
+    const categoryCounts = {
+        'Critical Fail Error': 0,
+        'Critical Error': 0,
+        'Significant Error': 0,
+        'Major Error': 0,
+        'Minor Error': 0
+    };
+    
+    const errorNameCounts = {}; // Track individual error names
+    
+    relevantAudits.forEach(audit => {
+        if (!audit.scorecard_id) return;
+        
+        const parameters = allScorecardParameters[audit.scorecard_id];
+        if (!parameters) return;
+        
+        Object.keys(parameters).forEach(fieldId => {
+            const paramInfo = parameters[fieldId];
+            const value = audit[fieldId];
+            let errorCount = 0;
+            
+            if (value !== null && value !== undefined && value !== '') {
+                const paramType = paramInfo.parameter_type || 'error';
+                const fieldType = paramInfo.field_type || 'counter';
+                
+                // Only count error parameters, not achievements or bonuses
+                if (paramType !== 'error') return;
+                
+                if (fieldType === 'radio') {
+                    let numValue = 0;
+                    if (typeof value === 'boolean') {
+                        numValue = value ? 1 : 0;
+                    } else if (typeof value === 'number') {
+                        numValue = value;
+                    } else if (typeof value === 'string') {
+                        const parsed = parseInt(value);
+                        if (!isNaN(parsed)) {
+                            numValue = parsed;
+                        } else if (value === 'true' || value === '1') {
+                            numValue = 1;
+                        }
+                    }
+                    errorCount = numValue;
+                } else {
+                    if (typeof value === 'boolean') {
+                        errorCount = value ? 1 : 0;
+                    } else if (typeof value === 'number') {
+                        errorCount = value;
+                    } else if (typeof value === 'string') {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue)) {
+                            errorCount = numValue;
+                        } else if (value === 'true' || value === '1') {
+                            errorCount = 1;
+                        }
+                    }
+                }
+            }
+            
+            if (errorCount > 0) {
+                const category = paramInfo.error_category || 'Significant Error';
+                const errorName = paramInfo.name;
+                
+                // Count by category
+                if (categoryCounts.hasOwnProperty(category)) {
+                    categoryCounts[category] += errorCount;
+                } else {
+                    categoryCounts[category] = errorCount;
+                }
+                
+                // Count by error name
+                if (!errorNameCounts[errorName]) {
+                    errorNameCounts[errorName] = {
+                        count: 0,
+                        category: category
+                    };
+                }
+                errorNameCounts[errorName].count += errorCount;
+            }
+        });
+    });
+    
+    // Update error type summary
+    updateErrorTypeSummary(categoryCounts);
+    
+    // Update error frequency chart
+    updateErrorFrequencyChart(categoryCounts);
+    
+    // Update top error categories list
+    updateTopErrorCategoriesList(errorNameCounts);
+}
+
+function updateErrorTypeSummary(categoryCounts) {
+    const summaryDiv = document.getElementById('errorTypeSummary');
+    
+    const totalErrors = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
+    
+    if (totalErrors === 0) {
+        summaryDiv.innerHTML = '<div style="color: var(--text-muted); font-size: 0.5625rem; padding: 0.25rem 0;">No errors found</div>';
+        return;
+    }
+    
+    const categories = [
+        { name: 'Critical Fail', key: 'Critical Fail Error', color: '#dc2626' },
+        { name: 'Critical', key: 'Critical Error', color: '#ea580c' },
+        { name: 'Significant', key: 'Significant Error', color: '#f59e0b' },
+        { name: 'Major', key: 'Major Error', color: '#eab308' },
+        { name: 'Minor', key: 'Minor Error', color: '#84cc16' }
+    ];
+    
+    summaryDiv.innerHTML = categories.map(cat => {
+        const count = categoryCounts[cat.key] || 0;
+        const percentage = totalErrors > 0 ? Math.round((count / totalErrors) * 100) : 0;
+        
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.1875rem 0;">
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <div style="width: 0.375rem; height: 0.375rem; border-radius: 50%; background-color: ${cat.color}; flex-shrink: 0;"></div>
+                    <span style="font-size: 0.5625rem; color: var(--text-color); font-weight: 500;">${cat.name}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <span style="font-size: 0.5625rem; font-weight: 600; color: var(--text-color);">${count}</span>
+                    <span style="font-size: 0.5156rem; color: var(--text-muted);">${percentage}%</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateErrorFrequencyChart(categoryCounts) {
+    const ctx = document.getElementById('errorFrequencyChart');
+    
+    if (charts.errorFrequency) {
+        charts.errorFrequency.destroy();
+    }
+    
+    const categories = ['Critical Fail Error', 'Critical Error', 'Significant Error', 'Major Error', 'Minor Error'];
+    const labels = ['Critical Fail', 'Critical', 'Significant', 'Major', 'Minor'];
+    const data = categories.map(cat => categoryCounts[cat] || 0);
+    const colors = ['#dc2626', '#ea580c', '#f59e0b', '#eab308', '#84cc16'];
+    
+    const totalErrors = data.reduce((sum, val) => sum + val, 0);
+    
+    if (totalErrors === 0) {
+        return;
+    }
+    
+    charts.errorFrequency = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const percentage = totalErrors > 0 ? Math.round((value / totalErrors) * 100) : 0;
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                },
+                datalabels: {
+                    display: function(context) {
+                        // Only show label if the segment is large enough (at least 5% of total)
+                        const value = context.parsed || 0;
+                        const percentage = totalErrors > 0 ? (value / totalErrors) * 100 : 0;
+                        return percentage >= 5;
+                    },
+                    color: '#ffffff',
+                    font: {
+                        size: 10,
+                        weight: 600,
+                        family: 'Poppins, sans-serif'
+                    },
+                    formatter: function(value, context) {
+                        const percentage = totalErrors > 0 ? Math.round((value / totalErrors) * 100) : 0;
+                        return percentage > 0 ? `${percentage}%` : '';
+                    },
+                    textStrokeColor: 'rgba(0, 0, 0, 0.3)',
+                    textStrokeWidth: 1
+                }
+            }
+        }
+    });
+}
+
+function updateTopErrorCategoriesList(errorNameCounts) {
+    const listDiv = document.getElementById('topErrorCategoriesList');
+    
+    // Sort errors by count and get top 10
+    const sortedErrors = Object.entries(errorNameCounts)
+        .map(([name, data]) => ({
+            name,
+            count: data.count,
+            category: data.category
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    
+    if (sortedErrors.length === 0) {
+        listDiv.innerHTML = '<div style="color: var(--text-muted); font-size: 0.6562rem; padding: 0.75rem;">No errors found</div>';
+        return;
+    }
+    
+    const getCategoryColor = (category) => {
+        if (category && category.includes('Fail')) return '#dc2626';
+        if (category && category.includes('Critical')) return '#ea580c';
+        if (category && category.includes('Significant')) return '#f59e0b';
+        if (category && category.includes('Major')) return '#eab308';
+        if (category && category.includes('Minor')) return '#84cc16';
+        return '#6b7280';
+    };
+    
+    const getCategoryLabel = (category) => {
+        if (category && category.includes('Fail')) return 'Critical Fail';
+        if (category && category.includes('Critical')) return 'Critical';
+        if (category && category.includes('Significant')) return 'Significant';
+        if (category && category.includes('Major')) return 'Major';
+        if (category && category.includes('Minor')) return 'Minor';
+        return 'Other';
+    };
+    
+    // Create compact table view
+    listDiv.innerHTML = `
+        <div style="border-radius: 0.375rem; overflow: hidden; border: 0.0469rem solid var(--border-light);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.6562rem;">
+                <thead>
+                    <tr style="border-bottom: 0.0469rem solid var(--border-light); background-color: var(--gray-50);">
+                        <th style="text-align: left; padding: 0.5rem 0.375rem; font-weight: 600; color: var(--text-secondary); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.05em; width: 1.25rem;">#</th>
+                        <th style="text-align: left; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--text-secondary); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.05em; min-width: 8rem;">Error Type</th>
+                        <th style="text-align: center; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--text-secondary); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.05em; width: 7rem;">Category</th>
+                        <th style="text-align: right; padding: 0.5rem 0.75rem; font-weight: 600; color: var(--text-secondary); font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.05em; width: 4rem;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sortedErrors.map((error, index) => {
+                        const categoryColor = getCategoryColor(error.category);
+                        const categoryLabel = getCategoryLabel(error.category);
+                        const isLastRow = index === sortedErrors.length - 1;
+                        
+                        return `
+                            <tr style="border-bottom: ${isLastRow ? 'none' : '0.0469rem solid var(--border-light)'}; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
+                                <td style="padding: 0.5rem 0.375rem; color: var(--text-muted); font-weight: 600; font-size: 0.5625rem;">${index + 1}</td>
+                                <td style="padding: 0.5rem 0.75rem; color: var(--text-color); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(error.name)}">${escapeHtml(error.name)}</td>
+                                <td style="padding: 0.5rem 0.75rem; text-align: center;">
+                                    <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.1875rem 0.5rem; border-radius: 0.1875rem; font-size: 0.5625rem; font-weight: 500; background-color: ${categoryColor}15; color: ${categoryColor}; white-space: nowrap;">
+                                        <div style="width: 0.375rem; height: 0.375rem; border-radius: 50%; background-color: ${categoryColor}; flex-shrink: 0;"></div>
+                                        ${categoryLabel}
+                                    </span>
+                                </td>
+                                <td style="padding: 0.5rem 0.75rem; text-align: right; color: var(--text-color); font-weight: 600;">${error.count}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
 }
 
 // ============================================================================

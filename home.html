@@ -821,8 +821,137 @@ function applyFilters() {
   ]);
 }
 
+// Cache helper functions - unlimited cache with background refresh
+function getCacheKey(prefix, userEmail, period = null) {
+  const periodKey = period ? `${period.start}_${period.end}` : 'default';
+  return `homepage_cache_${prefix}_${userEmail}_${periodKey}`;
+}
+
+function getCachedData(cacheKey) {
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (!cached) return null;
+    
+    const { data, timestamp } = JSON.parse(cached);
+    return data;
+  } catch (e) {
+    console.warn('Error reading cache:', e);
+    return null;
+  }
+}
+
+function setCachedData(cacheKey, data) {
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.warn('Error writing cache:', e);
+    // If storage is full, clear old cache entries
+    if (e.name === 'QuotaExceededError') {
+      clearOldCache();
+      // Try once more
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+      } catch (e2) {
+        console.error('Failed to cache after cleanup:', e2);
+      }
+    }
+  }
+}
+
+function clearOldCache() {
+  try {
+    const keys = Object.keys(localStorage);
+    const cacheKeys = keys.filter(k => k.startsWith('homepage_cache_'));
+    
+    // Keep only the most recent cache for each prefix/user combination
+    const cacheGroups = {};
+    cacheKeys.forEach(key => {
+      const parts = key.split('_');
+      if (parts.length >= 4) {
+        const prefix = parts[2];
+        const userEmail = parts[3];
+        const groupKey = `${prefix}_${userEmail}`;
+        if (!cacheGroups[groupKey]) {
+          cacheGroups[groupKey] = [];
+        }
+        cacheGroups[groupKey].push(key);
+      }
+    });
+    
+    // For each group, keep only the most recent entry
+    Object.values(cacheGroups).forEach(group => {
+      if (group.length > 1) {
+        // Sort by timestamp and keep only the newest
+        const withTimestamps = group.map(key => {
+          try {
+            const cached = localStorage.getItem(key);
+            if (cached) {
+              const { timestamp } = JSON.parse(cached);
+              return { key, timestamp };
+            }
+          } catch (e) {
+            return { key, timestamp: 0 };
+          }
+        }).sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Remove all but the newest
+        withTimestamps.slice(1).forEach(({ key }) => {
+          localStorage.removeItem(key);
+        });
+      }
+    });
+  } catch (e) {
+    console.warn('Error clearing old cache:', e);
+  }
+}
+
+function invalidateHomepageCache(userEmail = null) {
+  try {
+    const keys = Object.keys(localStorage);
+    const cacheKeys = keys.filter(k => k.startsWith('homepage_cache_'));
+    
+    if (userEmail) {
+      // Invalidate only for specific user
+      cacheKeys.forEach(key => {
+        if (key.includes(userEmail)) {
+          localStorage.removeItem(key);
+        }
+      });
+    } else {
+      // Invalidate all homepage cache
+      cacheKeys.forEach(key => localStorage.removeItem(key));
+    }
+  } catch (e) {
+    console.warn('Error invalidating cache:', e);
+  }
+}
+
 // Populate filter options
 async function populateFilters() {
+  try {
+    const cacheKey = getCacheKey('filters', currentUserEmail, null);
+    
+    // Check cache first and render immediately
+    const cachedFilters = getCachedData(cacheKey);
+    if (cachedFilters) {
+      console.log('Rendering cached filters immediately');
+      renderFiltersFromData(cachedFilters);
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheFilters(cacheKey);
+  } catch (error) {
+    console.error('Error populating filters:', error);
+  }
+}
+
+async function fetchAndCacheFilters(cacheKey) {
   try {
     // Load all assignments for filter population (without filters)
     let allAssignmentsForFilters = [];
@@ -883,39 +1012,53 @@ async function populateFilters() {
     
     // Populate channels
     const channels = [...new Set(allAssignmentsForFilters.map(a => a.channel).filter(Boolean))].sort();
-    const channelSelect = document.getElementById('filterChannel');
-    if (channelSelect) {
-      const existingValue = channelSelect.value;
-      channelSelect.innerHTML = '<option value="">All Channels</option>';
-      channels.forEach(channel => {
-        const option = document.createElement('option');
-        option.value = channel;
-        option.textContent = channel;
-        channelSelect.appendChild(option);
-      });
-      if (existingValue) channelSelect.value = existingValue;
-    }
-
-    // Populate agents (only for auditors)
-    if (!isAgent) {
-      const agents = [...new Set(allAssignmentsForFilters.map(a => a.employee_email).filter(Boolean))].sort();
-      const agentSelect = document.getElementById('filterAgent');
-      const agentGroup = document.getElementById('filterAgentGroup');
-      if (agentSelect && agentGroup) {
-        const existingValue = agentSelect.value;
-        agentSelect.innerHTML = '<option value="">All Agents</option>';
-        agents.forEach(agent => {
-          const option = document.createElement('option');
-          option.value = agent;
-          option.textContent = formatAgentName(agent);
-          agentSelect.appendChild(option);
-        });
-        if (existingValue) agentSelect.value = existingValue;
-        agentGroup.style.display = 'flex';
-      }
-    }
+    const agents = !isAgent ? [...new Set(allAssignmentsForFilters.map(a => a.employee_email).filter(Boolean))].sort() : [];
+    
+    // Cache the fresh data
+    const filtersData = { channels, agents };
+    setCachedData(cacheKey, filtersData);
+    
+    // Update UI with fresh data
+    console.log('Updating UI with fresh filters');
+    renderFiltersFromData(filtersData);
   } catch (error) {
     console.error('Error populating filters:', error);
+  }
+}
+
+function renderFiltersFromData(filtersData) {
+  const { channels, agents } = filtersData;
+  
+  // Populate channels
+  const channelSelect = document.getElementById('filterChannel');
+  if (channelSelect) {
+    const existingValue = channelSelect.value;
+    channelSelect.innerHTML = '<option value="">All Channels</option>';
+    channels.forEach(channel => {
+      const option = document.createElement('option');
+      option.value = channel;
+      option.textContent = channel;
+      channelSelect.appendChild(option);
+    });
+    if (existingValue) channelSelect.value = existingValue;
+  }
+
+  // Populate agents (only for auditors)
+  if (!isAgent) {
+    const agentSelect = document.getElementById('filterAgent');
+    const agentGroup = document.getElementById('filterAgentGroup');
+    if (agentSelect && agentGroup) {
+      const existingValue = agentSelect.value;
+      agentSelect.innerHTML = '<option value="">All Agents</option>';
+      agents.forEach(agent => {
+        const option = document.createElement('option');
+        option.value = agent;
+        option.textContent = formatAgentName(agent);
+        agentSelect.appendChild(option);
+      });
+      if (existingValue) agentSelect.value = existingValue;
+      agentGroup.style.display = 'flex';
+    }
   }
 }
 
@@ -1142,6 +1285,25 @@ async function loadRecentUpdates() {
     const updatesFeed = document.getElementById('updatesFeed');
     if (!updatesFeed) return;
 
+    const period = getCurrentPeriodDates();
+    const cacheKey = getCacheKey('recentUpdates', currentUserEmail, period);
+    
+    // Check cache first and render immediately
+    const cachedUpdates = getCachedData(cacheKey);
+    if (cachedUpdates) {
+      console.log('Rendering cached recent updates immediately');
+      renderRecentUpdatesFromData(cachedUpdates);
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheRecentUpdates(cacheKey, period);
+  } catch (error) {
+    console.error('Error loading recent updates:', error);
+  }
+}
+
+async function fetchAndCacheRecentUpdates(cacheKey, period) {
+  try {
     let allUpdates = [];
 
     if (isAgent) {
@@ -1534,30 +1696,45 @@ async function loadRecentUpdates() {
     // Limit to 15 most recent
     allUpdates = allUpdates.slice(0, 15);
     
-    // Count reversal status updates for agents
-    if (isAgent) {
-      const reversalStatusUpdates = allUpdates.filter(u => u.type === 'reversal_status_update');
-      const reversalCountEl = document.getElementById('reversalUpdatesCount');
-      if (reversalCountEl) {
-        if (reversalStatusUpdates.length > 0) {
-          reversalCountEl.textContent = reversalStatusUpdates.length;
-          reversalCountEl.style.display = 'inline-flex';
-        } else {
-          reversalCountEl.style.display = 'none';
-        }
+    // Cache the fresh data
+    setCachedData(cacheKey, allUpdates);
+    
+    // Update UI with fresh data
+    console.log('Updating UI with fresh recent updates');
+    renderRecentUpdatesFromData(allUpdates);
+  } catch (error) {
+    console.error('Error fetching recent updates:', error);
+  }
+}
+
+function renderRecentUpdatesFromData(allUpdates) {
+  const updatesFeed = document.getElementById('updatesFeed');
+  if (!updatesFeed) return;
+  
+  // Count reversal status updates for agents
+  if (isAgent) {
+    const reversalStatusUpdates = allUpdates.filter(u => u.type === 'reversal_status_update');
+    const reversalCountEl = document.getElementById('reversalUpdatesCount');
+    if (reversalCountEl) {
+      if (reversalStatusUpdates.length > 0) {
+        reversalCountEl.textContent = reversalStatusUpdates.length;
+        reversalCountEl.style.display = 'inline-flex';
+      } else {
+        reversalCountEl.style.display = 'none';
       }
     }
+  }
 
-    if (allUpdates.length === 0) {
-      updatesFeed.innerHTML = `
-        <div class="px-4 py-6 text-center text-gray-500 text-xs">
-          <p>No recent updates</p>
-        </div>
-      `;
-      return;
-    }
+  if (allUpdates.length === 0) {
+    updatesFeed.innerHTML = `
+      <div class="px-4 py-6 text-center text-gray-500 text-xs">
+        <p>No recent updates</p>
+      </div>
+    `;
+    return;
+  }
 
-    updatesFeed.innerHTML = allUpdates.map(update => {
+  updatesFeed.innerHTML = allUpdates.map(update => {
       const timestamp = formatTimestamp(update.timestamp);
       const initials = getInitials(update.displayName);
       
@@ -1627,21 +1804,33 @@ async function loadRecentUpdates() {
         </div>
       `;
     }).join('');
-
-  } catch (error) {
-    console.error('Error loading recent updates:', error);
-    document.getElementById('updatesFeed').innerHTML = `
-      <div class="px-4 py-6 text-center text-red-500 text-xs">
-        <p>Error loading updates</p>
-      </div>
-    `;
-  }
 }
 
 async function loadAssignedAudits() {
   try {
     console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole, 'IsAgent:', isAgent);
     
+    const period = getCurrentPeriodDates();
+    const cacheKey = getCacheKey('assignedAudits', currentUserEmail, period);
+    
+    // Check cache first and render immediately
+    const cachedAudits = getCachedData(cacheKey);
+    if (cachedAudits) {
+      console.log('Rendering cached assigned audits immediately');
+      assignedAudits = cachedAudits;
+      allAssignments = cachedAudits;
+      renderAssignedAudits();
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheAssignedAudits(cacheKey, period);
+  } catch (error) {
+    console.error('Error loading assigned audits:', error);
+  }
+}
+
+async function fetchAndCacheAssignedAudits(cacheKey, period) {
+  try {
     if (isAgent) {
       // For employees: Load completed audits from scorecard tables
       await loadCompletedAuditsForEmployee();
@@ -1650,10 +1839,14 @@ async function loadAssignedAudits() {
       await loadPendingAssignmentsForAuditor();
     }
 
+    // Cache the fresh data
+    setCachedData(cacheKey, assignedAudits);
+    
+    // Update UI with fresh data
+    console.log('Updating UI with fresh assigned audits');
     renderAssignedAudits();
-
   } catch (error) {
-    console.error('Error loading assigned audits:', error);
+    console.error('Error fetching assigned audits:', error);
     document.getElementById('assignedAuditsList').innerHTML = `
       <div class="px-4 py-8 text-center text-red-500 text-xs">
         <p>Error loading audits</p>
@@ -2168,6 +2361,30 @@ async function updateYourStats() {
       return;
     }
     
+    const period = getCurrentPeriodDates();
+    const cacheKey = getCacheKey('stats', currentUserEmail, period);
+    
+    // Check cache first and render immediately
+    const cachedStats = getCachedData(cacheKey);
+    if (cachedStats) {
+      console.log('Rendering cached stats immediately');
+      renderStatsFromData(cachedStats);
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheStats(cacheKey, period);
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+}
+
+async function fetchAndCacheStats(cacheKey, period) {
+  try {
+    if (!currentUserEmail) {
+      console.log('No user email found for stats');
+      return;
+    }
+    
     // Load assignments for current user
     // Filter by employee_email if agent, otherwise by auditor_email
     const filterField = isAgent ? 'employee_email' : 'auditor_email';
@@ -2619,120 +2836,162 @@ async function updateYourStats() {
       console.error('Error calculating reversal counts:', error);
     }
     
-    // Update stat cards
-    const statsAuditsConductedCount = document.getElementById('statsAuditsConductedCount');
-    const statsRemainingText = document.getElementById('statsRemainingText');
-    const statsRemainingProgress = document.getElementById('statsRemainingProgress');
-    const statsAvgQualityScore = document.getElementById('statsAvgQualityScore');
-    const statsAvgScoreSubtitle = document.getElementById('statsAvgScoreSubtitle');
-    const statsPassingCount = document.getElementById('statsPassingCount');
-    const statsNotPassingCount = document.getElementById('statsNotPassingCount');
-    const statsRemainingCount = document.getElementById('statsRemainingCount');
-    const statsInProgressCount = document.getElementById('statsInProgressCount');
-    const statsDaysRemaining = document.getElementById('statsDaysRemaining');
-    const statsReversalTotalCount = document.getElementById('statsReversalTotalCount');
-    const statsReversalActiveCount = document.getElementById('statsReversalActiveCount');
-    const statsReversalResolvedCount = document.getElementById('statsReversalResolvedCount');
-    const statsRequiresAcknowledgmentCount = document.getElementById('statsRequiresAcknowledgmentCount');
-    const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
-    const statsAvgDuration = document.getElementById('statsAvgDuration');
-    const statsAvgDurationSubtitle = document.getElementById('statsAvgDurationSubtitle');
+    // Collect all stats into an object for caching
+    const statsData = {
+      totalAssigned,
+      completed,
+      inProgress,
+      pending,
+      remaining,
+      percentage,
+      daysRemaining,
+      avgDuration,
+      avgDurationText,
+      totalAuditsConducted,
+      totalScoreSum,
+      totalAuditsWithScore,
+      avgQualityScore,
+      avgQualityScoreText,
+      passingCount,
+      notPassingCount,
+      activeReversals,
+      resolvedReversals,
+      totalReversals,
+      requiresAcknowledgment
+    };
     
-    // Update Audits Conducted card
-    if (statsAuditsConductedCount) statsAuditsConductedCount.textContent = totalAuditsConducted;
-    if (statsRemainingText) statsRemainingText.textContent = `${remaining} remaining`;
+    // Cache the fresh data
+    setCachedData(cacheKey, statsData);
     
-    // Calculate progress bar percentage (completed / total assigned, showing completed portion in green)
-    // The bar shows how much is completed (green), and the remaining is unfilled
-    const completedCount = totalAssigned - remaining;
-    const progressPercentage = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
-    if (statsRemainingProgress) {
-      statsRemainingProgress.style.width = `${Math.min(100, progressPercentage)}%`;
-      // Make it green if there's any progress
-      if (progressPercentage > 0) {
-        statsRemainingProgress.classList.remove('bg-warning');
-        statsRemainingProgress.classList.add('bg-success');
-      } else {
-        statsRemainingProgress.classList.remove('bg-success');
-        statsRemainingProgress.classList.add('bg-warning');
-      }
-    }
-    
-    // Update Average Quality Score card
-    if (statsAvgQualityScore) statsAvgQualityScore.textContent = avgQualityScoreText;
-    if (statsAvgScoreSubtitle) {
-      statsAvgScoreSubtitle.textContent = totalAuditsWithScore > 0 ? `from ${totalAuditsWithScore} audits` : 'No audits yet';
-    }
-    
-    // Update passing and not passing count chips
-    if (statsPassingCount) {
-      // Remove loading placeholder
-      const loadingSpan = statsPassingCount.querySelector('span.inline-block');
-      if (loadingSpan) {
-        loadingSpan.remove();
-      }
-      // Update count text with label
-      const svg = statsPassingCount.querySelector('svg');
-      const textSpan = statsPassingCount.querySelector('span:last-child');
-      if (svg && textSpan) {
-        // Remove all nodes between SVG and the last span (including any existing numbers)
-        let nextSibling = svg.nextSibling;
-        while (nextSibling && nextSibling !== textSpan) {
-          const toRemove = nextSibling;
-          nextSibling = nextSibling.nextSibling;
-          toRemove.remove();
-        }
-        // Update the text span to include the count
-        textSpan.textContent = `${passingCount} Passed`;
-      }
-    }
-    if (statsNotPassingCount) {
-      // Remove loading placeholder
-      const loadingSpan = statsNotPassingCount.querySelector('span.inline-block');
-      if (loadingSpan) {
-        loadingSpan.remove();
-      }
-      // Update count text with label
-      const svg = statsNotPassingCount.querySelector('svg');
-      const textSpan = statsNotPassingCount.querySelector('span:last-child');
-      if (svg && textSpan) {
-        // Remove all nodes between SVG and the last span (including any existing numbers)
-        let nextSibling = svg.nextSibling;
-        while (nextSibling && nextSibling !== textSpan) {
-          const toRemove = nextSibling;
-          nextSibling = nextSibling.nextSibling;
-          toRemove.remove();
-        }
-        // Update the text span to include the count
-        textSpan.textContent = `${notPassingCount} Not Passed`;
-      }
-    }
-    
-    // Update other cards
-    if (statsRemainingCount) statsRemainingCount.textContent = remaining;
-    if (statsInProgressCount) statsInProgressCount.textContent = inProgress;
-    if (statsDaysRemaining) statsDaysRemaining.textContent = `${daysRemaining} working day${daysRemaining !== 1 ? 's' : ''} remaining`;
-    
-    // Update Reversal card
-    if (statsReversalTotalCount) statsReversalTotalCount.textContent = totalReversals;
-    if (statsReversalActiveCount) statsReversalActiveCount.textContent = activeReversals;
-    if (statsReversalResolvedCount) statsReversalResolvedCount.textContent = resolvedReversals;
-    
-    // Update Requires Acknowledgment card (agents only)
-    if (isAgent && statsRequiresAcknowledgmentCount && requiresAcknowledgmentCard) {
-      statsRequiresAcknowledgmentCount.textContent = requiresAcknowledgment;
-      requiresAcknowledgmentCard.style.display = 'block';
-      console.log('Updated Requires Acknowledgment card:', { requiresAcknowledgment, isAgent });
-    } else if (requiresAcknowledgmentCard) {
-      requiresAcknowledgmentCard.style.display = 'none';
-    }
-    
-    if (statsAvgDuration) statsAvgDuration.textContent = avgDurationText;
-    if (statsAvgDurationSubtitle) statsAvgDurationSubtitle.textContent = 'per audit';
+    // Update UI with fresh data
+    console.log('Updating UI with fresh stats');
+    renderStatsFromData(statsData);
     
   } catch (error) {
     console.error('Error updating your stats:', error);
   }
+}
+
+function renderStatsFromData(stats) {
+  const {
+    totalAssigned,
+    completed,
+    inProgress,
+    pending,
+    remaining,
+    percentage,
+    daysRemaining,
+    avgDurationText,
+    totalAuditsConducted,
+    totalAuditsWithScore,
+    avgQualityScoreText,
+    passingCount,
+    notPassingCount,
+    activeReversals,
+    resolvedReversals,
+    totalReversals,
+    requiresAcknowledgment
+  } = stats;
+  
+  // Update stat cards
+  const statsAuditsConductedCount = document.getElementById('statsAuditsConductedCount');
+  const statsRemainingText = document.getElementById('statsRemainingText');
+  const statsRemainingProgress = document.getElementById('statsRemainingProgress');
+  const statsAvgQualityScore = document.getElementById('statsAvgQualityScore');
+  const statsAvgScoreSubtitle = document.getElementById('statsAvgScoreSubtitle');
+  const statsPassingCount = document.getElementById('statsPassingCount');
+  const statsNotPassingCount = document.getElementById('statsNotPassingCount');
+  const statsRemainingCount = document.getElementById('statsRemainingCount');
+  const statsInProgressCount = document.getElementById('statsInProgressCount');
+  const statsDaysRemaining = document.getElementById('statsDaysRemaining');
+  const statsReversalTotalCount = document.getElementById('statsReversalTotalCount');
+  const statsReversalActiveCount = document.getElementById('statsReversalActiveCount');
+  const statsReversalResolvedCount = document.getElementById('statsReversalResolvedCount');
+  const statsRequiresAcknowledgmentCount = document.getElementById('statsRequiresAcknowledgmentCount');
+  const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
+  const statsAvgDuration = document.getElementById('statsAvgDuration');
+  const statsAvgDurationSubtitle = document.getElementById('statsAvgDurationSubtitle');
+  
+  // Update Audits Conducted card
+  if (statsAuditsConductedCount) statsAuditsConductedCount.textContent = totalAuditsConducted;
+  if (statsRemainingText) statsRemainingText.textContent = `${remaining} remaining`;
+  
+  // Calculate progress bar percentage (completed / total assigned, showing completed portion in green)
+  const completedCount = totalAssigned - remaining;
+  const progressPercentage = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
+  if (statsRemainingProgress) {
+    statsRemainingProgress.style.width = `${Math.min(100, progressPercentage)}%`;
+    if (progressPercentage > 0) {
+      statsRemainingProgress.classList.remove('bg-warning');
+      statsRemainingProgress.classList.add('bg-success');
+    } else {
+      statsRemainingProgress.classList.remove('bg-success');
+      statsRemainingProgress.classList.add('bg-warning');
+    }
+  }
+  
+  // Update Average Quality Score card
+  if (statsAvgQualityScore) statsAvgQualityScore.textContent = avgQualityScoreText;
+  if (statsAvgScoreSubtitle) {
+    statsAvgScoreSubtitle.textContent = totalAuditsWithScore > 0 ? `from ${totalAuditsWithScore} audits` : 'No audits yet';
+  }
+  
+  // Update passing and not passing count chips
+  if (statsPassingCount) {
+    const loadingSpan = statsPassingCount.querySelector('span.inline-block');
+    if (loadingSpan) {
+      loadingSpan.remove();
+    }
+    const svg = statsPassingCount.querySelector('svg');
+    const textSpan = statsPassingCount.querySelector('span:last-child');
+    if (svg && textSpan) {
+      let nextSibling = svg.nextSibling;
+      while (nextSibling && nextSibling !== textSpan) {
+        const toRemove = nextSibling;
+        nextSibling = nextSibling.nextSibling;
+        toRemove.remove();
+      }
+      textSpan.textContent = `${passingCount} Passed`;
+    }
+  }
+  if (statsNotPassingCount) {
+    const loadingSpan = statsNotPassingCount.querySelector('span.inline-block');
+    if (loadingSpan) {
+      loadingSpan.remove();
+    }
+    const svg = statsNotPassingCount.querySelector('svg');
+    const textSpan = statsNotPassingCount.querySelector('span:last-child');
+    if (svg && textSpan) {
+      let nextSibling = svg.nextSibling;
+      while (nextSibling && nextSibling !== textSpan) {
+        const toRemove = nextSibling;
+        nextSibling = nextSibling.nextSibling;
+        toRemove.remove();
+      }
+      textSpan.textContent = `${notPassingCount} Not Passed`;
+    }
+  }
+  
+  // Update other cards
+  if (statsRemainingCount) statsRemainingCount.textContent = remaining;
+  if (statsInProgressCount) statsInProgressCount.textContent = inProgress;
+  if (statsDaysRemaining) statsDaysRemaining.textContent = `${daysRemaining} working day${daysRemaining !== 1 ? 's' : ''} remaining`;
+  
+  // Update Reversal card
+  if (statsReversalTotalCount) statsReversalTotalCount.textContent = totalReversals;
+  if (statsReversalActiveCount) statsReversalActiveCount.textContent = activeReversals;
+  if (statsReversalResolvedCount) statsReversalResolvedCount.textContent = resolvedReversals;
+  
+  // Update Requires Acknowledgment card (agents only)
+  if (isAgent && statsRequiresAcknowledgmentCount && requiresAcknowledgmentCard) {
+    statsRequiresAcknowledgmentCount.textContent = requiresAcknowledgment;
+    requiresAcknowledgmentCard.style.display = 'block';
+  } else if (requiresAcknowledgmentCard) {
+    requiresAcknowledgmentCard.style.display = 'none';
+  }
+  
+  if (statsAvgDuration) statsAvgDuration.textContent = avgDurationText;
+  if (statsAvgDurationSubtitle) statsAvgDurationSubtitle.textContent = 'per audit';
 }
 
 function viewAudit(assignmentId) {
@@ -2928,6 +3187,29 @@ function getReversalStatusChip(audit) {
 
 // Notifications
 async function loadNotifications() {
+  try {
+    if (!currentUserEmail) return;
+
+    const cacheKey = getCacheKey('notifications', currentUserEmail, null);
+    
+    // Check cache first and render immediately
+    const cachedNotifications = getCachedData(cacheKey);
+    if (cachedNotifications) {
+      console.log('Rendering cached notifications immediately');
+      notifications = cachedNotifications.notifications;
+      unreadNotificationCount = cachedNotifications.unreadNotificationCount;
+      renderNotifications();
+      updateNotificationBadge();
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheNotifications(cacheKey);
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+}
+
+async function fetchAndCacheNotifications(cacheKey) {
   try {
     if (!currentUserEmail) return;
 
@@ -3168,6 +3450,14 @@ async function loadNotifications() {
       unreadNotificationCount = recentNotifications.length;
     }
 
+    // Cache the fresh data
+    setCachedData(cacheKey, {
+      notifications,
+      unreadNotificationCount
+    });
+    
+    // Update UI with fresh data
+    console.log('Updating UI with fresh notifications');
     renderNotifications();
     updateNotificationBadge();
 

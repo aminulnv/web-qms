@@ -187,28 +187,13 @@ class SidebarLoader {
             </button>
         </li>
 
-        <li role="none" class="menu-item-with-submenu">
-            <button class="menu-item has-submenu" role="menuitem" tabindex="0" aria-label="Reports" aria-expanded="false">
+        <li role="none">
+            <a href="expert-audits.html" class="menu-item" role="menuitem" tabindex="0" aria-label="Audit Reports">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
-                <span>Reports</span>
-                <svg class="submenu-arrow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                </svg>
-            </button>
-            <ul class="submenu" role="menu">
-                <li role="none">
-                    <a class="submenu-item" href="expert-audits.html" role="menuitem" tabindex="-1">
-                        <span>Expert Audits</span>
-                    </a>
-                </li>
-                <li role="none">
-                    <a class="submenu-item" href="ai-audits.html" role="menuitem" tabindex="-1">
-                        <span>AI Audits</span>
-                    </a>
-                </li>
-            </ul>
+                <span>Audit Reports</span>
+            </a>
         </li>
 
         <li role="none">
@@ -682,9 +667,7 @@ class SidebarLoader {
       "Create New Audit": "create-audit.html",
       "Auditor's Dashboard": "auditor-dashboard.html",
       "Audit Distribution": "audit-distribution.html",
-      Reports: "expert-audits.html",
-      "Expert Audits": "expert-audits.html",
-      "AI Audits": "ai-audits.html",
+      "Audit Reports": "expert-audits.html",
       Performance: "employee-performance.html",
       Reversal: "reversal.html",
       "Improvement Corner": "improvement-corner.html",
@@ -715,8 +698,6 @@ class SidebarLoader {
       "auditor-dashboard.html": "Auditor's Dashboard",
       "audit-distribution.html": "Audit Distribution",
       "expert-audits.html": "Audit Reports",
-      "expert-audits.html": "Expert Audits",
-      "ai-audits.html": "AI Audits",
       "scorecards.html": "Scorecards",
       "employee-performance.html": "Performance",
       "reversal.html": "Reversal",

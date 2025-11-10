@@ -10,6 +10,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1a733e',
+              'primary-dark': '#0d5e3a',
+              'dark-forest': '#032816',
+              'success': '#10b981',
+              'warning': '#f59e0b',
+              'error': '#ef4444',
+            },
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="env-config.js"></script>
@@ -630,6 +651,178 @@
                 <div class="loading">Loading calibration sessions...</div>
             </div>
         </div>
+
+        <!-- Advanced Analytics Section -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18 17V9"/>
+                        <path d="M13 17V5"/>
+                        <path d="M8 17v-3"/>
+                    </svg>
+                    Advanced Analytics: Pre vs Post-Calibration
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn-secondary" onclick="exportAnalyticsData()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Export
+                    </button>
+                    <button class="btn-primary" onclick="refreshAnalytics()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analytics Filters -->
+            <div class="mb-4 p-3 bg-gray-50 rounded border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Date Range (From)</label>
+                        <input type="date" id="analyticsDateFrom" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Date Range (To)</label>
+                        <input type="date" id="analyticsDateTo" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Scorecard</label>
+                        <select id="analyticsScorecardFilter" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">All Scorecards</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Auditor</label>
+                        <select id="analyticsAuditorFilter" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">All Auditors</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button onclick="applyAnalyticsFilters()" class="px-3 py-1 text-xs font-semibold bg-primary text-white rounded hover:bg-primary-dark transition">Apply Filters</button>
+                    <button onclick="clearAnalyticsFilters()" class="px-3 py-1 text-xs font-semibold bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">Clear</button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="analyticsLoading" class="text-center py-8 text-gray-500">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p class="mt-2 text-sm">Loading analytics data...</p>
+            </div>
+
+            <!-- Analytics Content -->
+            <div id="analyticsContent" class="hidden">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="text-xs font-semibold text-blue-700 uppercase mb-1">Pre-Calibration Audits</div>
+                        <div class="text-2xl font-bold text-blue-900" id="preCalibrationCount">0</div>
+                        <div class="text-xs text-blue-600 mt-1">Total regular audits analyzed</div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="text-xs font-semibold text-green-700 uppercase mb-1">Post-Calibration Sessions</div>
+                        <div class="text-2xl font-bold text-green-900" id="postCalibrationCount">0</div>
+                        <div class="text-xs text-green-600 mt-1">Total calibration results</div>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div class="text-xs font-semibold text-purple-700 uppercase mb-1">Avg Agreement Rate</div>
+                        <div class="text-2xl font-bold text-purple-900" id="avgAgreementRate">-</div>
+                        <div class="text-xs text-purple-600 mt-1">Inter-auditor agreement</div>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <div class="text-xs font-semibold text-orange-700 uppercase mb-1">Auditors Analyzed</div>
+                        <div class="text-2xl font-bold text-orange-900" id="auditorsAnalyzed">0</div>
+                        <div class="text-xs text-orange-600 mt-1">Unique auditors in comparison</div>
+                    </div>
+                </div>
+
+                <!-- Comparison Table -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-3">Auditor Performance Comparison</h3>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200 text-xs">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-gray-700 sticky left-0 bg-gray-50 z-10">Auditor</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700 border-l-2 border-blue-300 bg-blue-50" colspan="4">Pre-Calibration</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700 border-l-2 border-green-300 bg-green-50" colspan="4">Post-Calibration</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700 border-l-2 border-purple-300 bg-purple-50" colspan="3">Change</th>
+                                </tr>
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-medium text-gray-600 sticky left-0 bg-gray-50 z-10"></th>
+                                    <!-- Pre-Calibration Headers -->
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-blue-50">Avg Score</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-blue-50">Variance</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-blue-50">Consistency</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-blue-50">Count</th>
+                                    <!-- Post-Calibration Headers -->
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-green-50 border-l-2 border-green-300">Avg Score</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-green-50">Variance</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-green-50">Consistency</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-green-50">Count</th>
+                                    <!-- Change Headers -->
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-purple-50 border-l-2 border-purple-300">Score Δ</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-purple-50">Variance Δ</th>
+                                    <th class="px-3 py-2 text-center font-medium text-gray-600 bg-purple-50">Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Inter-Auditor Agreement Chart -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-3">Inter-Auditor Agreement Over Time</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4" style="height: 300px;">
+                        <canvas id="agreementChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Agreement Details Table -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800 mb-3">Session Agreement Details</h3>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200 text-xs">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold text-gray-700">Session</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Participants</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Avg Score</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Score Spread</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Agreement Rate</th>
+                                    <th class="px-4 py-3 text-center font-semibold text-gray-700">Consensus Level</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agreementTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Table rows will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="analyticsEmpty" class="hidden text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No analytics data available</h3>
+                <p class="mt-1 text-sm text-gray-500">Complete some calibration sessions to see analytics.</p>
+            </div>
+        </div>
     </div>
 </main>
 
@@ -770,6 +963,9 @@ async function initializeCalibration() {
         await loadCalibrationSessions();
         await loadMyCalibrationSessions(); // Load sessions assigned to current user
         updateStatistics();
+        
+        // Initialize analytics after main data is loaded
+        initializeAnalytics();
 
         // Setup event listeners
         document.getElementById('searchInput')?.addEventListener('input', filterSessions);
@@ -1834,6 +2030,742 @@ document.addEventListener('click', function(event) {
         event.target.classList.remove('active');
     }
 });
+
+// ============================================================================
+// Advanced Analytics Functions
+// ============================================================================
+
+// Global analytics variables
+let analyticsData = {
+    preCalibration: {},
+    postCalibration: {},
+    sessions: [],
+    agreementChart: null
+};
+
+// Initialize analytics - called after main calibration initialization
+async function initializeAnalytics() {
+    try {
+        // Wait a bit for main data to load
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        if (window.supabaseClient) {
+            await populateAnalyticsFilters();
+            await loadAnalyticsData();
+        }
+    } catch (error) {
+        console.error('Error initializing analytics:', error);
+    }
+}
+
+// Load all analytics data
+async function loadAnalyticsData() {
+    try {
+        showAnalyticsLoading(true);
+        
+        // Load pre-calibration data (regular audits)
+        await loadPreCalibrationData();
+        
+        // Load post-calibration data (calibration results)
+        await loadPostCalibrationData();
+        
+        // Calculate and render analytics
+        calculateAndRenderAnalytics();
+        
+        showAnalyticsLoading(false);
+    } catch (error) {
+        console.error('Error loading analytics data:', error);
+        showAnalyticsLoading(false);
+        showAnalyticsEmpty(true);
+    }
+}
+
+// Load pre-calibration data from regular audits
+async function loadPreCalibrationData() {
+    try {
+        analyticsData.preCalibration = {};
+        
+        // Get all scorecards
+        const { data: scorecards } = await window.supabaseClient
+            .from('scorecards')
+            .select('id, name, table_name')
+            .eq('is_active', true);
+        
+        if (!scorecards || scorecards.length === 0) {
+            console.log('No scorecards found for pre-calibration data');
+            return;
+        }
+        
+        // Get filter values
+        const dateFrom = document.getElementById('analyticsDateFrom')?.value;
+        const dateTo = document.getElementById('analyticsDateTo')?.value;
+        const scorecardFilter = document.getElementById('analyticsScorecardFilter')?.value;
+        const auditorFilter = document.getElementById('analyticsAuditorFilter')?.value;
+        
+        // Load audits from all scorecard tables
+        for (const scorecard of scorecards) {
+            // Apply scorecard filter if set
+            if (scorecardFilter && scorecard.id !== scorecardFilter) continue;
+            
+            try {
+                let query = window.supabaseClient
+                    .from(scorecard.table_name)
+                    .select('auditor_email, auditor_name, average_score, submitted_at')
+                    .not('average_score', 'is', null)
+                    .not('auditor_email', 'is', null);
+                
+                // Apply date filters
+                if (dateFrom) {
+                    query = query.gte('submitted_at', dateFrom);
+                }
+                if (dateTo) {
+                    const endDate = new Date(dateTo);
+                    endDate.setHours(23, 59, 59, 999);
+                    query = query.lte('submitted_at', endDate.toISOString());
+                }
+                
+                const { data: audits, error } = await query;
+                
+                if (error) {
+                    console.warn(`Error loading audits from ${scorecard.table_name}:`, error);
+                    continue;
+                }
+                
+                if (!audits || audits.length === 0) continue;
+                
+                // Group by auditor
+                audits.forEach(audit => {
+                    const email = (audit.auditor_email || '').toLowerCase().trim();
+                    if (!email) return;
+                    
+                    // Apply auditor filter if set
+                    if (auditorFilter && email !== auditorFilter.toLowerCase().trim()) return;
+                    
+                    if (!analyticsData.preCalibration[email]) {
+                        analyticsData.preCalibration[email] = {
+                            email: email,
+                            name: audit.auditor_name || email.split('@')[0],
+                            scores: []
+                        };
+                    }
+                    
+                    const score = parseFloat(audit.average_score);
+                    if (!isNaN(score)) {
+                        analyticsData.preCalibration[email].scores.push(score);
+                    }
+                });
+            } catch (err) {
+                console.warn(`Error processing scorecard ${scorecard.name}:`, err);
+                continue;
+            }
+        }
+        
+        console.log('Pre-calibration data loaded:', Object.keys(analyticsData.preCalibration).length, 'auditors');
+    } catch (error) {
+        console.error('Error loading pre-calibration data:', error);
+        throw error;
+    }
+}
+
+// Load post-calibration data from calibration_results
+async function loadPostCalibrationData() {
+    try {
+        analyticsData.postCalibration = {};
+        analyticsData.sessions = [];
+        
+        // Get filter values
+        const dateFrom = document.getElementById('analyticsDateFrom')?.value;
+        const dateTo = document.getElementById('analyticsDateTo')?.value;
+        const scorecardFilter = document.getElementById('analyticsScorecardFilter')?.value;
+        const auditorFilter = document.getElementById('analyticsAuditorFilter')?.value;
+        
+        let query = window.supabaseClient
+            .from('calibration_results')
+            .select('*, calibration_sessions(*)')
+            .not('average_score', 'is', null)
+            .not('participant_email', 'is', null);
+        
+        // Apply date filters
+        if (dateFrom) {
+            query = query.gte('submitted_at', dateFrom);
+        }
+        if (dateTo) {
+            const endDate = new Date(dateTo);
+            endDate.setHours(23, 59, 59, 999);
+            query = query.lte('submitted_at', endDate.toISOString());
+        }
+        
+        // Apply scorecard filter
+        if (scorecardFilter) {
+            query = query.eq('scorecard_id', scorecardFilter);
+        }
+        
+        const { data: results, error } = await query;
+        
+        if (error) {
+            if (error.code === 'PGRST116') {
+                console.log('calibration_results table does not exist yet');
+                return;
+            }
+            throw error;
+        }
+        
+        if (!results || results.length === 0) {
+            console.log('No calibration results found');
+            return;
+        }
+        
+        // Group by participant (auditor)
+        const sessionMap = {};
+        
+        results.forEach(result => {
+            const email = (result.participant_email || '').toLowerCase().trim();
+            if (!email) return;
+            
+            // Apply auditor filter if set
+            if (auditorFilter && email !== auditorFilter.toLowerCase().trim()) return;
+            
+            if (!analyticsData.postCalibration[email]) {
+                analyticsData.postCalibration[email] = {
+                    email: email,
+                    name: result.participant_name || email.split('@')[0],
+                    scores: [],
+                    sessionIds: new Set()
+                };
+            }
+            
+            const score = parseFloat(result.average_score);
+            if (!isNaN(score)) {
+                analyticsData.postCalibration[email].scores.push(score);
+            }
+            
+            // Track sessions for agreement calculation
+            const sessionId = result.calibration_session_id;
+            if (sessionId) {
+                analyticsData.postCalibration[email].sessionIds.add(sessionId);
+                
+                if (!sessionMap[sessionId]) {
+                    sessionMap[sessionId] = {
+                        id: sessionId,
+                        name: result.calibration_sessions?.name || `Session ${sessionId}`,
+                        results: []
+                    };
+                }
+                
+                sessionMap[sessionId].results.push({
+                    email: email,
+                    name: result.participant_name || email.split('@')[0],
+                    score: score,
+                    submitted_at: result.submitted_at
+                });
+            }
+        });
+        
+        // Convert session map to array
+        analyticsData.sessions = Object.values(sessionMap);
+        
+        console.log('Post-calibration data loaded:', Object.keys(analyticsData.postCalibration).length, 'auditors');
+        console.log('Sessions loaded:', analyticsData.sessions.length);
+    } catch (error) {
+        console.error('Error loading post-calibration data:', error);
+        throw error;
+    }
+}
+
+// Calculate metrics for a set of scores
+function calculateMetrics(scores) {
+    if (!scores || scores.length === 0) {
+        return {
+            avgScore: 0,
+            variance: 0,
+            stdDev: 0,
+            consistency: 0,
+            minScore: 0,
+            maxScore: 0,
+            count: 0
+        };
+    }
+    
+    const count = scores.length;
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const avgScore = sum / count;
+    
+    // Calculate variance and standard deviation
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / count;
+    const stdDev = Math.sqrt(variance);
+    
+    // Calculate consistency (inverted coefficient of variation, normalized to 0-100)
+    const coefficientOfVariation = avgScore > 0 ? (stdDev / avgScore) * 100 : 0;
+    const consistency = Math.max(0, 100 - Math.min(100, coefficientOfVariation * 2));
+    
+    const minScore = Math.min(...scores);
+    const maxScore = Math.max(...scores);
+    
+    return {
+        avgScore: Math.round(avgScore * 10) / 10,
+        variance: Math.round(variance * 10) / 10,
+        stdDev: Math.round(stdDev * 10) / 10,
+        consistency: Math.round(consistency * 10) / 10,
+        minScore: Math.round(minScore * 10) / 10,
+        maxScore: Math.round(maxScore * 10) / 10,
+        count: count
+    };
+}
+
+// Calculate agreement metrics for a session
+function calculateSessionAgreement(session) {
+    if (!session.results || session.results.length < 2) {
+        return {
+            agreementRate: 0,
+            scoreSpread: 0,
+            consensusLevel: 0,
+            avgScore: 0
+        };
+    }
+    
+    const scores = session.results.map(r => r.score);
+    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const scoreSpread = Math.max(...scores) - Math.min(...scores);
+    const stdDev = Math.sqrt(scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length);
+    
+    // Agreement rate: percentage of scores within ±5% of mean
+    const threshold = 5;
+    const withinThreshold = scores.filter(score => Math.abs(score - avgScore) <= threshold).length;
+    const agreementRate = (withinThreshold / scores.length) * 100;
+    
+    // Consensus level: inverse of standard deviation (higher = more consensus)
+    const consensusLevel = Math.max(0, 100 - (stdDev * 5));
+    
+    return {
+        agreementRate: Math.round(agreementRate * 10) / 10,
+        scoreSpread: Math.round(scoreSpread * 10) / 10,
+        consensusLevel: Math.round(consensusLevel * 10) / 10,
+        avgScore: Math.round(avgScore * 10) / 10
+    };
+}
+
+// Calculate and render all analytics
+function calculateAndRenderAnalytics() {
+    // Get all unique auditors
+    const allAuditorEmails = new Set([
+        ...Object.keys(analyticsData.preCalibration),
+        ...Object.keys(analyticsData.postCalibration)
+    ]);
+    
+    if (allAuditorEmails.size === 0) {
+        showAnalyticsEmpty(true);
+        return;
+    }
+    
+    showAnalyticsEmpty(false);
+    
+    // Calculate metrics for each auditor
+    const comparisonData = [];
+    
+    allAuditorEmails.forEach(email => {
+        const preData = analyticsData.preCalibration[email];
+        const postData = analyticsData.postCalibration[email];
+        
+        const preMetrics = preData ? calculateMetrics(preData.scores) : null;
+        const postMetrics = postData ? calculateMetrics(postData.scores) : null;
+        
+        // Calculate changes
+        let scoreDelta = 0;
+        let varianceDelta = 0;
+        let consistencyDelta = 0;
+        let trend = 'neutral';
+        
+        if (preMetrics && postMetrics) {
+            scoreDelta = postMetrics.avgScore - preMetrics.avgScore;
+            varianceDelta = postMetrics.variance - preMetrics.variance;
+            consistencyDelta = postMetrics.consistency - preMetrics.consistency;
+            
+            // Determine trend
+            if (consistencyDelta > 2 && varianceDelta < -2) {
+                trend = 'improving';
+            } else if (consistencyDelta < -2 && varianceDelta > 2) {
+                trend = 'declining';
+            } else {
+                trend = 'stable';
+            }
+        }
+        
+        comparisonData.push({
+            email: email,
+            name: (preData?.name || postData?.name || email.split('@')[0]),
+            preMetrics: preMetrics,
+            postMetrics: postMetrics,
+            change: {
+                scoreDelta: Math.round(scoreDelta * 10) / 10,
+                varianceDelta: Math.round(varianceDelta * 10) / 10,
+                consistencyDelta: Math.round(consistencyDelta * 10) / 10,
+                trend: trend
+            }
+        });
+    });
+    
+    // Sort by name
+    comparisonData.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Update summary cards
+    updateSummaryCards(comparisonData);
+    
+    // Render comparison table
+    renderComparisonTable(comparisonData);
+    
+    // Calculate and render agreement metrics
+    calculateAndRenderAgreement();
+}
+
+// Update summary cards
+function updateSummaryCards(comparisonData) {
+    const preCount = Object.values(analyticsData.preCalibration).reduce((sum, data) => sum + data.scores.length, 0);
+    const postCount = Object.values(analyticsData.postCalibration).reduce((sum, data) => sum + data.scores.length, 0);
+    
+    // Calculate average agreement rate
+    const sessionAgreements = analyticsData.sessions.map(s => calculateSessionAgreement(s));
+    const avgAgreement = sessionAgreements.length > 0
+        ? sessionAgreements.reduce((sum, a) => sum + a.agreementRate, 0) / sessionAgreements.length
+        : 0;
+    
+    document.getElementById('preCalibrationCount').textContent = preCount.toLocaleString();
+    document.getElementById('postCalibrationCount').textContent = postCount.toLocaleString();
+    document.getElementById('avgAgreementRate').textContent = avgAgreement > 0 ? `${Math.round(avgAgreement)}%` : '-';
+    document.getElementById('auditorsAnalyzed').textContent = comparisonData.length;
+}
+
+// Render comparison table
+function renderComparisonTable(comparisonData) {
+    const tbody = document.getElementById('comparisonTableBody');
+    if (!tbody) return;
+    
+    if (comparisonData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="px-4 py-4 text-center text-gray-500">No data available</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = comparisonData.map(auditor => {
+        const pre = auditor.preMetrics;
+        const post = auditor.postMetrics;
+        const change = auditor.change;
+        
+        // Determine trend color and icon
+        let trendColor = 'text-gray-600';
+        let trendIcon = '→';
+        let trendText = 'Stable';
+        
+        if (change.trend === 'improving') {
+            trendColor = 'text-green-600';
+            trendIcon = '↑';
+            trendText = 'Improving';
+        } else if (change.trend === 'declining') {
+            trendColor = 'text-red-600';
+            trendIcon = '↓';
+            trendText = 'Declining';
+        }
+        
+        // Format change values with colors
+        const scoreDeltaClass = change.scoreDelta > 0 ? 'text-green-600' : change.scoreDelta < 0 ? 'text-red-600' : 'text-gray-600';
+        const varianceDeltaClass = change.varianceDelta < 0 ? 'text-green-600' : change.varianceDelta > 0 ? 'text-red-600' : 'text-gray-600';
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium text-gray-900 sticky left-0 bg-white">${escapeHtml(auditor.name)}</td>
+                <!-- Pre-Calibration -->
+                <td class="px-3 py-3 text-center text-gray-700 bg-blue-50">${pre ? pre.avgScore.toFixed(1) + '%' : '-'}</td>
+                <td class="px-3 py-3 text-center text-gray-700 bg-blue-50">${pre ? pre.variance.toFixed(1) : '-'}</td>
+                <td class="px-3 py-3 text-center text-gray-700 bg-blue-50">${pre ? pre.consistency.toFixed(1) + '%' : '-'}</td>
+                <td class="px-3 py-3 text-center text-gray-700 bg-blue-50">${pre ? pre.count : '-'}</td>
+                <!-- Post-Calibration -->
+                <td class="px-3 py-3 text-center text-gray-700 bg-green-50 border-l-2 border-green-300">${post ? post.avgScore.toFixed(1) + '%' : '-'}</td>
+                <td class="px-3 py-3 text-center text-gray-700 bg-green-50">${post ? post.variance.toFixed(1) : '-'}</td>
+                <td class="px-3 py-3 text-center text-gray-700 bg-green-50">${post ? post.consistency.toFixed(1) + '%' : '-'}</td>
+                <td class="px-3 py-3 text-center text-gray-700 bg-green-50">${post ? post.count : '-'}</td>
+                <!-- Change -->
+                <td class="px-3 py-3 text-center font-semibold ${scoreDeltaClass} bg-purple-50 border-l-2 border-purple-300">
+                    ${pre && post ? (change.scoreDelta > 0 ? '+' : '') + change.scoreDelta.toFixed(1) + '%' : '-'}
+                </td>
+                <td class="px-3 py-3 text-center font-semibold ${varianceDeltaClass} bg-purple-50">
+                    ${pre && post ? (change.varianceDelta > 0 ? '+' : '') + change.varianceDelta.toFixed(1) : '-'}
+                </td>
+                <td class="px-3 py-3 text-center font-semibold ${trendColor} bg-purple-50">
+                    ${pre && post ? `${trendIcon} ${trendText}` : '-'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Calculate and render agreement metrics
+function calculateAndRenderAgreement() {
+    // Calculate agreement for each session
+    const sessionAgreements = analyticsData.sessions.map(session => {
+        const agreement = calculateSessionAgreement(session);
+        return {
+            ...session,
+            ...agreement
+        };
+    });
+    
+    // Sort by date (most recent first)
+    sessionAgreements.sort((a, b) => {
+        const dateA = a.results && a.results.length > 0 ? (a.results[0].submitted_at || 0) : 0;
+        const dateB = b.results && b.results.length > 0 ? (b.results[0].submitted_at || 0) : 0;
+        return new Date(dateB) - new Date(dateA);
+    });
+    
+    // Render agreement table
+    renderAgreementTable(sessionAgreements);
+    
+    // Render agreement chart
+    renderAgreementChart(sessionAgreements);
+}
+
+// Render agreement table
+function renderAgreementTable(sessionAgreements) {
+    const tbody = document.getElementById('agreementTableBody');
+    if (!tbody) return;
+    
+    if (sessionAgreements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">No session data available</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = sessionAgreements.map(session => {
+        const agreementColor = session.agreementRate >= 80 ? 'text-green-600' : session.agreementRate >= 60 ? 'text-yellow-600' : 'text-red-600';
+        const consensusColor = session.consensusLevel >= 80 ? 'text-green-600' : session.consensusLevel >= 60 ? 'text-yellow-600' : 'text-red-600';
+        
+        return `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium text-gray-900">${escapeHtml(session.name)}</td>
+                <td class="px-4 py-3 text-center text-gray-700">${session.results?.length || 0}</td>
+                <td class="px-4 py-3 text-center text-gray-700">${session.avgScore.toFixed(1)}%</td>
+                <td class="px-4 py-3 text-center text-gray-700">${session.scoreSpread.toFixed(1)}%</td>
+                <td class="px-4 py-3 text-center font-semibold ${agreementColor}">${session.agreementRate.toFixed(1)}%</td>
+                <td class="px-4 py-3 text-center font-semibold ${consensusColor}">${session.consensusLevel.toFixed(1)}%</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Render agreement chart
+function renderAgreementChart(sessionAgreements) {
+    const canvas = document.getElementById('agreementChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+    
+    // Destroy existing chart
+    if (analyticsData.agreementChart) {
+        analyticsData.agreementChart.destroy();
+    }
+    
+    // Sort by date for chart
+    const sortedSessions = [...sessionAgreements].sort((a, b) => {
+        const dateA = a.results && a.results.length > 0 ? (a.results[0].submitted_at || new Date(0)) : new Date(0);
+        const dateB = b.results && b.results.length > 0 ? (b.results[0].submitted_at || new Date(0)) : new Date(0);
+        return new Date(dateA) - new Date(dateB);
+    });
+    
+    const labels = sortedSessions.map(s => s.name.length > 20 ? s.name.substring(0, 20) + '...' : s.name);
+    const agreementRates = sortedSessions.map(s => s.agreementRate);
+    const consensusLevels = sortedSessions.map(s => s.consensusLevel);
+    
+    analyticsData.agreementChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Agreement Rate (%)',
+                    data: agreementRates,
+                    borderColor: '#1a733e',
+                    backgroundColor: 'rgba(26, 115, 62, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Consensus Level (%)',
+                    data: consensusLevels,
+                    borderColor: '#9333ea',
+                    backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Show/hide loading state
+function showAnalyticsLoading(show) {
+    const loading = document.getElementById('analyticsLoading');
+    const content = document.getElementById('analyticsContent');
+    const empty = document.getElementById('analyticsEmpty');
+    
+    if (loading) loading.classList.toggle('hidden', !show);
+    if (content) content.classList.toggle('hidden', show);
+    if (empty) empty.classList.add('hidden');
+}
+
+// Show/hide empty state
+function showAnalyticsEmpty(show) {
+    const loading = document.getElementById('analyticsLoading');
+    const content = document.getElementById('analyticsContent');
+    const empty = document.getElementById('analyticsEmpty');
+    
+    if (loading) loading.classList.add('hidden');
+    if (content) content.classList.toggle('hidden', show);
+    if (empty) empty.classList.toggle('hidden', !show);
+}
+
+// Populate analytics filters
+async function populateAnalyticsFilters() {
+    try {
+        // Populate scorecard filter
+        const scorecardFilter = document.getElementById('analyticsScorecardFilter');
+        if (scorecardFilter && allScorecards) {
+            allScorecards.forEach(scorecard => {
+                const option = document.createElement('option');
+                option.value = scorecard.id;
+                option.textContent = scorecard.name;
+                scorecardFilter.appendChild(option);
+            });
+        }
+        
+        // Populate auditor filter (from quality analysts)
+        const auditorFilter = document.getElementById('analyticsAuditorFilter');
+        if (auditorFilter && allQualityAnalysts) {
+            allQualityAnalysts.forEach(analyst => {
+                const option = document.createElement('option');
+                option.value = analyst.email;
+                option.textContent = analyst.name || analyst.email;
+                auditorFilter.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error populating analytics filters:', error);
+    }
+}
+
+// Apply analytics filters
+async function applyAnalyticsFilters() {
+    await loadAnalyticsData();
+}
+
+// Clear analytics filters
+function clearAnalyticsFilters() {
+    document.getElementById('analyticsDateFrom').value = '';
+    document.getElementById('analyticsDateTo').value = '';
+    document.getElementById('analyticsScorecardFilter').value = '';
+    document.getElementById('analyticsAuditorFilter').value = '';
+    loadAnalyticsData();
+}
+
+// Refresh analytics
+async function refreshAnalytics() {
+    await loadAnalyticsData();
+}
+
+// Export analytics data
+function exportAnalyticsData() {
+    try {
+        const allAuditorEmails = new Set([
+            ...Object.keys(analyticsData.preCalibration),
+            ...Object.keys(analyticsData.postCalibration)
+        ]);
+        
+        if (allAuditorEmails.size === 0) {
+            alert('No data to export');
+            return;
+        }
+        
+        const rows = [];
+        rows.push([
+            'Auditor Name',
+            'Auditor Email',
+            'Pre-Avg Score', 'Pre-Variance', 'Pre-Consistency', 'Pre-Count',
+            'Post-Avg Score', 'Post-Variance', 'Post-Consistency', 'Post-Count',
+            'Score Delta', 'Variance Delta', 'Consistency Delta', 'Trend'
+        ]);
+        
+        allAuditorEmails.forEach(email => {
+            const preData = analyticsData.preCalibration[email];
+            const postData = analyticsData.postCalibration[email];
+            const preMetrics = preData ? calculateMetrics(preData.scores) : null;
+            const postMetrics = postData ? calculateMetrics(postData.scores) : null;
+            
+            let scoreDelta = 0, varianceDelta = 0, consistencyDelta = 0, trend = 'neutral';
+            if (preMetrics && postMetrics) {
+                scoreDelta = postMetrics.avgScore - preMetrics.avgScore;
+                varianceDelta = postMetrics.variance - preMetrics.variance;
+                consistencyDelta = postMetrics.consistency - preMetrics.consistency;
+                trend = consistencyDelta > 2 && varianceDelta < -2 ? 'improving' : 
+                       consistencyDelta < -2 && varianceDelta > 2 ? 'declining' : 'stable';
+            }
+            
+            rows.push([
+                (preData?.name || postData?.name || email.split('@')[0]),
+                email,
+                preMetrics ? preMetrics.avgScore : '',
+                preMetrics ? preMetrics.variance : '',
+                preMetrics ? preMetrics.consistency : '',
+                preMetrics ? preMetrics.count : '',
+                postMetrics ? postMetrics.avgScore : '',
+                postMetrics ? postMetrics.variance : '',
+                postMetrics ? postMetrics.consistency : '',
+                postMetrics ? postMetrics.count : '',
+                preMetrics && postMetrics ? scoreDelta : '',
+                preMetrics && postMetrics ? varianceDelta : '',
+                preMetrics && postMetrics ? consistencyDelta : '',
+                trend
+            ]);
+        });
+        
+        const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `calibration-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error exporting analytics:', error);
+        alert('Error exporting data: ' + error.message);
+    }
+}
 </script>
 
 </body>
