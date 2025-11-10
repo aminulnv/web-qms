@@ -1248,7 +1248,7 @@
                     <!-- Chat Interface View -->
                     <div id="transcriptChatView" style="display: flex; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
                         <!-- Chat messages will be dynamically inserted here -->
-                        <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0;">
+                        <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0; width: 100%; gap: 0.3234rem; padding: 0.2426rem 0;">
                             <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
                                 <p>Enter an Interaction ID to automatically load conversation from Intercom</p>
                             </div>
@@ -9926,8 +9926,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Fetch conversation data from Intercom API via Supabase Edge Function (to avoid CORS)
-            // Add display_as parameter to get full conversation data including email_message_metadata
-            const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/intercom-proxy?conversation_id=${encodeURIComponent(conversationId)}&display_as=plaintext`;
+            // Use display_as=html to get proper HTML with image tags, or plaintext for text-based references
+            // We'll handle both formats in the parsing logic
+            const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/intercom-proxy?conversation_id=${encodeURIComponent(conversationId)}&display_as=html`;
             
             const response = await fetch(edgeFunctionUrl, {
                 method: 'GET',
@@ -10228,7 +10229,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayConversationMessages(conversation) {
         const parts = conversation.conversation_parts?.conversation_parts || [];
         
-        console.log('displayConversationMessages called with', parts.length, 'parts');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🔄 displayConversationMessages called');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('Total parts:', parts.length);
+        console.log('Conversation ID:', conversation.id);
+        
+        // Log conversation structure for debugging
+        if (parts.length > 0) {
+            console.log('Sample part structure:', {
+                partId: parts[0].id,
+                partType: parts[0].part_type,
+                hasBody: !!parts[0].body,
+                bodyType: typeof parts[0].body,
+                bodyPreview: typeof parts[0].body === 'string' ? parts[0].body.substring(0, 200) : 'object/other',
+                hasAttachments: !!(parts[0].attachments && parts[0].attachments.length > 0),
+                attachmentCount: parts[0].attachments?.length || 0
+            });
+        }
         
         // Extract client name from conversation
         let clientName = null;
@@ -10294,10 +10312,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Sort parts by created_at timestamp
         const sortedParts = [...parts].sort((a, b) => {
-            return new Date(a.created_at) - new Date(b.created_at);
+            // Handle Unix timestamps (in seconds) and Date objects
+            const timeA = typeof a.created_at === 'number' 
+                ? (a.created_at < 10000000000 ? a.created_at * 1000 : a.created_at)
+                : new Date(a.created_at).getTime();
+            const timeB = typeof b.created_at === 'number'
+                ? (b.created_at < 10000000000 ? b.created_at * 1000 : b.created_at)
+                : new Date(b.created_at).getTime();
+            return timeA - timeB;
         });
 
+        // Clear container and remove empty state message
         chatMessagesContainer.innerHTML = '';
+        chatMessagesContainer.style.gap = '0.3234rem';
         
         // Reset images array
         allConversationImages = [];
@@ -10319,16 +10346,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             const isUser = authorType === 'user' || authorType === 'contact';
             const isAdmin = authorType === 'admin' || authorType === 'team';
-            // Detect AI/Bot messages
+            // Detect AI/Bot messages - be strict: only if explicitly bot type or has AI flags
+            // Don't check name for "ai" as admins might be labeled as "AI" but are actually agents
             const isAI = authorType === 'bot' || 
                         author.from_ai_agent === true || 
                         author.is_ai_answer === true ||
-                        (authorType === 'admin' && (author.name || '').toLowerCase().includes('ai'));
+                        (part.from_ai_agent === true) ||
+                        (part.is_ai_answer === true);
+            
+            // Debug logging for message type detection
+            if (isAdmin && !isUser) {
+                console.log(`Message from ${authorName} (${authorType}):`, {
+                    isAI: isAI,
+                    isAdmin: isAdmin,
+                    authorType: authorType,
+                    from_ai_agent: author.from_ai_agent,
+                    is_ai_answer: author.is_ai_answer,
+                    part_from_ai_agent: part.from_ai_agent,
+                    part_is_ai_answer: part.is_ai_answer,
+                    willBeTreatedAs: isAI ? 'AI (dark)' : 'Agent (green)'
+                });
+            }
             
             // Format the message body to check if it has content
+            // This extracts images from HTML img tags and text-based [Image "..."] references
             const messageData = formatMessageBody(message);
             const formattedText = messageData.text;
+            const formattedHtml = messageData.html || null; // HTML with inline images
             const images = messageData.images || [];
+            
+            // Debug logging for message body parsing
+            if (images.length > 0 || (message && typeof message === 'string' && message.includes('[Image'))) {
+                console.log(`📝 Part ${part.id} body parsing:`, {
+                    hasFormattedText: !!formattedText,
+                    hasFormattedHtml: !!formattedHtml,
+                    imagesFromBody: images.length,
+                    messagePreview: typeof message === 'string' ? message.substring(0, 200) : 'object/other',
+                    hasImageReferences: typeof message === 'string' && message.includes('[Image')
+                });
+            }
             
             // Check if this is an email interaction
             // email_message_metadata is either null (not an email) or an object with properties (is an email)
@@ -10365,12 +10421,46 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Extract attachments from attachments array (separate from body images)
             const attachments = part.attachments || [];
-            const attachmentImages = attachments
-                .filter(att => att.type === 'upload' && att.content_type && att.content_type.startsWith('image/'))
-                .map(att => att.url);
+            
+            // Extract image attachments - check multiple possible structures
+            const attachmentImages = [];
+            attachments.forEach(att => {
+                // Check if it's an image attachment
+                const isImage = (
+                    (att.type === 'upload' || att.type === 'image' || !att.type) &&
+                    (
+                        (att.content_type && att.content_type.startsWith('image/')) ||
+                        (att.url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(att.url))
+                    ) &&
+                    att.url
+                );
+                
+                if (isImage && att.url) {
+                    attachmentImages.push(att.url);
+                }
+            });
+            
+            // Debug logging for attachments
+            if (attachments.length > 0) {
+                console.log(`📎 Part ${part.id} has ${attachments.length} attachments:`, {
+                    totalAttachments: attachments.length,
+                    imageAttachments: attachmentImages.length,
+                    attachmentTypes: attachments.map(a => ({ type: a.type, contentType: a.content_type, hasUrl: !!a.url }))
+                });
+            }
             
             // Combine body images and attachment images
+            // Body images come first (they appear inline in text), then attachments
             const allImages = [...images, ...attachmentImages];
+            
+            // Debug logging for combined images
+            if (allImages.length > 0) {
+                console.log(`🖼️ Part ${part.id} total images: ${allImages.length}`, {
+                    fromBody: images.length,
+                    fromAttachments: attachmentImages.length,
+                    allImageUrls: allImages
+                });
+            }
             
             // Add images to global array with their index for viewer navigation
             const imageStartIndex = allConversationImages.length;
@@ -10416,8 +10506,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Determine message type for avatar and styling
+            // Important: Agents should be green, AI should be dark gray
             const messageType = isUser ? 'user' : (isAI ? 'ai' : 'agent');
             const avatar = generateAvatar(authorName, messageType);
+            
+            // Debug: Log if we're treating an admin as AI when they should be an agent
+            if (isAdmin && isAI && authorType !== 'bot') {
+                console.warn(`⚠️ Admin "${authorName}" is being treated as AI. Check AI detection flags.`);
+            }
             
             // Create message bubble container (avatar will be added in innerHTML)
             const messageDiv = document.createElement('div');
@@ -10429,23 +10525,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     color: #374151;
                     border: 0.0304rem solid #e5e7eb;
                     border-radius: 0.4852rem 0.4852rem 0.4852rem 0.1617rem;
-                    max-width: 75%;
+                    max-width: 100%;
+                    width: fit-content;
                     margin-right: auto;
+                    margin-left: 0;
                 `
                 : isAI
                 ? `
                     background: #1d1d1d;
                     color: white;
                     border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
-                    max-width: 75%;
+                    max-width: 100%;
+                    width: fit-content;
                     margin-left: auto;
+                    margin-right: 0;
                 `
                 : `
                     background: #1A733E;
                     color: white;
                     border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
-                    max-width: 75%;
+                    max-width: 100%;
+                    width: fit-content;
                     margin-left: auto;
+                    margin-right: 0;
                 `;
 
             // Build email header if this is an email
@@ -10557,30 +10659,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 attachmentsHTML += '</div>';
             }
 
-            // Build images HTML
+            // Build images HTML (for images that aren't inline in text)
             let imagesHTML = '';
-            if (allImages.length > 0) {
+            if (allImages.length > 0 && !formattedHtml) {
                 imagesHTML = '<div style="margin-top: 0.3234rem; display: flex; flex-wrap: wrap; gap: 0.3234rem;">';
                 allImages.forEach((imgSrc, idx) => {
                     const globalIndex = imageStartIndex + idx;
-                    imagesHTML += `
-                        <img 
-                            src="${escapeHtml(imgSrc)}" 
-                            alt="Attachment ${idx + 1}"
-                            onclick="window.openImageViewer(${globalIndex})"
-                            style="
-                                max-width: 200px;
-                                max-height: 200px;
-                                border-radius: 0.3234rem;
-                                cursor: pointer;
-                                object-fit: cover;
-                                border: 0.0304rem solid ${isUser ? '#e5e7eb' : 'rgba(255,255,255,0.3)'};
-                                transition: transform 0.2s ease, box-shadow 0.2s ease;
-                            "
-                            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0.1617rem 0.4852rem rgba(0,0,0,0.2)'"
-                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'"
-                        />
-                    `;
+                    const escapedSrc = escapeHtmlAttribute(imgSrc);
+                    imagesHTML += `<img src="${escapedSrc}" alt="Attachment ${idx + 1}" onclick="window.openImageViewer(${globalIndex})" style="max-width: 200px; max-height: 200px; border-radius: 0.3234rem; cursor: pointer; object-fit: cover; border: 0.0304rem solid ${isUser ? '#e5e7eb' : 'rgba(255,255,255,0.3)'}; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0.1617rem 0.4852rem rgba(0,0,0,0.2)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'" onerror="console.error('Failed to load image:', this.src);" loading="lazy" />`;
                 });
                 imagesHTML += '</div>';
             }
@@ -10592,11 +10678,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Avatar alignment: Client on left, Agent/AI on right
             const avatarAlign = isUser ? 'flex-start' : 'flex-end';
             const avatarMargin = isUser ? 'margin-right: 0.3234rem;' : 'margin-left: 0.3234rem;';
+            const avatarOrder = isUser ? '1' : '3';
             
             // Avatar HTML - Client left, Agent/AI right
             // For AI, use the image avatar; for others, use gradient with initials
             const avatarHTML = isAI ? `
-                <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${isUser ? '1' : '2'};">
+                <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${avatarOrder};">
                     <div style="
                         width: 1.455rem;
                         height: 1.455rem;
@@ -10611,7 +10698,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         position: relative;
                         overflow: hidden;
                     ">
-                        <img src="assests/logos/ai_avatar.webp" alt="AI Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'position: relative; z-index: 1; text-shadow: 0 0.0203rem 0.0405rem rgba(0,0,0,0.2); color: ${avatar.textColor}; font-size: 0.5257rem; font-weight: 700;\\'>${avatar.initials}</span>';" />
+                        <img src="./assests/logos/ai_avatar.webp" alt="AI Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="console.error('AI avatar image failed to load:', this.src); this.style.display='none'; this.parentElement.innerHTML='<span style=\\'position: relative; z-index: 1; text-shadow: 0 0.0203rem 0.0405rem rgba(0,0,0,0.2); color: ${avatar.textColor}; font-size: 0.5257rem; font-weight: 700;\\'>${avatar.initials}</span>';" />
                     </div>
                     <span style="
                         font-size: 0.3639rem;
@@ -10623,7 +10710,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ">${avatar.label}</span>
                 </div>
             ` : `
-                <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${isUser ? '1' : '2'};">
+                <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${avatarOrder};">
                     <div style="
                         width: 1.455rem;
                         height: 1.455rem;
@@ -10659,18 +10746,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 display: flex;
                 flex-direction: row;
                 align-items: flex-start;
-                margin-bottom: 0.6469rem;
+                margin-bottom: 0;
+                width: 100%;
                 justify-content: ${isUser ? 'flex-start' : 'flex-end'};
+                gap: 0.3234rem;
             `;
             
             messageDiv.innerHTML = `
                 ${isUser ? avatarHTML : ''}
-                <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isUser ? 'flex-start' : 'flex-end'}; order: ${isUser ? '2' : '1'};">
-                    <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle}">
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isUser ? 'flex-start' : 'flex-end'}; order: ${isUser ? '2' : '1'}; min-width: 0; max-width: calc(100% - 3.5rem);">
+                    <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle} word-wrap: break-word; overflow-wrap: break-word;">
                     ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
                     ${emailHeaderHTML}
-                    ${formattedText ? `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'};">${formattedText}</div>` : ''}
-                    ${imagesHTML}
+                    ${formattedHtml ? renderMessageWithInlineImages(formattedHtml, images, imageStartIndex, part.id, isUser) : (formattedText ? `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'};">${formattedText}</div>` : '')}
+                    ${!formattedHtml && imagesHTML ? imagesHTML : ''}
                     ${attachmentsHTML}
                     </div>
                 </div>
@@ -10680,8 +10769,13 @@ document.addEventListener('DOMContentLoaded', function() {
             chatMessagesContainer.appendChild(messageDiv);
         });
 
-        // Scroll to bottom
-        transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
+        // Scroll to bottom after a brief delay to ensure DOM is updated
+        setTimeout(() => {
+            const transcriptChatView = document.getElementById('transcriptChatView');
+            if (transcriptChatView) {
+                transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
+            }
+        }, 100);
 
         // Sync to textarea for form submission
         syncChatToTextarea();
@@ -10689,21 +10783,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Format message body (handle HTML/plain text and extract images)
     function formatMessageBody(body) {
-        if (!body) return { text: '', images: [] };
+        if (!body) return { text: '', images: [], html: null };
         
         // If body is an object, extract text
         if (typeof body === 'object') {
             // Handle empty objects
-            if (Object.keys(body).length === 0) return { text: '', images: [] };
+            if (Object.keys(body).length === 0) return { text: '', images: [], html: null };
             
             // Check for text content in various possible fields
             if (body.plaintext) {
                 const text = String(body.plaintext).trim();
-                return { text: text ? escapeHtml(text) : '', images: [] };
+                return { text: text ? escapeHtml(text) : '', images: [], html: null };
             }
             if (body.text) {
                 const text = String(body.text).trim();
-                return { text: text ? escapeHtml(text) : '', images: [] };
+                return { text: text ? escapeHtml(text) : '', images: [], html: null };
             }
             if (body.body) {
                 return parseHtmlBody(String(body.body));
@@ -10716,48 +10810,176 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If object has no text content, return empty
             // Don't stringify as that would just show "{}"
-            return { text: '', images: [] };
+            return { text: '', images: [], html: null };
         }
         
         // Handle string body (which may contain HTML)
         return parseHtmlBody(String(body));
     }
-
-    // Parse HTML body to extract text and images
-    function parseHtmlBody(htmlBody) {
-        if (!htmlBody) return { text: '', images: [] };
+    
+    // Escape HTML attribute value (for src attributes, preserve URL structure)
+    // Important: Only escape characters that would break HTML attributes
+    // Don't double-encode URL parameters (they're already properly encoded)
+    function escapeHtmlAttribute(value) {
+        if (!value) return '';
+        const str = String(value);
         
-        // Create a temporary div to parse HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlBody;
+        // Only escape characters that would break the HTML attribute
+        // Preserve URL structure including query parameters
+        return str
+            .replace(/&/g, '&amp;')  // Must escape & first
+            .replace(/"/g, '&quot;')  // Escape quotes
+            .replace(/'/g, '&#x27;')  // Escape single quotes
+            .replace(/</g, '&lt;')    // Escape <
+            .replace(/>/g, '&gt;');   // Escape >
         
-        // Extract all images
-        const images = [];
-        const imgTags = tempDiv.querySelectorAll('img');
-        imgTags.forEach((img, index) => {
-            const src = img.getAttribute('src') || '';
-            if (src) {
-                // Decode HTML entities in URL
-                const decodedSrc = src
-                    .replace(/&amp;/g, '&')
-                    .replace(/&lt;/g, '<')
-                    .replace(/&gt;/g, '>')
-                    .replace(/&quot;/g, '"');
-                images.push(decodedSrc);
+        // Note: We don't escape spaces, slashes, or other URL characters
+        // as they're already properly encoded in the URL
+    }
+    
+    // Render message with inline images (replace placeholders with actual image elements)
+    function renderMessageWithInlineImages(htmlWithPlaceholders, images, imageStartIndex, messageId, isUser) {
+        if (!htmlWithPlaceholders) return '';
+        
+        let renderedHtml = htmlWithPlaceholders;
+        let replacedCount = 0;
+        
+        // Replace each image placeholder with an actual image element
+        images.forEach((imgSrc, idx) => {
+            const globalIndex = imageStartIndex + idx;
+            const placeholder = `__IMAGE_PLACEHOLDER_${idx}__`;
+            
+            // Escape the image src for HTML attribute (preserve URL structure)
+            // Only escape characters that would break the HTML attribute, preserve URL structure
+            const escapedSrc = escapeHtmlAttribute(imgSrc);
+            
+            // Create image HTML with proper styling and click handler
+            // Use proper attribute escaping for src, but don't double-encode URL parameters
+            const imageHtml = `<img src="${escapedSrc}" alt="Image ${idx + 1}" onclick="window.openImageViewer(${globalIndex})" onerror="console.error('Failed to load image:', this.src); this.style.display='none';" style="max-width: 100%; max-height: 20rem; border-radius: 0.3234rem; margin: 0.3234rem 0; cursor: pointer; display: block; box-shadow: 0 0.1213rem 0.2426rem rgba(0,0,0,0.1); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0.2426rem 0.4852rem rgba(0,0,0,0.15)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0.1213rem 0.2426rem rgba(0,0,0,0.1)';" loading="lazy" />`;
+            
+            if (renderedHtml.includes(placeholder)) {
+                renderedHtml = renderedHtml.replace(placeholder, imageHtml);
+                replacedCount++;
+            } else {
+                console.warn(`⚠️ Image placeholder ${placeholder} not found in HTML for message ${messageId}`);
             }
         });
         
-        // Remove image tags and extract text
-        imgTags.forEach(img => img.remove());
-        const text = tempDiv.textContent || tempDiv.innerText || '';
-        const cleanedText = text.trim();
-        
-        // Return empty if text is empty or just whitespace/JSON-like structures
-        if (!cleanedText || cleanedText === '{}' || cleanedText === '[]' || cleanedText === 'null' || cleanedText === 'undefined') {
-            return { text: '', images: images };
+        // Clean up any remaining placeholders (shouldn't happen, but just in case)
+        const remainingPlaceholders = (renderedHtml.match(/__IMAGE_PLACEHOLDER_\d+__/g) || []).length;
+        if (remainingPlaceholders > 0) {
+            console.warn(`⚠️ ${remainingPlaceholders} image placeholders not replaced in message ${messageId}`);
+            renderedHtml = renderedHtml.replace(/__IMAGE_PLACEHOLDER_\d+__/g, '');
         }
         
-        return { text: escapeHtml(cleanedText), images: images };
+        // Debug logging
+        if (images.length > 0) {
+            console.log(`🖼️ Rendered ${replacedCount}/${images.length} images inline for message ${messageId}`);
+        }
+        
+        return `<div class="message-text-content" data-message-id="${messageId}" style="font-size: 0.5257rem; line-height: 1.6; word-wrap: break-word; margin-top: 0; margin-bottom: 0; color: ${isUser ? '#374151' : 'white'};">
+            ${renderedHtml}
+        </div>`;
+    }
+
+    // Parse HTML body to extract text and images (preserve inline images)
+    // Handles both HTML <img> tags and text-based [Image "..."] references
+    function parseHtmlBody(htmlBody) {
+        if (!htmlBody) return { text: '', images: [], html: '' };
+        
+        const htmlString = String(htmlBody);
+        const images = [];
+        let processedHtml = htmlString;
+        
+        // Step 1: Extract images from HTML <img> tags
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlString;
+        
+        const imgTags = tempDiv.querySelectorAll('img');
+        let imageIndex = 0;
+        
+        imgTags.forEach((img) => {
+            const src = img.getAttribute('src') || '';
+            if (src) {
+                // Decode HTML entities in URL (but preserve the original URL structure)
+                let decodedSrc = src;
+                // Only decode if it's clearly an HTML entity, not part of URL encoding
+                if (src.includes('&amp;') && !src.includes('?')) {
+                    decodedSrc = src.replace(/&amp;/g, '&');
+                }
+                images.push(decodedSrc);
+                
+                // Replace img tag with a placeholder
+                const placeholder = document.createTextNode(`__IMAGE_PLACEHOLDER_${imageIndex}__`);
+                if (img.parentNode) {
+                    img.parentNode.replaceChild(placeholder, img);
+                }
+                imageIndex++;
+            }
+        });
+        
+        // Get HTML with placeholders from img tags
+        processedHtml = tempDiv.innerHTML;
+        
+        // Step 2: Extract images from text-based [Image "..."] references
+        // Pattern: [Image "URL"] or [Image 'URL'] or [Image URL]
+        // Need to handle URLs with query parameters that might contain quotes
+        // More robust pattern: [Image "..."], [Image '...'], or [Image ...]
+        const imageReferencePattern = /\[Image\s+(?:"([^"]+)"|'([^']+)'|([^\]]+))\]/gi;
+        let match;
+        const textImageMatches = [];
+        
+        // Find all matches and their positions
+        while ((match = imageReferencePattern.exec(htmlString)) !== null) {
+            // match[1] = double-quoted URL, match[2] = single-quoted URL, match[3] = unquoted URL
+            const imageUrl = match[1] || match[2] || match[3];
+            const fullMatch = match[0];
+            const matchIndex = match.index;
+            
+            if (imageUrl && imageUrl.trim() && !images.includes(imageUrl.trim())) {
+                const trimmedUrl = imageUrl.trim();
+                // Only add if not already found in HTML img tags
+                textImageMatches.push({
+                    url: trimmedUrl,
+                    fullMatch: fullMatch,
+                    index: matchIndex,
+                    placeholderIndex: imageIndex
+                });
+                images.push(trimmedUrl);
+                imageIndex++;
+            }
+        }
+        
+        // Replace text-based image references with placeholders (in reverse order to preserve indices)
+        textImageMatches.reverse().forEach(match => {
+            const placeholder = `__IMAGE_PLACEHOLDER_${match.placeholderIndex}__`;
+            processedHtml = processedHtml.substring(0, match.index) + 
+                          placeholder + 
+                          processedHtml.substring(match.index + match.fullMatch.length);
+        });
+        
+        // Step 3: Extract plain text for fallback (remove placeholders)
+        const tempDiv2 = document.createElement('div');
+        tempDiv2.innerHTML = processedHtml;
+        const plainText = tempDiv2.textContent || tempDiv2.innerText || '';
+        const cleanedText = plainText.replace(/__IMAGE_PLACEHOLDER_\d+__/g, '').trim();
+        
+        // Debug logging
+        if (images.length > 0) {
+            console.log(`📸 Extracted ${images.length} images from message body:`, {
+                htmlImages: imgTags.length,
+                textReferences: textImageMatches.length,
+                totalImages: images.length,
+                imageUrls: images
+            });
+        }
+        
+        // Return HTML with placeholders, plain text, and images array
+        return { 
+            text: cleanedText, 
+            images: images, 
+            html: processedHtml // HTML with image placeholders, preserving other formatting
+        };
     }
 
     // Store all images from conversation for image viewer
