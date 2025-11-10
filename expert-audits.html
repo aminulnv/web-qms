@@ -392,6 +392,202 @@
         <button id="viewAllBtn" onclick="toggleViewAll()" style="display: none; padding: 0.4688rem 0.75rem; background-color: #f3f4f6; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" class="action-btn">View All</button>
                 </div>
 
+    <!-- Filters and Search -->
+    <div id="filterPanel" class="controls-section" style="display: none; margin-bottom: 1.125rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem;">
+            <div class="controls-header" style="margin: 0; padding: 0; border: none;">Search & Filters</div>
+            <button id="clearFilters" style="padding: 0.2812rem 0.5625rem; background-color: #f9fafb; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Clear All</button>
+        </div>
+    
+    <!-- Compact Filter Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5.2734rem, 1fr)); gap: 0.375rem; align-items: end; width: 100%;">
+        <!-- Scorecard Selector -->
+        <div>
+            <label for="scorecardSelector" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Scorecard</label>
+            <select id="scorecardSelector" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">Loading scorecards...</option>
+            </select>
+        </div>
+        
+        <!-- General Search -->
+        <div>
+            <label for="searchInput" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Search</label>
+            <input type="text" id="searchInput" placeholder="Search audits..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Auditor Name -->
+        <div>
+            <label for="auditorNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Auditor</label>
+            <input type="text" id="auditorNameFilter" placeholder="Auditor name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Employee Name -->
+        <div>
+            <label for="employeeNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Employee</label>
+            <input type="text" id="employeeNameFilter" placeholder="Employee name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Audit Type -->
+        <div>
+            <label for="auditTypeFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Type</label>
+            <select id="auditTypeFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Types</option>
+                <option value="Routine Audit (Recorded)">Routine (Recorded)</option>
+                <option value="Focused Audit (Recorded)">Focused (Recorded)</option>
+                <option value="Focused Audit (Live)">Focused (Live)</option>
+                <option value="Evaluation and Feedback">Evaluation</option>
+            </select>
+        </div>
+        
+        <!-- Status -->
+        <div>
+            <label for="statusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Status</label>
+            <select id="statusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Statuses</option>
+                <option value="Passed">Passed</option>
+                <option value="Not Passed">Not Passed</option>
+            </select>
+        </div>
+        
+        <!-- Quarter -->
+        <div>
+            <label for="quarterFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Quarter</label>
+            <select id="quarterFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Quarters</option>
+                <option value="Q1">Q1</option>
+                <option value="Q2">Q2</option>
+                <option value="Q3">Q3</option>
+                <option value="Q4">Q4</option>
+            </select>
+        </div>
+        
+        <!-- Channel -->
+        <div>
+            <label for="channelFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Channel</label>
+            <select id="channelFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Channels</option>
+                <option value="FN Chat CFD">FN Chat CFD</option>
+                <option value="FN Chat Futures">FN Chat Futures</option>
+                <option value="FN Email">FN Email</option>
+                <option value="Regular PSTF">Regular PSTF</option>
+                <option value="Advance PSTF">Advance PSTF</option>
+                <option value="PO + Ticket">PO + Ticket</option>
+                <option value="CPM Email">CPM Email</option>
+                <option value="B.Dev Email">B.Dev Email</option>
+                <option value="MKT Social Media Comments">MKT Social Media</option>
+            </select>
+        </div>
+        
+        <!-- Employee Type -->
+        <div>
+            <label for="employeeTypeFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Emp Type</label>
+            <select id="employeeTypeFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Types</option>
+                <option value="Employee">Employee</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Manager">Manager</option>
+            </select>
+        </div>
+        
+        <!-- Country -->
+        <div>
+            <label for="countryFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Country</label>
+            <select id="countryFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Countries</option>
+                <option value="Bangladesh">Bangladesh</option>
+                <option value="Sri Lanka">Sri Lanka</option>
+            </select>
+        </div>
+        
+        <!-- Interaction ID -->
+        <div>
+            <label for="interactionIdFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Interaction ID</label>
+            <input type="text" id="interactionIdFilter" placeholder="Interaction ID..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Week -->
+        <div>
+            <label for="weekFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Week</label>
+            <input type="number" id="weekFilter" min="1" max="52" placeholder="Week (1-52)..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Min Score -->
+        <div>
+            <label for="minScoreFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Min Score</label>
+            <input type="number" id="minScoreFilter" min="0" max="100" placeholder="Min %..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Max Score -->
+        <div>
+            <label for="maxScoreFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Max Score</label>
+            <input type="number" id="maxScoreFilter" min="0" max="100" placeholder="Max %..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Min Errors -->
+        <div>
+            <label for="minErrorsFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Min Errors</label>
+            <input type="number" id="minErrorsFilter" min="0" placeholder="Min errors..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Max Errors -->
+        <div>
+            <label for="maxErrorsFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Max Errors</label>
+            <input type="number" id="maxErrorsFilter" min="0" placeholder="Max errors..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- From Date -->
+        <div>
+            <label for="dateFromFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">From Date</label>
+            <input type="date" id="dateFromFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- To Date -->
+        <div>
+            <label for="dateToFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">To Date</label>
+            <input type="date" id="dateToFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+        </div>
+        
+        <!-- Validation Status -->
+        <div>
+            <label for="validationStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Validation</label>
+            <select id="validationStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Validation</option>
+                <option value="Validated">Validated</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+        
+        <!-- Employee Pre Status -->
+        <div>
+            <label for="agentPreStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Pre Status</label>
+            <select id="agentPreStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Pre Status</option>
+                <option value="No active quality concerns">No concerns</option>
+                <option value="Pre-Quality">Pre-Quality</option>
+                <option value="Quality Concern">Quality Concern</option>
+                <option value="Performance Improvement Plan (PIP)">PIP</option>
+                <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
+                <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
+            </select>
+        </div>
+        
+        <!-- Employee Post Status -->
+        <div>
+            <label for="agentPostStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Post Status</label>
+            <select id="agentPostStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Post Status</option>
+                <option value="No active quality concerns">No concerns</option>
+                <option value="Pre-Quality">Pre-Quality</option>
+                <option value="Quality Concern">Quality Concern</option>
+                <option value="Performance Improvement Plan (PIP)">PIP</option>
+                <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
+                <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
+            </select>
+        </div>
+    </div>
+</div>
+
     <div class="expert-audits-container" style="margin-top: 0;">
         <!-- Statistics Overview - Enhanced CX Metrics -->
         <div class="kpi-grid">
@@ -499,202 +695,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Filters and Search -->
-        <div id="filterPanel" class="controls-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem;">
-                <div class="controls-header" style="margin: 0; padding: 0; border: none;">Search & Filters</div>
-                <button id="clearFilters" style="padding: 0.2812rem 0.5625rem; background-color: #f9fafb; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Clear All</button>
-            </div>
-        
-        <!-- Compact Filter Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5.2734rem, 1fr)); gap: 0.375rem; align-items: end; width: 100%;">
-            <!-- Scorecard Selector -->
-            <div>
-                <label for="scorecardSelector" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Scorecard</label>
-                <select id="scorecardSelector" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">Loading scorecards...</option>
-                </select>
-            </div>
-            
-            <!-- General Search -->
-            <div>
-                <label for="searchInput" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Search</label>
-                <input type="text" id="searchInput" placeholder="Search audits..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Auditor Name -->
-            <div>
-                <label for="auditorNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Auditor</label>
-                <input type="text" id="auditorNameFilter" placeholder="Auditor name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Employee Name -->
-            <div>
-                <label for="employeeNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Employee</label>
-                <input type="text" id="employeeNameFilter" placeholder="Employee name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Audit Type -->
-            <div>
-                <label for="auditTypeFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Type</label>
-                <select id="auditTypeFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Types</option>
-                    <option value="Routine Audit (Recorded)">Routine (Recorded)</option>
-                    <option value="Focused Audit (Recorded)">Focused (Recorded)</option>
-                    <option value="Focused Audit (Live)">Focused (Live)</option>
-                    <option value="Evaluation and Feedback">Evaluation</option>
-                </select>
-            </div>
-            
-            <!-- Status -->
-            <div>
-                <label for="statusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Status</label>
-                <select id="statusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Statuses</option>
-                    <option value="Passed">Passed</option>
-                    <option value="Not Passed">Not Passed</option>
-                </select>
-            </div>
-            
-            <!-- Quarter -->
-            <div>
-                <label for="quarterFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Quarter</label>
-                <select id="quarterFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Quarters</option>
-                    <option value="Q1">Q1</option>
-                    <option value="Q2">Q2</option>
-                    <option value="Q3">Q3</option>
-                    <option value="Q4">Q4</option>
-                </select>
-            </div>
-            
-            <!-- Channel -->
-            <div>
-                <label for="channelFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Channel</label>
-                <select id="channelFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Channels</option>
-                    <option value="FN Chat CFD">FN Chat CFD</option>
-                    <option value="FN Chat Futures">FN Chat Futures</option>
-                    <option value="FN Email">FN Email</option>
-                    <option value="Regular PSTF">Regular PSTF</option>
-                    <option value="Advance PSTF">Advance PSTF</option>
-                    <option value="PO + Ticket">PO + Ticket</option>
-                    <option value="CPM Email">CPM Email</option>
-                    <option value="B.Dev Email">B.Dev Email</option>
-                    <option value="MKT Social Media Comments">MKT Social Media</option>
-                </select>
-            </div>
-            
-            <!-- Employee Type -->
-            <div>
-                <label for="employeeTypeFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Emp Type</label>
-                <select id="employeeTypeFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Types</option>
-                    <option value="Employee">Employee</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Manager">Manager</option>
-                </select>
-            </div>
-            
-            <!-- Country -->
-            <div>
-                <label for="countryFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Country</label>
-                <select id="countryFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Countries</option>
-                    <option value="Bangladesh">Bangladesh</option>
-                    <option value="Sri Lanka">Sri Lanka</option>
-                </select>
-            </div>
-            
-            <!-- Interaction ID -->
-            <div>
-                <label for="interactionIdFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Interaction ID</label>
-                <input type="text" id="interactionIdFilter" placeholder="Interaction ID..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Week -->
-            <div>
-                <label for="weekFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Week</label>
-                <input type="number" id="weekFilter" min="1" max="52" placeholder="Week (1-52)..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Min Score -->
-            <div>
-                <label for="minScoreFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Min Score</label>
-                <input type="number" id="minScoreFilter" min="0" max="100" placeholder="Min %..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Max Score -->
-            <div>
-                <label for="maxScoreFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Max Score</label>
-                <input type="number" id="maxScoreFilter" min="0" max="100" placeholder="Max %..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Min Errors -->
-            <div>
-                <label for="minErrorsFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Min Errors</label>
-                <input type="number" id="minErrorsFilter" min="0" placeholder="Min errors..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Max Errors -->
-            <div>
-                <label for="maxErrorsFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Max Errors</label>
-                <input type="number" id="maxErrorsFilter" min="0" placeholder="Max errors..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- From Date -->
-            <div>
-                <label for="dateFromFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">From Date</label>
-                <input type="date" id="dateFromFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- To Date -->
-            <div>
-                <label for="dateToFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">To Date</label>
-                <input type="date" id="dateToFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-            </div>
-            
-            <!-- Validation Status -->
-            <div>
-                <label for="validationStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Validation</label>
-                <select id="validationStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Validation</option>
-                    <option value="Validated">Validated</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-            </div>
-            
-            <!-- Employee Pre Status -->
-            <div>
-                <label for="agentPreStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Pre Status</label>
-                <select id="agentPreStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Pre Status</option>
-                    <option value="No active quality concerns">No concerns</option>
-                    <option value="Pre-Quality">Pre-Quality</option>
-                    <option value="Quality Concern">Quality Concern</option>
-                    <option value="Performance Improvement Plan (PIP)">PIP</option>
-                    <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
-                    <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
-                </select>
-            </div>
-            
-            <!-- Employee Post Status -->
-            <div>
-                <label for="agentPostStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Post Status</label>
-                <select id="agentPostStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
-                    <option value="">All Post Status</option>
-                    <option value="No active quality concerns">No concerns</option>
-                    <option value="Pre-Quality">Pre-Quality</option>
-                    <option value="Quality Concern">Quality Concern</option>
-                    <option value="Performance Improvement Plan (PIP)">PIP</option>
-                    <option value="Performance Improvement Plan (PIP) - Alert">PIP Alert</option>
-                    <option value="Performance Improvement Plan (PIP) - Priority">PIP Priority</option>
-                </select>
-            </div>
-        </div>
-    </div>
 
     <!-- Audit List -->
     <div id="auditList" style="display: flex; flex-direction: column; gap: 0.5625rem; width: 100%;">
@@ -973,16 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Export button - use existing export functionality
-        const exportBtn = document.getElementById('exportBtn');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', function() {
-                const exportFiltersBtn = document.getElementById('exportFilters');
-                if (exportFiltersBtn) {
-                    exportFiltersBtn.click();
-                }
-            });
-        }
+        // Export button functionality is handled below in the export functionality section
     }
     
     // Setup listeners when DOM is ready
@@ -1991,12 +1982,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create card element
         const cardHtml = `
-            <div class="audit-card" style="background: #f9fafb; border: 0.0469rem solid ${isReversalPending ? '#fbbf24' : '#e5e7eb'}; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer;" 
+            <div class="audit-card" style="background: #f9fafb; border: 0.0469rem solid ${isReversalPending ? '#fbbf24' : '#e5e7eb'}; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer; position: relative;" 
                  onclick="viewAuditDetails('${audit.id}')"
                  onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='#ffffff';"
                  onmouseleave="this.style.borderColor='${isReversalPending ? '#fbbf24' : '#e5e7eb'}'; this.style.backgroundColor='#f9fafb';">
                 
-                <div style="flex: 1; display: flex; align-items: center; gap: 0.5625rem;">
+                <div style="flex: 1; display: flex; align-items: center; gap: 0.5625rem; pointer-events: none;">
                     <!-- Avatar with initials -->
                     <div style="width: 1.875rem; height: 1.875rem; border-radius: 0.1875rem; background: ${statusColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.6562rem; flex-shrink: 0;">
                         ${getInitials(audit.employeeName || 'Unknown')}
@@ -2042,7 +2033,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <!-- Action buttons -->
-                <div style="display: flex; gap: 0.375rem; flex-shrink: 0; align-items: center;">
+                <div style="display: flex; gap: 0.375rem; flex-shrink: 0; align-items: center; pointer-events: auto;">
                     ${acknowledgmentStatusChip}
                     <button 
                         onclick="event.stopPropagation(); viewAuditDetails('${audit.id}')"
@@ -2399,7 +2390,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Export functionality
-    document.getElementById('exportFilters').addEventListener('click', function() {
+    const exportBtnEl = document.getElementById('exportBtn');
+    if (exportBtnEl) {
+        exportBtnEl.addEventListener('click', function() {
         if (filteredAudits.length === 0) {
             alert('No audits to export. Please adjust your filters.');
             return;
@@ -2447,7 +2440,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    });
+        });
+    }
     
     // View audit details
     window.viewAuditDetails = function(auditId) {

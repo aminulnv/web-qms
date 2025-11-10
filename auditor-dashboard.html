@@ -19,6 +19,125 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <style>
+        .header-actions {
+            display: flex;
+            gap: 0.5625rem;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4688rem 0.75rem;
+            background-color: var(--background-white);
+            color: var(--text-color);
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.375rem;
+            font-size: 0.6562rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+        }
+
+        .action-btn:hover {
+            background-color: var(--gray-50);
+            border-color: var(--primary-color);
+        }
+
+        .action-btn.active {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .action-btn svg {
+            width: 0.75rem;
+            height: 0.75rem;
+        }
+
+        /* Date Range Picker */
+        .date-picker-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .date-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.375rem;
+            background: var(--background-white);
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.375rem;
+            box-shadow: var(--shadow-lg);
+            padding: 0.75rem;
+            z-index: 1000;
+            min-width: 9.8438rem;
+        }
+
+        .date-dropdown-menu.active {
+            display: block;
+        }
+
+        /* Filter Dropdown */
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 0.375rem);
+            left: 0;
+            background: var(--background-white);
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.375rem;
+            box-shadow: var(--shadow-lg);
+            padding: 0.75rem;
+            z-index: 1000;
+            min-width: 20rem;
+            max-width: 90vw;
+        }
+
+        .filter-dropdown-menu.active {
+            display: block;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .filter-label {
+            font-size: 0.5625rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.375rem 0.5625rem;
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.2812rem;
+            font-size: 0.6562rem;
+            font-family: var(--font-family);
+            background-color: var(--background-white);
+            color: var(--text-color);
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+    </style>
 
 </head>
 
@@ -26,10 +145,7 @@
 <!-- Sidebar will be loaded dynamically by load-sidebar.js -->
  <main class="main-content" role="main">
     <p class="page-heading">Auditor's Dashboard</p>
-    <div style="margin-bottom: 1.125rem;"></div>
-
-
-<!-- page content here -->
+    <div style="margin-bottom: 1.125rem; width: 100%;"></div>
 
         
             <!-- Tab Navigation -->
@@ -38,6 +154,107 @@
                 <button style="flex: 1; padding: 0.375rem 0.75rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .6rem;" class="active" onclick="switchTab(this, 0)">Team Stats</button>
                 <button style="flex: 1; padding: 0.375rem 0.75rem; text-align: center; cursor: pointer; background: none; border: none; color: #ffffff; font-weight: 700; transition: color 0.2s ease; z-index: 2; position: relative; font-family: var(--font-family); font-size: .6rem;" onclick="switchTab(this, 1)">Standup View</button>
             </div>
+
+    <!-- Action Buttons -->
+    <div class="header-actions" style="margin-top: 1.125rem; margin-bottom: 1.125rem; justify-content: center;">
+        <!-- Week Navigation -->
+        <div style="display: flex; align-items: center; gap: 0.5625rem;">
+            <button class="action-btn" id="prevWeekBtn" style="padding: 0.4688rem 0.5625rem;" title="Previous Week">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <div class="action-btn" id="weekDisplay" style="padding: 0.4688rem 0.75rem; cursor: default; background-color: var(--primary-color); color: var(--white); border-color: var(--primary-color);">
+                <span id="weekText">Week -</span>
+            </div>
+            <button class="action-btn" id="nextWeekBtn" style="padding: 0.4688rem 0.5625rem;" title="Next Week">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.75rem; height: 0.75rem;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+        <!-- Date Range Picker -->
+        <div class="date-picker-dropdown">
+            <button class="action-btn" id="dateBtn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span id="dateBtnText">Date Range</span>
+                <svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div class="date-dropdown-menu" id="dateDropdown">
+                <div class="filter-group">
+                    <label class="filter-label">Start Date</label>
+                    <input type="date" class="filter-input" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">End Date</label>
+                    <input type="date" class="filter-input" id="endDate">
+                </div>
+                <div style="display: flex; gap: 0.375rem; margin-top: 0.375rem;">
+                    <button class="action-btn" style="flex: 1;" onclick="applyDateFilter()">Apply</button>
+                    <button class="action-btn" style="flex: 1;" onclick="clearDateFilter()">Clear</button>
+                </div>
+            </div>
+        </div>
+        <div class="filter-dropdown">
+            <button class="action-btn" id="filterBtn">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                <span>Filter</span>
+            </button>
+            <!-- Filter Dropdown Menu -->
+            <div class="filter-dropdown-menu" id="filterDropdown">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem; padding-bottom: 0.375rem; border-bottom: 0.0469rem solid #e5e7eb;">
+                    <div style="font-size: 0.6562rem; font-weight: 600; color: #1A733E;">Filters</div>
+                    <button onclick="clearFilters()" style="padding: 0.2812rem 0.5625rem; background-color: #f9fafb; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; cursor: pointer;">Clear All</button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem;">
+                    <!-- Status Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-input" id="statusFilter" onchange="applyFilters()">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <!-- Channel Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">Channel</label>
+                        <select class="filter-input" id="channelFilter" onchange="applyFilters()">
+                            <option value="">All Channels</option>
+                        </select>
+                    </div>
+                    <!-- Auditor Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">Auditor</label>
+                        <select class="filter-input" id="auditorFilter" onchange="applyFilters()">
+                            <option value="">All Auditors</option>
+                        </select>
+                    </div>
+                    <!-- Employee Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">Employee</label>
+                        <select class="filter-input" id="employeeFilter" onchange="applyFilters()">
+                            <option value="">All Employees</option>
+                        </select>
+                    </div>
+                    <!-- Scorecard Filter -->
+                    <div class="filter-group">
+                        <label class="filter-label">Scorecard</label>
+                        <select class="filter-input" id="scorecardFilter" onchange="applyFilters()">
+                            <option value="">All Scorecards</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
             <!-- stat Cards -->
             <div id="statsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 1.125rem; margin-bottom: 1.5rem; width: 100%;">
@@ -71,45 +288,6 @@
                 </div>
             </div>
 
-            <!-- Filters Section -->
-            <div style="margin-bottom: 1.5rem; text-align: left;">
-                <button id="filterToggleBtn" onclick="toggleFilters()" onmouseover="this.style.backgroundColor='var(--dark-forest)'" onmouseout="this.style.backgroundColor='var(--primary-color)'" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.2812rem 0.5625rem; background-color: var(--primary-color); color: var(--white); border: 0.0469rem solid var(--primary-color); border-radius: 0.2812rem; font-weight: 500; font-size: 0.6562rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 0.0469rem 0.0938rem 0 rgba(0, 0, 0, 0.05);">
-                    <svg style="width: 0.75rem; height: 0.75rem; color: var(--white);" xmlns="http://www.w3.org/2000/svg" height="1.125rem" viewBox="0 -960 960 960" width="1.125rem" fill="currentColor">
-                        <path d="M440-160q-17 0-28.5-11.5T400-200v-240L168-736q-15-20-4.5-42t36.5-22h560q26 0 36.5 22t-4.5 42L560-440v240q0 17-11.5 28.5T520-160h-80Zm40-308 198-252H282l198 252Zm0 0Z"/>
-                    </svg>
-                    Filters
-                </button>
-            </div>
-
-            <!-- Filter Panel -->
-            <div id="filterPanel" style="display: none; background: #f9fafb; border: 0.0469rem solid #e5e7eb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 1.5rem;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(7.0312rem, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
-                    <div id="statusFilterContainer" style="display: flex; flex-direction: column;">
-                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.1875rem;">Status</label>
-                        <select id="statusFilter" onchange="applyFilters()" style="padding: 0.2812rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif;">
-                            <option value="">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                    <div id="channelFilterContainer" style="display: flex; flex-direction: column;">
-                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.1875rem;">Channel</label>
-                        <select id="channelFilter" onchange="applyFilters()" style="padding: 0.2812rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif;">
-                            <option value="">All Channels</option>
-                        </select>
-                    </div>
-                    <div id="weekFilterContainer" style="display: flex; flex-direction: column;">
-                        <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; margin-bottom: 0.1875rem;">Week</label>
-                        <input type="number" id="weekFilter" min="1" max="52" placeholder="Filter by week" onchange="applyFilters()" style="padding: 0.2812rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif;">
-                    </div>
-                </div>
-                <div style="display: flex; gap: 0.375rem;">
-                    <button onclick="clearFilters()" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'" style="padding: 0.2812rem 0.5625rem; background: #6b7280; color: white; border: none; border-radius: 0.1875rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.2s;">
-                        Clear Filters
-                    </button>
-                </div>
-            </div>
 
             <!-- Data Table -->
             <div id="performanceTable" style="background-color: var(--white); border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 80%; width: fit-content; min-width: 100%;">
@@ -147,8 +325,15 @@ let allUsers = [];
 let currentFilters = {
     status: '',
     channel: '',
-    week: ''
+    auditor: '',
+    employee: '',
+    scorecard: ''
 };
+let allScorecards = [];
+let currentWeek = null;
+let currentWeekYear = null;
+let dateFilter = { start: null, end: null };
+let useWeekFilter = true;
 
 // ============================================================================
 // Initialize Page
@@ -181,8 +366,15 @@ async function initializeDashboard() {
             return;
         }
 
+        // Initialize week filter
+        initializeWeekFilter();
+        setupEventListeners();
+
         // Load all users for lookups
         await loadAllUsers();
+        
+        // Load scorecards for filter
+        await loadScorecards();
         
         // Load assignments and update dashboard
         await loadAssignments();
@@ -193,19 +385,164 @@ async function initializeDashboard() {
 }
 
 // ============================================================================
+// Cache Helper Functions
+// ============================================================================
+function getCacheKey(prefix, userEmail, period = null) {
+    const periodKey = period ? `${period.start}_${period.end}` : 'default';
+    return `auditor_dashboard_cache_${prefix}_${userEmail}_${periodKey}`;
+}
+
+function getCachedData(cacheKey) {
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (!cached) return null;
+        
+        const { data, timestamp } = JSON.parse(cached);
+        return data;
+    } catch (e) {
+        console.warn('Error reading cache:', e);
+        return null;
+    }
+}
+
+function setCachedData(cacheKey, data) {
+    try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        console.warn('Error writing cache:', e);
+        // If storage is full, clear old cache entries
+        if (e.name === 'QuotaExceededError') {
+            clearOldCache();
+            // Try once more
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data,
+                    timestamp: Date.now()
+                }));
+            } catch (e2) {
+                console.error('Failed to cache after cleanup:', e2);
+            }
+        }
+    }
+}
+
+function clearOldCache() {
+    try {
+        const keys = Object.keys(localStorage);
+        const cacheKeys = keys.filter(k => k.startsWith('auditor_dashboard_cache_'));
+        
+        // Keep only the most recent cache for each prefix/user combination
+        const cacheGroups = {};
+        cacheKeys.forEach(key => {
+            const parts = key.split('_');
+            if (parts.length >= 5) {
+                const prefix = parts[3];
+                const userEmail = parts[4];
+                const groupKey = `${prefix}_${userEmail}`;
+                if (!cacheGroups[groupKey]) {
+                    cacheGroups[groupKey] = [];
+                }
+                cacheGroups[groupKey].push(key);
+            }
+        });
+        
+        // For each group, keep only the most recent entry
+        Object.values(cacheGroups).forEach(group => {
+            if (group.length > 1) {
+                // Sort by timestamp and keep only the newest
+                const withTimestamps = group.map(key => {
+                    try {
+                        const cached = localStorage.getItem(key);
+                        if (cached) {
+                            const { timestamp } = JSON.parse(cached);
+                            return { key, timestamp };
+                        }
+                    } catch (e) {
+                        return { key, timestamp: 0 };
+                    }
+                }).sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Remove all but the newest
+                withTimestamps.slice(1).forEach(({ key }) => {
+                    localStorage.removeItem(key);
+                });
+            }
+        });
+    } catch (e) {
+        console.warn('Error clearing old cache:', e);
+    }
+}
+
+function invalidateAuditorDashboardCache(userEmail = null) {
+    try {
+        const keys = Object.keys(localStorage);
+        const cacheKeys = keys.filter(k => k.startsWith('auditor_dashboard_cache_'));
+        
+        if (userEmail) {
+            // Invalidate only for specific user
+            cacheKeys.forEach(key => {
+                if (key.includes(userEmail)) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } else {
+            // Invalidate all auditor dashboard cache
+            cacheKeys.forEach(key => localStorage.removeItem(key));
+        }
+    } catch (e) {
+        console.warn('Error invalidating cache:', e);
+    }
+}
+
+// Get current period dates (week or date range)
+function getCurrentPeriodDates() {
+    if (dateFilter.start || dateFilter.end) {
+        // Using date range filter
+        return {
+            start: dateFilter.start ? new Date(dateFilter.start) : new Date(0),
+            end: dateFilter.end ? new Date(dateFilter.end) : new Date()
+        };
+    } else if (useWeekFilter && currentWeek !== null) {
+        // Using week filter
+        return getWeekDates(currentWeek, currentWeekYear);
+    } else {
+        // Default to current week
+        const today = new Date();
+        return getWeekDates(getWeekNumber(today), today.getFullYear());
+    }
+}
+
+// ============================================================================
 // Load Data
 // ============================================================================
 async function loadAllUsers() {
     try {
-        const { data, error } = await window.supabaseClient
-            .from('users')
-            .select('email, name, role, channel, quality_supervisor')
-            .eq('is_active', true);
+        // Use sessionStorage cache for users (5 minutes cache, same as home.html)
+        const cachedUsers = sessionStorage.getItem('cachedUsers');
+        const cachedUsersTime = sessionStorage.getItem('cachedUsersTime');
+        const cacheAge = cachedUsersTime ? Date.now() - parseInt(cachedUsersTime) : Infinity;
         
-        if (error) throw error;
-        
-        allUsers = data || [];
-        console.log(`Loaded ${allUsers.length} users`);
+        if (cachedUsers && cacheAge < 300000) { // 5 minutes cache
+            allUsers = JSON.parse(cachedUsers);
+            console.log(`Loaded ${allUsers.length} users from cache`);
+        } else {
+            const { data, error } = await window.supabaseClient
+                .from('users')
+                .select('email, name, role, channel, quality_supervisor')
+                .eq('is_active', true);
+            
+            if (error) throw error;
+            
+            allUsers = data || [];
+            console.log(`Loaded ${allUsers.length} users`);
+            
+            // Cache users in sessionStorage
+            sessionStorage.setItem('cachedUsers', JSON.stringify(allUsers));
+            sessionStorage.setItem('cachedUsersTime', Date.now().toString());
+        }
         
     } catch (error) {
         console.error('Error loading users:', error);
@@ -213,7 +550,74 @@ async function loadAllUsers() {
     }
 }
 
+async function loadScorecards() {
+    try {
+        const cacheKey = getCacheKey('scorecards', currentUserEmail, null);
+        
+        // Check cache first and render immediately
+        const cachedScorecards = getCachedData(cacheKey);
+        if (cachedScorecards) {
+            console.log('Rendering cached scorecards immediately');
+            allScorecards = cachedScorecards;
+            populateScorecardFilter();
+        }
+        
+        // Always fetch fresh data in background
+        const { data, error } = await window.supabaseClient
+            .from('scorecards')
+            .select('id, name')
+            .eq('is_active', true)
+            .order('name', { ascending: true });
+        
+        if (error) throw error;
+        
+        allScorecards = data || [];
+        
+        // Cache the fresh data
+        setCachedData(cacheKey, allScorecards);
+        
+        // Update UI with fresh data
+        console.log('Updating UI with fresh scorecards');
+        populateScorecardFilter();
+        
+    } catch (error) {
+        console.error('Error loading scorecards:', error);
+        allScorecards = [];
+    }
+}
+
 async function loadAssignments() {
+    try {
+        const period = getCurrentPeriodDates();
+        const cacheKey = getCacheKey('assignments', currentUserEmail, period);
+        
+        // Check cache first and render immediately
+        const cachedAssignments = getCachedData(cacheKey);
+        if (cachedAssignments) {
+            console.log('Rendering cached assignments immediately');
+            allAssignments = cachedAssignments;
+            unfilteredAssignments = [...allAssignments];
+            
+            // Populate filters
+            populateChannelFilter();
+            populateAuditorFilter();
+            populateEmployeeFilter();
+            
+            // Update dashboard based on current tab
+            await updateDashboard();
+        }
+        
+        // Always fetch fresh data in background
+        fetchAndCacheAssignments(cacheKey, period);
+        
+    } catch (error) {
+        console.error('Error loading assignments:', error);
+        allAssignments = [];
+        unfilteredAssignments = [];
+    }
+}
+
+async function fetchAndCacheAssignments(cacheKey, period) {
     try {
         const { data, error } = await window.supabaseClient
             .from('audit_assignments')
@@ -227,14 +631,20 @@ async function loadAssignments() {
         unfilteredAssignments = [...allAssignments]; // Store unfiltered copy
         console.log(`Loaded ${allAssignments.length} assignments`);
         
-        // Populate channel filter
-        populateChannelFilter();
+        // Cache the fresh data
+        setCachedData(cacheKey, allAssignments);
         
-        // Update dashboard based on current tab
+        // Populate filters
+        populateChannelFilter();
+        populateAuditorFilter();
+        populateEmployeeFilter();
+        
+        // Update UI with fresh data
+        console.log('Updating UI with fresh assignments');
         await updateDashboard();
         
     } catch (error) {
-        console.error('Error loading assignments:', error);
+        console.error('Error fetching assignments:', error);
         allAssignments = [];
         unfilteredAssignments = [];
     }
@@ -256,6 +666,22 @@ async function updateDashboard() {
 // Note: updateYourStats() function has been moved to create-audit.html
 
 async function updateTeamStats() {
+    const period = getCurrentPeriodDates();
+    const filterKey = JSON.stringify(currentFilters);
+    const cacheKey = getCacheKey('teamStats', currentUserEmail, period) + '_' + btoa(filterKey).slice(0, 20);
+    
+    // Check cache first and render immediately
+    const cachedStats = getCachedData(cacheKey);
+    if (cachedStats) {
+        console.log('Rendering cached team stats immediately');
+        renderTeamStats(cachedStats);
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheTeamStats(cacheKey, period);
+}
+
+async function fetchAndCacheTeamStats(cacheKey, period) {
     // Get all Quality Analysts (auditors)
     const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
     
@@ -409,68 +835,6 @@ async function updateTeamStats() {
         
         console.log('Team Stats - Reversal count:', teamReversalCount);
         
-        // Show the 4th and 6th stat cards (in case they were hidden in standup view)
-        const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
-        if (stat4Card) {
-            stat4Card.style.display = 'flex';
-            // Remove progress bar if it exists
-            const progressBar = stat4Card.querySelector('.progress-bar-container');
-            if (progressBar) progressBar.remove();
-        }
-        
-        const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
-        if (stat6Card) {
-            stat6Card.style.display = 'flex';
-        }
-        
-        // Reset 3rd card label to REMAINING and remove progress bar
-        const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
-        if (remainingCard) {
-            const label = remainingCard.querySelector('div[style*="font-size: 0.6562rem"]');
-            if (label) label.textContent = 'REMAINING';
-            
-            // Remove progress bar if it exists
-            const progressBar = remainingCard.querySelector('.progress-bar-container');
-            if (progressBar) progressBar.remove();
-        }
-        
-        // Update stat cards with team stats
-        document.getElementById('stat1Label').textContent = 'ASSIGNED';
-        document.getElementById('stat1Count').textContent = totalAssigned;
-        document.getElementById('completedCount').textContent = completed;
-        document.getElementById('targetAchieved').textContent = `${percentage}% Team Target Achieved`;
-        
-        const remainingCount = document.getElementById('remainingCount');
-        remainingCount.style.fontSize = '2.625rem';
-        remainingCount.textContent = remaining;
-        
-        document.getElementById('stat4Label').textContent = 'IN PROGRESS';
-        const stat4Count = document.getElementById('stat4Count');
-        stat4Count.style.fontSize = '2.625rem';
-        stat4Count.textContent = inProgress;
-        document.getElementById('stat4Subtitle').textContent = `${qualityAnalysts.length} auditor${qualityAnalysts.length !== 1 ? 's' : ''}`;
-        document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
-        document.getElementById('stat5Count').textContent = teamReversalCount;
-        document.getElementById('stat5Subtitle').textContent = '';
-        document.getElementById('stat6Label').textContent = 'AVG DURATION';
-        document.getElementById('stat6Count').textContent = avgDurationText;
-        document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
-        
-        // Update table header
-        const tableHeader = document.getElementById('tableHeader');
-        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr)';
-        tableHeader.style.display = 'grid';
-        tableHeader.style.gap = '0.75rem';
-        tableHeader.style.alignItems = 'center';
-        tableHeader.innerHTML = `
-            <div>Name</div>
-            <div>Assigned</div>
-            <div>Completed</div>
-            <div>Remaining</div>
-            <div>Avg Duration</div>
-            <div>Progress Meter</div>
-        `;
-        
         // Calculate stats for each Quality Analyst
         const auditorStats = [];
         for (const qa of qualityAnalysts) {
@@ -574,31 +938,154 @@ async function updateTeamStats() {
             return a.name.localeCompare(b.name);
         });
         
-        // Update table with all Quality Analysts
-        const tableBody = document.getElementById('performanceTableBody');
-        tableBody.innerHTML = auditorStats.map(stats => `
-            <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
-                <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Name">
-                    ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.5625rem;">(You)</span>' : ''}
-                </div>
-                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
-                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
-                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
-                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Avg Duration">${stats.avgDuration}</div>
-                <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage}%</span>
-                        <div style="flex: 1; height: 0.5625rem; background-color: var(--dark-forest); border-radius: 0.2812rem; overflow: hidden; position: relative;">
-                            <div style="height: 100%; background: var(--success-color); border-radius: 0.2812rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        // Cache the computed stats
+        const statsData = {
+            totalAssigned,
+            completed,
+            inProgress,
+            pending,
+            remaining,
+            percentage,
+            avgDurationText,
+            avgDurationSubtitle,
+            teamReversalCount,
+            auditorStats,
+            qualityAnalystsCount: qualityAnalysts.length
+        };
+        setCachedData(cacheKey, statsData);
+        
+        // Update UI with fresh data
+        console.log('Updating UI with fresh team stats');
+        renderTeamStats(statsData);
         
     } catch (error) {
         console.error('Error loading team stats:', error);
     }
+}
+
+function renderTeamStats(statsData) {
+    const {
+        totalAssigned,
+        completed,
+        inProgress,
+        remaining,
+        percentage,
+        avgDurationText,
+        avgDurationSubtitle,
+        teamReversalCount,
+        auditorStats,
+        qualityAnalystsCount
+    } = statsData;
+    
+    // Get all Quality Analysts (auditors)
+    const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
+    const qualityAnalystsLength = qualityAnalystsCount || qualityAnalysts.length;
+    
+    if (qualityAnalysts.length === 0) {
+        const tableBody = document.getElementById('performanceTableBody');
+        tableBody.innerHTML = `
+            <div style="text-align: center; padding: 1.5rem; color: #6b7280;">
+                No Quality Analysts found in the system.
+            </div>
+        `;
+        
+        // Reset stats
+        document.getElementById('stat1Label').textContent = 'ASSIGNED';
+        document.getElementById('stat1Count').textContent = '0';
+        document.getElementById('completedCount').textContent = '0';
+        document.getElementById('targetAchieved').textContent = '-';
+        document.getElementById('remainingCount').textContent = '0';
+        document.getElementById('stat4Label').textContent = 'IN PROGRESS';
+        document.getElementById('stat4Count').textContent = '0';
+        document.getElementById('stat4Subtitle').textContent = '-';
+        document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
+        document.getElementById('stat5Count').textContent = '0';
+        return;
+    }
+    
+    // Show the 4th and 6th stat cards (in case they were hidden in standup view)
+    const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat4Card) {
+        stat4Card.style.display = 'flex';
+        // Remove progress bar if it exists
+        const progressBar = stat4Card.querySelector('.progress-bar-container');
+        if (progressBar) progressBar.remove();
+    }
+    
+    const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat6Card) {
+        stat6Card.style.display = 'flex';
+    }
+    
+    // Reset 3rd card label to REMAINING and remove progress bar
+    const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
+    if (remainingCard) {
+        const label = remainingCard.querySelector('div[style*="font-size: 0.6562rem"]');
+        if (label) label.textContent = 'REMAINING';
+        
+        // Remove progress bar if it exists
+        const progressBar = remainingCard.querySelector('.progress-bar-container');
+        if (progressBar) progressBar.remove();
+    }
+    
+    // Update stat cards with team stats
+    document.getElementById('stat1Label').textContent = 'ASSIGNED';
+    document.getElementById('stat1Count').textContent = totalAssigned;
+    document.getElementById('completedCount').textContent = completed;
+    document.getElementById('targetAchieved').textContent = `${percentage}% Team Target Achieved`;
+    
+    const remainingCount = document.getElementById('remainingCount');
+    remainingCount.style.fontSize = '2.625rem';
+    remainingCount.textContent = remaining;
+    
+    document.getElementById('stat4Label').textContent = 'IN PROGRESS';
+    const stat4Count = document.getElementById('stat4Count');
+    stat4Count.style.fontSize = '2.625rem';
+    stat4Count.textContent = inProgress;
+    document.getElementById('stat4Subtitle').textContent = `${qualityAnalystsLength} auditor${qualityAnalystsLength !== 1 ? 's' : ''}`;
+    document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
+    document.getElementById('stat5Count').textContent = teamReversalCount;
+    document.getElementById('stat5Subtitle').textContent = '';
+    document.getElementById('stat6Label').textContent = 'AVG DURATION';
+    document.getElementById('stat6Count').textContent = avgDurationText;
+    document.getElementById('stat6Subtitle').textContent = avgDurationSubtitle;
+    
+    // Update table header
+    const tableHeader = document.getElementById('tableHeader');
+    tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr)';
+    tableHeader.style.display = 'grid';
+    tableHeader.style.gap = '0.75rem';
+    tableHeader.style.alignItems = 'center';
+    tableHeader.innerHTML = `
+        <div>Name</div>
+        <div>Assigned</div>
+        <div>Completed</div>
+        <div>Remaining</div>
+        <div>Avg Duration</div>
+        <div>Progress Meter</div>
+    `;
+    
+    // Update table with all Quality Analysts
+    const tableBody = document.getElementById('performanceTableBody');
+    tableBody.innerHTML = auditorStats.map(stats => `
+        <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
+            <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Name">
+                ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.5625rem;">(You)</span>' : ''}
+            </div>
+            <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
+            <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
+            <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
+            <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Avg Duration">${stats.avgDuration}</div>
+            <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage}%</span>
+                    <div style="flex: 1; height: 0.5625rem; background-color: var(--dark-forest); border-radius: 0.2812rem; overflow: hidden; position: relative;">
+                        <div style="height: 100%; width: ${stats.percentage}%; background-color: var(--primary-color); transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
 }
 
 async function updateStandupView() {
@@ -954,21 +1441,23 @@ function initializeSlider() {
 // Filter Functions
 // ============================================================================
 function toggleFilters() {
-    const panel = document.getElementById('filterPanel');
-    if (panel.style.display === 'none') {
-        panel.style.display = 'block';
-    } else {
-        panel.style.display = 'none';
+    const dropdown = document.getElementById('filterDropdown');
+    const filterBtn = document.getElementById('filterBtn');
+    if (dropdown && filterBtn) {
+        dropdown.classList.toggle('active');
+        filterBtn.classList.toggle('active');
     }
 }
 
 function populateChannelFilter() {
     const channelFilter = document.getElementById('channelFilter');
+    if (!channelFilter) return;
     
     // Get unique channels from all users
     const uniqueChannels = [...new Set(allUsers.map(u => u.channel).filter(Boolean))];
     
     // Clear existing options except "All Channels"
+    const existingValue = channelFilter.value;
     channelFilter.innerHTML = '<option value="">All Channels</option>';
     
     // Add channel options
@@ -978,13 +1467,81 @@ function populateChannelFilter() {
         option.textContent = channel;
         channelFilter.appendChild(option);
     });
+    
+    if (existingValue) channelFilter.value = existingValue;
+}
+
+function populateAuditorFilter() {
+    const auditorFilter = document.getElementById('auditorFilter');
+    if (!auditorFilter) return;
+    
+    // Get all Quality Analysts (auditors)
+    const auditors = allUsers.filter(u => u.role === 'Quality Analyst');
+    
+    const existingValue = auditorFilter.value;
+    auditorFilter.innerHTML = '<option value="">All Auditors</option>';
+    
+    auditors.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email)).forEach(auditor => {
+        const option = document.createElement('option');
+        option.value = auditor.email;
+        option.textContent = auditor.name || auditor.email;
+        auditorFilter.appendChild(option);
+    });
+    
+    if (existingValue) auditorFilter.value = existingValue;
+}
+
+function populateEmployeeFilter() {
+    const employeeFilter = document.getElementById('employeeFilter');
+    if (!employeeFilter) return;
+    
+    // Get unique employees from assignments
+    const employeeEmails = [...new Set(unfilteredAssignments.map(a => a.employee_email).filter(Boolean))];
+    
+    const existingValue = employeeFilter.value;
+    employeeFilter.innerHTML = '<option value="">All Employees</option>';
+    
+    employeeEmails.sort().forEach(email => {
+        const user = allUsers.find(u => u.email === email);
+        const option = document.createElement('option');
+        option.value = email;
+        option.textContent = user?.name || email;
+        employeeFilter.appendChild(option);
+    });
+    
+    if (existingValue) employeeFilter.value = existingValue;
+}
+
+function populateScorecardFilter() {
+    const scorecardFilter = document.getElementById('scorecardFilter');
+    if (!scorecardFilter) return;
+    
+    const existingValue = scorecardFilter.value;
+    scorecardFilter.innerHTML = '<option value="">All Scorecards</option>';
+    
+    allScorecards.forEach(scorecard => {
+        const option = document.createElement('option');
+        option.value = scorecard.id;
+        option.textContent = scorecard.name;
+        scorecardFilter.appendChild(option);
+    });
+    
+    if (existingValue) scorecardFilter.value = existingValue;
 }
 
 async function applyFilters() {
     // Get filter values
-    currentFilters.status = document.getElementById('statusFilter').value;
-    currentFilters.channel = document.getElementById('channelFilter').value;
-    currentFilters.week = document.getElementById('weekFilter').value;
+    const statusEl = document.getElementById('statusFilter');
+    const channelEl = document.getElementById('channelFilter');
+    const auditorEl = document.getElementById('auditorFilter');
+    const employeeEl = document.getElementById('employeeFilter');
+    const scorecardEl = document.getElementById('scorecardFilter');
+    
+    currentFilters.status = statusEl ? statusEl.value : '';
+    currentFilters.channel = channelEl ? channelEl.value : '';
+    currentFilters.auditor = auditorEl ? auditorEl.value : '';
+    currentFilters.employee = employeeEl ? employeeEl.value : '';
+    currentFilters.scorecard = scorecardEl ? scorecardEl.value : '';
     
     // Start with unfiltered assignments
     allAssignments = [...unfilteredAssignments];
@@ -1002,10 +1559,35 @@ async function applyFilters() {
         });
     }
     
-    // Apply week filter
-    if (currentFilters.week) {
-        const weekNum = parseInt(currentFilters.week);
-        allAssignments = allAssignments.filter(a => a.week === weekNum);
+    // Apply auditor filter
+    if (currentFilters.auditor) {
+        allAssignments = allAssignments.filter(a => a.auditor_email === currentFilters.auditor);
+    }
+    
+    // Apply employee filter
+    if (currentFilters.employee) {
+        allAssignments = allAssignments.filter(a => a.employee_email === currentFilters.employee);
+    }
+    
+    // Apply scorecard filter
+    if (currentFilters.scorecard) {
+        allAssignments = allAssignments.filter(a => a.scorecard_id === currentFilters.scorecard);
+    }
+    
+    // Apply week/date range filter (from week navigation or date range picker)
+    if (useWeekFilter && currentWeek !== null) {
+        // Filter by week
+        const weekDates = getWeekDates(currentWeek, currentWeekYear);
+        allAssignments = allAssignments.filter(a => {
+            if (!a.created_at) return false;
+            return isDateInRange(a.created_at, weekDates.start, weekDates.end);
+        });
+    } else if (dateFilter.start || dateFilter.end) {
+        // Filter by date range
+        allAssignments = allAssignments.filter(a => {
+            if (!a.created_at) return false;
+            return isDateInRange(a.created_at, dateFilter.start, dateFilter.end);
+        });
     }
     
     console.log(`Filtered to ${allAssignments.length} assignments`);
@@ -1016,15 +1598,25 @@ async function applyFilters() {
 
 async function clearFilters() {
     // Reset filter inputs
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('channelFilter').value = '';
-    document.getElementById('weekFilter').value = '';
+    const statusEl = document.getElementById('statusFilter');
+    const channelEl = document.getElementById('channelFilter');
+    const auditorEl = document.getElementById('auditorFilter');
+    const employeeEl = document.getElementById('employeeFilter');
+    const scorecardEl = document.getElementById('scorecardFilter');
+    
+    if (statusEl) statusEl.value = '';
+    if (channelEl) channelEl.value = '';
+    if (auditorEl) auditorEl.value = '';
+    if (employeeEl) employeeEl.value = '';
+    if (scorecardEl) scorecardEl.value = '';
     
     // Reset filter state
     currentFilters = {
         status: '',
         channel: '',
-        week: ''
+        auditor: '',
+        employee: '',
+        scorecard: ''
     };
     
     // Restore unfiltered data
@@ -1032,6 +1624,272 @@ async function clearFilters() {
     
     // Update the dashboard
     await updateDashboard();
+}
+
+// ============================================================================
+// Week and Date Filter Functions
+// ============================================================================
+function getWeekNumber(date = new Date()) {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const dayOfWeek = startOfYear.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mondayOfWeek1 = new Date(startOfYear);
+    mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+    mondayOfWeek1.setHours(0, 0, 0, 0);
+    
+    const dateDay = date.getDay();
+    const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
+    const mondayOfDateWeek = new Date(date);
+    mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
+    mondayOfDateWeek.setHours(0, 0, 0, 0);
+    
+    const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
+    const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
+    
+    return weekNumber;
+}
+
+function getWeekDates(weekNumber, year) {
+    const startOfYear = new Date(year, 0, 1);
+    const dayOfWeek = startOfYear.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mondayOfWeek1 = new Date(startOfYear);
+    mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
+    
+    const weekStart = new Date(mondayOfWeek1);
+    weekStart.setDate(mondayOfWeek1.getDate() + (weekNumber - 1) * 7);
+    weekStart.setHours(0, 0, 0, 0);
+    
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    
+    return { start: weekStart, end: weekEnd };
+}
+
+function initializeWeekFilter() {
+    const today = new Date();
+    currentWeek = getWeekNumber(today);
+    currentWeekYear = today.getFullYear();
+    updateWeekDisplay();
+}
+
+function updateWeekDisplay() {
+    const weekTextEl = document.getElementById('weekText');
+    const prevWeekBtn = document.getElementById('prevWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+    const weekDisplay = document.getElementById('weekDisplay');
+    
+    if (weekTextEl) {
+        if (useWeekFilter && currentWeek !== null) {
+            weekTextEl.textContent = `Week ${currentWeek}`;
+        } else {
+            weekTextEl.textContent = '-';
+        }
+    }
+    
+    // Disable/enable week navigation buttons based on date range filter
+    if (prevWeekBtn) {
+        if (useWeekFilter) {
+            prevWeekBtn.disabled = false;
+            prevWeekBtn.style.opacity = '1';
+            prevWeekBtn.style.cursor = 'pointer';
+        } else {
+            prevWeekBtn.disabled = true;
+            prevWeekBtn.style.opacity = '0.5';
+            prevWeekBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    if (nextWeekBtn) {
+        if (useWeekFilter) {
+            nextWeekBtn.disabled = false;
+            nextWeekBtn.style.opacity = '1';
+            nextWeekBtn.style.cursor = 'pointer';
+        } else {
+            nextWeekBtn.disabled = true;
+            nextWeekBtn.style.opacity = '0.5';
+            nextWeekBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    // Update week display styling
+    if (weekDisplay) {
+        if (useWeekFilter) {
+            weekDisplay.style.backgroundColor = 'var(--primary-color)';
+            weekDisplay.style.color = 'var(--white)';
+            weekDisplay.style.borderColor = 'var(--primary-color)';
+        } else {
+            weekDisplay.style.backgroundColor = '#f3f4f6';
+            weekDisplay.style.color = '#6b7280';
+            weekDisplay.style.borderColor = '#e5e7eb';
+        }
+    }
+}
+
+function navigateWeek(direction) {
+    currentWeek += direction;
+    
+    if (currentWeek > 52) {
+        currentWeek = 1;
+        currentWeekYear += 1;
+    } else if (currentWeek < 1) {
+        currentWeek = 52;
+        currentWeekYear -= 1;
+    }
+    
+    updateWeekDisplay();
+    useWeekFilter = true;
+    dateFilter.start = null;
+    dateFilter.end = null;
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    if (startDateEl) startDateEl.value = '';
+    if (endDateEl) endDateEl.value = '';
+    if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+    applyFilters();
+}
+
+function setupEventListeners() {
+    // Week navigation buttons
+    const prevWeekBtn = document.getElementById('prevWeekBtn');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+    if (prevWeekBtn) {
+        prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
+    }
+    if (nextWeekBtn) {
+        nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+    }
+
+    // Date button
+    const dateBtn = document.getElementById('dateBtn');
+    if (dateBtn) {
+        dateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = document.getElementById('dateDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+        });
+    }
+
+    // Filter button
+    const filterBtn = document.getElementById('filterBtn');
+    if (filterBtn) {
+        filterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFilters();
+        });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.date-picker-dropdown')) {
+            const dateDropdown = document.getElementById('dateDropdown');
+            if (dateDropdown) {
+                dateDropdown.classList.remove('active');
+            }
+        }
+        if (!e.target.closest('.filter-dropdown')) {
+            const filterDropdown = document.getElementById('filterDropdown');
+            const filterBtn = document.getElementById('filterBtn');
+            if (filterDropdown) {
+                filterDropdown.classList.remove('active');
+            }
+            if (filterBtn) {
+                filterBtn.classList.remove('active');
+            }
+        }
+    });
+}
+
+window.applyDateFilter = function() {
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const startDate = startDateEl?.value || '';
+    const endDate = endDateEl?.value || '';
+    
+    if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        dateFilter.start = start;
+    } else {
+        dateFilter.start = null;
+    }
+    
+    if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.end = end;
+    } else {
+        dateFilter.end = null;
+    }
+
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    if (startDate || endDate) {
+        const start = startDate ? new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
+        const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
+        if (dateBtnTextEl) dateBtnTextEl.textContent = `${start} - ${end}`;
+        useWeekFilter = false;
+        updateWeekDisplay(); // Update week display to show "-"
+    } else {
+        if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+        useWeekFilter = true;
+        updateWeekDisplay(); // Update week display to show week number
+    }
+
+    const dateDropdown = document.getElementById('dateDropdown');
+    if (dateDropdown) dateDropdown.classList.remove('active');
+    applyFilters();
+};
+
+window.clearDateFilter = function() {
+    dateFilter.start = null;
+    dateFilter.end = null;
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    const dateDropdown = document.getElementById('dateDropdown');
+    if (startDateEl) startDateEl.value = '';
+    if (endDateEl) endDateEl.value = '';
+    if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+    if (dateDropdown) dateDropdown.classList.remove('active');
+    useWeekFilter = true;
+    updateWeekDisplay(); // Update week display to show week number
+    applyFilters();
+};
+
+// Helper function to check if date is within filter range
+function isDateInRange(date, filterStart, filterEnd) {
+    if (!filterStart && !filterEnd) {
+        // If no date filter, check against current week
+        if (useWeekFilter && currentWeek !== null) {
+            const weekDates = getWeekDates(currentWeek, currentWeekYear);
+            filterStart = weekDates.start;
+            filterEnd = weekDates.end;
+        } else {
+            return true; // No filters, show all
+        }
+    }
+    
+    if (!filterStart && !filterEnd) return true;
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    if (filterStart) {
+        const start = new Date(filterStart);
+        start.setHours(0, 0, 0, 0);
+        if (checkDate < start) return false;
+    }
+    
+    if (filterEnd) {
+        const end = new Date(filterEnd);
+        end.setHours(23, 59, 59, 999);
+        if (checkDate > end) return false;
+    }
+    
+    return true;
 }
 
 // ============================================================================
@@ -1047,3 +1905,4 @@ function escapeHtml(text) {
 
 </body>
 </html>
+
