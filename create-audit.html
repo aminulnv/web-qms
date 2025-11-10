@@ -1842,6 +1842,20 @@ async function loadPendingAudits() {
         
         console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole);
         
+        // Load assigned audits from audit tables instead of audit_assignments
+        const filterField = isAgent ? 'employee_email' : 'auditor_email';
+        
+        // Get all active scorecards
+        const { data: scorecards, error: scError } = await window.supabaseClient
+            .from('scorecards')
+            .select('id, name, table_name')
+            .eq('is_active', true);
+        
+        if (scError) throw scError;
+        
+        // Determine status filter
+        const statusFilter = showAllAudits ? ['completed'] : ['pending', 'in_progress'];
+        
         // Load assigned audits from audit_assignments table with scorecard info
         // Filter by employee_email if agent, otherwise by auditor_email
         // showAllAudits controls whether to show completed or pending/in_progress
@@ -1861,28 +1875,36 @@ async function loadPendingAudits() {
         
         console.log('Filtering by:', filterField, '=', currentUserEmail);
         
-        // If showing completed audits, filter by completed status; otherwise show pending/in_progress
+        // If showing completed audits, filter by status
         if (showAllAudits) {
             query = query.eq('status', 'completed');
         } else {
-            query = query.in('status', ['pending', 'in_progress']);
+            query = query.in('status', statusFilter);
         }
         
         const { data, error } = await query;
         
         if (error) {
-            console.error('Error loading audits:', error);
+            console.error('Error loading assignments:', error);
             throw error;
         }
         
+        // Normalize and filter client-side for exact match
+        const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
+        let filteredData = (data || []).filter(assignment => {
+            const emailToCheck = isAgent ? assignment.employee_email : assignment.auditor_email;
+            if (!emailToCheck) return false;
+            return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
+        });
+        
         // Additional client-side filtering to ensure exact match (case-insensitive)
-        const filteredData = (data || []).filter(assignment => {
+        const finalFiltered = filteredData.filter(assignment => {
             const emailToCheck = isAgent ? assignment.employee_email : assignment.auditor_email;
             return emailToCheck && emailToCheck.toLowerCase().trim() === currentUserEmail;
         });
         
-        console.log('Loaded audits:', filteredData.length, 'out of', (data || []).length);
-        allPendingAudits = filteredData; // Store all audits
+        console.log('Loaded audits:', finalFiltered.length);
+        allPendingAudits = finalFiltered; // Store all audits
         
         // Apply filters
         applyFiltersToAudits();
@@ -7567,9 +7589,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 if (assignmentError) {
                                     console.error('Error marking assignment as completed:', assignmentError);
-                                    console.error('Assignment error details:', JSON.stringify(assignmentError, null, 2));
                                 } else {
-                                    console.log('Successfully marked audit assignment as completed:', updateData);
+                                    console.log('Successfully marked assignment as completed:', updateData);
                                 }
                             } catch (assignmentError) {
                                 console.error('Exception marking assignment as completed:', assignmentError);
@@ -7614,24 +7635,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 if (assignmentError) {
                                     console.error('Error marking assignment as completed:', assignmentError);
-                                    console.error('Assignment error details:', JSON.stringify(assignmentError, null, 2));
                                 } else {
-                                    console.log('Successfully marked audit assignment as completed:', updateData);
-                                    console.log('Assignment ID:', currentAssignmentId);
-                                    console.log('Audit ID:', auditPayload.id);
+                                    console.log('Successfully marked assignment as completed:', updateData);
                                 }
                             } catch (assignmentError) {
                                 console.error('Exception marking assignment as completed:', assignmentError);
                                 // Don't fail the audit submission if marking as completed fails
                             }
-                        } else {
-                            console.log('No currentAssignmentId - this is a manual audit creation');
                         }
-                        
-                        // Reset editing mode and assignment tracking
-                        isEditingPendingAudit = false;
-                        currentEditingAuditId = null;
-                        currentAssignmentId = null;
                     }
                 }
                 
@@ -7826,12 +7837,15 @@ async function loadAssignmentFromURL(assignmentId) {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         const userRole = userInfo.role || '';
         const isAgent = userRole === 'Employee';
+        const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
         
         // For agents, check if they are the employee being audited
         // For auditors, check if they are the auditor
+        const assignmentEmployeeEmail = (assignment.employee_email || '').toLowerCase().trim();
+        const assignmentAuditorEmail = (assignment.auditor_email || '').toLowerCase().trim();
         const hasPermission = isAgent 
-            ? assignment.employee_email === userInfo.email
-            : assignment.auditor_email === userInfo.email;
+            ? assignmentEmployeeEmail === currentUserEmail
+            : assignmentAuditorEmail === currentUserEmail;
         
         if (!hasPermission) {
             alert('You do not have permission to access this assignment.');
@@ -7841,20 +7855,12 @@ async function loadAssignmentFromURL(assignmentId) {
         }
         
         // Check if assignment is already completed
-        if (assignment.status === 'completed') {
-            // If there's an audit_id, redirect to view the completed audit
-            if (assignment.audit_id && assignment.scorecard_id) {
-                // Get scorecard to find table name
-                const { data: scorecard } = await window.supabaseClient
-                    .from('scorecards')
-                    .select('table_name')
-                    .eq('id', assignment.scorecard_id)
-                    .single();
-                
-                if (scorecard) {
-                    window.location.href = `audit-view.html?id=${assignment.audit_id}&scorecard=${assignment.scorecard_id}&table=${scorecard.table_name}`;
+        if (assignment.audit_status === 'completed') {
+            // Redirect to view the completed audit
+            const scorecardId = assignment._scorecard_id;
+            if (scorecardId && assignmentTable) {
+                window.location.href = `audit-view.html?id=${assignment.id}&scorecard=${scorecardId}&table=${assignmentTable}`;
                     return;
-                }
             }
             alert('This assignment has already been completed.');
             // Clean URL
@@ -7862,12 +7868,26 @@ async function loadAssignmentFromURL(assignmentId) {
             return;
         }
         
+        // Map assignment to expected format
+        const mappedAssignment = {
+            id: assignment.id,
+            employee_email: assignment.employee_email,
+            employee_name: assignment.employee_name,
+            auditor_email: assignment.auditor_email,
+            scorecard_id: assignment._scorecard_id,
+            status: assignment.audit_status,
+            scorecards: {
+                id: assignment._scorecard_id,
+                table_name: assignmentTable
+            }
+        };
+        
         // Start the assigned audit
-        console.log('Starting audit from assignment:', assignment);
+        console.log('Starting audit from assignment:', mappedAssignment);
         await window.startAssignedAudit(
-            assignment.id,
-            assignment.employee_email,
-            assignment.scorecard_id
+            mappedAssignment.id,
+            mappedAssignment.employee_email,
+            mappedAssignment.scorecard_id
         );
         
         // Clean URL after starting (optional - keeps the assignment ID for reference)

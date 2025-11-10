@@ -171,7 +171,7 @@
     <p class="page-heading">Expert Audit Reports</p>
     <div style="margin-bottom: 1.125rem; width: 100%;"></div>
 
-    <div class="expert-audits-container mt-24">
+    <div class="expert-audits-container" style="margin-top: 2rem;">
         <!-- Statistics Overview -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -706,6 +706,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             .select('*')
                             .order('submitted_at', { ascending: false });
                         
+                        // Only show completed audits (exclude pending and in_progress)
+                        query = query.or('audit_status.eq.completed,audit_status.is.null');
+                        
                         // If employee and not showing all audits, filter by employee_email
                         if (isAgent && !showAllAudits && currentUserEmail) {
                             query = query.eq('employee_email', currentUserEmail);
@@ -721,13 +724,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         if (data && data.length > 0) {
                             // For employees, do additional client-side filtering to ensure exact match
+                            // Also filter out incomplete audits (pending/in_progress)
                             let filteredData = data;
-                            if (isAgent && !showAllAudits && currentUserEmail) {
-                                filteredData = data.filter(audit => {
+                            filteredData = filteredData.filter(audit => {
+                                const auditStatus = audit.audit_status;
+                                // Only include completed audits or audits without audit_status (legacy completed audits)
+                                const isComplete = !auditStatus || auditStatus === 'completed';
+                                if (!isComplete) return false;
+                                
+                                // Employee email filter
+                                if (isAgent && !showAllAudits && currentUserEmail) {
                                     const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
                                     return auditEmployeeEmail === currentUserEmail;
-                                });
-                            }
+                                }
+                                return true;
+                            });
                             
                             // Add scorecard info to each audit
                             const auditsWithScorecard = filteredData.map(audit => ({
@@ -762,6 +773,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     .select('*')
                     .order('submitted_at', { ascending: false });
                 
+                // Only show completed audits (exclude pending and in_progress)
+                query = query.or('audit_status.eq.completed,audit_status.is.null');
+                
                 // If employee and not showing all audits, filter by employee_email
                 if (isAgent && !showAllAudits && currentUserEmail) {
                     query = query.eq('employee_email', currentUserEmail);
@@ -780,13 +794,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 let processedData = data || [];
                 
-                // For employees, do additional client-side filtering to ensure exact match
-                if (isAgent && !showAllAudits && currentUserEmail && processedData.length > 0) {
-                    processedData = processedData.filter(audit => {
+                // Filter out incomplete audits and apply employee filter
+                processedData = processedData.filter(audit => {
+                    const auditStatus = audit.audit_status;
+                    // Only include completed audits or audits without audit_status (legacy completed audits)
+                    const isComplete = !auditStatus || auditStatus === 'completed';
+                    if (!isComplete) return false;
+                    
+                    // For employees, do additional client-side filtering to ensure exact match
+                    if (isAgent && !showAllAudits && currentUserEmail) {
                         const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
                         return auditEmployeeEmail === currentUserEmail;
-                    });
-                }
+                    }
+                    return true;
+                });
                 
                 if (processedData.length > 0) {
                     // Add scorecard info to each audit

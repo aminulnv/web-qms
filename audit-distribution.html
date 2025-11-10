@@ -1058,18 +1058,20 @@ async function loadAssignedAudits() {
     try {
         console.log('Loading assignments. allUsers count:', allUsers.length, 'qualityAnalysts count:', qualityAnalysts.length);
         
+        // Load assignments from audit_assignments table with scorecard info
         const { data, error } = await window.supabaseClient
             .from('audit_assignments')
             .select(`
                 *,
-                scorecard:scorecards(name)
+                scorecards:scorecard_id (
+                    id,
+                    name,
+                    table_name
+                )
             `)
             .order('created_at', { ascending: false });
         
-        if (error) {
-            console.error('Error fetching assignments:', error);
-            throw error;
-        }
+        if (error) throw error;
         
         console.log('Loaded assignments:', data?.length || 0);
         
@@ -1266,13 +1268,13 @@ async function saveAssignment(assignmentId) {
             return;
         }
         
-        // Update the assignment
+        const updateData = {};
+        if (newAuditor) updateData.auditor_email = newAuditor;
+        if (newScorecard) updateData.scorecard_id = newScorecard;
+        
         const { error: updateError } = await window.supabaseClient
             .from('audit_assignments')
-            .update({
-                auditor_email: newAuditor,
-                scorecard_id: newScorecard
-            })
+            .update(updateData)
             .eq('id', assignmentId);
         
         if (updateError) throw updateError;
@@ -1301,14 +1303,17 @@ async function saveAssignment(assignmentId) {
 
 async function deleteAssignment(assignmentId) {
     try {
-        // Fetch the assignment details for confirmation
-        const { data: assignment, error: fetchError } = await window.supabaseClient
-            .from('audit_assignments')
-            .select('*, scorecard:scorecards(name)')
-            .eq('id', assignmentId)
-            .single();
+        // Find the assignment in local data
+        const assignment = allAssignments.find(a => a.id === assignmentId);
+        if (!assignment) {
+            throw new Error('Assignment not found');
+        }
         
-        if (fetchError) throw fetchError;
+        // Get table name from scorecard
+        const scorecard = allScorecards.find(sc => sc.id === assignment.scorecard_id);
+        if (!scorecard || !scorecard.table_name) {
+            throw new Error('Could not find scorecard table');
+        }
         
         // Find auditor name
         let auditorName = assignment.auditor_email.split('@')[0];
@@ -1321,7 +1326,7 @@ async function deleteAssignment(assignmentId) {
         
         const confirmed = await window.confirmationDialog.show({
             title: 'Delete Assignment',
-            message: `Are you sure you want to delete this assignment?\n\nEmployee: ${assignment.employee_name || assignment.employee_email}\nAuditor: ${auditorName}\nScorecard: ${assignment.scorecard?.name || 'N/A'}\n\nThis action cannot be undone.`,
+            message: `Are you sure you want to delete this assignment?\n\nEmployee: ${assignment.employee_name || assignment.employee_email}\nAuditor: ${auditorName}\nScorecard: ${assignment.scorecard?.name || scorecard.name || 'N/A'}\n\nThis action cannot be undone.`,
             confirmText: 'Delete',
             cancelText: 'Cancel',
             type: 'warning'
@@ -2008,11 +2013,10 @@ async function autoAssignBySupervisor() {
     try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         const assignedBy = userInfo.email || 'unknown';
-        const auditsToCreate = [];
-        
-        // Create audit assignments for each employee to their supervisor
-        // Scorecard will be selected by auditor during audit
         const currentWeek = getWeekNumber();
+        
+        // Create audit assignments in audit_assignments table
+        const assignmentsToCreate = [];
         
         supervisorGroups.forEach((employees, supervisorEmail) => {
             employees.forEach(emp => {
@@ -2022,26 +2026,41 @@ async function autoAssignBySupervisor() {
                 
                 // Create exactly auditCount assignments per employee
                 for (let i = 0; i < auditCount; i++) {
-                        auditsToCreate.push({
+                    assignmentsToCreate.push({
                             employee_email: emp.email,
                             employee_name: emp.name,
                             auditor_email: supervisorEmail,
                         scorecard_id: scorecardId,
                         week: currentWeek,
                             status: 'pending',
-                            assigned_by: assignedBy,
-                            created_at: new Date().toISOString()
+                        assigned_by: assignedBy
                     });
                 }
             });
         });
         
-        // Insert all audit assignments
-        const { error } = await window.supabaseClient
+        // Insert assignments into audit_assignments table
+        const { data: createdAssignments, error: insertError } = await window.supabaseClient
             .from('audit_assignments')
-            .insert(auditsToCreate);
+            .insert(assignmentsToCreate)
+            .select();
         
-        if (error) throw error;
+        if (insertError) throw insertError;
+        
+        const totalCreated = createdAssignments ? createdAssignments.length : 0;
+        
+        // Create simplified records for ClickUp notifications
+        const auditsToCreate = (createdAssignments || []).map(assignment => ({
+            id: assignment.id,
+            employee_email: assignment.employee_email,
+            employee_name: assignment.employee_name,
+            auditor_email: assignment.auditor_email,
+            scorecard_id: assignment.scorecard_id,
+            week: assignment.week,
+            status: assignment.status,
+            assigned_by: assignment.assigned_by,
+            created_at: assignment.created_at
+        }));
         
         // Send ClickUp notifications to employees (non-blocking)
         sendClickUpNotifications(auditsToCreate).catch(err => {
@@ -2057,7 +2076,7 @@ async function autoAssignBySupervisor() {
         
         await window.confirmationDialog.show({
             title: 'Success!',
-            message: `Successfully created ${auditsToCreate.length} audit assignment${auditsToCreate.length !== 1 ? 's' : ''} across ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}!`,
+            message: `Successfully created ${totalCreated} audit assignment${totalCreated !== 1 ? 's' : ''} across ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}!`,
             confirmText: 'OK',
             type: 'success'
         });
@@ -2201,7 +2220,6 @@ async function distributeToSelectedQAs() {
         throw new Error('No valid Quality Analysts found');
     }
     
-    const auditsToCreate = [];
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const assignedBy = userInfo.email || 'unknown';
     const currentWeek = getWeekNumber();
@@ -2225,26 +2243,45 @@ async function distributeToSelectedQAs() {
     
     // Distribute all audits evenly among selected auditors using round-robin
     const numAuditors = selectedQAsArray.length;
+    
+    // Create assignments in audit_assignments table
+    const assignmentsToCreate = [];
     allAudits.forEach((audit, index) => {
         const auditorIdx = index % numAuditors; // Round-robin: cycles through auditors
-        auditsToCreate.push({
+        
+        assignmentsToCreate.push({
             employee_email: audit.employee_email,
             employee_name: audit.employee_name,
             auditor_email: selectedQAsArray[auditorIdx].email,
             scorecard_id: audit.scorecard_id,
             week: currentWeek,
             status: 'pending',
-            assigned_by: assignedBy,
-            created_at: new Date().toISOString()
+            assigned_by: assignedBy
         });
     });
     
-    // Insert into audit_assignments table
-    const { error } = await window.supabaseClient
+    // Insert assignments into audit_assignments table
+    const { data: createdAssignments, error: insertError } = await window.supabaseClient
         .from('audit_assignments')
-        .insert(auditsToCreate);
+        .insert(assignmentsToCreate)
+        .select();
     
-    if (error) throw error;
+    if (insertError) throw insertError;
+    
+    const totalCreated = createdAssignments ? createdAssignments.length : 0;
+    
+    // Create simplified records for ClickUp notifications
+    const auditsToCreate = (createdAssignments || []).map(assignment => ({
+        id: assignment.id,
+        employee_email: assignment.employee_email,
+        employee_name: assignment.employee_name,
+        auditor_email: assignment.auditor_email,
+        scorecard_id: assignment.scorecard_id,
+        week: assignment.week,
+        status: assignment.status,
+        assigned_by: assignment.assigned_by,
+        created_at: assignment.created_at
+    }));
     
     // Send ClickUp notifications to employees (non-blocking)
     sendClickUpNotifications(auditsToCreate).catch(err => {

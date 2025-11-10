@@ -725,14 +725,33 @@ async function populateFilters() {
         }
       }
     } else {
-      // For auditors, load all assignments
-      const { data, error } = await window.supabaseClient
-        .from('audit_assignments')
-        .select('channel, employee_email')
-        .eq('auditor_email', currentUserEmail);
+      // For auditors, load all assignments from audit tables
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+        .eq('is_active', true);
       
-      if (!error && data) {
-        allAssignmentsForFilters = data;
+      if (!scError && scorecards) {
+        const assignmentPromises = scorecards.map(async (scorecard) => {
+          try {
+            const { data: audits, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('channel, employee_email, audit_status')
+              .eq('auditor_email', currentUserEmail)
+              .in('audit_status', ['pending', 'in_progress', 'completed']);
+            
+            if (!error && audits) {
+              return audits;
+            }
+            return [];
+          } catch (err) {
+            console.warn(`Error loading from ${scorecard.table_name}:`, err);
+            return [];
+          }
+        });
+        
+        const assignmentResults = await Promise.all(assignmentPromises);
+        allAssignmentsForFilters = assignmentResults.flat();
       }
     }
     
@@ -1216,19 +1235,42 @@ async function loadRecentUpdates() {
       }
       
     } else {
-      // For auditors: Show all assignment status changes (pending, in_progress, completed)
-      const { data, error } = await window.supabaseClient
-        .from('audit_assignments')
-        .select('*')
-        .eq('auditor_email', currentUserEmail)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // For auditors: Show all assignment status changes (pending, in_progress, completed) from audit tables
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('id, name, table_name')
+        .eq('is_active', true);
       
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
+      if (!scError && scorecards) {
         const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
-        const filteredAssignments = data.filter(assignment => {
+        
+        const assignmentPromises = scorecards.map(async (scorecard) => {
+          try {
+            const { data: audits, error } = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('*')
+              .eq('auditor_email', currentUserEmail)
+              .in('audit_status', ['pending', 'in_progress', 'completed'])
+              .order('assignment_created_at', { ascending: false })
+              .limit(20);
+            
+            if (!error && audits) {
+              return audits.map(audit => ({
+                ...audit,
+                status: audit.audit_status,
+                created_at: audit.assignment_created_at || audit.created_at,
+                completed_at: audit.completed_at || (audit.audit_status === 'completed' ? audit.submitted_at : null)
+              }));
+            }
+            return [];
+          } catch (err) {
+            console.warn(`Error loading from ${scorecard.table_name}:`, err);
+            return [];
+          }
+        });
+        
+        const assignmentResults = await Promise.all(assignmentPromises);
+        const filteredAssignments = assignmentResults.flat().filter(assignment => {
           const auditorEmail = (assignment.auditor_email || '').toLowerCase().trim();
           return auditorEmail === normalizedCurrentEmail;
         });
@@ -1254,17 +1296,17 @@ async function loadRecentUpdates() {
       
       // Also load reversals for auditors - parallelized
       // For auditors: Show only unprocessed reversals (same as reversal.html)
-      const { data: scorecards, error: scError } = await window.supabaseClient
+      const { data: reversalScorecards, error: reversalScError } = await window.supabaseClient
         .from('scorecards')
         .select('id, name, table_name')
         .eq('is_active', true);
       
-      if (!scError && scorecards) {
+      if (!reversalScError && reversalScorecards) {
         const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
         const reversalFilterField = 'auditor_email';
         
         // Parallelize all reversal queries
-        const reversalPromises = scorecards.map(async (scorecard) => {
+        const reversalPromises = reversalScorecards.map(async (scorecard) => {
           try {
             // For auditors: Only get unprocessed reversals (reversal_approved is null) - same as reversal.html
             const { data: reversals, error } = await window.supabaseClient
@@ -2689,31 +2731,59 @@ async function loadNotifications() {
   try {
     if (!currentUserEmail) return;
 
-    // Get recent audit assignments updates
+    // Get recent audit assignments updates from audit tables
     // Filter by employee_email if agent, otherwise by auditor_email
     const notificationFilterField = isAgent ? 'employee_email' : 'auditor_email';
-    const { data: assignments, error: assignmentsError } = await window.supabaseClient
-      .from('audit_assignments')
-      .select('*')
-      .eq(notificationFilterField, currentUserEmail)
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (assignmentsError) throw assignmentsError;
+    
+    const { data: scorecards, error: scError } = await window.supabaseClient
+      .from('scorecards')
+      .select('table_name')
+      .eq('is_active', true);
+    
+    let assignments = [];
+    if (!scError && scorecards) {
+      const assignmentPromises = scorecards.map(async (scorecard) => {
+        try {
+          const { data: audits, error } = await window.supabaseClient
+            .from(scorecard.table_name)
+            .select('*')
+            .eq(notificationFilterField, currentUserEmail)
+            .in('audit_status', ['pending', 'in_progress', 'completed'])
+            .order('assignment_created_at', { ascending: false })
+            .limit(20);
+          
+          if (!error && audits) {
+            return audits.map(audit => ({
+              ...audit,
+              status: audit.audit_status,
+              created_at: audit.assignment_created_at || audit.created_at,
+              completed_at: audit.completed_at || (audit.audit_status === 'completed' ? audit.submitted_at : null)
+            }));
+          }
+          return [];
+        } catch (err) {
+          console.warn(`Error loading from ${scorecard.table_name}:`, err);
+          return [];
+        }
+      });
+      
+      const assignmentResults = await Promise.all(assignmentPromises);
+      assignments = assignmentResults.flat();
+    }
 
     // Get reversals (audits with reversal requests)
-    const { data: scorecards, error: scError } = await window.supabaseClient
+    const { data: reversalScorecards, error: reversalScError } = await window.supabaseClient
       .from('scorecards')
       .select('table_name')
       .eq('is_active', true);
 
     let reversals = [];
-    if (!scError && scorecards) {
+    if (!reversalScError && reversalScorecards) {
       // Filter by employee_email if agent, otherwise by auditor_email
       const reversalNotificationFilterField = isAgent ? 'employee_email' : 'auditor_email';
       const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
       
-      for (const scorecard of scorecards) {
+      for (const scorecard of reversalScorecards) {
         try {
           // Get all reversals and filter client-side for case-insensitive matching
           const { data: auditReversals, error } = await window.supabaseClient
