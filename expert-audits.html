@@ -780,8 +780,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        console.log('DOM elements found, initializing...');
-    
     let allAudits = [];
     let filteredAudits = [];
     let currentScorecard = null;
@@ -820,8 +818,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (viewAllBtn) {
                 viewAllBtn.style.display = isAgent ? 'block' : 'none';
             }
-            
-            console.log('User initialized:', { email: currentUserEmail, role: currentUserRole, isAgent, showAllAudits });
         } catch (error) {
             console.error('Error initializing user info:', error);
         }
@@ -981,8 +977,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Wait for Supabase client to be ready, then initialize
     async function initializePage() {
-        console.log('Initializing page...');
-        
         // Wait for Supabase to be ready
         let attempts = 0;
         while (!window.supabaseClient && attempts < 50) {
@@ -999,7 +993,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        console.log('Supabase client ready, loading scorecards...');
     
     // Initialize scorecards (which will trigger loadAudits)
         try {
@@ -1018,8 +1011,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load audits from Supabase
     async function loadAudits() {
         try {
-            console.log('===== LOADING AUDITS FROM SUPABASE =====');
-            
             if (!window.supabaseClient) {
                 console.error('Supabase client not initialized');
                 return;
@@ -1029,8 +1020,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If no specific scorecard is selected, load from ALL scorecard tables
             if (!currentScorecard) {
-                console.log('Loading from ALL scorecards (including deleted ones)');
-                console.log('Available scorecards:', allScorecards.length);
                 
                 let tablesToQuery = [];
                 
@@ -1056,7 +1045,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             return;
                         }
                     } else {
-                        console.log('RPC returned tables:', allTables?.length || 0);
                         // Match tables with scorecards where possible
                         if (allTables && allTables.length > 0) {
                             tablesToQuery = allTables.map(t => {
@@ -1070,7 +1058,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         } else if (allScorecards && allScorecards.length > 0) {
                             // If RPC returned empty but we have scorecards, use scorecards
-                            console.log('RPC returned no tables, using scorecards instead');
                             tablesToQuery = allScorecards.map(s => ({
                                 table_name: s.table_name,
                                 scorecard_id: s.id,
@@ -1103,12 +1090,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                console.log(`Will query ${tablesToQuery.length} tables:`, tablesToQuery.map(t => t.table_name));
-                
                 // Step 2: Load from all discovered tables
                 for (const tableInfo of tablesToQuery) {
                     try {
-                        console.log(`Loading from table: ${tableInfo.table_name}`);
                         let query = window.supabaseClient
                             .from(tableInfo.table_name)
                             .select('*')
@@ -1117,7 +1101,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         // If employee and not showing all audits, filter by employee_email
                         if (isAgent && !showAllAudits && currentUserEmail) {
                             query = query.eq('employee_email', currentUserEmail);
-                            console.log(`Filtering by employee_email: ${currentUserEmail}`);
                         }
                         
                         // Try to filter by audit_status, but handle errors gracefully
@@ -1132,7 +1115,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Check if error is about audit_status column
                             const errorMessage = error.message || JSON.stringify(error);
                             if (errorMessage.includes('audit_status') || error.code === 'PGRST116' || error.code === '42703') {
-                                console.log(`Table ${tableInfo.table_name} doesn't have audit_status column, loading all records...`);
                                 // Retry without audit_status filter
                                 let retryQuery = window.supabaseClient
                                     .from(tableInfo.table_name)
@@ -1194,12 +1176,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dateB = new Date(b.submitted_at);
                     return dateB - dateA;
                 });
-                
-                console.log(`Total audits from all tables: ${combinedAudits.length}`);
             } else {
                 // Load from specific scorecard table
-                console.log('Loading from table:', currentScorecard.table_name);
-                
                 let query = window.supabaseClient
                     .from(currentScorecard.table_name)
                     .select('*')
@@ -1208,7 +1186,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If employee and not showing all audits, filter by employee_email
                 if (isAgent && !showAllAudits && currentUserEmail) {
                     query = query.eq('employee_email', currentUserEmail);
-                    console.log(`Filtering by employee_email: ${currentUserEmail}`);
                 }
                 
                 // Load data - filter audit_status client-side since some tables may not have this column
@@ -1252,13 +1229,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         _scoring_type: currentScorecard.scoring_type
                     }));
                 }
-                
-                console.log('Number of audits loaded:', combinedAudits.length);
             }
             
             if (combinedAudits.length > 0) {
-                console.log('First audit sample:', combinedAudits[0]);
-                
                 // Convert snake_case to camelCase for common fields, but preserve all original data
                 allAudits = combinedAudits.map(audit => {
                     const mapped = {
@@ -1323,9 +1296,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             filteredAudits = [...allAudits];
             updateStatistics();
-            console.log('Filtered audits count:', filteredAudits.length);
-            console.log('Total audits loaded:', allAudits.length);
-            console.log('========================');
             
             // Always render, even if empty
             renderAudits();
@@ -1836,7 +1806,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Render audits
     function renderAudits() {
-        console.log('Rendering audits. Total filtered:', filteredAudits.length);
         
         updateStatistics();
         calculatePagination();
@@ -1851,7 +1820,6 @@ document.addEventListener('DOMContentLoaded', function() {
             auditList.style.display = 'none';
             noAuditsMessage.style.display = 'block';
             updatePaginationUI();
-            console.log('No audits to display');
             return;
         }
         
@@ -1865,8 +1833,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update pagination UI
         updatePaginationUI();
-        
-        console.log(`Rendered ${paginatedAudits.length} audit cards (page ${currentPage} of ${totalPages})`);
     }
     
     // Helper function to normalize passing status (handles both old and new values)

@@ -1447,9 +1447,6 @@
 </main>
 
 <script>
-// Global test to verify JavaScript is running
-console.log('=== SCRIPT STARTED ===');
-
 // ============================================================================
 // Dynamic Scorecard System
 // ============================================================================
@@ -1632,7 +1629,6 @@ async function updateYourStats() {
         const isAgent = currentUserRole === 'Employee';
         
         if (!currentUserEmail) {
-            console.log('No user email found for stats');
             return;
         }
         
@@ -1981,11 +1977,8 @@ async function loadPendingAudits() {
         const isAgent = currentUserRole === 'Employee';
         
         if (!currentUserEmail) {
-            console.log('No user email found');
             return;
         }
-        
-        console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole);
         
         // Determine status filter
         const statusFilter = showAllAudits ? ['completed'] : ['pending', 'in_progress'];
@@ -2007,7 +2000,6 @@ async function loadPendingAudits() {
             .eq(filterField, currentUserEmail)
             .order('created_at', { ascending: false });
         
-        console.log('Filtering by:', filterField, '=', currentUserEmail);
         
         // If showing completed audits, filter by status
         if (showAllAudits) {
@@ -2032,7 +2024,6 @@ async function loadPendingAudits() {
             return emailToCheck.toLowerCase().trim() === normalizedCurrentEmail;
         });
         
-        console.log('Loaded audits:', finalFiltered.length);
         allPendingAudits = finalFiltered; // Store all audits
         
         // Apply filters
@@ -2244,7 +2235,6 @@ function displayPendingAudits() {
                     e.stopPropagation();
                     const email = this.getAttribute('data-email');
                     const name = this.getAttribute('data-name');
-                    console.log('🔘 Button clicked - Email:', email, 'Name:', name);
                     if (window.pullConversationsForEmployee && typeof window.pullConversationsForEmployee === 'function') {
                         window.pullConversationsForEmployee(email, name);
                     } else {
@@ -2865,8 +2855,6 @@ async function cacheAdminAsync(supabaseClient, admin) {
         
         if (upsertError) {
             console.warn('Failed to cache admin:', upsertError);
-        } else {
-            console.log('✅ Cached admin for future use:', adminEmail);
         }
     } catch (error) {
         console.warn('Error caching admin:', error);
@@ -2923,7 +2911,6 @@ window.viewEmployeeConversations = async function(employeeEmail, employeeName) {
         const supabaseClient = window.SupabaseConfig?.getClient?.();
         if (supabaseClient) {
             try {
-                console.log('🔍 Looking up admin in Supabase cache...');
                 const { data: cachedAdmins, error: queryError } = await supabaseClient
                     .from('intercom_admin_cache')
                     .select('id, email, name, admin_data')
@@ -2934,7 +2921,6 @@ window.viewEmployeeConversations = async function(employeeEmail, employeeName) {
                     const cachedAdmin = cachedAdmins[0];
                     adminId = cachedAdmin.id || cachedAdmin.admin_data?.id;
                     if (adminId) {
-                        console.log('✅ Admin found in Supabase cache');
                         adminFound = true;
                     }
                 } else if (queryError) {
@@ -2949,7 +2935,6 @@ window.viewEmployeeConversations = async function(employeeEmail, employeeName) {
         
         // Fallback: If not found in cache, fetch from Intercom API
         if (!adminFound) {
-            console.log('🔄 Admin not in cache, fetching from Intercom API...');
             try {
                 // Fetch admins from Intercom API via Supabase Edge Function
                 const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=admins`;
@@ -2980,7 +2965,6 @@ window.viewEmployeeConversations = async function(employeeEmail, employeeName) {
                 }
                 
                 adminId = admin.id;
-                console.log('✅ Admin found via Intercom API fallback');
                 
                 // Optionally cache this admin for future use (async, don't wait)
                 if (supabaseClient && admin) {
@@ -3014,7 +2998,6 @@ window.viewEmployeeConversations = async function(employeeEmail, employeeName) {
         const startDateInput = document.getElementById('conversationsStartDate');
         const endDateInput = document.getElementById('conversationsEndDate');
         if (startDateInput && endDateInput && (!startDateInput.value || !endDateInput.value)) {
-            console.log('⚠️ Dates not set, setting defaults again...');
             setDefaultConversationsDateRange();
             await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -3110,12 +3093,6 @@ window.pullConversationsFromIntercom = async function() {
 // Pull conversations for a specific employee (from audit card)
 window.pullConversationsForEmployee = async function(employeeEmail, employeeName) {
     try {
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('🚀 PULL CONVERSATIONS FOR EMPLOYEE');
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('Email:', employeeEmail);
-        console.log('Name:', employeeName);
-        
         if (!employeeEmail || !employeeEmail.trim()) {
             console.error('❌ Employee email is required');
             showPullConversationsError('Employee email is required.');
