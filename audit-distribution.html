@@ -2734,9 +2734,11 @@ async function performBulkAssignment() {
     if (!confirmed) return;
     
     // Disable button during processing
-    const assignButton = document.getElementById('assignButton');
-    assignButton.disabled = true;
-    assignButton.textContent = 'Assigning...';
+    const assignButton = document.getElementById('assignButtonRight');
+    if (assignButton) {
+        assignButton.disabled = true;
+        assignButton.textContent = 'Assigning...';
+    }
     
     try {
         await distributeToSelectedQAs();
@@ -3426,7 +3428,28 @@ async function sendClickUpNotifications(auditsToCreate) {
                 // Log each failed/skipped result with details
                 result.results.forEach((r, index) => {
                     if (r.status === 'error') {
-                        console.error(`Failed notification ${index + 1} for ${r.employee_email}:`, r.error || r.reason || 'Unknown error');
+                        // Handle error as string or object
+                        let errorMsg = 'Unknown error';
+                        if (r.error) {
+                            if (typeof r.error === 'string') {
+                                errorMsg = r.error;
+                            } else if (r.error.message) {
+                                errorMsg = r.error.message;
+                            } else if (typeof r.error === 'object') {
+                                errorMsg = JSON.stringify(r.error);
+                            }
+                        } else if (r.reason) {
+                            errorMsg = r.reason;
+                        }
+                        // Provide more context for common errors
+                        if (errorMsg.includes('Not Found') || errorMsg.includes('404')) {
+                            console.warn(`⚠️ Notification skipped for ${r.employee_email}: User not found in ClickUp. This is normal if the user doesn't have a ClickUp account.`);
+                        } else {
+                            console.error(`❌ Failed notification ${index + 1} for ${r.employee_email}: ${errorMsg}`);
+                        }
+                        if (r.error && typeof r.error === 'object' && Object.keys(r.error).length > 0) {
+                            console.error('Error details:', r.error);
+                        }
                     } else if (r.status === 'skipped') {
                         console.warn(`Skipped notification ${index + 1} for ${r.employee_email}:`, r.reason || 'Unknown reason');
                     }
