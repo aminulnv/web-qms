@@ -337,6 +337,40 @@
             background-color: #fef2f2;
         }
 
+        .audit-target-input {
+            width: 2.5rem;
+            padding: 0.1875rem 0.2812rem;
+            border: 0.0469rem solid #d1d5db;
+            border-radius: 0.1875rem;
+            font-size: 0.5625rem;
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            font-weight: 600;
+            background-color: #ffffff;
+            color: #1f2937;
+            cursor: text;
+            transition: all 0.2s;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        
+        .audit-target-input::-webkit-inner-spin-button,
+        .audit-target-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+        
+        .audit-target-input:focus {
+            outline: none;
+            border-color: #1A733E;
+            box-shadow: 0 0 0 0.1406rem rgba(26, 115, 62, 0.1);
+        }
+        
+        .audit-target-input:hover:not(:disabled) {
+            border-color: #9ca3af;
+        }
+
         .bulk-actions-bar {
             position: sticky;
             bottom: 0;
@@ -927,6 +961,52 @@
             </div>
         </div>
 
+        <!-- Agent-wise Audit Summary -->
+        <div class="section-card" id="agentWiseSummarySection">
+            <div class="section-header">
+                <div style="flex: 1; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.5625rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <h2 class="section-title">Agent-wise Audit Summary</h2>
+                    </div>
+                    <button class="btn-secondary" onclick="refreshAgentWiseSummary()" style="display: flex; align-items: center; gap: 0.375rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.5625rem;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 0.0938rem solid #e5e7eb;">
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151;">Agent</th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151;">Channel</th>
+                                <th style="text-align: center; padding: 0.375rem; font-weight: 600; color: #374151;">Audit Target</th>
+                                <th style="text-align: center; padding: 0.375rem; font-weight: 600; color: #374151;">Total Assigned</th>
+                                <th style="text-align: center; padding: 0.375rem; font-weight: 600; color: #374151;">Completed Audits</th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151;">Progress</th>
+                                <th style="text-align: left; padding: 0.375rem; font-weight: 600; color: #374151;">Breakdown by Auditor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentWiseSummaryTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 1.5rem; color: #6b7280;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Assigned Audits Summary -->
         <div class="section-card" id="assignedAuditsSection">
             <div class="section-header">
@@ -1105,6 +1185,7 @@ async function initializePage() {
         
         // Then load assignments (depends on allUsers being loaded)
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error initializing page:', error);
@@ -1412,6 +1493,393 @@ async function loadAssignedAudits() {
 
 async function refreshAssignedAudits() {
     await loadAssignedAudits();
+    await loadAgentWiseSummary();
+}
+
+// ============================================================================
+// Audit Target Management
+// ============================================================================
+function getAuditTargetKey(agentEmail, year, month) {
+    return `audit_target_${agentEmail}_${year}_${month}`;
+}
+
+function getAuditTarget(agentEmail, year, month, defaultValue = 22) {
+    try {
+        const key = getAuditTargetKey(agentEmail, year, month);
+        const stored = localStorage.getItem(key);
+        if (stored !== null) {
+            const value = parseInt(stored);
+            return isNaN(value) ? defaultValue : value;
+        }
+    } catch (e) {
+        console.warn('Error reading audit target:', e);
+    }
+    return defaultValue;
+}
+
+function setAuditTarget(agentEmail, year, month, target) {
+    try {
+        const key = getAuditTargetKey(agentEmail, year, month);
+        const value = parseInt(target);
+        if (!isNaN(value) && value >= 0) {
+            localStorage.setItem(key, value.toString());
+            return true;
+        }
+    } catch (e) {
+        console.error('Error saving audit target:', e);
+    }
+    return false;
+}
+
+function getCurrentMonthYear() {
+    const now = new Date();
+    return {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1 // 1-12
+    };
+}
+
+// ============================================================================
+// Load Agent-wise Summary
+// ============================================================================
+async function loadAgentWiseSummary() {
+    try {
+        const tbody = document.getElementById('agentWiseSummaryTableBody');
+        if (!tbody) return;
+        
+        if (!allAssignments || allAssignments.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: #6b7280;">No assignments found</td></tr>';
+            return;
+        }
+        
+        // Get current month/year for target storage
+        const { year, month } = getCurrentMonthYear();
+        
+        // Group assignments by employee (agent)
+        const agentStats = new Map();
+        
+        allAssignments.forEach(assignment => {
+            const employeeEmail = assignment.employee_email;
+            const employeeName = assignment.employee_name || employeeEmail;
+            
+            // Get channel from allUsers
+            const user = allUsers.find(u => u.email === employeeEmail);
+            const channel = user?.channel || '-';
+            
+            if (!agentStats.has(employeeEmail)) {
+                // Get saved target for this agent and month, default to 22
+                const target = getAuditTarget(employeeEmail, year, month, 22);
+                agentStats.set(employeeEmail, {
+                    name: employeeName,
+                    email: employeeEmail,
+                    channel: channel,
+                    target: target,
+                    totalAudits: 0,
+                    completedAudits: 0, // Will be populated from audit tables
+                    auditorBreakdown: new Map() // auditor_email -> count
+                });
+            }
+            
+            const stats = agentStats.get(employeeEmail);
+            stats.totalAudits++;
+            
+            // Get auditor name
+            const auditor = allUsers.find(u => u.email === assignment.auditor_email) ||
+                           qualityAnalysts.find(qa => qa.email === assignment.auditor_email);
+            const auditorName = auditor?.name || assignment.auditor_email.split('@')[0];
+            
+            // Update auditor breakdown
+            if (!stats.auditorBreakdown.has(assignment.auditor_email)) {
+                stats.auditorBreakdown.set(assignment.auditor_email, {
+                    name: auditorName,
+                    count: 0
+                });
+            }
+            stats.auditorBreakdown.get(assignment.auditor_email).count++;
+        });
+        
+        // Load completed audits from all scorecard tables
+        const completedAuditsCount = new Map(); // employee_email -> count
+        
+        try {
+            // Get all audit tables (similar to expert-audits.html)
+            let tablesToQuery = [];
+            
+            // Try to get tables via RPC first
+            try {
+                const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
+                
+                if (!tablesError && allTables && allTables.length > 0) {
+                    tablesToQuery = allTables.map(t => t.table_name);
+                } else if (allScorecards && allScorecards.length > 0) {
+                    // Fallback to scorecards
+                    tablesToQuery = allScorecards.map(s => s.table_name).filter(Boolean);
+                }
+            } catch (rpcError) {
+                console.warn('RPC call failed, using scorecard-based loading:', rpcError);
+                if (allScorecards && allScorecards.length > 0) {
+                    tablesToQuery = allScorecards.map(s => s.table_name).filter(Boolean);
+                }
+            }
+            
+            // Query each table for completed audits
+            for (const tableName of tablesToQuery) {
+                try {
+                    let query = window.supabaseClient
+                        .from(tableName)
+                        .select('employee_email, audit_status');
+                    
+                    const { data, error } = await query;
+                    
+                    if (error) {
+                        // Some tables may not have audit_status column, try without filter
+                        const retryQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('employee_email');
+                        
+                        const retryResult = await retryQuery;
+                        if (retryResult.error) {
+                            console.warn(`Error loading from ${tableName}:`, retryResult.error);
+                            continue;
+                        }
+                        
+                        // If no audit_status column, assume all are completed (legacy audits)
+                        if (retryResult.data) {
+                            retryResult.data.forEach(audit => {
+                                if (audit.employee_email) {
+                                    const email = (audit.employee_email || '').toLowerCase().trim();
+                                    completedAuditsCount.set(email, (completedAuditsCount.get(email) || 0) + 1);
+                                }
+                            });
+                        }
+                    } else if (data) {
+                        // Filter for completed audits
+                        data.forEach(audit => {
+                            const auditStatus = audit.audit_status;
+                            // Only include completed audits or audits without audit_status (legacy completed audits)
+                            const isComplete = !auditStatus || auditStatus === 'completed';
+                            if (isComplete && audit.employee_email) {
+                                const email = (audit.employee_email || '').toLowerCase().trim();
+                                completedAuditsCount.set(email, (completedAuditsCount.get(email) || 0) + 1);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.warn(`Exception loading from ${tableName}:`, err);
+                    continue;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading completed audits:', error);
+        }
+        
+        // Update agent stats with completed audit counts
+        agentStats.forEach((stats, email) => {
+            const normalizedEmail = (email || '').toLowerCase().trim();
+            stats.completedAudits = completedAuditsCount.get(normalizedEmail) || 0;
+        });
+        
+        // Convert to array and sort by name
+        const agentArray = Array.from(agentStats.values()).sort((a, b) => 
+            a.name.localeCompare(b.name)
+        );
+        
+        if (agentArray.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: #6b7280;">No assignments found</td></tr>';
+            return;
+        }
+        
+        // Render table rows
+        tbody.innerHTML = agentArray.map(agent => {
+            // Calculate progress percentage relative to agent's target
+            const progressPercentage = agent.target > 0 
+                ? Math.min(100, Math.round((agent.completedAudits / agent.target) * 100))
+                : 0;
+            
+            // Sanitize email for use in IDs
+            const sanitizedEmail = sanitizeEmailForId(agent.email);
+            
+            // Build auditor breakdown HTML
+            const auditorBreakdownHtml = Array.from(agent.auditorBreakdown.entries())
+                .sort((a, b) => b[1].count - a[1].count) // Sort by count descending
+                .map(([auditorEmail, data]) => {
+                    return `
+                        <div style="display: flex; align-items: center; gap: 0.375rem; padding: 0.1875rem 0; border-bottom: 0.0352rem solid #f3f4f6;">
+                            <span style="font-weight: 600; color: #374151; min-width: 6rem;">${escapeHtml(data.name)}:</span>
+                            <span style="color: #374151; font-size: 0.5625rem;">${data.count}</span>
+                        </div>
+                    `;
+                }).join('');
+            
+            return `
+                <tr data-email="${escapeHtml(agent.email)}" data-completed="${agent.completedAudits}" style="border-bottom: 0.0469rem solid #f3f4f6;">
+                    <td style="padding: 0.375rem; font-size: 0.5625rem; font-weight: 600; color: #374151;">
+                        ${escapeHtml(agent.name)}
+                    </td>
+                    <td style="padding: 0.375rem; font-size: 0.5625rem; color: #6b7280;">
+                        ${escapeHtml(agent.channel)}
+                    </td>
+                    <td style="padding: 0.375rem; text-align: center;">
+                        <input type="number" 
+                               class="audit-target-input" 
+                               data-email="${escapeHtml(agent.email)}"
+                               value="${agent.target}"
+                               min="0"
+                               max="100"
+                               onchange="updateAuditTarget('${escapeHtml(agent.email)}', this.value)"
+                               onblur="updateAuditTarget('${escapeHtml(agent.email)}', this.value)">
+                    </td>
+                    <td style="padding: 0.375rem; text-align: center; font-size: 0.5625rem; color: #374151;">
+                        ${agent.totalAudits}
+                    </td>
+                    <td style="padding: 0.375rem; text-align: center; font-size: 0.5625rem; color: #374151;">
+                        ${agent.completedAudits}
+                    </td>
+                    <td style="padding: 0.375rem; font-size: 0.5625rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span id="progress-text-${sanitizedEmail}" style="font-size: 0.5625rem; font-weight: 600; color: #374151; min-width: 1.875rem;">${progressPercentage}%</span>
+                            <div style="flex: 1; height: 0.5625rem; background-color: #e5e7eb; border-radius: 0.2812rem; overflow: hidden; position: relative;">
+                                <div id="progress-bar-${sanitizedEmail}" style="height: 100%; width: ${progressPercentage}%; background-color: #1A733E; transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 0.375rem; font-size: 0.5625rem;">
+                        <button onclick="toggleBreakdown('${escapeHtml(agent.email)}')" 
+                                style="display: flex; align-items: center; gap: 0.375rem; padding: 0.1875rem 0.375rem; background: none; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; cursor: pointer; font-size: 0.5625rem; color: #374151; font-family: 'Poppins', sans-serif; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#9ca3af';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.borderColor='#d1d5db';">
+                            <svg id="breakdown-icon-${sanitizedEmail}" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                            <span>Show</span>
+                        </button>
+                        <div id="breakdown-content-${sanitizedEmail}" style="display: none; margin-top: 0.375rem; padding: 0.375rem; background: #f9fafb; border-radius: 0.1875rem; border: 0.0469rem solid #e5e7eb;">
+                            <div style="display: flex; flex-direction: column; gap: 0.1875rem;">
+                                ${auditorBreakdownHtml || '<span style="color: #9ca3af;">No auditors assigned</span>'}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading agent-wise summary:', error);
+        const tbody = document.getElementById('agentWiseSummaryTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: #ef4444;">Error loading summary: ${error.message || 'Unknown error'}</td></tr>`;
+        }
+    }
+}
+
+async function refreshAgentWiseSummary() {
+    await loadAgentWiseSummary();
+}
+
+// Sanitize email for use in DOM IDs
+function sanitizeEmailForId(email) {
+    return (email || '').replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+// Toggle breakdown visibility for an agent
+window.toggleBreakdown = function(agentEmail) {
+    const sanitizedEmail = sanitizeEmailForId(agentEmail);
+    const contentId = `breakdown-content-${sanitizedEmail}`;
+    const iconId = `breakdown-icon-${sanitizedEmail}`;
+    const content = document.getElementById(contentId);
+    const icon = document.getElementById(iconId);
+    const button = icon?.closest('button');
+    
+    if (!content || !icon || !button) return;
+    
+    const isHidden = content.style.display === 'none';
+    
+    if (isHidden) {
+        content.style.display = 'block';
+        icon.style.transform = 'rotate(90deg)';
+        const span = button.querySelector('span');
+        if (span) span.textContent = 'Hide';
+    } else {
+        content.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        const span = button.querySelector('span');
+        if (span) span.textContent = 'Show';
+    }
+};
+
+// Update audit target for an agent
+window.updateAuditTarget = function(agentEmail, targetValue) {
+    const { year, month } = getCurrentMonthYear();
+    
+    // Handle empty string
+    if (targetValue === '' || targetValue === null || targetValue === undefined) {
+        const previousTarget = getAuditTarget(agentEmail, year, month, 22);
+        const input = document.querySelector(`input.audit-target-input[data-email="${agentEmail}"]`);
+        if (input) {
+            input.value = previousTarget;
+        }
+        return;
+    }
+    
+    const target = parseInt(targetValue);
+    
+    if (isNaN(target) || target < 0) {
+        // Invalid value, restore previous value
+        const previousTarget = getAuditTarget(agentEmail, year, month, 22);
+        const input = document.querySelector(`input.audit-target-input[data-email="${agentEmail}"]`);
+        if (input) {
+            input.value = previousTarget;
+        }
+        return;
+    }
+    
+    // Check if value actually changed
+    const currentTarget = getAuditTarget(agentEmail, year, month, 22);
+    if (target === currentTarget) {
+        return; // No change, don't update
+    }
+    
+    // Save the target
+    if (setAuditTarget(agentEmail, year, month, target)) {
+        // Update progress bar immediately without reloading
+        updateProgressBar(agentEmail, target);
+    }
+};
+
+// Update progress bar for a specific agent
+function updateProgressBar(agentEmail, target) {
+    const sanitizedEmail = sanitizeEmailForId(agentEmail);
+    // Find row by iterating through rows and checking data-email attribute
+    const rows = document.querySelectorAll('tr[data-email]');
+    let row = null;
+    for (const r of rows) {
+        if (r.getAttribute('data-email') === agentEmail) {
+            row = r;
+            break;
+        }
+    }
+    
+    if (!row) return;
+    
+    // Get completed audits from data attribute
+    const completedAudits = parseInt(row.getAttribute('data-completed')) || 0;
+    
+    // Calculate new progress percentage
+    const progressPercentage = target > 0 
+        ? Math.min(100, Math.round((completedAudits / target) * 100))
+        : 0;
+    
+    // Update progress text
+    const progressText = document.getElementById(`progress-text-${sanitizedEmail}`);
+    if (progressText) {
+        progressText.textContent = `${progressPercentage}%`;
+    }
+    
+    // Update progress bar width
+    const progressBar = document.getElementById(`progress-bar-${sanitizedEmail}`);
+    if (progressBar) {
+        progressBar.style.width = `${progressPercentage}%`;
+    }
 }
 
 // ============================================================================
@@ -1531,6 +1999,7 @@ async function deleteAssignment(assignmentId) {
         
         // Refresh the table
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error deleting assignment:', error);
@@ -2192,6 +2661,7 @@ async function autoAssignBySupervisor() {
         
         // Refresh assigned audits view
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error auto-assigning audits:', error);
@@ -2284,6 +2754,7 @@ async function performBulkAssignment() {
         
         // Refresh assigned audits view
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error assigning audits:', error);
@@ -2519,6 +2990,7 @@ async function applyBulkEdit() {
         document.getElementById('bulkEditAuditor').value = '';
         document.getElementById('bulkEditScorecard').value = '';
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error bulk editing assignments:', error);
@@ -2572,6 +3044,7 @@ async function bulkDeleteAssignments() {
         
         // Reload assignments
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error bulk deleting assignments:', error);
@@ -2610,6 +3083,7 @@ async function updateWeek(assignmentId, weekNumber) {
         
         // Refresh the table silently
         await loadAssignedAudits();
+        await loadAgentWiseSummary();
         
     } catch (error) {
         console.error('Error updating week:', error);

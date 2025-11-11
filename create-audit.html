@@ -8796,6 +8796,39 @@ document.addEventListener('DOMContentLoaded', function() {
             auditData.id = 'audit_' + Date.now();
             auditData.submittedAt = new Date().toISOString();
             
+            // FIXED: Recalculate passing status right before saving to ensure is_fail_all is checked
+            const finalScore = parseFloat(auditData.averageScore) || 0;
+            const threshold = currentScorecard ? parseFloat(currentScorecard.passing_threshold) : 85;
+            
+            // Check if any "fail all" parameters have errors
+            let hasFailAllError = false;
+            currentParameters.forEach(param => {
+                if (param.is_fail_all) {
+                    const paramType = param.parameter_type || 'error';
+                    const fieldValue = auditData[param.field_id];
+                    let errorCount = 0;
+                    
+                    if (param.field_type === 'radio') {
+                        errorCount = fieldValue ? parseInt(fieldValue) : 0;
+                    } else {
+                        errorCount = fieldValue ? parseInt(fieldValue) : 0;
+                    }
+                    
+                    if (errorCount > 0) {
+                        hasFailAllError = true;
+                    }
+                }
+            });
+            
+            // Set passing status based on fail-all errors first, then score
+            if (hasFailAllError) {
+                auditData.passingStatus = 'Not Passing';
+            } else if (finalScore >= threshold) {
+                auditData.passingStatus = 'Passing';
+            } else {
+                auditData.passingStatus = 'Not Passing';
+            }
+            
             // Capture audit start and end timestamps
             // For editing existing audits, preserve original start time if it exists
             let auditStartTime = null;
@@ -9364,7 +9397,14 @@ function calculateErrorsByCategory() {
     const scoringType = currentScorecard ? currentScorecard.scoring_type : 'deductive';
     
     currentParameters.forEach(param => {
+        // FIXED: Default to 'error' if parameter_type is null/undefined/empty
         const paramType = param.parameter_type || 'error';
+        
+        // Only count error parameters, not achievements/bonuses
+        if (paramType === 'achievement' || paramType === 'bonus') {
+            return; // Skip achievements/bonuses for error counting
+        }
+        
         let count = 0;
         
         if (param.field_type === 'radio') {
@@ -9374,18 +9414,12 @@ function calculateErrorsByCategory() {
             // Only count if something is actually selected
             if (selectedRadio) {
                 const selectedValue = parseInt(selectedRadio.value);
-                
-                // For additive/achievement types: NO (0) = not achieved = counts as error
                 // For error types: YES (1) = error occurred = counts as error
-                if (paramType === 'achievement' || paramType === 'bonus') {
-                    count = selectedValue === 0 ? 1 : 0; // NO = 1 error, YES = 0 errors
-                } else {
-                    count = selectedValue; // YES = 1 error, NO = 0 errors
-                }
+                count = selectedValue; // YES = 1 error, NO = 0 errors
             }
             // If nothing selected, count = 0 (don't count as error yet)
         } else {
-            // Counter field
+            // Counter field - the value itself is the error count
             const field = document.getElementById(param.field_id);
             count = field ? (parseInt(field.value) || 0) : 0;
         }
@@ -9443,21 +9477,22 @@ function calculateAverageScore() {
     let totalErrorsCount = 0;
     
     currentParameters.forEach(param => {
+        // FIXED: Default to 'error' if parameter_type is null/undefined/empty
         const paramType = param.parameter_type || 'error';
+        
+        // Only count error parameters, not achievements/bonuses
+        if (paramType === 'achievement' || paramType === 'bonus') {
+            return; // Skip achievements/bonuses for error counting
+        }
+        
         let value = 0;
         let errorCount = 0;
         
         if (param.field_type === 'radio') {
             const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
             value = selectedRadio ? parseInt(selectedRadio.value) : 0;
-            
-            // For additive/achievement: NO (0) = not achieved = error
             // For error parameters: YES (1) = error occurred = error
-            if (paramType === 'achievement' || paramType === 'bonus') {
-                errorCount = value === 0 ? 1 : 0; // NO = error, YES = no error
-            } else {
-                errorCount = value; // YES = error, NO = no error
-            }
+            errorCount = value; // YES = error, NO = no error
         } else {
             // Counter field - count is the value itself
             const field = document.getElementById(param.field_id);
@@ -9520,7 +9555,15 @@ function calculateDeductiveScore() {
     let totalDeduction = 0;
     
     currentParameters.forEach(param => {
-        if (param.parameter_type !== 'error' && param.points_direction !== 'subtract') return;
+        // Skip only if it's explicitly an achievement or bonus type (not an error type)
+        // Include if: parameter_type is 'error', points_direction is 'subtract', or parameter_type is null/undefined/empty (default to error)
+        const paramType = param.parameter_type || 'error';
+        const pointsDirection = param.points_direction;
+        
+        // Skip achievement/bonus types that don't have subtract direction
+        if ((paramType === 'achievement' || paramType === 'bonus') && pointsDirection !== 'subtract') {
+            return;
+        }
         
         let value = 0;
         
@@ -9599,13 +9642,18 @@ function calculateHybridScore() {
         
         const points = parseFloat(param.penalty_points) || 0;
         
-        if (param.parameter_type === 'error' || param.points_direction === 'subtract') {
+        // Default to 'error' if parameter_type is null/undefined/empty
+        const paramType = param.parameter_type || 'error';
+        const pointsDirection = param.points_direction;
+        
+        if (paramType === 'error' || pointsDirection === 'subtract') {
             // Subtract from base score
             baseScore -= value * points;
-        } else if (param.parameter_type === 'achievement' || param.parameter_type === 'bonus' || param.points_direction === 'add') {
+        } else if (paramType === 'achievement' || paramType === 'bonus' || pointsDirection === 'add') {
             // Add to bonus
             bonusPoints += value * points;
         }
+        // If parameter doesn't match any condition, it's skipped (no deduction or bonus)
     });
     
     // Apply max bonus cap if set
@@ -9700,7 +9748,14 @@ function calculateTotalErrorsCount() {
     let totalCount = 0;
     
     currentParameters.forEach(param => {
+        // FIXED: Default to 'error' if parameter_type is null/undefined/empty
         const paramType = param.parameter_type || 'error';
+        
+        // Only count error parameters, not achievements/bonuses
+        if (paramType === 'achievement' || paramType === 'bonus') {
+            return; // Skip achievements/bonuses for error counting
+        }
+        
         let count = 0;
         
         if (param.field_type === 'radio') {
@@ -9710,18 +9765,12 @@ function calculateTotalErrorsCount() {
             // Only count if something is actually selected
             if (selectedRadio) {
                 const selectedValue = parseInt(selectedRadio.value);
-                
-                // For additive/achievement types: NO (0) = not achieved = counts as error
                 // For error types: YES (1) = error occurred = counts as error
-                if (paramType === 'achievement' || paramType === 'bonus') {
-                    count = selectedValue === 0 ? 1 : 0; // NO = 1 error, YES = 0 errors
-                } else {
-                    count = selectedValue; // YES = 1 error, NO = 0 errors
-                }
+                count = selectedValue; // YES = 1 error, NO = 0 errors
             }
             // If nothing selected, count = 0 (don't count as error yet)
         } else {
-            // Counter field
+            // Counter field - the value itself is the error count
             const field = document.getElementById(param.field_id);
             count = field ? (parseInt(field.value) || 0) : 0;
         }

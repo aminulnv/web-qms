@@ -774,7 +774,9 @@ async function loadAuditFromURL() {
                             severity: severity,
                             field_type: param.field_type || 'counter',
                             parameter_type: param.parameter_type || 'error',
-                            points: param.penalty_points || 0
+                            points: param.penalty_points || 0,
+                            is_fail_all: param.is_fail_all || false,
+                            error_category: param.error_category || ''
                         };
                     });
                 }
@@ -1138,11 +1140,11 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Avg Score</p>
-                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.averageScore || '0'}%</div>
+                    <div id="averageScoreDisplay" style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.averageScore || '0'}%</div>
                 </div>
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
-                    <div style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.passingStatus || 'N/A'}</div>
+                    <div id="passingStatusDisplay" style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.passingStatus || 'N/A'}</div>
                 </div>
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Post-Status</p>
@@ -1761,6 +1763,8 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
     if (mode === 'edit') {
         setTimeout(() => {
             populateEditFormFields(audit);
+            // Update score display after form is populated
+            updateAverageScoreDisplay();
         }, 100);
     }
 
@@ -5271,6 +5275,19 @@ document.addEventListener('click', function(e) {
             if (currentValue === 0) {
                 targetInput.value = 0;
             }
+            
+            // Update score calculation whenever error count changes
+            // Use setTimeout to ensure DOM is updated first
+            setTimeout(() => {
+                updateAverageScoreDisplay();
+            }, 10);
+            
+            // Also update calculated score if in reversal approval interface
+            if (shouldShowReversalApprovalInterface()) {
+                setTimeout(() => {
+                    updateCalculatedScore();
+                }, 100);
+            }
         }
     }
 });
@@ -5285,17 +5302,13 @@ document.addEventListener('change', function(e) {
         // Update feedback boxes based on new selection
         updateFeedbackBoxesForParameter(fieldName, fieldType, paramType);
         
-        // Update score calculation if in edit mode with pending reversal
-        if (shouldShowReversalApprovalInterface()) {
-            updateCalculatedScore();
-        }
-    }
-});
-
-// Counter Button Change Handler - also update score calculation
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('counter-btn') || e.target.closest('.counter-btn')) {
-        // Update score calculation if in edit mode with pending reversal
+        // Update score calculation whenever error count changes
+        // Use setTimeout to ensure DOM is updated first
+        setTimeout(() => {
+            updateAverageScoreDisplay();
+        }, 10);
+        
+        // Also update calculated score if in edit mode with pending reversal
         if (shouldShowReversalApprovalInterface()) {
             setTimeout(() => {
                 updateCalculatedScore();
@@ -5366,7 +5379,12 @@ function calculateDeductiveScoreForEdit() {
     let totalDeduction = 0;
     
     currentErrorFields.forEach(field => {
-        if (field.parameter_type !== 'error') return;
+        // Default to 'error' if parameter_type is null/undefined/empty
+        // Skip only if it's explicitly an achievement or bonus type
+        const paramType = field.parameter_type || 'error';
+        if (paramType === 'achievement' || paramType === 'bonus') {
+            return;
+        }
         
         let value = 0;
         
@@ -5427,13 +5445,17 @@ function calculateHybridScoreForEdit() {
         
         const points = parseFloat(field.points) || 0;
         
-        if (field.parameter_type === 'error') {
+        // Default to 'error' if parameter_type is null/undefined/empty
+        const paramType = field.parameter_type || 'error';
+        
+        if (paramType === 'error') {
             // Subtract from base score
             baseScore -= value * points;
-        } else if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
+        } else if (paramType === 'achievement' || paramType === 'bonus') {
             // Add to bonus
             bonusPoints += value * points;
         }
+        // If parameter doesn't match any condition, it's skipped (no deduction or bonus)
     });
     
     // Apply max bonus cap if set
@@ -5476,6 +5498,136 @@ function updateCalculatedScore() {
         passingStatusDisplay.className = isPassing 
             ? 'text-green-600 font-semibold' 
             : 'text-red-600 font-semibold';
+    }
+}
+
+// Update average score display in the main form (similar to create-audit.html)
+function updateAverageScoreDisplay() {
+    if (!currentErrorFields || currentErrorFields.length === 0 || !currentAuditScorecard) {
+        return;
+    }
+    
+    const newScore = calculateNewScore();
+    
+    // Update average score field if it exists (hidden input for form submission)
+    const averageScoreField = document.getElementById('averageScore');
+    if (averageScoreField) {
+        averageScoreField.value = newScore.toFixed(2);
+    }
+    
+    // Update average score display element - try multiple ways to find it
+    let averageScoreDisplay = document.getElementById('averageScoreDisplay');
+    
+    // If not found by ID, try to find it by looking for the element containing "Avg Score" label
+    if (!averageScoreDisplay) {
+        // Find the label "Avg Score" and get the next sibling div
+        const labels = Array.from(document.querySelectorAll('p'));
+        const avgScoreLabel = labels.find(p => p.textContent && p.textContent.trim().toUpperCase().includes('AVG SCORE'));
+        if (avgScoreLabel && avgScoreLabel.nextElementSibling) {
+            averageScoreDisplay = avgScoreLabel.nextElementSibling;
+        }
+    }
+    
+    // If still not found, try querySelector for any element with averageScore in id
+    if (!averageScoreDisplay) {
+        averageScoreDisplay = document.querySelector('[id*="averageScore" i]');
+    }
+    
+    if (averageScoreDisplay) {
+        averageScoreDisplay.textContent = `${newScore.toFixed(2)}%`;
+    }
+    
+    // Update header score display
+    const headerScoreDisplay = document.getElementById('headerScoreDisplay');
+    if (headerScoreDisplay) {
+        headerScoreDisplay.textContent = `${newScore.toFixed(2)}%`;
+    }
+    
+    // Update passing status
+    const scorecard = currentAuditScorecard || {};
+    const passingThreshold = parseFloat(scorecard.passing_threshold) || 85;
+    const passingStatusField = document.getElementById('passingStatus');
+    const passingStatusDisplay = document.getElementById('passingStatusDisplay');
+    const headerStatusDisplay = document.getElementById('headerStatusDisplay');
+    const headerElement = document.getElementById('auditFormHeader');
+    
+    // Check if any "fail all" parameters have errors
+    let hasFailAllError = false;
+    if (currentErrorFields) {
+        currentErrorFields.forEach(field => {
+            // Check if this field has is_fail_all flag
+            if (field.is_fail_all) {
+                let errorCount = 0;
+                
+                if (field.field_type === 'radio') {
+                    const selectedRadio = document.querySelector(`input[name="${field.key}"]:checked`);
+                    const value = selectedRadio ? parseInt(selectedRadio.value) : 0;
+                    // For error parameters: YES (1) = error
+                    // For achievement/bonus: NO (0) = error
+                    if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
+                        errorCount = value === 0 ? 1 : 0;
+                    } else {
+                        errorCount = value;
+                    }
+                } else {
+                    const fieldInput = document.getElementById(field.key);
+                    errorCount = fieldInput ? (parseInt(fieldInput.value) || 0) : 0;
+                }
+                
+                if (errorCount > 0) {
+                    hasFailAllError = true;
+                }
+            }
+        });
+    }
+    
+    // Determine passing status
+    let passingStatus = 'Not Passing';
+    if (hasFailAllError) {
+        passingStatus = 'Not Passing';
+    } else if (newScore >= passingThreshold) {
+        passingStatus = 'Pass';
+    } else {
+        passingStatus = 'Not Passing';
+    }
+    
+    if (passingStatusField) {
+        passingStatusField.value = passingStatus;
+    }
+    
+    // Update passing status display element if it exists
+    if (passingStatusDisplay) {
+        // Normalize status for display
+        const displayStatus = passingStatus === 'Pass' || passingStatus === 'Passing' || passingStatus === 'Passed' 
+            ? 'Pass' 
+            : (passingStatus === 'Not Passing' || passingStatus === 'Not Passed' 
+                ? 'Not Passed' 
+                : passingStatus);
+        passingStatusDisplay.textContent = displayStatus;
+    }
+    
+    // Update header status display
+    if (headerStatusDisplay) {
+        // Determine status icon
+        const isPassing = passingStatus === 'Pass' || passingStatus === 'Passing' || passingStatus === 'Passed';
+        const statusIcon = isPassing ? '✓ ' : '✗ ';
+        // Normalize status for display
+        const displayStatus = isPassing 
+            ? 'Pass' 
+            : (passingStatus === 'Not Passing' || passingStatus === 'Not Passed' 
+                ? 'Not Passed' 
+                : passingStatus);
+        headerStatusDisplay.textContent = `${statusIcon}${displayStatus}`;
+    }
+    
+    // Update header background color based on passing status
+    if (headerElement) {
+        const isPassing = passingStatus === 'Pass' || passingStatus === 'Passing' || passingStatus === 'Passed';
+        if (isPassing) {
+            headerElement.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+        } else {
+            headerElement.style.background = 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)';
+        }
     }
 }
 

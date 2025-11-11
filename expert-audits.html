@@ -1873,7 +1873,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function normalizePassingStatus(status) {
         if (!status) return status;
         // Convert old values to new ones for consistency
-        if (status === 'Passing') return 'Passed';
+        if (status === 'Passing' || status === 'Pass') return 'Passed';
         if (status === 'Not Passing') return 'Not Passed';
         return status; // Return as-is if already normalized or unknown
     }
