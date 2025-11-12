@@ -380,6 +380,7 @@
                     <div style="display: flex; align-items: center; gap: 0.3234rem;">
                         <span style="font-size: 0.4852rem; color: #6b7280;">Participated Conversations:</span>
                         <span id="pullConversationsCount" style="font-size: 0.5659rem; font-weight: 600; color: #1A733E;">0</span>
+                        <span id="pullConversationsAdminName" style="font-size: 0.4852rem; color: #6b7280; margin-left: 0.3234rem; font-weight: 500;"></span>
                     </div>
                     <button onclick="openPullConversationsFilterDialog()" style="display: flex; align-items: center; gap: 0.2425rem; padding: 0.2425rem 0.4852rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'" title="Advanced Filters">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2774,6 +2775,8 @@ window.closeConversationsSection = function() {
 // ============================================================================
 
 let pullConversationsAdminId = null;
+let pullConversationsAdminName = null;
+let pullConversationsAdminEmail = null;
 let pullConversationsList = []; // Original unfiltered list from cache/API
 let pullConversationsFilteredList = []; // Filtered list for display
 let pullConversationsFilters = {
@@ -2812,6 +2815,11 @@ window.pullConversationsFromIntercom = async function() {
             const yesterdayStr = yesterday.toISOString().split('T')[0];
             dateInput.value = yesterdayStr;
         }
+        
+        // Reset admin info
+        pullConversationsAdminId = null;
+        pullConversationsAdminName = null;
+        pullConversationsAdminEmail = currentUserEmail;
         
         // Find admin ID for current user
         await findAdminIdForCurrentUser(currentUserEmail);
@@ -2886,8 +2894,10 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
             console.log('✅ Date set to:', yesterdayStr);
         }
         
-        // Reset admin ID
+        // Reset admin ID and info
         pullConversationsAdminId = null;
+        pullConversationsAdminName = employeeName || null;
+        pullConversationsAdminEmail = employeeEmail || null;
         
         // Find admin ID for the employee email (look in Supabase cache first)
         console.log('🔍 Looking up admin ID for email:', employeeEmail);
@@ -2952,6 +2962,10 @@ async function findAdminIdForEmployee(employeeEmail) {
                 if (adminId) {
                     console.log('✅ Admin found in Supabase cache:', adminId);
                     adminFound = true;
+                    // Store admin name from cache if available
+                    if (cachedAdmin.name && !pullConversationsAdminName) {
+                        pullConversationsAdminName = cachedAdmin.name;
+                    }
                 }
             } else if (queryError) {
                 console.warn('⚠️ Error querying admin cache:', queryError);
@@ -2994,6 +3008,11 @@ async function findAdminIdForEmployee(employeeEmail) {
             
             adminId = admin.id;
             console.log('✅ Admin found via Intercom API fallback:', adminId);
+            
+            // Store admin name from API if available
+            if (admin.name && !pullConversationsAdminName) {
+                pullConversationsAdminName = admin.name;
+            }
             
             // Cache this admin for future use (async, don't wait)
             if (supabaseClient && admin) {
@@ -3083,12 +3102,17 @@ async function findAdminIdForCurrentUser(userEmail) {
             const admin = admins.find(a => a.email && a.email.toLowerCase() === normalizedEmail);
             
             if (!admin || !admin.id) {
-                showPullConversationsError(`Admin not found for email: ${employeeEmail}`);
+                showPullConversationsError(`Admin not found for email: ${userEmail}`);
                 return;
             }
             
             adminId = admin.id;
             console.log('✅ Admin found via Intercom API fallback:', adminId);
+            
+            // Store admin name from API if available
+            if (admin.name && !pullConversationsAdminName) {
+                pullConversationsAdminName = admin.name;
+            }
             
             // Cache this admin for future use (async, don't wait)
             if (supabaseClient && admin) {
@@ -3105,11 +3129,14 @@ async function findAdminIdForCurrentUser(userEmail) {
     }
     
     if (!adminId) {
-        showPullConversationsError(`Admin ID not found for email: ${employeeEmail}`);
+        showPullConversationsError(`Admin ID not found for email: ${userEmail}`);
         return;
     }
     
     pullConversationsAdminId = adminId;
+    if (!pullConversationsAdminEmail) {
+        pullConversationsAdminEmail = userEmail;
+    }
     console.log('✅ Admin ID set:', pullConversationsAdminId);
 };
 
@@ -3666,10 +3693,7 @@ async function fetchConversationsForCurrentUser(selectedDate) {
         } else {
             // No filters, just display all conversations
             displayPullConversationsList(conversations);
-            const countElement = document.getElementById('pullConversationsCount');
-            if (countElement) {
-                countElement.textContent = conversations.length;
-            }
+            updatePullConversationsCountAndAdmin(conversations.length);
         }
         
         // Hide loading and show results
@@ -3763,10 +3787,7 @@ async function fetchConversationsForCurrentUser(selectedDate) {
         } else {
             // No filters, just display all conversations
             displayPullConversationsList(conversations);
-            const countElement = document.getElementById('pullConversationsCount');
-            if (countElement) {
-                countElement.textContent = conversations.length;
-            }
+            updatePullConversationsCountAndAdmin(conversations.length);
         }
         
         // Hide loading and show results
@@ -3838,6 +3859,25 @@ function showElementsAfterLoading() {
     }
 }
 
+// Update count and admin name display
+function updatePullConversationsCountAndAdmin(count) {
+    const countElement = document.getElementById('pullConversationsCount');
+    if (countElement) {
+        countElement.textContent = count;
+    }
+    
+    const adminNameElement = document.getElementById('pullConversationsAdminName');
+    if (adminNameElement) {
+        if (pullConversationsAdminName) {
+            adminNameElement.textContent = `- ${pullConversationsAdminName}`;
+            adminNameElement.style.display = 'inline';
+        } else {
+            adminNameElement.textContent = '';
+            adminNameElement.style.display = 'none';
+        }
+    }
+}
+
 // Display conversations list
 function displayPullConversationsList(conversations) {
     const tableBody = document.getElementById('pullConversationsTableBody');
@@ -3883,17 +3923,16 @@ function displayPullConversationsList(conversations) {
             ? `<span style="color: #dc2626; font-size: 0.875rem;" title="Priority">🔴</span>`
             : `<span style="color: #9ca3af; font-size: 0.6875rem;">-</span>`;
         
-        // Format tags (compact, show first 2)
+        // Format tags (show all with full names)
         let tagsHtml = '-';
         if (tags && tags.length > 0) {
-            const displayTags = tags.slice(0, 2).map(tag => {
+            const displayTags = tags.map(tag => {
                 const tagName = (tag.name || tag || '').toString();
                 return tagName;
             }).filter(tag => tag);
             if (displayTags.length > 0) {
-                tagsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 0.125rem; max-width: 8rem;">
-                    ${displayTags.map(tag => `<span style="background: #e0e7ff; color: #4338ca; padding: 0.0625rem 0.25rem; border-radius: 0.125rem; font-size: 0.5625rem; font-weight: 500;">${escapeHtml(tag.substring(0, 8))}</span>`).join('')}
-                    ${tags.length > 2 ? `<span style="color: #6b7280; font-size: 0.5625rem;" title="${tags.slice(2).map(t => (t.name || t || '').toString()).join(', ')}">+${tags.length - 2}</span>` : ''}
+                tagsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 0.125rem; max-width: 15rem;">
+                    ${displayTags.map(tag => `<span style="background: #e0e7ff; color: #4338ca; padding: 0.0625rem 0.25rem; border-radius: 0.125rem; font-size: 0.5625rem; font-weight: 500;">${escapeHtml(tag)}</span>`).join('')}
                 </div>`;
             }
         }
@@ -3912,12 +3951,12 @@ function displayPullConversationsList(conversations) {
             </td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
                 <div style="display: flex; align-items: center; gap: 0.25rem;">
-                    <span style="font-family: monospace; font-size: 0.625rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId.substring(0, 8) + '...' : 'N/A'}</span>
-                    <button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.125rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
+                    <span style="font-family: monospace; font-size: 0.625rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
+                    ${conversationId && conversationId !== 'N/A' ? `<button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.125rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
                         <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
-                    </button>
+                    </button>` : ''}
                 </div>
             </td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
@@ -3926,7 +3965,7 @@ function displayPullConversationsList(conversations) {
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${stateBadge}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${priorityBadge}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; max-width: 8rem;">${tagsHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; max-width: 15rem;">${tagsHtml}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${createdDate}">${createdDateShort}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${updatedDate}">${updatedDateShort}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
@@ -4064,12 +4103,21 @@ window.openConversationInIntercom = async function(conversationId) {
     const newTab = window.open(conversationUrl, '_blank', 'noopener,noreferrer');
     
     if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+        // Check if user has chosen to not show this warning
+        const doNotShowKey = 'intercom_popup_blocked_warning_dismissed';
+        if (localStorage.getItem(doNotShowKey) === 'true') {
+            // User chose not to see this warning, just return silently
+            return;
+        }
+        
         if (window.confirmationDialog) {
             await window.confirmationDialog.show({
                 title: 'Popup Blocked',
                 message: 'Please allow popups for this site to open Intercom conversations.',
                 confirmText: 'OK',
-                type: 'warning'
+                type: 'warning',
+                doNotShowAgain: true,
+                doNotShowAgainKey: doNotShowKey
             });
         } else {
             alert('Please allow popups for this site to open Intercom conversations.');
@@ -4349,11 +4397,8 @@ function filterPullConversations() {
     pullConversationsFilteredList = filtered;
     displayPullConversationsList(filtered);
     
-    // Update count
-    const countElement = document.getElementById('pullConversationsCount');
-    if (countElement) {
-        countElement.textContent = filtered.length;
-    }
+    // Update count and admin name
+    updatePullConversationsCountAndAdmin(filtered.length);
 }
 
 // Clear all filters
@@ -4376,11 +4421,8 @@ window.clearPullConversationsFilters = function() {
     pullConversationsFilteredList = [...pullConversationsList];
     displayPullConversationsList(pullConversationsFilteredList);
     
-    // Update count
-    const countElement = document.getElementById('pullConversationsCount');
-    if (countElement) {
-        countElement.textContent = pullConversationsList.length;
-    }
+    // Update count and admin name
+    updatePullConversationsCountAndAdmin(pullConversationsFilteredList.length);
     
     // Update active filters display
     updatePullConversationsActiveFilters();

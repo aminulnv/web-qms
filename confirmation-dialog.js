@@ -46,6 +46,8 @@ class ConfirmationDialog {
       message: this.dialog.querySelector(".confirmation-message"),
       cancelBtn: this.dialog.querySelector(".confirmation-btn-cancel"),
       confirmBtn: this.dialog.querySelector(".confirmation-btn-confirm"),
+      doNotShowAgainContainer: this.dialog.querySelector(".confirmation-do-not-show-again"),
+      doNotShowAgainCheckbox: this.dialog.querySelector(".confirmation-do-not-show-again-checkbox"),
     }
 
     // Assemble dialog
@@ -71,7 +73,7 @@ class ConfirmationDialog {
   getDialogTemplate() {
     return `
       <div class="confirmation-header">
-        <div class="confirmation-logo" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background-color: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; margin-right: 0.75rem;">
+        <div class="confirmation-logo">
           <svg xmlns="http://www.w3.org/2000/svg" height="1.5rem" viewBox="0 0 24 24" width="1.5rem" fill="#3b82f6">
             <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
           </svg>
@@ -80,6 +82,12 @@ class ConfirmationDialog {
       </div>
       <div class="confirmation-body">
         <p class="confirmation-message">Are you sure you want to proceed?</p>
+      </div>
+      <div class="confirmation-do-not-show-again" style="display: none;">
+        <label class="confirmation-do-not-show-again-label">
+          <input type="checkbox" class="confirmation-do-not-show-again-checkbox">
+          <span class="confirmation-do-not-show-again-text">Do not show this message again</span>
+        </label>
       </div>
       <div class="confirmation-actions">
         <button class="confirmation-btn confirmation-btn-cancel" type="button" aria-label="Cancel action">Cancel</button>
@@ -134,6 +142,8 @@ class ConfirmationDialog {
    * @param {string} options.confirmText - Confirm button text
    * @param {string} options.cancelText - Cancel button text
    * @param {string} options.type - Dialog type (warning, error, info, success)
+   * @param {boolean} options.doNotShowAgain - Show "do not show again" checkbox
+   * @param {string} options.doNotShowAgainKey - localStorage key for storing preference
    * @returns {Promise<boolean>} - Promise that resolves to true if confirmed, false if cancelled
    */
   show(options = {}) {
@@ -147,7 +157,19 @@ class ConfirmationDialog {
         confirmText: "Confirm",
         cancelText: "Cancel",
         type: "warning",
+        doNotShowAgain: false,
+        doNotShowAgainKey: null,
         ...options,
+      }
+
+      // Check if user has chosen to not show this dialog again
+      if (config.doNotShowAgain && config.doNotShowAgainKey) {
+        const shouldNotShow = localStorage.getItem(config.doNotShowAgainKey) === 'true'
+        if (shouldNotShow) {
+          // User chose not to show this dialog, resolve immediately
+          resolve(true)
+          return
+        }
       }
 
       // Update dialog content
@@ -176,6 +198,21 @@ class ConfirmationDialog {
     this.elements.message.textContent = config.message
     this.elements.cancelBtn.textContent = config.cancelText
     this.elements.confirmBtn.textContent = config.confirmText
+    
+    // Show/hide "do not show again" checkbox
+    if (this.elements.doNotShowAgainContainer) {
+      if (config.doNotShowAgain && config.doNotShowAgainKey) {
+        this.elements.doNotShowAgainContainer.style.display = 'block'
+        if (this.elements.doNotShowAgainCheckbox) {
+          this.elements.doNotShowAgainCheckbox.checked = false
+        }
+      } else {
+        this.elements.doNotShowAgainContainer.style.display = 'none'
+      }
+    }
+    
+    // Store config for use in hide method
+    this.currentConfig = config
     
     // Update colors based on type
     this.updateTypeStyles(config.type)
@@ -244,6 +281,13 @@ class ConfirmationDialog {
   hide(confirmed) {
     if (!this.isVisible) return
 
+    // Check if "do not show again" was checked
+    if (this.currentConfig?.doNotShowAgain && this.currentConfig?.doNotShowAgainKey) {
+      if (this.elements.doNotShowAgainCheckbox?.checked) {
+        localStorage.setItem(this.currentConfig.doNotShowAgainKey, 'true')
+      }
+    }
+
     this.isVisible = false
     this.overlay.classList.remove("show")
     this.overlay.setAttribute("aria-hidden", "true")
@@ -254,6 +298,9 @@ class ConfirmationDialog {
       this.resolveCallback(confirmed)
       this.resolveCallback = null
     }
+    
+    // Clear current config
+    this.currentConfig = null
   }
 
   /**
