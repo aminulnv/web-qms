@@ -207,7 +207,7 @@ window.generateAuditHeader = function(options = {}) {
     `;
 
     return `
-        <div id="auditFormHeader" style="background: ${headerGradient}; padding: 0.6469rem 0.9704rem; color: white; box-shadow: 0 0.1213rem 0.1819rem rgba(0,0,0,0.1); margin-bottom: 0.9704rem; transition: background 0.3s ease;">
+        <div id="auditFormHeader" style="background: ${headerGradient}; padding: 0.6469rem 0.9704rem; color: white; box-shadow: 0 0.1213rem 0.1819rem rgba(0,0,0,0.1); margin-bottom: 0.5rem; flex-shrink: 0; transition: background 0.3s ease;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.4852rem;">
                 <div style="flex: 1;">
                     <h2 style="font-size: 0.7278rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif;">${escapeHtml(title)}</h2>
@@ -324,8 +324,8 @@ window.generateTranscriptSection = function(options = {}) {
     const textViewDefaultDisplay = isEdit ? 'flex' : 'none';
 
     return `
-        <div style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 1; min-height: 0; max-height: calc(100vh - 15rem);">
-            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 0; transition: height 0.3s ease; overflow: hidden;">
+        <div style="display: flex; flex-direction: column; gap: 0.3234rem; flex: 1; min-height: 0;">
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 60vh; max-height: 100vh; transition: height 0.3s ease; overflow: hidden;">
                 <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.4852rem;">
                     ${transcriptInfoHtml}
                     <!-- Third Row: Collapsible Information Grid -->
@@ -347,9 +347,9 @@ window.generateTranscriptSection = function(options = {}) {
                     </div>
                 </div>
                 <!-- Chat Interface View -->
-                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0;">
+                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0; width: 100%; box-sizing: border-box;">
                     <!-- Chat messages will be dynamically inserted here -->
-                    <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0;">
+                    <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0; width: 100%; box-sizing: border-box; overflow-x: hidden;">
                         ${isEdit 
                             ? '<div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;"><p>Enter an Interaction ID to automatically load conversation from Intercom</p></div>'
                             : '<!-- Loading state will be shown here initially, then replaced with messages or error -->'
@@ -427,21 +427,21 @@ window.generateAuditFormHTML = function(options = {}) {
     const splitterHtml = window.generateSplitter();
 
     return `
-        <div style="background: white; width: 100%; min-height: 100vh;">
+        <div style="background: white; width: 100%; min-height: 100vh; display: flex; flex-direction: column;">
             ${headerHtml}
             
             <!-- Two Column Layout -->
-            <div id="auditMainContent" style="display: flex; padding: 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: stretch;">
+            <div id="auditMainContent" style="display: flex; padding: 0.5rem 0.9704rem 0.9704rem 0.9704rem; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: stretch; flex: 1; min-height: 0;">
                 
                 <!-- LEFT COLUMN: Interaction Details + Transcript -->
-                <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.6469rem; flex: 0 0 33%; min-width: 13.6451rem; max-width: 75%; padding-right: 0.6469rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
+                <div id="leftColumn" style="display: flex; flex-direction: column; gap: 0.3234rem; flex: 0 0 33%; min-width: 13.6451rem; max-width: 75%; padding-right: 0.6469rem; overflow-x: visible; overflow-y: visible; box-sizing: border-box;">
                     ${transcriptHtml}
                 </div>
                 
                 ${splitterHtml}
                 
                 <!-- RIGHT COLUMN: Error Details & Recommendations -->
-                <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; max-height: calc(100vh - 15rem); overflow-y: auto;">
+                <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;">
                     ${errorDetailsHtml}
                     ${recommendationsHtml}
                 </div>
