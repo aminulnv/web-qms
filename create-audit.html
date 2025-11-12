@@ -670,12 +670,12 @@
                             <div style="display: flex; gap: 0.3234rem; align-items: center;">
                                 <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Min:</label>
                                 <input type="number" id="pullFilterRatingMin" min="1" max="5" placeholder="1" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
-                            </div>
+                    </div>
                             <div style="display: flex; gap: 0.3234rem; align-items: center;">
                                 <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Max:</label>
                                 <input type="number" id="pullFilterRatingMax" min="1" max="5" placeholder="5" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
-                            </div>
-                        </div>
+                    </div>
+                    </div>
                         <div id="pullFilterRatingRangeError" style="display: none; color: #ef4444; font-size: 0.4043rem; margin-top: 0.1617rem;"></div>
                     </div>
                     
@@ -1798,6 +1798,252 @@ window.viewCompletedAudit = function(auditId, scorecardId, tableName) {
     window.location.href = `audit-view.html?id=${auditId}&scorecard=${scorecardId}&table=${tableName}`;
 };
 
+// ============================================================================
+// ASSIGNED AUDITS DISPLAY CONFIGURATION
+// ============================================================================
+// Configure how assigned audits are displayed
+const ASSIGNED_AUDITS_CONFIG = {
+    // GROUPING SETTINGS
+    // Set to true to group audits by employee (shows one row per employee with count)
+    // Set to false to show individual audit rows (original behavior)
+    groupByEmployee: true,
+    
+    // When grouped, show expandable/collapsible list of individual audits
+    // Set to true to allow expanding to see individual audits
+    // Set to false to show only summary (employee name + count)
+    allowExpandCollapse: true,
+    
+    // CONVERSATION LINKING SETTINGS
+    // Set to true to show conversation information and link
+    // Set to false to hide conversation features
+    showConversationLink: true,
+    
+    // When conversation_id exists, show a "View Conversation" button
+    showViewConversationButton: true,
+    
+    // DISPLAY SETTINGS
+    // Show count badge next to employee name when grouped
+    showCountBadge: true,
+    
+    // Show status breakdown when grouped (e.g., "2 pending, 1 in progress")
+    showStatusBreakdown: true,
+    
+    // DEFAULT EXPANDED STATE
+    // When grouped, should groups be expanded by default?
+    // true = all expanded, false = all collapsed, 'mixed' = remember user preference
+    defaultExpandedState: false
+};
+
+// Storage key for expanded/collapsed state
+const EXPANDED_STATE_STORAGE_KEY = 'assignedAuditsExpandedState';
+
+// Track selected audit ID (single selection)
+let selectedAuditId = null;
+
+// ============================================================================
+// ASSIGNED AUDITS HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Group audits by employee email
+ * Returns an object with employee_email as key and grouped data as value
+ */
+function groupAuditsByEmployee(audits) {
+    const grouped = {};
+    
+    audits.forEach(audit => {
+        // Use employee_email as the grouping key
+        const key = (audit.employee_email || 'unknown').toLowerCase().trim();
+        
+        if (!grouped[key]) {
+            grouped[key] = {
+                employee_email: audit.employee_email,
+                employee_name: audit.employee_name || audit.employee_email?.split('@')[0] || 'Unknown',
+                assignments: [],
+                pending: 0,
+                in_progress: 0,
+                completed: 0,
+                total: 0
+            };
+        }
+        
+        grouped[key].assignments.push(audit);
+        grouped[key].total++;
+        
+        // Count by status
+        if (audit.status === 'pending') {
+            grouped[key].pending++;
+        } else if (audit.status === 'in_progress') {
+            grouped[key].in_progress++;
+        } else if (audit.status === 'completed') {
+            grouped[key].completed++;
+        }
+    });
+    
+    return grouped;
+}
+
+/**
+ * Get expanded state for a specific employee
+ */
+function getExpandedState(employeeEmail) {
+    try {
+        const stored = localStorage.getItem(EXPANDED_STATE_STORAGE_KEY);
+        if (!stored) return ASSIGNED_AUDITS_CONFIG.defaultExpandedState;
+        
+        const states = JSON.parse(stored);
+        return states[employeeEmail] ?? ASSIGNED_AUDITS_CONFIG.defaultExpandedState;
+    } catch (e) {
+        return ASSIGNED_AUDITS_CONFIG.defaultExpandedState;
+    }
+}
+
+/**
+ * Set expanded state for a specific employee
+ */
+function setExpandedState(employeeEmail, isExpanded) {
+    try {
+        const stored = localStorage.getItem(EXPANDED_STATE_STORAGE_KEY);
+        const states = stored ? JSON.parse(stored) : {};
+        states[employeeEmail] = isExpanded;
+        localStorage.setItem(EXPANDED_STATE_STORAGE_KEY, JSON.stringify(states));
+    } catch (e) {
+        console.warn('Failed to save expanded state:', e);
+    }
+}
+
+/**
+ * Build conversation link HTML if conversation_id exists
+ */
+function buildConversationLinkHTML(audit) {
+    if (!ASSIGNED_AUDITS_CONFIG.showConversationLink) return '';
+    
+    // Show conversation ID or "No conversation" indicator
+    if (audit.conversation_id) {
+        const conversationId = String(audit.conversation_id).replace(/'/g, "\\'");
+        const workspaceId = window.intercomConfig?.appId || 'aphmhtyj';
+        const conversationUrl = `https://app.intercom.com/a/inbox/${workspaceId}/inbox/conversation/${conversationId}?view`;
+        
+        let html = '';
+        
+        if (ASSIGNED_AUDITS_CONFIG.showViewConversationButton) {
+            html = `<span style="display: inline-flex; align-items: center; gap: 0.2425rem; margin-left: 0.3234rem;">
+                <span style="font-size: 0.4043rem; color: #6b7280;">Conv:</span>
+                <span style="font-family: monospace; font-size: 0.4043rem; color: #2563eb; font-weight: 500;">${conversationId}</span>
+                <button 
+                    onclick="event.stopPropagation(); window.open('${conversationUrl}', '_blank', 'noopener,noreferrer')" 
+                    style="padding: 0.1617rem 0.3234rem; background-color: #2563eb; color: white; border: none; border-radius: 0.1213rem; font-size: 0.3639rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    onmouseover="this.style.backgroundColor='#1d4ed8'"
+                    onmouseout="this.style.backgroundColor='#2563eb'"
+                    title="Open conversation in Intercom"
+                >
+                    View
+                </button>
+            </span>`;
+        } else {
+            // Just show conversation ID as text with copy button
+            html = `<span style="display: inline-flex; align-items: center; gap: 0.2425rem; margin-left: 0.3234rem;">
+                <span style="font-size: 0.4043rem; color: #6b7280;">Conv:</span>
+                <span style="font-family: monospace; font-size: 0.4043rem; color: #2563eb; font-weight: 500;">${conversationId}</span>
+                <button 
+                    onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" 
+                    style="padding: 0.0808rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                    onmouseover="this.style.color='#2563eb'"
+                    onmouseout="this.style.color='#6b7280'"
+                    title="Copy conversation ID"
+                >
+                    <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </button>
+            </span>`;
+        }
+        
+        return html;
+    } else {
+        // Show "No conversation" indicator
+        return `<span style="font-size: 0.4043rem; color: #9ca3af; margin-left: 0.3234rem; font-style: italic;">No conversation</span>`;
+    }
+}
+
+/**
+ * Build status breakdown text (e.g., "2 pending, 1 in progress")
+ */
+function buildStatusBreakdown(group) {
+    if (!ASSIGNED_AUDITS_CONFIG.showStatusBreakdown) return '';
+    
+    const parts = [];
+    if (group.pending > 0) parts.push(`${group.pending} pending`);
+    if (group.in_progress > 0) parts.push(`${group.in_progress} in progress`);
+    if (group.completed > 0) parts.push(`${group.completed} completed`);
+    
+    if (parts.length === 0) return '';
+    return `<span style="font-size: 0.4043rem; color: #6b7280; margin-left: 0.3234rem;">(${parts.join(', ')})</span>`;
+}
+
+/**
+ * Toggle expand/collapse for a grouped audit
+ */
+window.toggleAuditGroup = function(employeeEmail) {
+    if (!ASSIGNED_AUDITS_CONFIG.allowExpandCollapse) return;
+    
+    const groupId = `auditGroup_${employeeEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const groupDiv = document.getElementById(groupId);
+    
+    if (!groupDiv) return;
+    
+    const isCurrentlyExpanded = groupDiv.style.display !== 'none';
+    const newExpandedState = !isCurrentlyExpanded;
+    
+    groupDiv.style.display = newExpandedState ? 'block' : 'none';
+    
+    // Update expand button icon
+    const expandButton = groupDiv.parentElement.querySelector('button[onclick*="toggleAuditGroup"]');
+    if (expandButton) {
+        expandButton.style.transform = newExpandedState ? 'rotate(90deg)' : 'rotate(0deg)';
+        expandButton.title = newExpandedState ? 'Collapse' : 'Expand';
+    }
+    
+    // Save state
+    setExpandedState(employeeEmail, newExpandedState);
+};
+
+/**
+ * Select a nested audit (single selection)
+ */
+window.selectNestedAudit = function(auditId) {
+    // If clicking the same audit, deselect it
+    if (selectedAuditId === auditId) {
+        selectedAuditId = null;
+    } else {
+        selectedAuditId = auditId;
+    }
+    
+    // Update all nested audit cards to reflect selection state
+    const allNestedCards = document.querySelectorAll('.nested-audit-card');
+    allNestedCards.forEach(card => {
+        const cardAuditId = card.getAttribute('data-audit-id');
+        const radioButton = card.querySelector(`input[type="radio"][value="${cardAuditId}"]`);
+        const isSelected = selectedAuditId === cardAuditId;
+        
+        if (isSelected) {
+            // Selected state
+            card.style.background = '#eff6ff';
+            card.style.border = '0.0405rem solid #2563eb';
+            card.style.boxShadow = '0 0 0 0.0808rem rgba(37, 99, 235, 0.1)';
+            if (radioButton) radioButton.checked = true;
+        } else {
+            // Unselected state
+            card.style.background = '#ffffff';
+            card.style.border = '0.0304rem solid #e5e7eb';
+            card.style.boxShadow = 'none';
+            if (radioButton) radioButton.checked = false;
+        }
+    });
+    
+    console.log('Selected audit ID:', selectedAuditId);
+};
+
 // Load pending audits for current user from audit_assignments table
 async function loadPendingAudits() {
     try {
@@ -1866,6 +2112,9 @@ async function loadPendingAudits() {
         // Reset pagination to first page when audits reload
         pendingCurrentPage = 1;
         
+        // Clear selection when audits reload
+        selectedAuditId = null;
+        
         // Display pending audits
         displayPendingAudits();
         
@@ -1889,7 +2138,13 @@ function displayPendingAudits() {
         section.style.display = 'block';
     }
     
-    countBadge.textContent = pendingAudits.length;
+    // Update count badge - show total audits or total employees based on grouping
+    if (ASSIGNED_AUDITS_CONFIG.groupByEmployee) {
+        const grouped = groupAuditsByEmployee(pendingAudits);
+        countBadge.textContent = Object.keys(grouped).length; // Count of unique employees
+    } else {
+        countBadge.textContent = pendingAudits.length; // Count of total audits
+    }
     
     // Show empty state if no audits
     if (pendingAudits.length === 0) {
@@ -1913,6 +2168,59 @@ function displayPendingAudits() {
         return;
     }
     
+    // Get current user info to check if agent
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userRole = userInfo.role || '';
+    const isAgent = userRole === 'Employee';
+    
+    // Check if we should group by employee
+    if (ASSIGNED_AUDITS_CONFIG.groupByEmployee) {
+        // GROUPED VIEW
+        const grouped = groupAuditsByEmployee(pendingAudits);
+        const groupedArray = Object.values(grouped);
+        
+        // Calculate pagination for groups
+        pendingTotalPages = Math.ceil(groupedArray.length / pendingItemsPerPage);
+        if (pendingCurrentPage > pendingTotalPages && pendingTotalPages > 0) {
+            pendingCurrentPage = pendingTotalPages;
+        }
+        if (pendingCurrentPage < 1) {
+            pendingCurrentPage = 1;
+        }
+        
+        // Get paginated groups
+        const startIndex = (pendingCurrentPage - 1) * pendingItemsPerPage;
+        const endIndex = startIndex + pendingItemsPerPage;
+        const paginatedGroups = groupedArray.slice(startIndex, endIndex);
+        
+        list.innerHTML = '';
+        
+        paginatedGroups.forEach(group => {
+            const isExpanded = getExpandedState(group.employee_email);
+            const groupCard = createGroupedAuditCard(group, isAgent, isExpanded);
+            list.appendChild(groupCard);
+        });
+        
+        // Add event listeners for pull conversations buttons in group headers AND nested cards
+        setTimeout(() => {
+            const pullBtns = list.querySelectorAll('.pull-conversations-btn, .pull-conversations-btn-group');
+            pullBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const email = this.getAttribute('data-email');
+                    const name = this.getAttribute('data-name');
+                    if (window.pullConversationsForEmployee && typeof window.pullConversationsForEmployee === 'function') {
+                        window.pullConversationsForEmployee(email, name);
+                    } else {
+                        console.error('❌ pullConversationsForEmployee function not found on window');
+                        alert('Function not loaded. Please refresh the page.');
+                    }
+                });
+            });
+        }, 0);
+        
+    } else {
+        // INDIVIDUAL VIEW (Original behavior)
     // Calculate pagination
     pendingTotalPages = Math.ceil(pendingAudits.length / pendingItemsPerPage);
     if (pendingCurrentPage > pendingTotalPages && pendingTotalPages > 0) {
@@ -1929,40 +2237,165 @@ function displayPendingAudits() {
     
     list.innerHTML = '';
     
-    // Get current user info to check if agent
+        paginatedAudits.forEach(audit => {
+            const auditCard = createIndividualAuditCard(audit, isAgent);
+            
+            // Add hover effects
+            auditCard.onmouseenter = () => {
+                auditCard.style.borderColor = '#1A733E';
+                auditCard.style.backgroundColor = '#ffffff';
+            };
+            
+            auditCard.onmouseleave = () => {
+                auditCard.style.borderColor = '#e5e7eb';
+                auditCard.style.backgroundColor = '#f9fafb';
+            };
+            
+            // Add event listener to pull conversations button
+            const displayEmail = isAgent ? (audit.auditor_email || 'No email') : (audit.employee_email || 'No email');
+            if (displayEmail && displayEmail !== 'No email') {
+                const pullBtn = auditCard.querySelector('.pull-conversations-btn');
+                if (pullBtn) {
+                    pullBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const email = this.getAttribute('data-email');
+                        const name = this.getAttribute('data-name');
+                        if (window.pullConversationsForEmployee && typeof window.pullConversationsForEmployee === 'function') {
+                            window.pullConversationsForEmployee(email, name);
+                        } else {
+                            console.error('❌ pullConversationsForEmployee function not found on window');
+                            alert('Function not loaded. Please refresh the page.');
+                        }
+                    });
+                }
+            }
+            
+            list.appendChild(auditCard);
+        });
+    }
+    
+    // Update pagination UI
+    updatePendingPaginationUI();
+}
+
+/**
+ * Create a grouped audit card (one employee with multiple audits)
+ */
+function createGroupedAuditCard(group, isAgent, isExpanded) {
+    const card = document.createElement('div');
+    const displayName = group.employee_name || 'Unknown Employee';
+    const displayEmail = group.employee_email || 'No email';
+    
+    // Count badge HTML
+    const countBadgeHTML = ASSIGNED_AUDITS_CONFIG.showCountBadge 
+        ? `<span style="background-color: #1A733E; color: white; padding: 0.0808rem 0.2425rem; border-radius: 0.1617rem; font-size: 0.4043rem; font-weight: 600; margin-left: 0.3234rem;">${group.total}</span>`
+        : '';
+    
+    // Status breakdown HTML
+    const statusBreakdownHTML = buildStatusBreakdown(group);
+    
+    // Expand/collapse button
+    const expandButtonHTML = ASSIGNED_AUDITS_CONFIG.allowExpandCollapse
+        ? `<button 
+            onclick="event.stopPropagation(); toggleAuditGroup('${escapeHtml(displayEmail).replace(/'/g, "\\'")}')" 
+            style="background: none; border: none; padding: 0.1617rem; cursor: pointer; color: #6b7280; transition: transform 0.2s; transform: rotate(${isExpanded ? '90deg' : '0deg'});"
+            title="${isExpanded ? 'Collapse' : 'Expand'}"
+        >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </button>`
+        : '';
+    
+    card.innerHTML = `
+        <div style="background: #f9fafb; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; padding: 0.4852rem; margin-bottom: 0.3234rem;">
+            <!-- Group Header -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4852rem;">
+                <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1; cursor: pointer;" onclick="toggleAuditGroup('${escapeHtml(displayEmail).replace(/'/g, "\\'")}')">
+                    ${expandButtonHTML}
+                    <div style="width: 1.6171rem; height: 1.6171rem; border-radius: 0.1617rem; background: #1A733E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.5659rem; flex-shrink: 0;">
+                        ${getInitials(displayName)}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                            <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
+                                ${escapeHtml(displayName)}
+                            </h4>
+                            ${countBadgeHTML}
+                            ${statusBreakdownHTML}
+                        </div>
+                        <p style="margin: 0.1617rem 0 0 0; font-size: 0.4852rem; color: #6b7280;">
+                            ${escapeHtml(displayEmail)}
+                        </p>
+                    </div>
+                </div>
+                ${displayEmail && displayEmail !== 'No email' ? `
+                    <div style="flex-shrink: 0;">
+                        <button 
+                            class="pull-conversations-btn-group"
+                            data-email="${escapeHtml(displayEmail)}"
+                            data-name="${escapeHtml(displayName)}"
+                            onclick="event.stopPropagation();"
+                            style="padding: 0.2425rem 0.4852rem; background-color: #f0fdf4; color: #1A733E; border: 0.0304rem solid #1A733E; border-radius: 0.1617rem; font-size: 0.4447rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.2425rem;"
+                            onmouseover="this.style.backgroundColor='#dcfce7'; this.style.borderColor='#15582E'; this.style.color='#15582E';"
+                            onmouseout="this.style.backgroundColor='#f0fdf4'; this.style.borderColor='#1A733E'; this.style.color='#1A733E';"
+                            title="Pull conversations for ${escapeHtml(displayName)}"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span>Pull Conversations</span>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <!-- Individual Audits (shown when expanded) -->
+            <div id="auditGroup_${escapeHtml(displayEmail).replace(/[^a-zA-Z0-9]/g, '_')}" style="display: ${isExpanded ? 'block' : 'none'}; margin-top: 0.4852rem; padding-top: 0.4852rem; border-top: 0.0405rem solid #e5e7eb;">
+                ${group.assignments.map(audit => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const userRole = userInfo.role || '';
     const isAgent = userRole === 'Employee';
+                    return createIndividualAuditCardHTML(audit, isAgent, true); // true = is nested
+                }).join('')}
+            </div>
+        </div>
+    `;
     
-    paginatedAudits.forEach(audit => {
-        const auditCard = document.createElement('div');
-        auditCard.style.cssText = `
-            background: #f9fafb;
-            border: 0.0405rem solid #e5e7eb;
-            border-radius: 0.1617rem;
-            padding: 0.4852rem;
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.4852rem;
-        `;
-        
-        // For agents, show auditor name; for auditors, show employee name
+    return card;
+}
+
+/**
+ * Create an individual audit card
+ */
+function createIndividualAuditCard(audit, isAgent) {
+    const card = document.createElement('div');
+    card.innerHTML = createIndividualAuditCardHTML(audit, isAgent, false);
+    return card;
+}
+
+/**
+ * Generate HTML for individual audit card
+ * @param {Object} audit - The audit assignment object
+ * @param {boolean} isAgent - Whether current user is an agent
+ * @param {boolean} isNested - Whether this card is nested inside a group
+ */
+function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         const displayName = isAgent ? (audit.auditor_email || 'Unknown Auditor') : (audit.employee_name || 'Unknown Employee');
         const displayEmail = isAgent ? (audit.auditor_email || 'No email') : (audit.employee_email || 'No email');
         
-        // Status badge - different for completed audits
+    // Status badge - larger for nested cards for better visibility
         let statusBadge = '';
         let actionButton = '';
-        
-        // Agents can only view completed audits, not start/continue them
         const canEdit = !isAgent;
+        const badgeSize = isNested ? '0.4852rem' : '0.4447rem';
+        const badgePadding = isNested ? '0.1617rem 0.4043rem' : '0.0808rem 0.3234rem';
         
         if (audit.status === 'completed') {
-            statusBadge = '<span style="background-color: #dbeafe; color: #1e40af; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">Completed</span>';
-            // Add View button for completed audits
-            // Escape values to prevent XSS and ensure proper parameter passing
+            // Status chip - very light greenish indicator for completed (pill-shaped)
+            statusBadge = `<span style="background-color: #d1fae5; color: #047857; padding: ${isNested ? '0.1617rem 0.4852rem' : badgePadding}; border-radius: 9999px; font-size: ${isNested ? '0.4852rem' : badgeSize}; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; height: 1.2935rem;">Completed</span>`;
             const auditId = audit.audit_id ? String(audit.audit_id).replace(/'/g, "\\'") : '';
             const scorecardId = audit.scorecard_id ? String(audit.scorecard_id).replace(/'/g, "\\'") : '';
             const tableName = audit.scorecards?.table_name ? String(audit.scorecards.table_name).replace(/'/g, "\\'") : '';
@@ -1970,27 +2403,20 @@ function displayPendingAudits() {
             if (auditId && scorecardId && tableName) {
                 actionButton = `<button 
                     onclick="event.stopPropagation(); viewCompletedAudit('${auditId}', '${scorecardId}', '${tableName}')" 
-                    style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    style="padding: ${isNested ? '0.2425rem 0.4043rem' : '0.3234rem 0.6469rem'}; background-color: #1A733E; color: white; border: none; border-radius: ${isNested ? '0.2425rem' : '0.1617rem'}; font-size: ${isNested ? '0.4447rem' : '0.4852rem'}; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; height: ${isNested ? '1.6169rem' : 'auto'}; display: flex; align-items: center;"
                     onmouseover="this.style.backgroundColor='#15582E'"
                     onmouseout="this.style.backgroundColor='#1A733E'"
                 >
                     View Details
                 </button>`;
-            } else {
-                // No audit_id available, can't view
-                actionButton = '';
-                console.warn('Cannot show View button - missing required data:', { 
-                    audit_id: audit.audit_id, 
-                    scorecard_id: audit.scorecard_id, 
-                    table_name: audit.scorecards?.table_name 
-                });
             }
         } else if (audit.status === 'in_progress') {
-            statusBadge = '<span style="background-color: #fef3c7; color: #92400e; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">In Progress</span>';
+            // Status chip - very light purple indicator for in progress (pill-shaped)
+            statusBadge = `<span style="background-color: #e9d5ff; color: #6b21a8; padding: ${isNested ? '0.1617rem 0.4852rem' : badgePadding}; border-radius: 9999px; font-size: ${isNested ? '0.4852rem' : badgeSize}; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; height: 1.2935rem;">In Progress</span>`;
             if (canEdit) {
                 actionButton = `<button 
                     onclick="event.stopPropagation(); navigateToAssignment('${audit.id}')" 
-                    style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    style="padding: ${isNested ? '0.2425rem 0.4043rem' : '0.3234rem 0.6469rem'}; background-color: #1A733E; color: white; border: none; border-radius: ${isNested ? '0.2425rem' : '0.1617rem'}; font-size: ${isNested ? '0.4447rem' : '0.4852rem'}; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; height: ${isNested ? '1.6169rem' : 'auto'}; display: flex; align-items: center;"
                     onmouseover="this.style.backgroundColor='#15582E'"
                     onmouseout="this.style.backgroundColor='#1A733E'"
                 >
@@ -1998,11 +2424,12 @@ function displayPendingAudits() {
                 </button>`;
             }
         } else {
-            statusBadge = '<span style="background-color: #dcfce7; color: #166534; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4447rem; font-weight: 600;">Pending</span>';
+            // Status chip - very light red indicator for pending (pill-shaped)
+            statusBadge = `<span style="background-color: #fee2e2; color: #991b1b; padding: ${isNested ? '0.1617rem 0.4852rem' : badgePadding}; border-radius: 9999px; font-size: ${isNested ? '0.4852rem' : badgeSize}; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; height: 1.2935rem;">Pending</span>`;
             if (canEdit) {
                 actionButton = `<button 
                     onclick="event.stopPropagation(); navigateToAssignment('${audit.id}')" 
-                    style="padding: 0.3234rem 0.6469rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                    style="padding: ${isNested ? '0.2425rem 0.4043rem' : '0.3234rem 0.6469rem'}; background-color: #1A733E; color: white; border: none; border-radius: ${isNested ? '0.2425rem' : '0.1617rem'}; font-size: ${isNested ? '0.4447rem' : '0.4852rem'}; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; height: ${isNested ? '1.6169rem' : 'auto'}; display: flex; align-items: center;"
                     onmouseover="this.style.backgroundColor='#15582E'"
                     onmouseout="this.style.backgroundColor='#1A733E'"
                 >
@@ -2011,33 +2438,158 @@ function displayPendingAudits() {
             }
         }
         
+    // Conversation link
+    const conversationLinkHTML = buildConversationLinkHTML(audit);
+    
+    // Click handler
         const clickHandler = audit.status === 'completed' && audit.audit_id 
             ? `onclick="event.stopPropagation(); viewCompletedAudit('${audit.audit_id}', '${audit.scorecard_id}', '${audit.scorecards?.table_name || ''}')"`
             : canEdit ? `onclick="navigateToAssignment('${audit.id}')"` : '';
         
-        auditCard.innerHTML = `
-            <div style="flex: 1; display: flex; align-items: center; gap: 0.4852rem; ${clickHandler ? 'cursor: pointer;' : ''}" ${clickHandler}>
+    // Check if this audit is selected
+    const isSelected = selectedAuditId === audit.id;
+    
+    // Nested styling - professional card design matching reference
+    // Add selected state styling for nested cards
+    let cardStyle = '';
+    if (isNested) {
+        if (isSelected) {
+            cardStyle = 'background: #ffffff; border: 0.0405rem solid #2563eb; border-radius: 0.3234rem; margin-bottom: 0.4043rem; box-shadow: 0 0.0808rem 0.2425rem rgba(37, 99, 235, 0.15), 0 0 0 0.0808rem rgba(37, 99, 235, 0.1);';
+        } else {
+            cardStyle = 'background: #ffffff; border: 0.0304rem solid #e5e7eb; border-radius: 0.3234rem; margin-bottom: 0.4043rem; box-shadow: 0 0.0405rem 0.1213rem rgba(0, 0, 0, 0.05);';
+        }
+    } else {
+        cardStyle = 'background: #f9fafb; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; padding: 0.4852rem; transition: all 0.2s ease;';
+    }
+    
+    // Radio button for nested cards (single selection) - compact inline version
+    const radioButtonHTML = isNested ? `
+        <input 
+            type="radio" 
+            name="selectedAudit" 
+            id="auditRadio_${audit.id}"
+            value="${audit.id}"
+            ${isSelected ? 'checked' : ''}
+            onclick="event.stopPropagation(); selectNestedAudit('${audit.id}');"
+            style="width: 0.8086rem; height: 0.8086rem; cursor: pointer; accent-color: #2563eb; flex-shrink: 0;"
+        />
+    ` : '';
+    
+    // For nested cards, create a professional card layout matching the reference design
+    if (isNested) {
+        const conversationId = audit.conversation_id ? String(audit.conversation_id) : null;
+        const workspaceId = window.intercomConfig?.appId || 'aphmhtyj';
+        const conversationUrl = conversationId ? `https://app.intercom.com/a/inbox/${workspaceId}/inbox/conversation/${conversationId}?view` : '';
+        
+        // Format assignment ID (show first 8 chars for display)
+        const assignmentIdDisplay = audit.id ? `#${String(audit.id).substring(0, 8).toUpperCase()}` : '#N/A';
+        
+        // Get date to display (completed date if available, otherwise created date)
+        const displayDate = audit.completed_at ? audit.completed_at : audit.created_at;
+        let dateFormatted = 'N/A';
+        if (displayDate) {
+            const dateObj = typeof displayDate === 'string' ? new Date(displayDate) : displayDate;
+            // Format as "DD MMM YYYY" (e.g., "23 Nov 2022")
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = dateObj.getDate();
+            const month = months[dateObj.getMonth()];
+            const year = dateObj.getFullYear();
+            dateFormatted = `${day} ${month} ${year}`;
+        }
+        
+        // Get employee name
+        const employeeName = audit.employee_name || audit.employee_email?.split('@')[0] || 'Unknown';
+        
+        return `
+            <div class="nested-audit-card" data-audit-id="${audit.id}" style="${cardStyle} display: flex; align-items: center; gap: 0.8086rem; padding: 0.4043rem 0.8086rem; height: 2.5rem; max-height: 2.5rem; ${isNested ? 'cursor: pointer;' : ''}" ${isNested ? `onclick="selectNestedAudit('${audit.id}')"` : clickHandler}>
+                <!-- Left: Basic Info (Radio + Scorecard Name) -->
+                <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0; min-width: 0;">
+                    ${radioButtonHTML}
+                    <span style="font-size: 0.6069rem; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 10rem;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
+                </div>
+                
+                <!-- Middle: Crucial Info (Status Chip + Conversation ID, Employee, Date) -->
+                <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1; min-width: 0; overflow: hidden;">
+                    ${statusBadge}
+                    ${conversationId ? `
+                        <div style="display: flex; align-items: center; gap: 0.2425rem; flex-shrink: 0;">
+                            <svg style="width: 0.8886rem; height: 0.8886rem; color: #2563eb; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            <span style="font-size: 0.5252rem; font-family: 'Courier New', monospace; color: #1e40af; font-weight: 600; white-space: nowrap;">${conversationId}</span>
+                            <button 
+                                onclick="event.stopPropagation(); navigator.clipboard.writeText('${conversationId}').then(() => { const btn = event.target.closest('button'); const originalHTML = btn.innerHTML; btn.innerHTML = '<svg style=\\'width: 0.7273rem; height: 0.7273rem;\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'2\\' d=\\'M5 13l4 4L19 7\\'></path></svg>'; setTimeout(() => { btn.innerHTML = originalHTML; }, 1000); }).catch(err => console.error('Failed to copy:', err));"
+                                style="padding: 0.1617rem; background-color: transparent; border: none; border-radius: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s; flex-shrink: 0;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#374151';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';"
+                                title="Copy conversation ID"
+                            >
+                                <svg style="width: 0.7273rem; height: 0.7273rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="display: flex; align-items: center; gap: 0.2425rem; flex-shrink: 0;">
+                            <svg style="width: 0.8886rem; height: 0.8886rem; color: #9ca3af; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                            </svg>
+                            <span style="font-size: 0.5252rem; color: #9ca3af; font-style: italic; white-space: nowrap;">No conversation</span>
+                        </div>
+                    `}
+                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
+                    <span style="font-size: 0.5252rem; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 7rem;">${escapeHtml(employeeName)}</span>
+                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
+                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap;">${dateFormatted}</span>
+                </div>
+                
+                <!-- Right: Actions (Buttons only, chip moved to center) -->
+                <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
+                    ${conversationId && conversationUrl ? `
+                        <button 
+                            onclick="event.stopPropagation(); window.open('${conversationUrl}', '_blank', 'noopener,noreferrer')" 
+                            style="padding: 0.2425rem 0.4043rem; background-color: #f3f4f6; color: #374151; border: none; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 0.1617rem; height: 1.6169rem;"
+                            onmouseover="this.style.backgroundColor='#e5e7eb'"
+                            onmouseout="this.style.backgroundColor='#f3f4f6'"
+                            title="Open conversation in Intercom"
+                        >
+                            <svg style="width: 0.8886rem; height: 0.8886rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            <span>View</span>
+                        </button>
+                    ` : ''}
+                    ${actionButton}
+                </div>
+            </div>
+        `;
+    }
+    
+    // For non-nested cards, use the original layout
+    return `
+        <div class="nested-audit-card" data-audit-id="${audit.id}" style="${cardStyle} display: flex; justify-content: space-between; align-items: center; gap: 0.4852rem; ${clickHandler ? 'cursor: pointer;' : ''}" ${clickHandler}>
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.4852rem;">
                 <div style="width: 1.6171rem; height: 1.6171rem; border-radius: 0.1617rem; background: #1A733E; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.5659rem; flex-shrink: 0;">
                     ${getInitials(displayName)}
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: center; gap: 0.3234rem; margin-bottom: 0.1617rem;">
+                    <div style="display: flex; align-items: center; gap: 0.3234rem; margin-bottom: 0.1617rem; flex-wrap: wrap;">
                         <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
                             ${escapeHtml(displayName)}
                         </h4>
+                        ${statusBadge}
+                        ${conversationLinkHTML}
                     </div>
                     <p style="margin: 0; font-size: 0.4852rem; color: #6b7280; display: flex; align-items: center; gap: 0.2425rem; flex-wrap: wrap;">
                         <span>${escapeHtml(displayEmail)}</span>
-                        <span style="color: #d1d5db;">•</span>
-                        <span style="font-weight: 500; color: #374151;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
-                        ${audit.completed_at ? `<span style="color: #d1d5db;">•</span><span style="font-size: 0.4447rem; color: #6b7280;">Completed ${formatDate(audit.completed_at)}</span>` : ''}
+                        ${audit.scorecards?.name ? `<span style="color: #9ca3af;">•</span><span>${escapeHtml(audit.scorecards.name)}</span>` : ''}
+                        ${audit.completed_at ? `<span style="color: #9ca3af;">•</span><span style="font-size: 0.4447rem; color: #6b7280;">Completed ${formatDate(audit.completed_at)}</span>` : ''}
                     </p>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.3234rem; flex-shrink: 0;">
-                ${statusBadge}
-                ${actionButton}
-                ${displayEmail && displayEmail !== 'No email' ? `
+            ${actionButton ? `<div style="flex-shrink: 0;">${actionButton}</div>` : ''}
+            ${displayEmail && displayEmail !== 'No email' ? `
+                <div style="flex-shrink: 0;">
                     <button 
                         class="pull-conversations-btn"
                         data-email="${escapeHtml(displayEmail)}"
@@ -2054,43 +2606,10 @@ function displayPendingAudits() {
                         </svg>
                         <span>Pull Conversations</span>
                     </button>
-                ` : ''}
-            </div>
-        `;
-        
-        // Add event listener to pull conversations button
-        if (displayEmail && displayEmail !== 'No email') {
-            const pullBtn = auditCard.querySelector('.pull-conversations-btn');
-            if (pullBtn) {
-                pullBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const email = this.getAttribute('data-email');
-                    const name = this.getAttribute('data-name');
-                    if (window.pullConversationsForEmployee && typeof window.pullConversationsForEmployee === 'function') {
-                        window.pullConversationsForEmployee(email, name);
-                    } else {
-                        console.error('❌ pullConversationsForEmployee function not found on window');
-                        alert('Function not loaded. Please refresh the page.');
-                    }
-                });
-            }
-        }
-        
-        auditCard.onmouseenter = () => {
-            auditCard.style.borderColor = '#1A733E';
-            auditCard.style.backgroundColor = '#ffffff';
-        };
-        
-        auditCard.onmouseleave = () => {
-            auditCard.style.borderColor = '#e5e7eb';
-            auditCard.style.backgroundColor = '#f9fafb';
-        };
-        
-        list.appendChild(auditCard);
-    });
-    
-    // Update pagination UI
-    updatePendingPaginationUI();
+                </div>
+            ` : ''}
+        </div>
+    `;
 }
 
 // Calculate pagination for pending audits
@@ -4001,15 +4520,15 @@ function displayPullConversationsList(conversations) {
                     >
                         Open in Intercom
                     </button>
-                    <button 
-                        class="start-audit-from-conversation-btn"
-                        data-conversation-id="${conversation.id}"
-                        style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
-                        onmouseover="this.style.background='#a7f3d0'"
-                        onmouseout="this.style.background='#d1fae5'"
-                    >
-                        Audit
-                    </button>
+                <button 
+                    class="start-audit-from-conversation-btn"
+                    data-conversation-id="${conversation.id}"
+                    style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                    onmouseover="this.style.background='#a7f3d0'"
+                    onmouseout="this.style.background='#d1fae5'"
+                >
+                    Audit
+                </button>
                 </div>
             </td>
         `;
@@ -4534,11 +5053,11 @@ function filterPullConversations() {
         // Handle old string format for backward compatibility
         if (typeof ratingFilter === 'string') {
             if (ratingFilter === 'unrated') {
-                filtered = filtered.filter(conv => !conv.conversation_rating || !conv.conversation_rating.rating);
-            } else {
+            filtered = filtered.filter(conv => !conv.conversation_rating || !conv.conversation_rating.rating);
+        } else {
                 const ratingNum = parseInt(ratingFilter);
-                filtered = filtered.filter(conv => {
-                    const convRating = conv.conversation_rating?.rating;
+            filtered = filtered.filter(conv => {
+                const convRating = conv.conversation_rating?.rating;
                     return convRating === ratingNum;
                 });
             }
@@ -4546,7 +5065,7 @@ function filterPullConversations() {
             // New object format
             if (ratingFilter.type === 'hasRating') {
                 // Filter: has any rating (1-5)
-                filtered = filtered.filter(conv => {
+        filtered = filtered.filter(conv => {
                     const rating = conv.conversation_rating?.rating;
                     return rating && rating >= 1 && rating <= 5;
                 });
@@ -4556,13 +5075,13 @@ function filterPullConversations() {
             } else if (ratingFilter.type === 'exact' && ratingFilter.value) {
                 // Filter: exact rating match
                 const ratingNum = parseInt(ratingFilter.value);
-                filtered = filtered.filter(conv => {
+        filtered = filtered.filter(conv => {
                     const convRating = conv.conversation_rating?.rating;
                     return convRating === ratingNum;
                 });
             } else if (ratingFilter.type === 'range' && ratingFilter.min !== undefined && ratingFilter.max !== undefined) {
                 // Filter: rating range
-                filtered = filtered.filter(conv => {
+        filtered = filtered.filter(conv => {
                     const rating = conv.conversation_rating?.rating;
                     return rating && rating >= ratingFilter.min && rating <= ratingFilter.max;
                 });
@@ -6139,12 +6658,67 @@ window.startAuditFromConversation = async function(conversation) {
             pullConversationsSection.style.display = 'none';
         }
         
-        // Navigate to audit-form.html with conversation data
+        // Check if an assignment is selected
+        if (selectedAuditId) {
+            console.log('📌 Assignment selected, linking conversation to assignment:', selectedAuditId);
+            
+            // Get Supabase client
+            const supabaseClient = window.SupabaseConfig?.getClient?.();
+            if (supabaseClient) {
+                try {
+                    // Update assignment with conversation_id and set status to in_progress
+                    const { error: updateError } = await supabaseClient
+                        .from('audit_assignments')
+                        .update({ 
+                            conversation_id: conversation.id || null,
+                            status: 'in_progress'  // Update status to in_progress
+                        })
+                        .eq('id', selectedAuditId);
+                    
+                    if (updateError) {
+                        console.error('Error updating assignment:', updateError);
+                        await window.confirmationDialog.show({
+                            title: 'Error',
+                            message: 'Failed to link conversation to assignment: ' + updateError.message,
+                            confirmText: 'OK',
+                            type: 'error'
+                        });
+                        return;
+                    }
+                    
+                    console.log('✅ Successfully linked conversation to assignment');
+                    
+                    // Store assignment ID before clearing selection
+                    const assignmentIdToNavigate = selectedAuditId;
+                    
+                    // Clear selection
+                    selectedAuditId = null;
+                    
+                    // Navigate to assignment (which will load the conversation automatically)
+                    window.location.href = `audit-form.html?assignment=${assignmentIdToNavigate}`;
+                    return;
+                } catch (error) {
+                    console.error('Exception updating assignment:', error);
+                    await window.confirmationDialog.show({
+                        title: 'Error',
+                        message: 'Failed to link conversation to assignment: ' + error.message,
+                        confirmText: 'OK',
+                        type: 'error'
+                    });
+                    return;
+                }
+            } else {
+                console.warn('⚠️ Supabase client not available');
+            }
+        }
+        
+        // Navigate to audit-form.html with conversation data (original flow when no assignment selected)
         // Store conversation data in sessionStorage to pass to new page
         sessionStorage.setItem('pendingConversationData', JSON.stringify({
             conversation: conversation,
             adminInfo: adminInfo,
-            adminEmail: adminEmail
+            adminEmail: adminEmail,
+            conversation_id: conversation.id || null  // Store conversation ID for linking
         }));
         window.location.href = 'audit-form.html?fromConversation=true';
         

@@ -8046,7 +8046,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     .from('audit_assignments')
                                     .update({ 
                                         status: 'completed',
-                                        completed_at: new Date().toISOString()
+                                        completed_at: new Date().toISOString(),
+                                        ...(pendingConversationId ? { conversation_id: pendingConversationId } : {})
                                     })
                                     .eq('id', currentEditingAuditId)
                                     .select();
@@ -8087,13 +8088,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         // If this was from an audit assignment, mark it as completed
                         if (currentAssignmentId) {
                             try {
-                                const { data: updateData, error: assignmentError } = await window.supabaseClient
-                                    .from('audit_assignments')
-                                    .update({ 
+                                // Build update object
+                                const assignmentUpdate = { 
                                         status: 'completed',
                                         completed_at: new Date().toISOString(),
                                         audit_id: auditPayload.id  // Link the completed audit
-                                    })
+                                };
+                                
+                                // Include conversation_id if available (from starting audit from conversation)
+                                if (pendingConversationId) {
+                                    assignmentUpdate.conversation_id = pendingConversationId;
+                                }
+                                
+                                const { data: updateData, error: assignmentError } = await window.supabaseClient
+                                    .from('audit_assignments')
+                                    .update(assignmentUpdate)
                                     .eq('id', currentAssignmentId)
                                     .select();
                                 
@@ -8229,6 +8238,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentAssignmentId = null;
                 isEditingExistingAudit = false;
                 currentEditingTableName = null;
+                pendingConversationId = null; // Clear conversation ID after use
                 
                 // Hide form modal
                 const auditFormModal = document.getElementById('auditFormModal');
@@ -8350,20 +8360,23 @@ async function loadAssignmentFromURL(assignmentId) {
             auditor_email: assignment.auditor_email,
             scorecard_id: scorecardId,
             status: assignment.status || assignment.audit_status,
+            conversation_id: assignment.conversation_id || null,
             scorecards: {
                 id: scorecardId,
                 table_name: assignmentTable
             }
         };
         
-        // Update assignment status to 'in_progress'
-        const { error: updateError } = await window.supabaseClient
-            .from('audit_assignments')
-            .update({ status: 'in_progress' })
-            .eq('id', mappedAssignment.id);
-        
-        if (updateError) {
-            console.error('Error updating assignment status:', updateError);
+        // Update assignment status to 'in_progress' (only if it's pending)
+        if (mappedAssignment.status === 'pending') {
+            const { error: updateError } = await window.supabaseClient
+                .from('audit_assignments')
+                .update({ status: 'in_progress' })
+                .eq('id', mappedAssignment.id);
+            
+            if (updateError) {
+                console.error('Error updating assignment status:', updateError);
+            }
         }
         
         // Set assignment tracking
@@ -8372,6 +8385,11 @@ async function loadAssignmentFromURL(assignmentId) {
         currentEditingAuditId = null;
         isEditingExistingAudit = false;
         currentEditingTableName = null;
+        
+        // Store conversation ID for later use
+        if (mappedAssignment.conversation_id) {
+            pendingConversationId = mappedAssignment.conversation_id;
+        }
         
         // Auto-select the scorecard from assignment
         const scorecardSelect = document.getElementById('scorecardSelect');
@@ -8399,6 +8417,39 @@ async function loadAssignmentFromURL(assignmentId) {
                     employeeSelect.dispatchEvent(new Event('change'));
                     break;
                 }
+            }
+        }
+        
+        // If assignment has a conversation_id, load that conversation
+        if (mappedAssignment.conversation_id) {
+            console.log('📌 Loading linked conversation:', mappedAssignment.conversation_id);
+            
+            // Set the interaction ID field
+            const interactionIdField = document.getElementById('interactionId');
+            if (interactionIdField) {
+                interactionIdField.value = mappedAssignment.conversation_id;
+                
+                // Ensure chat view is shown
+                const transcriptChatView = document.getElementById('transcriptChatView');
+                const transcriptTextView = document.getElementById('transcriptTextView');
+                if (transcriptChatView && transcriptTextView) {
+                    transcriptChatView.style.display = 'flex';
+                    transcriptTextView.style.display = 'none';
+                }
+                
+                // Load the conversation after a short delay to ensure form is ready
+                setTimeout(async () => {
+                    if (window.loadConversationFromIntercom && typeof window.loadConversationFromIntercom === 'function') {
+                        await window.loadConversationFromIntercom(mappedAssignment.conversation_id);
+                    } else {
+                        // Retry if function not ready
+                        setTimeout(async () => {
+                            if (window.loadConversationFromIntercom && typeof window.loadConversationFromIntercom === 'function') {
+                                await window.loadConversationFromIntercom(mappedAssignment.conversation_id);
+                            }
+                        }, 500);
+                    }
+                }, 300);
             }
         }
         
@@ -11137,8 +11188,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // Load conversation data into form (for starting audit from conversation)
+// Store conversation ID globally for assignment linking
+let pendingConversationId = null;
+
 async function loadConversationDataIntoForm(conversationData) {
-    const { conversation, adminInfo, adminEmail } = conversationData;
+    const { conversation, adminInfo, adminEmail, conversation_id } = conversationData;
+    
+    // Store conversation ID for later use when creating/updating assignment
+    pendingConversationId = conversation_id || conversation?.id || null;
     
     // Ensure employees are loaded
     await loadEmployees();
