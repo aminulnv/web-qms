@@ -647,15 +647,36 @@
                     <!-- Rating Filter -->
                     <div>
                         <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">Rating</label>
-                        <select id="pullFilterRating" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer;">
+                        <select id="pullFilterRatingType" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; margin-bottom: 0.3234rem;">
                             <option value="">All Ratings</option>
+                            <option value="hasRating">Has Rating (Any Star)</option>
+                            <option value="unrated">Unrated</option>
+                            <option value="exact">Exact Rating</option>
+                            <option value="range">Rating Range</option>
+                        </select>
+                        
+                        <!-- Exact Rating Input (shown when "exact" is selected) -->
+                        <select id="pullFilterRatingExact" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; display: none; margin-bottom: 0.3234rem;">
+                            <option value="">Select Rating</option>
                             <option value="5">5 Stars</option>
                             <option value="4">4 Stars</option>
                             <option value="3">3 Stars</option>
                             <option value="2">2 Stars</option>
                             <option value="1">1 Star</option>
-                            <option value="unrated">Unrated</option>
                         </select>
+                        
+                        <!-- Range Inputs (shown when "range" is selected) -->
+                        <div id="pullFilterRatingRange" style="display: none; flex-direction: column; gap: 0.3234rem; margin-bottom: 0.3234rem;">
+                            <div style="display: flex; gap: 0.3234rem; align-items: center;">
+                                <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Min:</label>
+                                <input type="number" id="pullFilterRatingMin" min="1" max="5" placeholder="1" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
+                            </div>
+                            <div style="display: flex; gap: 0.3234rem; align-items: center;">
+                                <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Max:</label>
+                                <input type="number" id="pullFilterRatingMax" min="1" max="5" placeholder="5" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
+                            </div>
+                        </div>
+                        <div id="pullFilterRatingRangeError" style="display: none; color: #ef4444; font-size: 0.4043rem; margin-top: 0.1617rem;"></div>
                     </div>
                     
                     <!-- Client Email/Name Search -->
@@ -4251,6 +4272,77 @@ window.closePullConversationsSection = function() {
 // Pull Conversations Filtering Functions
 // ============================================================================
 
+// Handle rating type change to show/hide conditional inputs
+function handleRatingTypeChange() {
+    const ratingType = document.getElementById('pullFilterRatingType')?.value || '';
+    const exactSelect = document.getElementById('pullFilterRatingExact');
+    const rangeDiv = document.getElementById('pullFilterRatingRange');
+    const errorDiv = document.getElementById('pullFilterRatingRangeError');
+    
+    // Hide all conditional inputs first
+    if (exactSelect) exactSelect.style.display = 'none';
+    if (rangeDiv) rangeDiv.style.display = 'none';
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+    }
+    
+    // Show appropriate input based on selection
+    if (ratingType === 'exact') {
+        if (exactSelect) exactSelect.style.display = 'block';
+    } else if (ratingType === 'range') {
+        if (rangeDiv) rangeDiv.style.display = 'flex';
+        
+        // Add validation for range inputs
+        const minInput = document.getElementById('pullFilterRatingMin');
+        const maxInput = document.getElementById('pullFilterRatingMax');
+        
+        if (minInput && maxInput && !minInput.hasAttribute('data-listener-attached')) {
+            // Add validation listeners
+            const validateRange = () => {
+                const min = parseInt(minInput.value, 10);
+                const max = parseInt(maxInput.value, 10);
+                
+                if (minInput.value && maxInput.value) {
+                    if (isNaN(min) || isNaN(max) || min < 1 || min > 5 || max < 1 || max > 5) {
+                        if (errorDiv) {
+                            errorDiv.textContent = 'Rating must be between 1 and 5.';
+                            errorDiv.style.display = 'block';
+                        }
+                        return false;
+                    } else if (min > max) {
+                        if (errorDiv) {
+                            errorDiv.textContent = 'Minimum cannot be greater than maximum.';
+                            errorDiv.style.display = 'block';
+                        }
+                        return false;
+                    } else {
+                        if (errorDiv) {
+                            errorDiv.style.display = 'none';
+                            errorDiv.textContent = '';
+                        }
+                        return true;
+                    }
+                } else {
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                        errorDiv.textContent = '';
+                    }
+                    return true;
+                }
+            };
+            
+            minInput.addEventListener('input', validateRange);
+            maxInput.addEventListener('input', validateRange);
+            minInput.addEventListener('blur', validateRange);
+            maxInput.addEventListener('blur', validateRange);
+            
+            minInput.setAttribute('data-listener-attached', 'true');
+            maxInput.setAttribute('data-listener-attached', 'true');
+        }
+    }
+}
+
 // Open filter dialog
 window.openPullConversationsFilterDialog = function() {
     const modal = document.getElementById('pullConversationsFilterModal');
@@ -4259,7 +4351,38 @@ window.openPullConversationsFilterDialog = function() {
     // Set current filter values in the form
     document.getElementById('pullFilterState').value = pullConversationsFilters.state || '';
     document.getElementById('pullFilterPriority').value = pullConversationsFilters.priority || '';
-    document.getElementById('pullFilterRating').value = pullConversationsFilters.rating || '';
+    // Handle rating filter (support both old string format and new object format)
+    const ratingFilter = pullConversationsFilters.rating;
+    if (ratingFilter) {
+        if (typeof ratingFilter === 'string') {
+            // Old format: migrate to new format
+            if (ratingFilter === 'unrated') {
+                document.getElementById('pullFilterRatingType').value = 'unrated';
+            } else if (ratingFilter) {
+                document.getElementById('pullFilterRatingType').value = 'exact';
+                document.getElementById('pullFilterRatingExact').value = ratingFilter;
+            }
+        } else if (typeof ratingFilter === 'object') {
+            // New format
+            document.getElementById('pullFilterRatingType').value = ratingFilter.type || '';
+            if (ratingFilter.type === 'exact' && ratingFilter.value) {
+                document.getElementById('pullFilterRatingExact').value = ratingFilter.value;
+            } else if (ratingFilter.type === 'range') {
+                if (ratingFilter.min) document.getElementById('pullFilterRatingMin').value = ratingFilter.min;
+                if (ratingFilter.max) document.getElementById('pullFilterRatingMax').value = ratingFilter.max;
+            }
+        }
+    }
+    // Trigger change to show/hide conditional inputs
+    const ratingTypeSelect = document.getElementById('pullFilterRatingType');
+    if (ratingTypeSelect) {
+        // Set up event listener if not already set
+        if (!ratingTypeSelect.hasAttribute('data-listener-attached')) {
+            ratingTypeSelect.addEventListener('change', handleRatingTypeChange);
+            ratingTypeSelect.setAttribute('data-listener-attached', 'true');
+        }
+        ratingTypeSelect.dispatchEvent(new Event('change'));
+    }
     document.getElementById('pullFilterClientSearch').value = pullConversationsFilters.clientSearch || '';
     document.getElementById('pullFilterConversationId').value = pullConversationsFilters.conversationId || '';
     
@@ -4296,7 +4419,56 @@ window.applyPullConversationsFilters = function() {
     
     pullConversationsFilters.state = getValue('pullFilterState');
     pullConversationsFilters.priority = getValue('pullFilterPriority');
-    pullConversationsFilters.rating = getValue('pullFilterRating');
+    
+    // Handle rating filter with new structure
+    const ratingType = getValue('pullFilterRatingType');
+    if (ratingType) {
+        if (ratingType === 'exact') {
+            const exactValue = getValue('pullFilterRatingExact');
+            if (exactValue) {
+                pullConversationsFilters.rating = {
+                    type: 'exact',
+                    value: exactValue
+                };
+            } else {
+                pullConversationsFilters.rating = null;
+            }
+        } else if (ratingType === 'range') {
+            const minEl = document.getElementById('pullFilterRatingMin');
+            const maxEl = document.getElementById('pullFilterRatingMax');
+            const min = minEl && minEl.value ? parseInt(minEl.value, 10) : null;
+            const max = maxEl && maxEl.value ? parseInt(maxEl.value, 10) : null;
+            
+            // Validate range
+            if (min !== null && max !== null) {
+                if (min < 1 || min > 5 || max < 1 || max > 5) {
+                    alert('Rating range must be between 1 and 5.');
+                    return;
+                }
+                if (min > max) {
+                    alert('Minimum rating cannot be greater than maximum rating.');
+                    return;
+                }
+                pullConversationsFilters.rating = {
+                    type: 'range',
+                    min: min,
+                    max: max
+                };
+            } else {
+                alert('Please enter both minimum and maximum ratings for range filter.');
+                return;
+            }
+        } else if (ratingType === 'hasRating' || ratingType === 'unrated') {
+            pullConversationsFilters.rating = {
+                type: ratingType
+            };
+        } else {
+            pullConversationsFilters.rating = null;
+        }
+    } else {
+        pullConversationsFilters.rating = null;
+    }
+    
     pullConversationsFilters.clientSearch = getValue('pullFilterClientSearch');
     pullConversationsFilters.conversationId = getValue('pullFilterConversationId');
     
@@ -4354,23 +4526,49 @@ function filterPullConversations() {
         console.log(`🔍 Priority filter (${pullConversationsFilters.priority}): ${beforeCount} → ${filtered.length}`);
     }
     
-    // Filter by rating
+    // Filter by rating (support both old string format and new object format)
     if (pullConversationsFilters.rating) {
         const beforeCount = filtered.length;
-        if (pullConversationsFilters.rating === 'unrated') {
-            filtered = filtered.filter(conv => !conv.conversation_rating || !conv.conversation_rating.rating);
-        } else {
-            const ratingNum = parseInt(pullConversationsFilters.rating);
-            filtered = filtered.filter(conv => {
-                const convRating = conv.conversation_rating?.rating;
-                const matches = convRating === ratingNum;
-                if (!matches && beforeCount <= 5) {
-                    console.log(`❌ Rating filter: conv.rating=${convRating}, filter=${ratingNum}`);
-                }
-                return matches;
-            });
+        const ratingFilter = pullConversationsFilters.rating;
+        
+        // Handle old string format for backward compatibility
+        if (typeof ratingFilter === 'string') {
+            if (ratingFilter === 'unrated') {
+                filtered = filtered.filter(conv => !conv.conversation_rating || !conv.conversation_rating.rating);
+            } else {
+                const ratingNum = parseInt(ratingFilter);
+                filtered = filtered.filter(conv => {
+                    const convRating = conv.conversation_rating?.rating;
+                    return convRating === ratingNum;
+                });
+            }
+        } else if (typeof ratingFilter === 'object' && ratingFilter.type) {
+            // New object format
+            if (ratingFilter.type === 'hasRating') {
+                // Filter: has any rating (1-5)
+                filtered = filtered.filter(conv => {
+                    const rating = conv.conversation_rating?.rating;
+                    return rating && rating >= 1 && rating <= 5;
+                });
+            } else if (ratingFilter.type === 'unrated') {
+                // Filter: no rating
+                filtered = filtered.filter(conv => !conv.conversation_rating || !conv.conversation_rating.rating);
+            } else if (ratingFilter.type === 'exact' && ratingFilter.value) {
+                // Filter: exact rating match
+                const ratingNum = parseInt(ratingFilter.value);
+                filtered = filtered.filter(conv => {
+                    const convRating = conv.conversation_rating?.rating;
+                    return convRating === ratingNum;
+                });
+            } else if (ratingFilter.type === 'range' && ratingFilter.min !== undefined && ratingFilter.max !== undefined) {
+                // Filter: rating range
+                filtered = filtered.filter(conv => {
+                    const rating = conv.conversation_rating?.rating;
+                    return rating && rating >= ratingFilter.min && rating <= ratingFilter.max;
+                });
+            }
         }
-        console.log(`🔍 Rating filter (${pullConversationsFilters.rating}): ${beforeCount} → ${filtered.length}`);
+        console.log(`🔍 Rating filter (${JSON.stringify(ratingFilter)}): ${beforeCount} → ${filtered.length}`);
     }
     
     // Filter by client search (name or email)
@@ -4443,7 +4641,31 @@ function updatePullConversationsActiveFilters() {
     
     if (pullConversationsFilters.state) activeFilters.push({ label: `State: ${pullConversationsFilters.state}`, key: 'state' });
     if (pullConversationsFilters.priority) activeFilters.push({ label: `Priority: ${pullConversationsFilters.priority}`, key: 'priority' });
-    if (pullConversationsFilters.rating) activeFilters.push({ label: `Rating: ${pullConversationsFilters.rating === 'unrated' ? 'Unrated' : pullConversationsFilters.rating + ' Stars'}`, key: 'rating' });
+    // Handle rating filter display (support both old and new format)
+    if (pullConversationsFilters.rating) {
+        const ratingFilter = pullConversationsFilters.rating;
+        let ratingLabel = '';
+        
+        if (typeof ratingFilter === 'string') {
+            // Old format
+            ratingLabel = ratingFilter === 'unrated' ? 'Unrated' : ratingFilter + ' Stars';
+        } else if (typeof ratingFilter === 'object' && ratingFilter.type) {
+            // New format
+            if (ratingFilter.type === 'hasRating') {
+                ratingLabel = 'Has Rating (Any Star)';
+            } else if (ratingFilter.type === 'unrated') {
+                ratingLabel = 'Unrated';
+            } else if (ratingFilter.type === 'exact' && ratingFilter.value) {
+                ratingLabel = ratingFilter.value + ' Stars';
+            } else if (ratingFilter.type === 'range' && ratingFilter.min !== undefined && ratingFilter.max !== undefined) {
+                ratingLabel = `${ratingFilter.min}-${ratingFilter.max} Stars`;
+            }
+        }
+        
+        if (ratingLabel) {
+            activeFilters.push({ label: `Rating: ${ratingLabel}`, key: 'rating' });
+        }
+    }
     if (pullConversationsFilters.clientSearch) activeFilters.push({ label: `Client: ${pullConversationsFilters.clientSearch}`, key: 'clientSearch' });
     if (pullConversationsFilters.conversationId) activeFilters.push({ label: `ID: ${pullConversationsFilters.conversationId}`, key: 'conversationId' });
     
@@ -4480,7 +4702,7 @@ window.removePullConversationFilter = function(filterKey) {
         const inputMap = {
             'state': 'pullFilterState',
             'priority': 'pullFilterPriority',
-            'rating': 'pullFilterRating',
+            'rating': 'pullFilterRatingType', // Use rating type selector
             'clientSearch': 'pullFilterClientSearch',
             'conversationId': 'pullFilterConversationId'
         };
@@ -4490,6 +4712,25 @@ window.removePullConversationFilter = function(filterKey) {
             const input = document.getElementById(inputId);
             if (input) {
                 input.value = '';
+            }
+            
+            // If clearing rating, also clear related inputs
+            if (filterKey === 'rating') {
+                const exactInput = document.getElementById('pullFilterRatingExact');
+                const minInput = document.getElementById('pullFilterRatingMin');
+                const maxInput = document.getElementById('pullFilterRatingMax');
+                if (exactInput) exactInput.value = '';
+                if (minInput) minInput.value = '';
+                if (maxInput) maxInput.value = '';
+                // Hide conditional inputs
+                if (exactInput) exactInput.style.display = 'none';
+                const rangeDiv = document.getElementById('pullFilterRatingRange');
+                if (rangeDiv) rangeDiv.style.display = 'none';
+                const errorDiv = document.getElementById('pullFilterRatingRangeError');
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                    errorDiv.textContent = '';
+                }
             }
         }
     }
