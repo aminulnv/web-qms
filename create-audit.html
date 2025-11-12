@@ -425,10 +425,22 @@
         
         <!-- Conversations List -->
         <div id="pullConversationsList" style="display: none;">
-            <div style="background: white; border-radius: 0.3234rem; border: 0.0304rem solid #e5e7eb; max-height: 60vh; overflow: auto; position: relative;">
+            <!-- Bulk Action Bar -->
+            <div id="pullConversationsBulkActions" style="display: none; background: #eff6ff; border-bottom: 0.0304rem solid #bfdbfe; padding: 0.4852rem 0.6469rem; display: flex; align-items: center; justify-content: space-between; border-radius: 0.3234rem 0.3234rem 0 0; border: 0.0304rem solid #e5e7eb; border-bottom: 0.0304rem solid #bfdbfe;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <span id="pullConversationsSelectedCount" style="font-size: 0.4852rem; font-weight: 600; color: #1e40af;">0 selected</span>
+                </div>
+                <button id="openSelectedInIntercomBtn" style="padding: 0.3234rem 0.6469rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
+                    Open Selected in Intercom
+                </button>
+            </div>
+            <div style="background: white; border-radius: 0 0 0.3234rem 0.3234rem; border: 0.0304rem solid #e5e7eb; border-top: none; max-height: 60vh; overflow: auto; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 0.75rem;">
                     <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
                         <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; width: 3rem;">
+                                <input type="checkbox" id="selectAllPullConversations" style="cursor: pointer;" title="Select all conversations">
+                            </th>
                             <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
                                     <span>Client</span>
@@ -3834,16 +3846,12 @@ function displayPullConversationsList(conversations) {
         tableBody.innerHTML = '';
     
     if (conversations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
         return;
     }
     
     conversations.forEach(conversation => {
         const row = document.createElement('tr');
-        row.style.cursor = 'pointer';
-        row.onclick = () => {
-            window.startAuditFromConversation(conversation);
-        };
         
         // Extract data
         const clientName = extractClientName(conversation) || 'Unknown';
@@ -3895,6 +3903,9 @@ function displayPullConversationsList(conversations) {
         const updatedDateShort = updatedDate !== '-' ? new Date(updatedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-';
         
         row.innerHTML = `
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
+                <input type="checkbox" class="conversation-checkbox" data-conversation-id="${conversation.id}" style="cursor: pointer;" onclick="event.stopPropagation(); updatePullConversationsSelection();">
+            </td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
                 <div style="font-weight: 500; color: #111827; font-size: 0.75rem; line-height: 1.2;">${escapeHtml(clientName)}</div>
                 <div style="font-size: 0.625rem; color: #6b7280; line-height: 1.2;">${clientEmail ? escapeHtml(clientEmail.substring(0, 20)) + (clientEmail.length > 20 ? '...' : '') : '-'}</div>
@@ -3919,19 +3930,40 @@ function displayPullConversationsList(conversations) {
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${createdDate}">${createdDateShort}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${updatedDate}">${updatedDateShort}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
-                <button 
-                    class="start-audit-from-conversation-btn"
-                    data-conversation-id="${conversation.id}"
-                    style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
-                    onmouseover="this.style.background='#a7f3d0'"
-                    onmouseout="this.style.background='#d1fae5'"
-                >
-                    Audit
-                </button>
+                <div style="display: flex; gap: 0.25rem; justify-content: center; align-items: center;">
+                    <button 
+                        class="open-in-intercom-btn"
+                        data-conversation-id="${conversation.id}"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #2563eb; background: #dbeafe; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                        onmouseover="this.style.background='#bfdbfe'" 
+                        onmouseout="this.style.background='#dbeafe'"
+                        title="Open in Intercom"
+                    >
+                        Open in Intercom
+                    </button>
+                    <button 
+                        class="start-audit-from-conversation-btn"
+                        data-conversation-id="${conversation.id}"
+                        style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                        onmouseover="this.style.background='#a7f3d0'"
+                        onmouseout="this.style.background='#d1fae5'"
+                    >
+                        Audit
+                    </button>
+                </div>
             </td>
         `;
         
-        // Attach click handler to the button using the conversation from closure
+        // Attach click handler to the "Open in Intercom" button
+        const openInIntercomBtn = row.querySelector('.open-in-intercom-btn');
+        if (openInIntercomBtn) {
+            openInIntercomBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openConversationInIntercom(conversation.id);
+            });
+        }
+        
+        // Attach click handler to the Audit button using the conversation from closure
         const auditButton = row.querySelector('.start-audit-from-conversation-btn');
         if (auditButton) {
             auditButton.addEventListener('click', (e) => {
@@ -3943,6 +3975,188 @@ function displayPullConversationsList(conversations) {
         tableBody.appendChild(row);
     });
 }
+
+// Track open Intercom tabs
+let openIntercomTabs = [];
+const MAX_INTERCOM_TABS = 10;
+
+// Update selection state
+window.updatePullConversationsSelection = function() {
+    const checkboxes = document.querySelectorAll('.conversation-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllPullConversations');
+    const bulkActionsBar = document.getElementById('pullConversationsBulkActions');
+    const selectedCountSpan = document.getElementById('pullConversationsSelectedCount');
+    
+    if (!checkboxes || checkboxes.length === 0) {
+        if (bulkActionsBar) bulkActionsBar.style.display = 'none';
+        return;
+    }
+    
+    const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
+    const selectedCount = checkedBoxes.length;
+    
+    // Update select all checkbox
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
+        selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
+    }
+    
+    // Show/hide bulk actions bar
+    if (bulkActionsBar) {
+        bulkActionsBar.style.display = selectedCount > 0 ? 'flex' : 'none';
+    }
+    
+    // Update count
+    if (selectedCountSpan) {
+        selectedCountSpan.textContent = `${selectedCount} selected`;
+    }
+};
+
+// Select all conversations
+window.selectAllPullConversations = function(checked) {
+    const checkboxes = document.querySelectorAll('.conversation-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = checked;
+    });
+    updatePullConversationsSelection();
+};
+
+// Build Intercom URL
+function buildIntercomUrl(conversationId) {
+    const workspaceId = window.intercomConfig?.appId || 'aphmhtyj';
+    return `https://app.intercom.com/a/inbox/${workspaceId}/inbox/conversation/${conversationId}?view`;
+}
+
+// Open single conversation in Intercom
+window.openConversationInIntercom = async function(conversationId) {
+    if (!conversationId) {
+        console.warn('No conversation ID provided');
+        return;
+    }
+    
+    // Clean up closed tabs
+    openIntercomTabs = openIntercomTabs.filter(tabInfo => {
+        if (!tabInfo.tab) return false;
+        try {
+            return !tabInfo.tab.closed;
+        } catch (e) {
+            // Tab reference is invalid
+            return false;
+        }
+    });
+    
+    // Check limit
+    if (openIntercomTabs.length >= MAX_INTERCOM_TABS) {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Tab Limit Reached',
+                message: `You can only have ${MAX_INTERCOM_TABS} Intercom tabs open at once. Please close some tabs first.`,
+                confirmText: 'OK',
+                type: 'warning'
+            });
+        } else {
+            alert(`You can only have ${MAX_INTERCOM_TABS} Intercom tabs open at once. Please close some tabs first.`);
+        }
+        return;
+    }
+    
+    const conversationUrl = buildIntercomUrl(conversationId);
+    const newTab = window.open(conversationUrl, '_blank', 'noopener,noreferrer');
+    
+    if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Popup Blocked',
+                message: 'Please allow popups for this site to open Intercom conversations.',
+                confirmText: 'OK',
+                type: 'warning'
+            });
+        } else {
+            alert('Please allow popups for this site to open Intercom conversations.');
+        }
+        return;
+    }
+    
+    // Track the tab
+    openIntercomTabs.push({
+        tab: newTab,
+        conversationId: conversationId,
+        openedAt: Date.now()
+    });
+    
+    console.log(`✅ Opened conversation ${conversationId} in Intercom. Total open tabs: ${openIntercomTabs.length}`);
+};
+
+// Open selected conversations in Intercom
+window.openSelectedConversationsInIntercom = async function() {
+    const checkboxes = document.querySelectorAll('.conversation-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.conversationId).filter(id => id);
+    
+    if (selectedIds.length === 0) {
+        return;
+    }
+    
+    // Clean up closed tabs
+    openIntercomTabs = openIntercomTabs.filter(tabInfo => {
+        if (!tabInfo.tab) return false;
+        try {
+            return !tabInfo.tab.closed;
+        } catch (e) {
+            return false;
+        }
+    });
+    
+    // Check if we can open all selected
+    const currentOpenCount = openIntercomTabs.length;
+    const willExceedLimit = currentOpenCount + selectedIds.length > MAX_INTERCOM_TABS;
+    
+    if (willExceedLimit) {
+        const canOpen = MAX_INTERCOM_TABS - currentOpenCount;
+        
+        if (canOpen === 0) {
+            if (window.confirmationDialog) {
+                await window.confirmationDialog.show({
+                    title: 'Tab Limit Reached',
+                    message: `You've reached the limit of ${MAX_INTERCOM_TABS} open tabs. Please close some tabs first.`,
+                    confirmText: 'OK',
+                    type: 'warning'
+                });
+            } else {
+                alert(`You've reached the limit of ${MAX_INTERCOM_TABS} open tabs. Please close some tabs first.`);
+            }
+            return;
+        }
+        
+        // Limit to what we can open
+        selectedIds.splice(canOpen);
+    }
+    
+    // Open all tabs immediately - browsers allow multiple popups from single user gesture
+    // This maintains the user gesture chain, so popup blocker won't interfere
+    // We'll open them directly here to avoid individual limit checks interfering
+    for (let i = 0; i < selectedIds.length; i++) {
+        const conversationId = selectedIds[i];
+        const conversationUrl = buildIntercomUrl(conversationId);
+        const newTab = window.open(conversationUrl, '_blank', 'noopener,noreferrer');
+        
+        if (newTab && !newTab.closed && typeof newTab.closed !== 'undefined') {
+            // Track the tab
+            openIntercomTabs.push({
+                tab: newTab,
+                conversationId: conversationId,
+                openedAt: Date.now()
+            });
+            console.log(`✅ Opened conversation ${conversationId} in Intercom. Total open tabs: ${openIntercomTabs.length}`);
+        } else {
+            // Popup was blocked for this one, but continue with others
+            console.warn(`⚠️ Popup blocked for conversation ${conversationId}`);
+        }
+    }
+    
+    // Clear selection after opening
+    checkboxes.forEach(cb => cb.checked = false);
+    updatePullConversationsSelection();
+};
 
 // Show error message
 function showPullConversationsError(message) {
@@ -11109,6 +11323,62 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Select all checkbox event listener
+    const selectAllCheckbox = document.getElementById('selectAllPullConversations');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            selectAllPullConversations(this.checked);
+        });
+    }
+    
+    // Bulk action button event listener
+    const openSelectedBtn = document.getElementById('openSelectedInIntercomBtn');
+    if (openSelectedBtn) {
+        openSelectedBtn.addEventListener('click', openSelectedConversationsInIntercom);
+    }
+    
+    // Keyboard shortcut: Ctrl+I (or Cmd+I on Mac) to open selected conversations in Intercom
+    document.addEventListener('keydown', function(e) {
+        // Check for Ctrl+I or Cmd+I
+        const isModifierPressed = e.ctrlKey || e.metaKey;
+        const isShiftPressed = e.shiftKey;
+        const isIPressed = e.key === 'i' || e.key === 'I';
+        
+        // Check for Ctrl+I (without Shift)
+        const isCtrlI = isModifierPressed && !isShiftPressed && isIPressed;
+        
+        if (isCtrlI) {
+            // Don't trigger if user is typing in an input field
+            const activeElement = document.activeElement;
+            const tagName = activeElement.tagName.toLowerCase();
+            const isInput = ['input', 'textarea', 'select'].includes(tagName);
+            const isContentEditable = activeElement.contentEditable === 'true';
+            
+            if (isInput || isContentEditable) {
+                return; // User is typing, ignore shortcut
+            }
+            
+            // Check if pull conversations section is visible
+            const pullConversationsList = document.getElementById('pullConversationsList');
+            if (!pullConversationsList || pullConversationsList.style.display === 'none') {
+                return; // Conversations list not visible, ignore shortcut
+            }
+            
+            // Check if there are selected conversations
+            const checkedBoxes = document.querySelectorAll('.conversation-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                return; // No conversations selected, ignore shortcut
+            }
+            
+            // Prevent default browser behavior
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Trigger the function
+            openSelectedConversationsInIntercom();
+        }
+    });
 });
 
 // ============================================================================
