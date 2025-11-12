@@ -6666,11 +6666,167 @@ window.startAuditFromConversation = async function(conversation) {
             const supabaseClient = window.SupabaseConfig?.getClient?.();
             if (supabaseClient) {
                 try {
+                    // ============================================================================
+                    // VALIDATION CHECKS BEFORE LINKING CONVERSATION
+                    // ============================================================================
+                    
+                    // 1. Get the current assignment to check if it already has a conversation_id
+                    const { data: currentAssignment, error: fetchError } = await supabaseClient
+                        .from('audit_assignments')
+                        .select('id, conversation_id, employee_email, employee_name, auditor_email, status')
+                        .eq('id', selectedAuditId)
+                        .single();
+                    
+                    if (fetchError || !currentAssignment) {
+                        console.error('Error fetching assignment:', fetchError);
+                        await window.confirmationDialog.show({
+                            title: 'Error',
+                            message: 'Failed to load assignment details: ' + (fetchError?.message || 'Assignment not found'),
+                            confirmText: 'OK',
+                            type: 'error'
+                        });
+                        return;
+                    }
+                    
+                    const conversationId = conversation.id || null;
+                    if (!conversationId) {
+                        await window.confirmationDialog.show({
+                            title: 'Error',
+                            message: 'Invalid conversation: No conversation ID found',
+                            confirmText: 'OK',
+                            type: 'error'
+                        });
+                        return;
+                    }
+                    
+                    // 2. Check if current assignment already has a conversation_id
+                    if (currentAssignment.conversation_id) {
+                        const existingConvId = String(currentAssignment.conversation_id);
+                        const newConvId = String(conversationId);
+                        
+                        // If it's the same conversation, just proceed (no need to warn)
+                        if (existingConvId === newConvId) {
+                            console.log('✅ Same conversation already linked, proceeding...');
+                            // Just navigate to the assignment
+                            window.location.href = `audit-form.html?assignment=${selectedAuditId}`;
+                            return;
+                        }
+                        
+                        // Different conversation - show warning
+                        const proceed = await window.confirmationDialog.show({
+                            title: 'Warning: Conversation Already Linked',
+                            message: `This assignment already has a conversation linked (ID: ${existingConvId}).\n\n` +
+                                    `You are trying to link a different conversation (ID: ${newConvId}).\n\n` +
+                                    `Do you want to replace the existing conversation?`,
+                            confirmText: 'Replace',
+                            cancelText: 'Cancel',
+                            type: 'warning'
+                        });
+                        
+                        if (!proceed) {
+                            console.log('User cancelled conversation replacement');
+                            return;
+                        }
+                    }
+                    
+                    // 3. Check if another assignment already has this conversation_id
+                    const { data: existingAssignments, error: checkError } = await supabaseClient
+                        .from('audit_assignments')
+                        .select('id, employee_email, employee_name, auditor_email, status, created_at')
+                        .eq('conversation_id', String(conversationId))
+                        .neq('id', selectedAuditId); // Exclude current assignment
+                    
+                    if (checkError) {
+                        console.error('Error checking for existing conversation links:', checkError);
+                        // Continue anyway, but log the error
+                    } else if (existingAssignments && existingAssignments.length > 0) {
+                        // Found other assignments with this conversation
+                        // Hard block: Cannot link same conversation to multiple assignments
+                        const existingAssignment = existingAssignments[0];
+                        const assignmentInfo = existingAssignment.employee_name 
+                            ? `${existingAssignment.employee_name} (${existingAssignment.employee_email})`
+                            : existingAssignment.employee_email || 'Unknown';
+                        
+                        await window.confirmationDialog.show({
+                            title: 'Error: Conversation Already Linked to Another Assignment',
+                            message: `This conversation (ID: ${conversationId}) is already linked to another audit assignment:\n\n` +
+                                    `• Employee: ${assignmentInfo}\n` +
+                                    `• Status: ${existingAssignment.status || 'Unknown'}\n` +
+                                    `• Assignment ID: ${existingAssignment.id}\n\n` +
+                                    `You cannot link the same conversation to multiple assignments. Please select a different conversation.`,
+                            confirmText: 'OK',
+                            type: 'error'
+                        });
+                        
+                        console.log('❌ Blocked: Conversation already linked to another assignment - cannot proceed');
+                        return;
+                    }
+                    
+                    // 4. Extract admin email from conversation and compare with assignment employee_email
+                    // Note: adminEmail is already extracted earlier in this function (lines 6581-6652)
+                    // We need to ensure it's available and compare it with the assignment's employee_email
+                    
+                    // Get the admin email (it should already be extracted, but ensure we have it)
+                    let conversationAdminEmail = adminEmail || null;
+                    
+                    // If adminEmail wasn't found earlier, try to extract it from adminInfo
+                    if (!conversationAdminEmail && adminInfo?.email) {
+                        conversationAdminEmail = adminInfo.email.toLowerCase().trim();
+                    }
+                    
+                    // If still not found, try to extract from conversation directly
+                    if (!conversationAdminEmail) {
+                        const extractedAdmin = extractAdminFromConversation(conversation);
+                        if (extractedAdmin?.email) {
+                            conversationAdminEmail = extractedAdmin.email.toLowerCase().trim();
+                        }
+                    }
+                    
+                    // Compare with assignment employee_email
+                    if (conversationAdminEmail && currentAssignment.employee_email) {
+                        const assignmentEmployeeEmail = (currentAssignment.employee_email || '').toLowerCase().trim();
+                        
+                        if (assignmentEmployeeEmail && conversationAdminEmail !== assignmentEmployeeEmail) {
+                            // Hard block: Admin email must match employee email - no option to proceed
+                            await window.confirmationDialog.show({
+                                title: 'Error: Admin Email Mismatch',
+                                message: `The conversation's admin email (${conversationAdminEmail}) does not match the assignment's employee email (${assignmentEmployeeEmail}).\n\n` +
+                                        `You cannot link this conversation to this audit assignment. Please select a conversation that belongs to the correct employee.`,
+                                confirmText: 'OK',
+                                type: 'error'
+                            });
+                            
+                            console.log('❌ Blocked: Admin email mismatch - cannot proceed');
+                            return;
+                        }
+                    } else if (conversationAdminEmail && !currentAssignment.employee_email) {
+                        // Assignment has no employee_email, but conversation has admin email
+                        // This is less critical, but we could still warn
+                        console.log('⚠️ Assignment has no employee_email to compare with conversation admin');
+                    } else if (!conversationAdminEmail && currentAssignment.employee_email) {
+                        // Conversation has no admin email, but assignment has employee_email
+                        // Hard block: Cannot verify match without admin email
+                        await window.confirmationDialog.show({
+                            title: 'Error: Cannot Verify Admin Email',
+                            message: `The conversation does not have an admin email to verify against the assignment's employee email (${currentAssignment.employee_email}).\n\n` +
+                                    `You cannot link this conversation to this audit assignment. Please select a conversation with valid admin information.`,
+                            confirmText: 'OK',
+                            type: 'error'
+                        });
+                        
+                        console.log('❌ Blocked: Conversation has no admin email - cannot verify match');
+                        return;
+                    }
+                    
+                    // ============================================================================
+                    // ALL VALIDATIONS PASSED - PROCEED WITH LINKING
+                    // ============================================================================
+                    
                     // Update assignment with conversation_id and set status to in_progress
                     const { error: updateError } = await supabaseClient
                         .from('audit_assignments')
                         .update({ 
-                            conversation_id: conversation.id || null,
+                            conversation_id: conversationId,
                             status: 'in_progress'  // Update status to in_progress
                         })
                         .eq('id', selectedAuditId);
