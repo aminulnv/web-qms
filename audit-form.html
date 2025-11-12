@@ -136,9 +136,165 @@
             max-width: 100% !important;
         }
 
+        /* Message Content Styling - Professional HTML formatting */
+        .message-text-content {
+            font-size: 0.5257rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        
+        /* Paragraphs - proper spacing */
+        .message-text-content p {
+            margin: 0 0 0.4043rem 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        .message-text-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Links - clickable and styled */
+        .message-text-content a {
+            color: #2563eb;
+            text-decoration: underline;
+            word-break: break-word;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .message-text-content a:hover {
+            opacity: 0.8;
+        }
+        
+        .message-text-content a:visited {
+            color: #7c3aed;
+        }
+        
+        /* Email links */
+        .message-text-content a[href^="mailto:"] {
+            color: #2563eb;
+        }
+        
+        /* Agent message links (on green background) - lighter blue */
+        .message-text-content.agent-message a {
+            color: #93c5fd;
+        }
+        
+        .message-text-content.agent-message a:hover {
+            opacity: 0.9;
+        }
+        
+        .message-text-content.agent-message a:visited {
+            color: #a5b4fc;
+        }
+        
+        /* Text formatting */
+        .message-text-content strong,
+        .message-text-content b {
+            font-weight: 600;
+        }
+        
+        .message-text-content em,
+        .message-text-content i {
+            font-style: italic;
+        }
+        
+        .message-text-content u {
+            text-decoration: underline;
+        }
+        
+        /* Lists */
+        .message-text-content ul,
+        .message-text-content ol {
+            margin: 0.3234rem 0;
+            padding-left: 1.2937rem;
+            line-height: 1.6;
+        }
+        
+        .message-text-content li {
+            margin: 0.1617rem 0;
+            line-height: 1.6;
+        }
+        
+        /* Code blocks */
+        .message-text-content code {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.0808rem 0.2425rem;
+            border-radius: 0.1213rem;
+            font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+            font-size: 0.4852rem;
+            line-height: 1.4;
+            display: inline-block;
+        }
+        
+        .message-text-content pre {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.4043rem;
+            border-radius: 0.2425rem;
+            overflow-x: auto;
+            margin: 0.3234rem 0;
+        }
+        
+        .message-text-content pre code {
+            background: transparent;
+            padding: 0;
+        }
+        
+        /* Agent message code blocks */
+        .message-text-content.agent-message code {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .message-text-content.agent-message pre {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        
+        /* Blockquotes */
+        .message-text-content blockquote {
+            border-left: 0.1617rem solid #d1d5db;
+            padding-left: 0.4852rem;
+            margin: 0.3234rem 0;
+            font-style: italic;
+            color: #6b7280;
+        }
+        
+        .message-text-content.agent-message blockquote {
+            border-left-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        /* Headings */
+        .message-text-content h1,
+        .message-text-content h2,
+        .message-text-content h3,
+        .message-text-content h4,
+        .message-text-content h5,
+        .message-text-content h6 {
+            margin: 0.4043rem 0;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        
+        .message-text-content h1 { font-size: 1.2em; }
+        .message-text-content h2 { font-size: 1.1em; }
+        .message-text-content h3 { font-size: 1.05em; }
+        
+        /* Line breaks */
+        .message-text-content br {
+            display: block;
+            margin: 0.1617rem 0;
+            content: "";
+        }
+
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
@@ -861,16 +1017,26 @@ async function updateYourStats() {
             console.error('Error calculating reversal count:', error);
         }
         
-        // Update stat cards
-        document.getElementById('statsAssignedCount').textContent = totalAssigned;
-        document.getElementById('statsCompletedCount').textContent = completed;
-        document.getElementById('statsTargetAchieved').textContent = `${percentage}% Target Achieved`;
-        document.getElementById('statsRemainingCount').textContent = remaining;
-        document.getElementById('statsInProgressCount').textContent = inProgress;
-        document.getElementById('statsDaysRemaining').textContent = `${daysRemaining} working day${daysRemaining !== 1 ? 's' : ''} remaining`;
-        document.getElementById('statsReversalCount').textContent = reversalCount;
-        document.getElementById('statsAvgDuration').textContent = avgDurationText;
-        document.getElementById('statsAvgDurationSubtitle').textContent = 'per audit';
+        // Update stat cards (with null checks)
+        const statsAssignedCount = document.getElementById('statsAssignedCount');
+        const statsCompletedCount = document.getElementById('statsCompletedCount');
+        const statsTargetAchieved = document.getElementById('statsTargetAchieved');
+        const statsRemainingCount = document.getElementById('statsRemainingCount');
+        const statsInProgressCount = document.getElementById('statsInProgressCount');
+        const statsDaysRemaining = document.getElementById('statsDaysRemaining');
+        const statsReversalCount = document.getElementById('statsReversalCount');
+        const statsAvgDuration = document.getElementById('statsAvgDuration');
+        const statsAvgDurationSubtitle = document.getElementById('statsAvgDurationSubtitle');
+        
+        if (statsAssignedCount) statsAssignedCount.textContent = totalAssigned;
+        if (statsCompletedCount) statsCompletedCount.textContent = completed;
+        if (statsTargetAchieved) statsTargetAchieved.textContent = `${percentage}% Target Achieved`;
+        if (statsRemainingCount) statsRemainingCount.textContent = remaining;
+        if (statsInProgressCount) statsInProgressCount.textContent = inProgress;
+        if (statsDaysRemaining) statsDaysRemaining.textContent = `${daysRemaining} working day${daysRemaining !== 1 ? 's' : ''} remaining`;
+        if (statsReversalCount) statsReversalCount.textContent = reversalCount;
+        if (statsAvgDuration) statsAvgDuration.textContent = avgDurationText;
+        if (statsAvgDurationSubtitle) statsAvgDurationSubtitle.textContent = 'per audit';
         
     } catch (error) {
         console.error('Error updating your stats:', error);
@@ -1111,6 +1277,12 @@ function displayPendingAudits() {
     const list = document.getElementById('pendingAuditsList');
     const countBadge = document.getElementById('pendingCount');
     const paginationContainer = document.getElementById('pendingAuditsPagination');
+    
+    // Check if elements exist before accessing them
+    if (!section || !list || !countBadge) {
+        console.warn('Pending audits section elements not found in DOM');
+        return;
+    }
     
     // Don't show the section if we're currently editing an audit
     if (!isEditingPendingAudit) {
@@ -9481,6 +9653,115 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 timestamp = new Date(part.created_at);
             }
+            
+            // Format timestamp for display
+            const timeStr = timestamp.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            const dateStr = timestamp.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            // Check if this is a system comment part type (should be displayed outside chat bubbles)
+            const systemCommentTypes = [
+                'user_became_idle',
+                'close',
+                'fin_guidance_applied',
+                'conversation_attribute_updated_by_admin',
+                'attribute_collected'
+            ];
+            const isSystemComment = systemCommentTypes.includes(partType);
+            
+            // If this is a system comment, render it differently (outside chat bubbles)
+            if (isSystemComment) {
+                const messageDiv = document.createElement('div');
+                messageDiv.style.cssText = `
+                    width: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0.4043rem 0;
+                    padding: 0 0.8086rem;
+                `;
+                
+                // Format the message body
+                let messageData;
+                try {
+                    messageData = formatMessageBody(message);
+                } catch (e) {
+                    console.error('Error formatting message body for system comment:', e);
+                    messageData = { text: '', html: null, images: [] };
+                }
+                const formattedText = messageData?.text || '';
+                const formattedHtml = messageData?.html || null;
+                
+                // Create human-readable label for the part type
+                const partTypeLabels = {
+                    'user_became_idle': 'User became idle',
+                    'close': 'Conversation closed',
+                    'fin_guidance_applied': 'Guidance applied',
+                    'conversation_attribute_updated_by_admin': 'Attribute updated by admin',
+                    'attribute_collected': 'Attribute collected'
+                };
+                const partTypeLabel = partTypeLabels[partType] || partType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                // Build the system comment content
+                let commentContent = '';
+                // Use text version for system comments to avoid HTML rendering issues
+                if (formattedText && formattedText.trim() !== '' && formattedText.trim() !== '{}') {
+                    commentContent = formattedText;
+                } else if (part.body && String(part.body).trim() !== '') {
+                    // Fallback: strip HTML tags from body and get plain text
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = String(part.body);
+                    commentContent = tempDiv.textContent || tempDiv.innerText || '';
+                }
+                
+                // Escape HTML for safe display
+                if (commentContent) {
+                    const tempEscDiv = document.createElement('div');
+                    tempEscDiv.textContent = commentContent;
+                    commentContent = tempEscDiv.innerHTML;
+                }
+                
+                messageDiv.innerHTML = `
+                    <div style="
+                        background: #f3f4f6;
+                        border: 0.0304rem solid #e5e7eb;
+                        border-radius: 0.2426rem;
+                        padding: 0.3234rem 0.4852rem;
+                        max-width: 80%;
+                        text-align: center;
+                        font-size: 0.4447rem;
+                        color: #6b7280;
+                        line-height: 1.5;
+                    ">
+                        <div style="
+                            font-weight: 600;
+                            color: #4b5563;
+                            margin-bottom: 0.1213rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.0405rem;
+                            font-size: 0.4043rem;
+                        ">${partTypeLabel.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}</div>
+                        ${commentContent ? `<div style="margin-top: 0.1617rem; color: #6b7280; font-size: 0.4447rem;">${commentContent}</div>` : ''}
+                        <div style="
+                            margin-top: 0.1617rem;
+                            font-size: 0.3639rem;
+                            color: #9ca3af;
+                            opacity: 0.8;
+                        ">${timeStr} • ${dateStr}</div>
+                    </div>
+                `;
+                
+                chatMessagesContainer.appendChild(messageDiv);
+                return; // Skip normal message rendering for system comments
+            }
+            
+            // Continue with normal message rendering for non-system-comment parts
             const isUser = authorType === 'user' || authorType === 'contact';
             const isAdmin = authorType === 'admin' || authorType === 'team';
             // Detect AI/Bot messages - be strict: only if explicitly bot type or has AI flags
@@ -9609,38 +9890,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
             
-            // Skip empty messages or non-comment parts (like assignments, system messages, etc.)
-            // BUT allow email interactions even if part_type is not 'comment' or 'note'
-            // Only show parts that have actual text content, images, attachments, or email metadata
-            if ((!formattedText || formattedText.trim() === '' || formattedText.trim() === '{}') && 
-                allImages.length === 0 && 
-                attachments.length === 0 && 
-                !isEmail) {
-                return; // Skip this part
+            // REMOVED: No longer skipping any parts - show ALL parts in the chatbox
+            // Always display parts so users can see everything, even if empty
+            
+            // Check what content this part has (for display purposes)
+            const hasBody = !!(part.body && String(part.body).trim() !== '');
+            const hasText = !!(formattedText && formattedText.trim() !== '' && formattedText.trim() !== '{}');
+            const hasHtml = !!formattedHtml;
+            const hasImages = allImages.length > 0;
+            const hasAttachments = attachments.length > 0;
+            
+            // Build content info badge to show in UI what this part contains
+            // Always show part_type for all parts
+            let contentInfoBadge = '';
+            const contentTypes = [];
+            
+            // Always include part_type first
+            if (partType) {
+                contentTypes.push(`Type: ${partType}`);
             }
             
-            // Also skip if part type is not a comment, note, or email
-            // Email interactions can have various part_types (open, close, etc.)
-            if (!isEmail && partType !== 'comment' && partType !== 'note') {
-                console.log('Skipping part:', { partId: part.id, partType: partType, isEmail: isEmail });
-                return; // Skip non-comment parts (unless it's an email)
+            // Then add content types
+            if (hasText || hasHtml) contentTypes.push('Text');
+            if (hasImages) contentTypes.push(`${allImages.length} Image${allImages.length > 1 ? 's' : ''}`);
+            if (hasAttachments) contentTypes.push(`${attachments.length} Attachment${attachments.length > 1 ? 's' : ''}`);
+            if (isEmail) contentTypes.push('Email');
+            
+            // Always show badge if we have part_type or any content
+            if (contentTypes.length > 0 || partType) {
+                contentInfoBadge = `<div style="
+                    font-size: 0.3639rem;
+                    color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.7)'};
+                    margin-bottom: 0.1617rem;
+                    padding: 0.1213rem 0.2426rem;
+                    background: ${isUser ? '#f3f4f6' : 'rgba(255,255,255,0.1)'};
+                    border-radius: 0.1617rem;
+                    display: inline-block;
+                ">
+                    ${contentTypes.length > 0 ? contentTypes.join(' • ') : (partType ? `Part Type: ${partType}` : 'Empty Part')}
+                </div>`;
             }
             
-            // Log when we're displaying a part
-            if (isEmail) {
-                console.log('Displaying email part:', part.id, 'with', allImages.length, 'images and', attachments.length, 'attachments');
-            }
-            
-            // Format timestamp
-            const timeStr = timestamp.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            const dateStr = timestamp.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-            });
+            // Timestamp already formatted above (before system comment check)
+            // timeStr and dateStr are already available here
 
             // Determine message type for avatar and styling
             // Important: Agents should be green, AI should be dark gray
@@ -9895,7 +10187,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle} word-wrap: break-word; overflow-wrap: break-word;">
                     ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} â€¢ ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} â€¢ ${dateStr}</span></div>`}
                     ${emailHeaderHTML}
-                    ${formattedHtml ? renderMessageWithInlineImages(formattedHtml, images, imageStartIndex, part.id, isUser) : (formattedText ? `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'};">${formattedText}</div>` : '')}
+                    ${contentInfoBadge}
+                    ${formattedHtml ? renderMessageWithInlineImages(formattedHtml, images, imageStartIndex, part.id, isUser) : 
+                      (hasText ? 
+                        `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'};">${formattedText}</div>` : 
+                        (partType && partType.trim() !== '' ? 
+                            `<div class="message-text-content" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.8)'}; font-style: italic;">
+                                <span style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.0405rem; font-size: 0.4447rem; opacity: 0.8;">${escapeHtml(partType)}</span>
+                                ${hasBody ? '<span style="margin-left: 0.2426rem; font-size: 0.4043rem; opacity: 0.6;">(body exists but no displayable content)</span>' : ''}
+                            </div>` : 
+                            (hasBody || hasImages || hasAttachments || isEmail ? 
+                                `<div class="message-text-content" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.8)'}; font-style: italic;">
+                                    <span style="opacity: 0.7;">Part ID: ${part.id}</span>
+                                    ${hasBody ? '<span style="margin-left: 0.2426rem;">• Has body (no displayable text)</span>' : ''}
+                                </div>` : 
+                                `<div class="message-text-content" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#9ca3af' : 'rgba(255,255,255,0.5)'}; font-style: italic;">
+                                    <span style="opacity: 0.6;">Empty part (ID: ${part.id})</span>
+                                </div>`
+                            )
+                        )
+                    )}
                     ${!formattedHtml && imagesHTML ? imagesHTML : ''}
                     ${attachmentsHTML}
                     </div>
@@ -10014,7 +10325,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`ðŸ–¼ï¸ Rendered ${replacedCount}/${images.length} images inline for message ${messageId}`);
         }
         
-        return `<div class="message-text-content" data-message-id="${messageId}" style="font-size: 0.5257rem; line-height: 1.6; word-wrap: break-word; margin-top: 0; margin-bottom: 0; color: ${isUser ? '#374151' : 'white'};">
+        // Add CSS class based on message type for styling
+        const messageClass = isUser ? '' : 'agent-message';
+        const textColor = isUser ? '#374151' : 'white';
+        
+        return `<div class="message-text-content ${messageClass}" data-message-id="${messageId}" style="font-size: 0.5257rem; line-height: 1.6; word-wrap: break-word; margin-top: 0; margin-bottom: 0; color: ${textColor};">
             ${renderedHtml}
         </div>`;
     }
@@ -10095,7 +10410,19 @@ document.addEventListener('DOMContentLoaded', function() {
                           processedHtml.substring(match.index + match.fullMatch.length);
         });
         
-        // Step 3: Extract plain text for fallback (remove placeholders)
+        // Step 3: Sanitize HTML using DOMPurify (security + clean HTML)
+        if (typeof DOMPurify !== 'undefined') {
+            processedHtml = DOMPurify.sanitize(processedHtml, {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                ALLOW_DATA_ATTR: false,
+                KEEP_CONTENT: true,
+                RETURN_DOM: false,
+                RETURN_DOM_FRAGMENT: false
+            });
+        }
+        
+        // Step 4: Extract plain text for fallback (remove placeholders)
         const tempDiv2 = document.createElement('div');
         tempDiv2.innerHTML = processedHtml;
         const plainText = tempDiv2.textContent || tempDiv2.innerText || '';
@@ -10103,7 +10430,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Debug logging
         if (images.length > 0) {
-            console.log(`ðŸ“¸ Extracted ${images.length} images from message body:`, {
+            console.log(`📸 Extracted ${images.length} images from message body:`, {
                 htmlImages: imgTags.length,
                 textReferences: textImageMatches.length,
                 totalImages: images.length,
@@ -10115,7 +10442,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return { 
             text: cleanedText, 
             images: images, 
-            html: processedHtml // HTML with image placeholders, preserving other formatting
+            html: processedHtml // HTML with image placeholders, sanitized and preserving formatting
         };
     }
 
