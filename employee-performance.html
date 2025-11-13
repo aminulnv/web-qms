@@ -889,6 +889,83 @@ let dateFilter = { start: null, end: null };
 let currentFilters = { channel: '', status: '', agent: '' };
 
 // ============================================================================
+// Cache Configuration
+// ============================================================================
+const CACHE_KEYS = {
+    USERS: 'perf_users',
+    ASSIGNMENTS: 'perf_assignments',
+    SCORECARDS: 'perf_scorecards',
+    SCORECARD_PARAMS: 'perf_scorecard_params',
+    AUDITS: 'perf_audits',
+    TIMESTAMP: 'perf_cache_timestamp'
+};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// ============================================================================
+// Cache Functions
+// ============================================================================
+function getCachedData(key) {
+    try {
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+        
+        const data = JSON.parse(cached);
+        return data;
+    } catch (error) {
+        console.warn(`Error reading cache for ${key}:`, error);
+        return null;
+    }
+}
+
+function setCachedData(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+        console.warn(`Error writing cache for ${key}:`, error);
+        // If storage is full, try to clear old cache
+        if (error.name === 'QuotaExceededError') {
+            clearCache();
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (retryError) {
+                console.error('Failed to cache data after clearing:', retryError);
+            }
+        }
+    }
+}
+
+function isCacheValid() {
+    try {
+        const timestamp = localStorage.getItem(CACHE_KEYS.TIMESTAMP);
+        if (!timestamp) return false;
+        
+        const cacheTime = parseInt(timestamp, 10);
+        const now = Date.now();
+        return (now - cacheTime) < CACHE_TTL;
+    } catch (error) {
+        return false;
+    }
+}
+
+function updateCacheTimestamp() {
+    try {
+        localStorage.setItem(CACHE_KEYS.TIMESTAMP, Date.now().toString());
+    } catch (error) {
+        console.warn('Error updating cache timestamp:', error);
+    }
+}
+
+function clearCache() {
+    try {
+        Object.values(CACHE_KEYS).forEach(key => {
+            localStorage.removeItem(key);
+        });
+    } catch (error) {
+        console.warn('Error clearing cache:', error);
+    }
+}
+
+// ============================================================================
 // Initialization
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -954,7 +1031,58 @@ function setupEventListeners() {
 // ============================================================================
 // Data Loading
 // ============================================================================
-async function loadAllData() {
+async function loadAllData(forceRefresh = false) {
+    try {
+        const useCache = !forceRefresh && isCacheValid();
+        
+        if (useCache) {
+            // Load from cache
+            console.log('Loading data from cache...');
+            const cachedUsers = getCachedData(CACHE_KEYS.USERS);
+            const cachedAssignments = getCachedData(CACHE_KEYS.ASSIGNMENTS);
+            const cachedScorecards = getCachedData(CACHE_KEYS.SCORECARDS);
+            const cachedScorecardParams = getCachedData(CACHE_KEYS.SCORECARD_PARAMS);
+            const cachedAudits = getCachedData(CACHE_KEYS.AUDITS);
+            
+            // Validate that we have all required cache data
+            const hasAllCache = cachedUsers && cachedAssignments && cachedScorecards && 
+                               cachedScorecardParams && cachedAudits;
+            
+            if (hasAllCache) {
+                allUsers = cachedUsers;
+                allAssignments = cachedAssignments;
+                allScorecards = cachedScorecards;
+                allScorecardParameters = cachedScorecardParams;
+                allAudits = cachedAudits;
+                
+                // Apply filters
+                applyAllFilters();
+                
+                // Load filter options
+                populateFilters();
+                
+                // Initialize charts
+                initializeKPIChats();
+                
+                // Load fresh data in background for next time
+                loadAllDataFresh(true);
+            } else {
+                // Cache is incomplete, load fresh data
+                console.log('Cache incomplete, loading fresh data...');
+                await loadAllDataFresh(false);
+            }
+        } else {
+            // Load fresh data
+            await loadAllDataFresh(false);
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('performanceTableBody').innerHTML = 
+            '<tr><td colspan="8" class="loading" style="color: var(--error-color);">Error loading data. Please refresh.</td></tr>';
+    }
+}
+
+async function loadAllDataFresh(background = false) {
     try {
         // Load all users for employee info
         const { data: users, error: usersError } = await window.supabaseClient
@@ -964,6 +1092,7 @@ async function loadAllData() {
 
         if (usersError) throw usersError;
         allUsers = users || [];
+        setCachedData(CACHE_KEYS.USERS, allUsers);
 
         // Load all audit assignments
         const { data: assignments, error: assignError } = await window.supabaseClient
@@ -973,6 +1102,7 @@ async function loadAllData() {
 
         if (assignError) throw assignError;
         allAssignments = assignments || [];
+        setCachedData(CACHE_KEYS.ASSIGNMENTS, allAssignments);
 
         // Load scorecard parameters for error parameter mapping
         await loadScorecardParameters();
@@ -980,19 +1110,30 @@ async function loadAllData() {
         // Load all audits from scorecard tables
         await loadAuditsData();
 
-        // Apply filters
-        applyAllFilters();
+        // Update cache timestamp
+        updateCacheTimestamp();
 
-        // Load filter options
-        populateFilters();
+        // Only update UI if not in background mode
+        if (!background) {
+            // Apply filters
+            applyAllFilters();
 
-        // Initialize charts
-        initializeKPIChats();
+            // Load filter options
+            populateFilters();
 
+            // Initialize charts
+            initializeKPIChats();
+        } else {
+            // In background mode, just update the data silently
+            // The UI will use the cached data that was already displayed
+            console.log('Background data refresh completed');
+        }
     } catch (error) {
-        console.error('Error loading data:', error);
-        document.getElementById('performanceTableBody').innerHTML = 
-            '<tr><td colspan="8" class="loading" style="color: var(--error-color);">Error loading data. Please refresh.</td></tr>';
+        console.error('Error loading fresh data:', error);
+        if (!background) {
+            document.getElementById('performanceTableBody').innerHTML = 
+                '<tr><td colspan="8" class="loading" style="color: var(--error-color);">Error loading data. Please refresh.</td></tr>';
+        }
     }
 }
 
@@ -1007,6 +1148,7 @@ async function loadScorecardParameters() {
 
         // Store scorecards for mapping scorecard_id to table_name
         allScorecards = scorecards || [];
+        setCachedData(CACHE_KEYS.SCORECARDS, allScorecards);
         allScorecardParameters = {};
         
         for (const scorecard of scorecards) {
@@ -1034,6 +1176,9 @@ async function loadScorecardParameters() {
                 console.warn(`Error loading parameters for scorecard ${scorecard.id}:`, err);
             }
         }
+        
+        // Cache scorecard parameters
+        setCachedData(CACHE_KEYS.SCORECARD_PARAMS, allScorecardParameters);
     } catch (error) {
         console.error('Error loading scorecard parameters:', error);
     }
@@ -1072,6 +1217,9 @@ async function loadAuditsData() {
                 console.warn(`Error loading audits from ${scorecard.table_name}:`, err);
             }
         }
+        
+        // Cache audits data
+        setCachedData(CACHE_KEYS.AUDITS, allAudits);
     } catch (error) {
         console.error('Error loading audits:', error);
     }
@@ -2289,7 +2437,8 @@ function exportToCSV() {
 function refreshData() {
     const tbody = document.getElementById('performanceTableBody');
     tbody.innerHTML = '<tr><td colspan="8" class="loading">Refreshing data...</td></tr>';
-    loadAllData();
+    clearCache(); // Clear cache to force fresh data load
+    loadAllData(true); // Force refresh
 }
 
 // ============================================================================
