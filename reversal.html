@@ -806,72 +806,82 @@ document.addEventListener('DOMContentLoaded', function() {
                           (reversal.reversal_approved === null ? 'Pending' : 
                            (reversal.reversal_approved ? 'Approved' : 'Rejected'));
             
-            let statusColor, statusBgColor, statusTextColor, statusText;
+            let statusColor, statusBgColor, statusTextColor, statusIcon;
             if (status === 'Pending') {
                 statusColor = '#f59e0b';
                 statusBgColor = '#fef3c7';
                 statusTextColor = '#92400e';
-                statusText = '⏳ Pending';
+                statusIcon = `<svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>`;
             } else if (status === 'Approved') {
                 statusColor = '#10b981';
                 statusBgColor = '#dcfce7';
                 statusTextColor = '#166534';
-                statusText = '✓ Approved';
+                statusIcon = `<svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>`;
             } else if (status === 'Rejected') {
                 statusColor = '#ef4444';
                 statusBgColor = '#fee2e2';
                 statusTextColor = '#991b1b';
-                statusText = '✗ Rejected';
+                statusIcon = `<svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>`;
             } else if (status === 'Acknowledged') {
                 statusColor = '#3b82f6';
                 statusBgColor = '#dbeafe';
                 statusTextColor = '#1e40af';
-                statusText = '✓ Acknowledged';
+                statusIcon = `<svg style="width: 0.5625rem; height: 0.5625rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>`;
             } else {
                 statusColor = '#6b7280';
                 statusBgColor = '#f3f4f6';
                 statusTextColor = '#374151';
-                statusText = status;
+                statusIcon = '';
             }
             
             return `
-                <div class="reversal-card" style="background: #f9fafb; border: 0.0469rem solid #e5e7eb; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer;" 
+                <div class="reversal-card" style="background: #f9fafb; border: 0.0469rem solid #e5e7eb; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer; position: relative;" 
                      onclick="${reversal.reversal_approved === null ? `reviewAndProcessReversal('${reversal.id}', '${reversal._scorecard_table}')` : `viewReversalDetails('${reversal.id}', '${reversal._scorecard_table}')`}"
                      onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='#ffffff';"
                      onmouseleave="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#f9fafb';">
                     
-                    <div style="flex: 1; display: flex; align-items: center; gap: 0.5625rem;">
-                        <!-- Avatar -->
+                    <div style="flex: 1; display: flex; align-items: center; gap: 0.5625rem; pointer-events: none;">
+                        <!-- Avatar with initials -->
                         <div style="width: 1.875rem; height: 1.875rem; border-radius: 0.1875rem; background: ${statusColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.6562rem; flex-shrink: 0;">
                             ${getInitials(reversal.employee_name || 'Unknown')}
                         </div>
                         
-                        <!-- Info -->
+                        <!-- Employee info -->
                         <div style="flex: 1; min-width: 0;">
                             <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.1875rem; flex-wrap: wrap;">
                                 <h4 style="margin: 0; font-size: 0.6562rem; font-weight: 600; color: #1f2937;">
                                     ${escapeHtml(reversal.employee_name || 'Unknown Employee')}
                                 </h4>
-                                <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600;">
-                                    ${statusText}
-                                </span>
+                                ${reversal._scorecard_name ? `
+                                    <span style="background-color: #f3f4f6; color: #374151; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600; border: 0.0469rem solid #d1d5db;">
+                                        ${escapeHtml(reversal._scorecard_name)}
+                                    </span>
+                                ` : ''}
                                 ${reversal.reversal_type ? `
                                     <span style="background-color: #ede9fe; color: #6b21a8; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600;">
                                         ${escapeHtml(reversal.reversal_type)}
                                     </span>
                                 ` : ''}
-                                ${reversal._scorecard_name ? `
-                                    <span style="background-color: #f3f4f6; color: #374151; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600; border: 0.0469rem solid #d1d5db;">
-                                        📋 ${escapeHtml(reversal._scorecard_name)}
-                                    </span>
-                                ` : ''}
+                                <span style="background-color: ${statusBgColor}; color: ${statusTextColor}; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.1875rem;">
+                                    ${statusIcon} ${status}
+                                </span>
                             </div>
                             <p style="margin: 0; font-size: 0.5625rem; color: #6b7280; display: flex; align-items: center; gap: 0.2812rem; flex-wrap: wrap;">
                                 <span>${escapeHtml(reversal.interaction_id || 'No ID')}</span>
                                 <span style="color: #d1d5db;">•</span>
-                                <span>Score: ${reversal.score_before_appeal || reversal.average_score || '0'}%</span>
+                                <span style="font-weight: 500;">${reversal.score_before_appeal || reversal.average_score || '0'}%</span>
                                 <span style="color: #d1d5db;">•</span>
                                 <span>${escapeHtml(reversal.reversal_reason || 'No reason provided')}</span>
+                                <span style="color: #d1d5db;">•</span>
+                                <span style="color: #374151; font-weight: 500;">${escapeHtml(reversal.auditor_name || 'Unknown auditor')}</span>
                                 <span style="color: #d1d5db;">•</span>
                                 <span>${requestedDate}</span>
                             </p>
@@ -879,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     
                     <!-- Action buttons -->
-                    <div style="display: flex; gap: 0.375rem; flex-shrink: 0;">
+                    <div style="display: flex; gap: 0.375rem; flex-shrink: 0; align-items: center; pointer-events: auto;">
                         ${reversal.reversal_approved === null ? `
                             <button 
                                 onclick="event.stopPropagation(); reviewAndProcessReversal('${reversal.id}', '${reversal._scorecard_table}')"
