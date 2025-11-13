@@ -427,7 +427,7 @@
             color: #1e40af;
         }
 
-        .status-badge.excellent {
+        .status-badge.exceeding {
             background-color: #d1fae5;
             color: #065f46;
         }
@@ -458,7 +458,7 @@
             background-color: #3b82f6;
         }
 
-        .status-dot.excellent {
+        .status-dot.exceeding {
             background-color: var(--success-color);
         }
 
@@ -1648,7 +1648,7 @@ function updateAgentPerformance() {
         
         // Status based on average score
         // >=95% = Exemplary
-        // 90-94% = Excellent
+        // 90-94% = Exceeding
         // 80-89% = Developing
         // 70-79% = Needs Improvement
         // <70% = At Risk
@@ -1657,8 +1657,8 @@ function updateAgentPerformance() {
             status = 'exemplary';
             statusText = 'Exemplary';
         } else if (avgScore >= 90) {
-            status = 'excellent';
-            statusText = 'Excellent';
+            status = 'exceeding';
+            statusText = 'Exceeding';
         } else if (avgScore >= 80) {
             status = 'developing';
             statusText = 'Developing';
@@ -2185,7 +2185,7 @@ function exportToCSV() {
             
             // Status based on average score
             // >=95% = Exemplary
-            // 90-94% = Excellent
+            // 90-94% = Exceeding
             // 80-89% = Developing
             // 70-79% = Needs Improvement
             // <70% = At Risk
@@ -2194,8 +2194,8 @@ function exportToCSV() {
                 status = 'exemplary';
                 statusText = 'Exemplary';
             } else if (avgScore >= 90) {
-                status = 'excellent';
-                statusText = 'Excellent';
+                status = 'exceeding';
+                statusText = 'Exceeding';
             } else if (avgScore >= 80) {
                 status = 'developing';
                 statusText = 'Developing';
