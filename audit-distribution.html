@@ -853,6 +853,7 @@
                         <option value="quality_supervisor">Quality Supervisor</option>
                         <option value="team_supervisor">Team Supervisor</option>
                         <option value="department">Department</option>
+                        <option value="country">Country</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -860,13 +861,37 @@
                     <select id="channelFilter" class="filter-select" onchange="applyFiltersAndGroup()">
                         <option value="">All Channels</option>
                     </select>
-            </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Team</label>
+                    <select id="teamFilter" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="">All Teams</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Department</label>
+                    <select id="departmentFilter" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Country</label>
+                    <select id="countryFilter" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
                 <div class="filter-group">
                     <label class="filter-label">Filter by Quality Supervisor</label>
                     <select id="qualitySupervisorFilter" class="filter-select" onchange="applyFiltersAndGroup()">
                         <option value="">All Supervisors</option>
                     </select>
-        </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Filter by Team Supervisor</label>
+                    <select id="teamSupervisorFilter" class="filter-select" onchange="applyFiltersAndGroup()">
+                        <option value="">All Team Supervisors</option>
+                    </select>
+                </div>
                 <div class="filter-group">
                     <label class="filter-label">Search Employee</label>
                     <input type="text" id="employeeSearch" class="filter-input" placeholder="Search by name..." oninput="applyFiltersAndGroup()">
@@ -2109,6 +2134,42 @@ function populateFilters() {
         channelFilter.appendChild(option);
     });
     
+    // Populate team filter
+    const teamFilter = document.getElementById('teamFilter');
+    const uniqueTeams = [...new Set(allEmployees.map(e => e.team).filter(Boolean))];
+    
+    teamFilter.innerHTML = '<option value="">All Teams</option>';
+    uniqueTeams.sort().forEach(team => {
+        const option = document.createElement('option');
+        option.value = team;
+        option.textContent = team;
+        teamFilter.appendChild(option);
+    });
+    
+    // Populate department filter
+    const departmentFilter = document.getElementById('departmentFilter');
+    const uniqueDepartments = [...new Set(allEmployees.map(e => e.department).filter(Boolean))];
+    
+    departmentFilter.innerHTML = '<option value="">All Departments</option>';
+    uniqueDepartments.sort().forEach(department => {
+        const option = document.createElement('option');
+        option.value = department;
+        option.textContent = department;
+        departmentFilter.appendChild(option);
+    });
+    
+    // Populate country filter
+    const countryFilter = document.getElementById('countryFilter');
+    const uniqueCountries = [...new Set(allEmployees.map(e => e.country).filter(Boolean))];
+    
+    countryFilter.innerHTML = '<option value="">All Countries</option>';
+    uniqueCountries.sort().forEach(country => {
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countryFilter.appendChild(option);
+    });
+    
     // Populate quality supervisor filter
     const qsFilter = document.getElementById('qualitySupervisorFilter');
     const uniqueQS = [...new Set(allEmployees.map(e => e.quality_supervisor).filter(Boolean))];
@@ -2130,6 +2191,28 @@ function populateFilters() {
         option.textContent = supervisor.name;
         qsFilter.appendChild(option);
     });
+    
+    // Populate team supervisor filter
+    const tsFilter = document.getElementById('teamSupervisorFilter');
+    const uniqueTS = [...new Set(allEmployees.map(e => e.team_supervisor).filter(Boolean))];
+    
+    tsFilter.innerHTML = '<option value="">All Team Supervisors</option>';
+    
+    // Create options with names and sort by name
+    const teamSupervisorOptions = uniqueTS.map(ts => {
+        const tsUser = allUsers.find(u => u.email === ts);
+        return {
+            email: ts,
+            name: tsUser ? tsUser.name : ts
+        };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+    
+    teamSupervisorOptions.forEach(supervisor => {
+        const option = document.createElement('option');
+        option.value = supervisor.email;
+        option.textContent = supervisor.name;
+        tsFilter.appendChild(option);
+    });
 }
 
 // ============================================================================
@@ -2137,19 +2220,27 @@ function populateFilters() {
 // ============================================================================
 function applyFiltersAndGroup() {
     const channelFilter = document.getElementById('channelFilter').value;
+    const teamFilter = document.getElementById('teamFilter').value;
+    const departmentFilter = document.getElementById('departmentFilter').value;
+    const countryFilter = document.getElementById('countryFilter').value;
     const qsFilter = document.getElementById('qualitySupervisorFilter').value;
+    const tsFilter = document.getElementById('teamSupervisorFilter').value;
     const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
     const groupBy = document.getElementById('groupBySelect').value;
     
     // Apply filters
     filteredEmployees = allEmployees.filter(emp => {
         const matchesChannel = !channelFilter || emp.channel === channelFilter;
+        const matchesTeam = !teamFilter || emp.team === teamFilter;
+        const matchesDepartment = !departmentFilter || emp.department === departmentFilter;
+        const matchesCountry = !countryFilter || emp.country === countryFilter;
         const matchesQS = !qsFilter || emp.quality_supervisor === qsFilter;
+        const matchesTS = !tsFilter || emp.team_supervisor === tsFilter;
         const matchesSearch = !searchTerm || 
             (emp.name && emp.name.toLowerCase().includes(searchTerm)) ||
             (emp.email && emp.email.toLowerCase().includes(searchTerm));
         
-        return matchesChannel && matchesQS && matchesSearch;
+        return matchesChannel && matchesTeam && matchesDepartment && matchesCountry && matchesQS && matchesTS && matchesSearch;
     });
     
     // Initialize error state for audit count input if value is 0
