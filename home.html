@@ -2258,7 +2258,7 @@ function renderAssignedAudits() {
               <div class="flex-1 min-w-0">
                 ${isAgent ? `
                   <!-- For employees: 2 rows, info compact -->
-                  <!-- Row 1: Interaction ID + Scorecard -->
+                  <!-- Row 1: Interaction ID + Scorecard + Passing Status -->
                   <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
                     <h4 class="text-xs font-semibold text-gray-900 truncate">
                       ${escapeHtml(interactionId)}
@@ -2268,6 +2268,9 @@ function renderAssignedAudits() {
                         ${escapeHtml(audit._scorecard_name)}
                       </span>
                     ` : ''}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold ${statusColor}">
+                      ${statusIcon} ${normalizedStatus}
+                    </span>
                   </div>
                   <!-- Row 2: Auditor name • Channel • Score • Errors • Date -->
                   <p class="text-[10px] text-gray-600 flex items-center gap-1 flex-wrap">
@@ -2275,12 +2278,7 @@ function renderAssignedAudits() {
                     <span class="text-gray-300">•</span>
                     <span>${escapeHtml(channel)}</span>
                     <span class="text-gray-300">•</span>
-                    <span class="flex flex-col items-start">
-                      <span class="font-medium text-gray-700">${averageScore}%</span>
-                      <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold ${statusColor} mt-0.5">
-                        ${statusIcon} ${normalizedStatus}
-                      </span>
-                    </span>
+                    <span class="font-medium text-gray-700">${averageScore}%</span>
                     <span class="text-gray-300">•</span>
                     <span>${totalErrors} errors</span>
                     <span class="text-gray-300">•</span>
