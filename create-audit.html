@@ -3496,6 +3496,72 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
 };
 
 // Find admin ID for a specific employee email (looks in Supabase cache first)
+// Send email notification to employee when audit is submitted
+async function sendAuditEmailNotification(auditData, scorecard) {
+    try {
+        // Get Supabase configuration
+        const supabaseUrl = window.env?.SUPABASE_URL || window.SUPABASE_URL;
+        const supabaseAnonKey = window.env?.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.warn('Supabase configuration not found. Email notification skipped.');
+            return;
+        }
+        
+        // Prepare email notification data
+        const emailData = {
+            employee_email: auditData.employee_email || null,
+            employee_name: auditData.employee_name || null,
+            auditor_name: auditData.auditor_name || null,
+            auditor_email: auditData.auditor_email || null,
+            audit_id: auditData.id || null,
+            audit_type: auditData.audit_type || null,
+            passing_status: auditData.passing_status || null,
+            average_score: auditData.average_score || null,
+            submitted_at: auditData.submitted_at || null,
+            scorecard_name: scorecard?.name || null
+        };
+        
+        // Only send if employee email is available
+        if (!emailData.employee_email) {
+            console.warn('Employee email not found. Email notification skipped.');
+            return;
+        }
+        
+        // Call Supabase Edge Function to send email
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/send-audit-email`;
+        console.log('Sending email notification to:', emailData.employee_email);
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(emailData)
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Email notification API error:', response.status, response.statusText, errorText);
+            // Don't throw - we don't want to fail audit submission if email fails
+            return;
+        }
+        
+        const result = await response.json();
+        if (result.success) {
+            console.log('Email notification sent successfully:', result);
+        } else {
+            console.warn('Email notification not sent:', result.message || result.warning);
+        }
+    } catch (error) {
+        // Log error but don't throw - we don't want to fail audit submission if email fails
+        console.error('Error sending email notification:', error);
+    }
+}
+
 async function findAdminIdForEmployee(employeeEmail) {
     const normalizedEmail = employeeEmail.toLowerCase().trim();
     let adminId = null;
@@ -10125,6 +10191,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         type: 'error'
                     });
                     return;
+                }
+                
+                // Send email notification to the audited employee
+                if (data && data[0] && (data[0].employee_email || auditPayload.employee_email)) {
+                    try {
+                        await sendAuditEmailNotification(data[0], currentScorecard);
+                    } catch (emailError) {
+                        // Log error but don't fail the audit submission
+                        console.error('Error sending email notification:', emailError);
+                    }
                 }
                 
                 // Show success message
