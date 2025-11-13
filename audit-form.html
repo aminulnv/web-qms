@@ -8315,12 +8315,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
+                // Store audit ID for redirect (before any variables get cleared)
+                const savedAuditId = data && data[0] ? data[0].id : (currentEditingAuditId || null);
+                
                 // Show success message
                 const message = wasEditingExistingAudit ? 'Audit updated successfully!' : 'Audit submitted successfully!';
                 const confirmed = await window.confirmationDialog.show({
                     title: 'Success!',
                     message: message,
-                    confirmText: 'View Reports',
+                    confirmText: 'View Audit',
                     cancelText: 'Stay Here',
                     type: 'success'
                 });
@@ -8357,9 +8360,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update stats after submission
                 await updateYourStats();
                 
-                // Redirect to audit reports if user clicked "View Reports"
+                // Redirect to audit view if user clicked "View Audit"
                 if (confirmed) {
-                    window.location.href = 'expert-audits.html';
+                    const scorecardId = currentScorecard ? currentScorecard.id : null;
+                    const tableName = currentScorecard ? currentScorecard.table_name : null;
+                    
+                    if (savedAuditId && scorecardId && tableName) {
+                        window.location.href = `audit-view.html?id=${savedAuditId}&scorecard=${scorecardId}&table=${tableName}`;
+                    } else {
+                        // Fallback to expert-audits if we don't have the required info
+                        window.location.href = 'expert-audits.html';
+                    }
                 } else {
                     // Scroll to top to show pending audits
                     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -370,6 +370,233 @@
             color: var(--gray-600);
         }
 
+        /* Quick Links Section */
+        .quick-links-section {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title svg {
+            width: 1.125rem;
+            height: 1.125rem;
+            color: var(--primary-color);
+        }
+
+        .quick-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-link-card {
+            background: var(--white);
+            border: 0.0352rem solid var(--border-light);
+            border-radius: 0.5625rem;
+            padding: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .quick-link-card:hover {
+            transform: translateY(-0.0703rem);
+            box-shadow: 0 0.2109rem 0.5273rem -0.1055rem rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .quick-link-icon {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, rgba(26, 115, 62, 0.1), rgba(26, 115, 62, 0.05));
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .quick-link-icon svg {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .quick-link-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .quick-link-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.1875rem;
+        }
+
+        .quick-link-subtitle {
+            font-size: 0.625rem;
+            color: var(--gray-500);
+        }
+
+        /* Recent Searches */
+        .recent-searches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .recent-search-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            background: var(--gray-100);
+            border: 0.0352rem solid var(--border-light);
+            border-radius: 1.125rem;
+            font-size: 0.6562rem;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .recent-search-chip:hover {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .recent-search-chip .remove-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .recent-search-chip:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .recent-search-chip .remove-btn svg {
+            width: 0.75rem;
+            height: 0.75rem;
+        }
+
+        /* Keyboard Shortcuts */
+        .shortcuts-section {
+            margin-top: 2rem;
+            padding: 1.125rem;
+            background: var(--gray-50);
+            border-radius: 0.75rem;
+            border: 0.0352rem solid var(--border-light);
+        }
+
+        .shortcuts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5625rem;
+            background: var(--white);
+            border-radius: 0.375rem;
+        }
+
+        .shortcut-label {
+            font-size: 0.6562rem;
+            color: var(--gray-700);
+        }
+
+        .shortcut-keys {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .key {
+            padding: 0.1875rem 0.375rem;
+            background: var(--white);
+            border: 0.0352rem solid var(--border-light);
+            border-radius: 0.2812rem;
+            font-size: 0.5625rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            box-shadow: 0 0.0703rem 0.1406rem rgba(0, 0, 0, 0.1);
+        }
+
+        /* Keyboard Navigation Highlight */
+        .search-result-card.keyboard-focused {
+            outline: 0.1406rem solid var(--primary-color);
+            outline-offset: 0.1406rem;
+            transform: translateY(-0.0703rem);
+            box-shadow: 0 0.3516rem 0.8789rem -0.1758rem rgba(0, 0, 0, 0.1);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5625rem 1rem;
+            background: var(--white);
+            border: 0.0352rem solid var(--border-light);
+            border-radius: 0.5rem;
+            font-size: 0.6562rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .quick-action-btn svg {
+            width: 0.875rem;
+            height: 0.875rem;
+        }
+
+        /* Hide sections when searching */
+        .quick-links-section.hidden,
+        .shortcuts-section.hidden,
+        .quick-actions.hidden {
+            display: none;
+        }
+
     </style>
 </head>
 
@@ -402,6 +629,67 @@
                 <button class="filter-btn" data-filter="dashboard">Dashboards</button>
                 <button class="filter-btn" data-filter="setting">Settings</button>
             </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions" id="quick-actions">
+            <button class="quick-action-btn" data-action="home">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                Home
+            </button>
+            <button class="quick-action-btn" data-action="create-audit">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                New Audit
+            </button>
+            <button class="quick-action-btn" data-action="dashboard">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                </svg>
+                Dashboard
+            </button>
+            <button class="quick-action-btn" data-action="settings">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+                Settings
+            </button>
+        </div>
+
+        <!-- Quick Links Section -->
+        <div class="quick-links-section" id="quick-links-section">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Quick Links
+            </h2>
+            <div class="quick-links-grid" id="quick-links-grid"></div>
+
+            <!-- Recent Searches -->
+            <div id="recent-searches-container" style="display: none;">
+                <h2 class="section-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                    </svg>
+                    Recent Searches
+                </h2>
+                <div class="recent-searches" id="recent-searches"></div>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts Section -->
+        <div class="shortcuts-section" id="shortcuts-section">
+            <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.5 4.5c-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5-1.45 0-2.99.22-4.28.79C1.49 5.62 1 6.33 1 7.14v11.28c0 1.3 1.22 2.26 2.48 1.94.98-.25 2.02-.36 3.02-.36 1.56 0 3.22.26 4.56.92.6.3 1.28.3 1.88 0 1.34-.67 3-.92 4.56-.92 1 0 2.04.11 3.02.36 1.26.33 2.48-.63 2.48-1.94V7.14c0-.81-.49-1.52-1.22-1.85-1.29-.57-2.83-.79-4.28-.79zM21 17.23c0 .63-.58 1.09-1.2.98-.75-.14-1.53-.2-2.3-.2-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5.77 0 1.55.06 2.3.2.62.11 1.2.35 1.2.98v9.55z"/>
+                </svg>
+                Keyboard Shortcuts
+            </h2>
+            <div class="shortcuts-grid" id="shortcuts-grid"></div>
         </div>
 
         <!-- Search Stats -->
@@ -464,6 +752,8 @@ class SearchPage {
         this.isSearching = false
         this.searchDebounceTimer = null
         this.lastSearchTime = 0
+        this.selectedResultIndex = -1
+        this.recentSearches = this.loadRecentSearches()
         this.init()
     }
 
@@ -472,6 +762,10 @@ class SearchPage {
         this.buildSearchIndex()
         console.log(`SearchPage: Built index with ${this.allItems.length} items`)
         this.setupEventListeners()
+        this.setupQuickLinks()
+        this.setupKeyboardShortcuts()
+        this.setupQuickActions()
+        this.displayRecentSearches()
         this.handleURLParams()
         
         // Auto-focus search input on page load
@@ -552,7 +846,30 @@ class SearchPage {
                     if (this.searchDebounceTimer) {
                         clearTimeout(this.searchDebounceTimer)
                     }
-                    this.performSearch(e.target.value.trim())
+                    // If a result is selected, navigate to it
+                    if (this.selectedResultIndex >= 0) {
+                        const cards = document.querySelectorAll('.search-result-card')
+                        if (cards[this.selectedResultIndex]) {
+                            cards[this.selectedResultIndex].click()
+                        }
+                    } else {
+                        this.performSearch(e.target.value.trim())
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    this.navigateResults(1)
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    this.navigateResults(-1)
+                } else if (e.key === 'Escape') {
+                    e.preventDefault()
+                    this.clearSearch()
+                } else if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+                    // Focus search on "/" key (but not if typing in input)
+                    if (document.activeElement !== searchInput) {
+                        e.preventDefault()
+                        searchInput.focus()
+                    }
                 }
             })
         }
@@ -588,6 +905,24 @@ class SearchPage {
                 this.performSearch(btn.dataset.suggestion)
             })
         })
+
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Focus search on "/" key (but not when typing in input/textarea)
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const activeElement = document.activeElement
+                const isInput = activeElement && (
+                    activeElement.tagName === 'INPUT' ||
+                    activeElement.tagName === 'TEXTAREA' ||
+                    activeElement.isContentEditable
+                )
+                
+                if (!isInput) {
+                    e.preventDefault()
+                    searchInput?.focus()
+                }
+            }
+        })
     }
 
     handleURLParams() {
@@ -622,7 +957,13 @@ class SearchPage {
 
         console.log(`SearchPage: Performing search for "${trimmedQuery}"`)
         this.isSearching = true
+        this.selectedResultIndex = -1
         this.showLoadingState()
+
+        // Hide quick links, shortcuts, and quick actions when searching
+        document.getElementById('quick-links-section')?.classList.add('hidden')
+        document.getElementById('shortcuts-section')?.classList.add('hidden')
+        document.getElementById('quick-actions')?.classList.add('hidden')
 
         // Record search start time
         const startTime = performance.now()
@@ -636,6 +977,9 @@ class SearchPage {
             // Calculate search time
             const endTime = performance.now()
             this.lastSearchTime = Math.round(endTime - startTime)
+            
+            // Save to recent searches
+            this.saveRecentSearch(trimmedQuery)
             
             this.displayResults()
             this.updateURL(trimmedQuery)
@@ -850,6 +1194,9 @@ class SearchPage {
             return
         }
 
+        // Reset selected index when displaying new results
+        this.selectedResultIndex = -1
+
         // Show results
         noResults.style.display = 'none'
         header.style.display = 'flex'
@@ -970,17 +1317,25 @@ class SearchPage {
             const subtitleEl = noResults.querySelector('.no-results-subtitle')
             if (titleEl) titleEl.textContent = 'No Results Found'
             if (subtitleEl) subtitleEl.textContent = `No results found for "${query}". Try different keywords or check your spelling.`
+            // Keep quick links hidden when there's a query but no results
+            document.getElementById('quick-links-section')?.classList.add('hidden')
+            document.getElementById('shortcuts-section')?.classList.add('hidden')
         } else {
             const titleEl = noResults.querySelector('.no-results-title')
             const subtitleEl = noResults.querySelector('.no-results-subtitle')
             if (titleEl) titleEl.textContent = 'Start Searching'
             if (subtitleEl) subtitleEl.textContent = 'Enter a search term above to find pages, features, and information'
+            // Show quick links, shortcuts, and quick actions when no query
+            document.getElementById('quick-links-section')?.classList.remove('hidden')
+            document.getElementById('shortcuts-section')?.classList.remove('hidden')
+            document.getElementById('quick-actions')?.classList.remove('hidden')
         }
         
         noResults.style.display = 'block'
         document.getElementById('search-results-header').style.display = 'none'
         document.getElementById('search-stats').style.display = 'none'
         document.getElementById('search-results-grid').innerHTML = ''
+        this.selectedResultIndex = -1
     }
 
     showLoadingState() {
@@ -1000,6 +1355,191 @@ class SearchPage {
         const url = new URL(window.location)
         url.searchParams.set('q', query)
         window.history.replaceState({}, '', url)
+    }
+
+    // Quick Links
+    setupQuickLinks() {
+        const quickLinks = [
+            { title: "Create Audit", url: "create-audit.html", icon: "audit", subtitle: "Start new audit" },
+            { title: "Auditor Dashboard", url: "auditor-dashboard.html", icon: "dashboard", subtitle: "View dashboard" },
+            { title: "Expert Audits", url: "expert-audits.html", icon: "report", subtitle: "View reports" },
+            { title: "Employee Performance", url: "employee-performance.html", icon: "performance", subtitle: "Track metrics" },
+            { title: "Settings", url: "settings.html", icon: "setting", subtitle: "Configure system" },
+            { title: "Profile", url: "profile.html", icon: "profile", subtitle: "Your account" }
+        ]
+
+        const grid = document.getElementById('quick-links-grid')
+        if (!grid) return
+
+        grid.innerHTML = quickLinks.map(link => {
+            const icon = this.getResultIcon(link.icon)
+            return `
+                <a href="${link.url}" class="quick-link-card">
+                    <div class="quick-link-icon">${icon}</div>
+                    <div class="quick-link-content">
+                        <div class="quick-link-title">${link.title}</div>
+                        <div class="quick-link-subtitle">${link.subtitle}</div>
+                    </div>
+                </a>
+            `
+        }).join('')
+    }
+
+    // Quick Actions
+    setupQuickActions() {
+        const actionBtns = document.querySelectorAll('.quick-action-btn')
+        actionBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.dataset.action
+                const actionMap = {
+                    'home': 'home.html',
+                    'create-audit': 'create-audit.html',
+                    'dashboard': 'auditor-dashboard.html',
+                    'settings': 'settings.html'
+                }
+                if (actionMap[action]) {
+                    window.location.href = actionMap[action]
+                }
+            })
+        })
+    }
+
+    // Keyboard Shortcuts
+    setupKeyboardShortcuts() {
+        const shortcuts = [
+            { label: "Focus search", keys: ["/"] },
+            { label: "Search", keys: ["Enter"] },
+            { label: "Navigate down", keys: ["↓"] },
+            { label: "Navigate up", keys: ["↑"] },
+            { label: "Clear search", keys: ["Esc"] },
+            { label: "Open result", keys: ["Enter"] }
+        ]
+
+        const grid = document.getElementById('shortcuts-grid')
+        if (!grid) return
+
+        grid.innerHTML = shortcuts.map(shortcut => {
+            const keys = shortcut.keys.map(key => `<span class="key">${key}</span>`).join('')
+            return `
+                <div class="shortcut-item">
+                    <span class="shortcut-label">${shortcut.label}</span>
+                    <div class="shortcut-keys">${keys}</div>
+                </div>
+            `
+        }).join('')
+    }
+
+    // Recent Searches
+    loadRecentSearches() {
+        try {
+            const stored = localStorage.getItem('qms_recent_searches')
+            return stored ? JSON.parse(stored) : []
+        } catch (e) {
+            return []
+        }
+    }
+
+    saveRecentSearch(query) {
+        if (!query || query.length < 2) return
+        
+        // Remove if already exists
+        this.recentSearches = this.recentSearches.filter(s => s !== query)
+        
+        // Add to beginning
+        this.recentSearches.unshift(query)
+        
+        // Keep only last 5
+        this.recentSearches = this.recentSearches.slice(0, 5)
+        
+        // Save to localStorage
+        try {
+            localStorage.setItem('qms_recent_searches', JSON.stringify(this.recentSearches))
+        } catch (e) {
+            console.error('Failed to save recent searches:', e)
+        }
+        
+        this.displayRecentSearches()
+    }
+
+    displayRecentSearches() {
+        const container = document.getElementById('recent-searches-container')
+        const list = document.getElementById('recent-searches')
+        
+        if (!container || !list) return
+        
+        if (this.recentSearches.length === 0) {
+            container.style.display = 'none'
+            return
+        }
+        
+        container.style.display = 'block'
+        list.innerHTML = this.recentSearches.map(search => `
+            <div class="recent-search-chip">
+                <span onclick="window.SearchPage.performSearch('${search.replace(/'/g, "\\'")}')">${search}</span>
+                <button class="remove-btn" onclick="event.stopPropagation(); window.SearchPage.removeRecentSearch('${search.replace(/'/g, "\\'")}')">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+        `).join('')
+    }
+
+    removeRecentSearch(query) {
+        this.recentSearches = this.recentSearches.filter(s => s !== query)
+        try {
+            localStorage.setItem('qms_recent_searches', JSON.stringify(this.recentSearches))
+        } catch (e) {
+            console.error('Failed to save recent searches:', e)
+        }
+        this.displayRecentSearches()
+    }
+
+    // Keyboard Navigation
+    navigateResults(direction) {
+        const cards = document.querySelectorAll('.search-result-card')
+        if (cards.length === 0) return
+
+        // Remove previous selection
+        if (this.selectedResultIndex >= 0 && cards[this.selectedResultIndex]) {
+            cards[this.selectedResultIndex].classList.remove('keyboard-focused')
+        }
+
+        // Update index
+        this.selectedResultIndex += direction
+
+        // Clamp to valid range
+        if (this.selectedResultIndex < 0) {
+            this.selectedResultIndex = -1
+            document.getElementById('search-input-large')?.focus()
+            return
+        }
+        if (this.selectedResultIndex >= cards.length) {
+            this.selectedResultIndex = cards.length - 1
+        }
+
+        // Highlight selected card
+        if (this.selectedResultIndex >= 0 && cards[this.selectedResultIndex]) {
+            cards[this.selectedResultIndex].classList.add('keyboard-focused')
+            cards[this.selectedResultIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }
+    }
+
+    clearSearch() {
+        const searchInput = document.getElementById('search-input-large')
+        if (searchInput) {
+            searchInput.value = ''
+            searchInput.focus()
+        }
+        this.searchResults = []
+        this.selectedResultIndex = -1
+        this.showNoResultsState()
+        this.updateURL('')
+        
+        // Show quick links, shortcuts, and quick actions again
+        document.getElementById('quick-links-section')?.classList.remove('hidden')
+        document.getElementById('shortcuts-section')?.classList.remove('hidden')
+        document.getElementById('quick-actions')?.classList.remove('hidden')
     }
 }
 

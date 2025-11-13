@@ -399,6 +399,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
             </svg>
         </button>
+        <button class="action-btn" id="clearAllBtn" style="display: none;" title="Clear All Filters">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <span>Clear All</span>
+        </button>
         <button id="viewAllBtn" onclick="toggleViewAll()" style="display: none; padding: 0.4688rem 0.75rem; background-color: #f3f4f6; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.375rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" class="action-btn">View All</button>
                 </div>
 
@@ -1149,7 +1155,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.warn('Could not fetch table list via RPC, falling back to scorecard-based loading:', tablesError);
                         // Fallback: use known scorecards
                         if (allScorecards && allScorecards.length > 0) {
-                            tablesToQuery = allScorecards.map(s => ({
+                            tablesToQuery = allScorecards
+                                .filter(s => s.table_name !== 'ai_analysis_results') // Exclude AI analysis results
+                                .map(s => ({
                             table_name: s.table_name,
                             scorecard_id: s.id,
                             scorecard_name: s.name,
@@ -1165,7 +1173,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         // Match tables with scorecards where possible
                         if (allTables && allTables.length > 0) {
-                            tablesToQuery = allTables.map(t => {
+                            tablesToQuery = allTables
+                                .filter(t => t.table_name !== 'ai_analysis_results') // Exclude AI analysis results
+                                .map(t => {
                             const matchingScorecard = allScorecards.find(s => s.table_name === t.table_name);
                             return {
                                 table_name: t.table_name,
@@ -1176,7 +1186,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         } else if (allScorecards && allScorecards.length > 0) {
                             // If RPC returned empty but we have scorecards, use scorecards
-                            tablesToQuery = allScorecards.map(s => ({
+                            tablesToQuery = allScorecards
+                                .filter(s => s.table_name !== 'ai_analysis_results') // Exclude AI analysis results
+                                .map(s => ({
                                 table_name: s.table_name,
                                 scorecard_id: s.id,
                                 scorecard_name: s.name,
@@ -1193,7 +1205,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (rpcError) {
                     console.warn('RPC call failed, using scorecard-based loading:', rpcError);
                     if (allScorecards && allScorecards.length > 0) {
-                        tablesToQuery = allScorecards.map(s => ({
+                        tablesToQuery = allScorecards
+                            .filter(s => s.table_name !== 'ai_analysis_results') // Exclude AI analysis results
+                            .map(s => ({
                         table_name: s.table_name,
                         scorecard_id: s.id,
                         scorecard_name: s.name,
@@ -1208,7 +1222,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Step 2: Load from all discovered tables
+                // Step 2: Filter out ai_analysis_results table (additional safety check)
+                tablesToQuery = tablesToQuery.filter(t => t.table_name !== 'ai_analysis_results');
+                
+                // Step 3: Load from all discovered tables
                 for (const tableInfo of tablesToQuery) {
                     try {
                         let query = window.supabaseClient
@@ -1512,13 +1529,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Update statistics with comprehensive CX metrics
-    async function updateStatistics() {
-        const total = filteredAudits.length;
-        const passing = filteredAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Passed').length;
-        const notPassing = filteredAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Not Passed').length;
+    async function updateStatistics(auditsForStats = null) {
+        // Use provided audits or filteredAudits (before KPI filter)
+        // This ensures statistics always show totals based on all filters EXCEPT KPI filter
+        const statsAudits = auditsForStats || filteredAudits;
+        
+        const total = statsAudits.length;
+        const passing = statsAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Passed').length;
+        const notPassing = statsAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Not Passed').length;
         
         // Calculate Average Quality Score
-        const auditsWithScores = filteredAudits.filter(a => a.averageScore != null && a.averageScore !== '');
+        const auditsWithScores = statsAudits.filter(a => a.averageScore != null && a.averageScore !== '');
         const avgScore = auditsWithScores.length > 0
             ? Math.round(auditsWithScores.reduce((sum, a) => sum + (parseFloat(a.averageScore) || 0), 0) / auditsWithScores.length)
             : 0;
@@ -1531,12 +1552,12 @@ document.addEventListener('DOMContentLoaded', function() {
         let totalErrors = 0;
         let criticalErrorAuditsCount = 0;
         
-        // Load parameters for all unique scorecards in filtered audits
-        const uniqueScorecardIds = [...new Set(filteredAudits.map(a => a._scorecard_id).filter(id => id))];
+        // Load parameters for all unique scorecards in statsAudits
+        const uniqueScorecardIds = [...new Set(statsAudits.map(a => a._scorecard_id).filter(id => id))];
         await Promise.all(uniqueScorecardIds.map(id => loadScorecardParameters(id)));
         
         // Calculate critical errors and total errors for each audit
-        for (const audit of filteredAudits) {
+        for (const audit of statsAudits) {
             const criticalCount = await calculateCriticalErrorCount(audit);
             totalCriticalErrors += criticalCount;
             
@@ -1553,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const avgErrorsPerAudit = total > 0 ? (totalErrors / total).toFixed(1) : '0.0';
         
         // Calculate Reversal Rate
-        const reversals = filteredAudits.filter(a => {
+        const reversals = statsAudits.filter(a => {
             const reversalRequested = a.reversalRequestedAt || a.reversal_requested_at;
             return reversalRequested != null && reversalRequested !== '';
         });
@@ -1564,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }).length;
         
         // Calculate Acknowledgment Rate
-        const acknowledged = filteredAudits.filter(a => {
+        const acknowledged = statsAudits.filter(a => {
             const status = a.acknowledgementStatus || a.acknowledgement_status || '';
             return status && (
                 status.toLowerCase().includes('acknowledged') || 
@@ -1628,16 +1649,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (notPassingAuditsEl) notPassingAuditsEl.textContent = notPassing.toLocaleString();
         
-        // Update trend charts
-        await updateTrendCharts();
+        // Update trend charts using the same audits for consistency
+        await updateTrendCharts(statsAudits);
     }
     
     // Calculate and update trend charts for all metrics
-    async function updateTrendCharts() {
+    async function updateTrendCharts(auditsForTrends = null) {
         if (typeof Chart === 'undefined') {
             console.warn('Chart.js not loaded, skipping trend charts');
             return;
         }
+        
+        // Use provided audits or filteredAudits (before KPI filter)
+        const trendsAudits = auditsForTrends || filteredAudits;
         
         // Generate smooth trend data based on actual trend direction (matching employee-performance.html style)
         const generateData = (trend) => {
@@ -1663,7 +1687,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notPassed: []
         };
         
-        // Get last 7 days of data - use filteredAudits to respect week/date filter
+        // Get last 7 days of data - use trendsAudits to respect week/date filter but not KPI filter
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
@@ -1671,8 +1695,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const nextDate = new Date(date);
             nextDate.setDate(nextDate.getDate() + 1);
             
-            // Filter audits for this day from filteredAudits (which already respects week/date filter)
-            const dayAudits = filteredAudits.filter(a => {
+            // Filter audits for this day from trendsAudits (which already respects week/date filter)
+            const dayAudits = trendsAudits.filter(a => {
                 const submitted = new Date(a.submittedAt || a.submitted_at);
                 return submitted >= date && submitted < nextDate;
             });
@@ -2148,16 +2172,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const deleteButtonHtml = isAuditor ? `
             <button 
                 onclick="event.stopPropagation(); deleteAudit('${audit.id}', '${audit._scorecard_table || ''}', '${escapeHtml(audit.employeeName || audit.employee_name || 'Unknown')}', '${escapeHtml(audit.interactionId || audit.interaction_id || 'N/A')}')"
-                style="padding: 0.375rem 0.75rem; background-color: #dc2626; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                style="padding: 0.375rem; background-color: #dc2626; color: white; border: none; border-radius: 0.1875rem; font-size: 0.5625rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem;"
                 onmouseover="this.style.backgroundColor='#b91c1c'"
                 onmouseout="this.style.backgroundColor='#dc2626'"
                 title="Delete Audit"
             >
-                <svg style="width: 0.75rem; height: 0.75rem; display: inline-block; vertical-align: middle; margin-right: 0.1875rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg style="width: 0.75rem; height: 0.75rem; display: block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                 </svg>
-                Delete
             </button>
         ` : '';
         
@@ -2395,6 +2418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         
         updateWeekDisplay();
+        updateClearAllButtonVisibility();
         filterAudits();
     }
     
@@ -2418,6 +2442,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         
         updateWeekDisplay();
+        updateClearAllButtonVisibility();
         filterAudits();
     }
 
@@ -2444,6 +2469,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const dateDropdown = document.getElementById('dateDropdown');
         if (dateDropdown) dateDropdown.classList.remove('active');
+        updateClearAllButtonVisibility();
         filterAudits();
     };
 
@@ -2452,6 +2478,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeMonthFilter();
         const dateDropdown = document.getElementById('dateDropdown');
         if (dateDropdown) dateDropdown.classList.remove('active');
+        updateClearAllButtonVisibility();
         filterAudits();
     };
     
@@ -2627,6 +2654,10 @@ document.addEventListener('DOMContentLoaded', function() {
                    matchesDateRange && matchesKpiFilter;
         });
         
+        // Store audits before KPI filter for statistics calculation
+        // Statistics should always show totals based on all filters EXCEPT KPI filter
+        const auditsBeforeKpiFilter = [...filteredAudits];
+        
         // If critical filter is active, further filter by checking critical errors
         if (activeKpiFilter === 'critical') {
             // Load parameters for all unique scorecards
@@ -2643,6 +2674,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             filteredAudits = auditsWithCriticalErrors;
         }
+        
+        // Update clear all button visibility
+        updateClearAllButtonVisibility();
+        
+        // Update statistics using audits before KPI filter (so totals don't change)
+        await updateStatistics(auditsBeforeKpiFilter);
         
         await renderAudits();
     }
@@ -2666,6 +2703,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // Update button visibility
+        updateClearAllButtonVisibility();
+        
         // Apply filters
         await filterAudits();
     }
@@ -2687,30 +2727,108 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Event listeners - simplified
-    if (searchInput) {
-        searchInput.addEventListener('input', filterAudits);
-    }
-    if (statusFilter) {
-        statusFilter.addEventListener('change', filterAudits);
-    }
-    if (quarterFilter) {
-        quarterFilter.addEventListener('change', filterAudits);
+    // Check if any filters are applied
+    function hasActiveFilters() {
+        // Check search input
+        if (searchInput && searchInput.value.trim() !== '') return true;
+        
+        // Check status filter
+        if (statusFilter && statusFilter.value !== '') return true;
+        
+        // Check quarter filter
+        if (quarterFilter && quarterFilter.value !== '') return true;
+        
+        // Check all other filter inputs
+        const filterInputs = document.querySelectorAll('input[id$="Filter"], select[id$="Filter"]');
+        for (const input of filterInputs) {
+            if (input.value && input.value.trim() !== '') return true;
+        }
+        
+        // Check date filters
+        if (dateFilter.start || dateFilter.end) return true;
+        if (useWeekFilter && currentWeek !== null) return true;
+        
+        // Check KPI filter
+        if (activeKpiFilter) return true;
+        
+        return false;
     }
     
-    if (clearFilters) {
-        clearFilters.addEventListener('click', async function() {
+    // Update clear all button visibility
+    function updateClearAllButtonVisibility() {
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        if (clearAllBtn) {
+            clearAllBtn.style.display = hasActiveFilters() ? 'inline-flex' : 'none';
+        }
+    }
+    
+    // Clear all filters function
+    async function clearAllFilters() {
             // Clear all filter inputs and selects
             document.querySelectorAll('input[id$="Filter"], select[id$="Filter"], #searchInput').forEach(input => {
                 input.value = '';
             });
-            // Clear KPI filter
-            activeKpiFilter = null;
-            document.querySelectorAll('.kpi-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            await filterAudits();
+        
+        // Clear KPI filter
+        activeKpiFilter = null;
+        document.querySelectorAll('.kpi-card').forEach(card => {
+            card.classList.remove('active');
         });
+        
+        // Clear date filters
+        dateFilter.start = null;
+        dateFilter.end = null;
+        useWeekFilter = false;
+        currentWeek = null;
+        currentWeekYear = null;
+        
+        // Reset date inputs
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const dateBtnTextEl = document.getElementById('dateBtnText');
+        if (startDateEl) startDateEl.value = '';
+        if (endDateEl) endDateEl.value = '';
+        if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+        
+        // Reset to current month view
+        initializeMonthFilter();
+        
+        // Update button visibility
+        updateClearAllButtonVisibility();
+        
+        // Apply filters (which will show all audits)
+        await filterAudits();
+    }
+    
+    // Event listeners - simplified
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            updateClearAllButtonVisibility();
+            filterAudits();
+        });
+    }
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            updateClearAllButtonVisibility();
+            filterAudits();
+        });
+    }
+    if (quarterFilter) {
+        quarterFilter.addEventListener('change', () => {
+            updateClearAllButtonVisibility();
+            filterAudits();
+        });
+    }
+    
+    // Header clear all button
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', clearAllFilters);
+    }
+    
+    // Panel clear filters button (inside filter panel)
+    if (clearFilters) {
+        clearFilters.addEventListener('click', clearAllFilters);
     }
     
     // Add event listeners for all additional filter inputs
@@ -2726,8 +2844,14 @@ document.addEventListener('DOMContentLoaded', function() {
     additionalFilters.forEach(filterId => {
         const filterElement = document.getElementById(filterId);
         if (filterElement) {
-            filterElement.addEventListener('input', filterAudits);
-            filterElement.addEventListener('change', filterAudits);
+            filterElement.addEventListener('input', () => {
+                updateClearAllButtonVisibility();
+                filterAudits();
+            });
+            filterElement.addEventListener('change', () => {
+                updateClearAllButtonVisibility();
+                filterAudits();
+            });
         }
     });
     
