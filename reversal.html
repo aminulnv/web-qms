@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Week and date filter state
         let currentWeek = null;
         let currentWeekYear = null;
-        let useWeekFilter = true;
+        let useWeekFilter = false; // Don't filter by week by default - show all pending reversals
         let dateFilter = { start: null, end: null };
         
         // Load scorecards first
@@ -397,6 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
             currentWeek = getWeekNumber(today);
             currentWeekYear = today.getFullYear();
+            // Don't apply week filter by default - show all reversals
+            useWeekFilter = false;
             updateWeekDisplay();
         }
 
@@ -465,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             updateWeekDisplay();
-            useWeekFilter = true;
+            useWeekFilter = true; // User explicitly navigated to a week, so apply the filter
             dateFilter.start = null;
             dateFilter.end = null;
             const startDateEl = document.getElementById('startDate');
@@ -495,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateWeekDisplay(); // Update week display to show "-"
             } else {
                 if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
-                useWeekFilter = true;
+                useWeekFilter = false; // Clear date filter means show all, not filter by current week
                 updateWeekDisplay(); // Update week display to show week number
             }
 
@@ -515,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (endDateEl) endDateEl.value = '';
             if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
             if (dateDropdown) dateDropdown.classList.remove('active');
-            useWeekFilter = true;
+            useWeekFilter = false; // Clear date filter means show all, not filter by current week
             updateWeekDisplay(); // Update week display to show week number
             filterReversals();
         };
@@ -551,14 +553,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             .select('*')
                             .not('reversal_requested_at', 'is', null);
                         
+                        // For agents: Only show reversals they requested (filter by employee_email)
+                        if (isAgent && userInfo.email) {
+                            query = query.eq('employee_email', userInfo.email);
+                        }
+                        
                         // Filter based on user role and view mode
                         if (onlyPending) {
                             if (isAgent) {
-                                // For agents: Show reversals that are:
-                                // 1. Not approved AND not acknowledged (pending)
-                                // 2. Approved but not acknowledged
-                                // 3. Rejected but not acknowledged
-                                // We'll filter client-side after loading
+                                // For agents: We already filtered by email above, so load all their reversals
+                                // We'll filter by acknowledgement status client-side
                             } else {
                                 // For auditors: Only show unprocessed reversals (reversal_approved is null)
                                 query = query.is('reversal_approved', null);
@@ -575,7 +579,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         if (data && data.length > 0) {
-                            const reversalsWithScorecard = data.map(audit => ({
+                            let filteredData = data;
+                            
+                            // For agents: Additional client-side filtering to ensure exact email match
+                            if (isAgent && userInfo.email) {
+                                filteredData = filteredData.filter(audit => {
+                                    const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
+                                    return auditEmployeeEmail === userInfo.email;
+                                });
+                            }
+                            
+                            const reversalsWithScorecard = filteredData.map(audit => ({
                                 ...audit,
                                 _scorecard_id: scorecard.id,
                                 _scorecard_name: scorecard.name,
@@ -587,6 +601,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.warn(`Exception loading from ${scorecard.table_name}:`, err);
                         continue;
                     }
+                }
+                
+                // For agents: Additional filtering to ensure only their own reversals are shown
+                if (isAgent && userInfo.email) {
+                    combinedReversals = combinedReversals.filter(reversal => {
+                        const auditEmployeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                        return auditEmployeeEmail === userInfo.email;
+                    });
                 }
                 
                 // Filter reversals based on user role if loading pending
@@ -612,6 +634,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Apply submission date filter (week or date range) - filter by submitted_at
+                // Only apply date/week filtering if explicitly set by user
                 let dateFilteredReversals = combinedReversals;
                 if (dateFilter.start || dateFilter.end) {
                     useWeekFilter = false;
@@ -626,12 +649,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         return true;
                     });
                 } else if (useWeekFilter && currentWeek !== null) {
+                    // Only apply week filter if user explicitly navigated to a week
                     const weekDates = getWeekDates(currentWeek, currentWeekYear);
                     dateFilteredReversals = dateFilteredReversals.filter(r => {
                         const submitted = new Date(r.submitted_at || r.submittedAt || r.reversal_requested_at);
                         return submitted >= weekDates.start && submitted <= weekDates.end;
                     });
                 }
+                // If useWeekFilter is false and no date filter, show all reversals (no date filtering)
                 
                 // Sort by reversal request date descending
                 dateFilteredReversals.sort((a, b) => {
@@ -658,14 +683,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     allReversalsLoaded = true;
                 }
                 
+                // For agents: Ensure only their own reversals are shown (additional safety check)
+                let reversalsForFiltering = allReversals;
+                if (isAgent && userInfo.email) {
+                    reversalsForFiltering = allReversals.filter(reversal => {
+                        const auditEmployeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                        return auditEmployeeEmail === userInfo.email;
+                    });
+                }
+                
                 // Update filtered reversals based on current view mode and user role
                 if (viewingAll) {
-                    filteredReversals = [...allReversals];
+                    filteredReversals = [...reversalsForFiltering];
                 } else {
                     // Filter based on user role
                     if (isAgent) {
-                        // For agents: Show reversals that need acknowledgement
-                        filteredReversals = allReversals.filter(reversal => {
+                        // For agents: Show reversals that need acknowledgement (already filtered to their own)
+                        filteredReversals = reversalsForFiltering.filter(reversal => {
                             const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
                             const isAcknowledged = acknowledgementStatus && (
                                 acknowledgementStatus.toLowerCase().includes('acknowledged') || 
@@ -683,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const getStatus = (r) => r.reversal_status || 
                                             (r.reversal_approved === null ? 'Pending' : 
                                              (r.reversal_approved ? 'Approved' : 'Rejected'));
-                        filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                        filteredReversals = reversalsForFiltering.filter(r => getStatus(r) === 'Pending');
                     }
                 }
                 
@@ -892,10 +926,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 viewAllBtn.textContent = 'View All';
                 viewAllBtn.style.backgroundColor = '#6b7280';
                 
+                // For agents: Ensure only their own reversals are shown
+                let reversalsForFiltering = allReversals;
+                if (isAgent && userInfo.email) {
+                    reversalsForFiltering = allReversals.filter(reversal => {
+                        const auditEmployeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                        return auditEmployeeEmail === userInfo.email;
+                    });
+                }
+                
                 // Filter based on user role
                 if (isAgent) {
-                    // For agents: Show reversals that need acknowledgement
-                    filteredReversals = allReversals.filter(reversal => {
+                    // For agents: Show reversals that need acknowledgement (already filtered to their own)
+                    filteredReversals = reversalsForFiltering.filter(reversal => {
                         const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
                         const isAcknowledged = acknowledgementStatus && (
                             acknowledgementStatus.toLowerCase().includes('acknowledged') || 
@@ -913,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const getStatus = (r) => r.reversal_status || 
                                         (r.reversal_approved === null ? 'Pending' : 
                                          (r.reversal_approved ? 'Approved' : 'Rejected'));
-                    filteredReversals = allReversals.filter(r => getStatus(r) === 'Pending');
+                    filteredReversals = reversalsForFiltering.filter(r => getStatus(r) === 'Pending');
                 }
                 
                 // Clear filters that might conflict
@@ -936,8 +979,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return; // loadReversals will call renderReversals
                 }
                 
-                // Show all reversals
-                filteredReversals = [...allReversals];
+                // For agents: Ensure only their own reversals are shown
+                if (isAgent && userInfo.email) {
+                    filteredReversals = allReversals.filter(reversal => {
+                        const auditEmployeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                        return auditEmployeeEmail === userInfo.email;
+                    });
+                } else {
+                    // Show all reversals for auditors
+                    filteredReversals = [...allReversals];
+                }
             }
             
             updateStatistics();
@@ -954,10 +1005,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const dateFrom = document.getElementById('dateFromFilter')?.value || '';
             const dateTo = document.getElementById('dateToFilter')?.value || '';
             
+            // For agents: First filter to only their own reversals
+            let reversalsForFiltering = allReversals;
+            if (isAgent && userInfo.email) {
+                reversalsForFiltering = allReversals.filter(reversal => {
+                    const auditEmployeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                    return auditEmployeeEmail === userInfo.email;
+                });
+            }
+            
             // Start with the appropriate base set
-            let baseReversals = viewingAll ? allReversals : (isAgent ? 
-                // For agents: Show reversals that need acknowledgement
-                allReversals.filter(reversal => {
+            let baseReversals = viewingAll ? reversalsForFiltering : (isAgent ? 
+                // For agents: Show reversals that need acknowledgement (already filtered to their own)
+                reversalsForFiltering.filter(reversal => {
                     const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus || '';
                     const isAcknowledged = acknowledgementStatus && (
                         acknowledgementStatus.toLowerCase().includes('acknowledged') || 
@@ -971,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return !isAcknowledged && (isPending || isApproved || isRejected);
                 }) :
                 // For auditors: Only show unprocessed reversals (pending)
-                allReversals.filter(r => {
+                reversalsForFiltering.filter(r => {
                     const getStatus = (r) => r.reversal_status || 
                                         (r.reversal_approved === null ? 'Pending' : 
                                          (r.reversal_approved ? 'Approved' : 'Rejected'));
@@ -987,7 +1047,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (statusFilter) statusFilter.value = '';
                     return;
                 }
-                baseReversals = allReversals;
+                // For agents: Still filter to their own reversals
+                if (isAgent && userInfo.email) {
+                    baseReversals = allReversals.filter(reversal => {
+                        const auditEmployeeEmail = (reversal.employee_email || '').toLowerCase().trim();
+                        return auditEmployeeEmail === userInfo.email;
+                    });
+                } else {
+                    baseReversals = allReversals;
+                }
             }
             
             filteredReversals = baseReversals.filter(reversal => {
@@ -1016,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Date range filter - use submission date (submitted_at) for filtering
                 let matchesDateRange = true;
-                // First apply week/date filter from header controls
+                // First apply week/date filter from header controls (only if explicitly set)
                 if (dateFilter.start || dateFilter.end) {
                     const submitted = new Date(reversal.submitted_at || reversal.submittedAt || reversal.reversal_requested_at);
                     if (dateFilter.start && submitted < new Date(dateFilter.start)) matchesDateRange = false;
@@ -1026,10 +1094,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (submitted > endDate) matchesDateRange = false;
                     }
                 } else if (useWeekFilter && currentWeek !== null) {
+                    // Only apply week filter if user explicitly navigated to a week
                     const weekDates = getWeekDates(currentWeek, currentWeekYear);
                     const submitted = new Date(reversal.submitted_at || reversal.submittedAt || reversal.reversal_requested_at);
                     if (submitted < weekDates.start || submitted > weekDates.end) matchesDateRange = false;
                 }
+                // If useWeekFilter is false and no date filter, matchesDateRange remains true (show all)
                 // Then apply additional date range filter from filter panel if specified
                 if (matchesDateRange && (dateFrom || dateTo)) {
                     const submitted = new Date(reversal.submitted_at || reversal.submittedAt || reversal.reversal_requested_at);
