@@ -7928,6 +7928,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 auditData[`feedback_${param.field_id}`] = feedbacks.length > 0 ? feedbacks : null;
+                
+                // Collect parameter comments from comment input fields
+                // Comments should be saved even if error count is 0
+                const commentInputs = document.querySelectorAll(`input[data-param-key="${param.field_id}"]`);
+                const comments = [];
+                commentInputs.forEach(input => {
+                    if (input.value && input.value.trim()) {
+                        comments.push(input.value.trim());
+                    }
+                });
+                
+                // Store comments in auditData if there are any (even if error count is 0)
+                if (comments.length > 0) {
+                    if (!auditData.parameter_comments) {
+                        auditData.parameter_comments = {};
+                    }
+                    // Get current user email for commented_by
+                    const userEmail = (typeof getCurrentUserEmail === 'function' ? getCurrentUserEmail() : null) || 
+                                     (typeof currentUserEmail !== 'undefined' ? currentUserEmail : null) || 
+                                     '';
+                    auditData.parameter_comments[param.field_id] = {
+                        comments: comments,
+                        commented_at: new Date().toISOString(),
+                        commented_by: userEmail
+                    };
+                }
             });
             
             // Update employeeName with the actual name from the selected option
@@ -8105,6 +8131,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         ? feedbackValue 
                         : null;
                 });
+                
+                // Add parameter comments (always include, even if empty, to ensure comments are saved)
+                // Comments should be saved even if error count is 0
+                if (auditData.parameter_comments && Object.keys(auditData.parameter_comments).length > 0) {
+                    auditPayload.parameter_comments = auditData.parameter_comments;
+                } else {
+                    // Initialize empty object if no comments (to ensure field exists in database)
+                    auditPayload.parameter_comments = {};
+                }
                 
                 console.log('Payload to save:', auditPayload);
                 console.log('Target table:', currentScorecard.table_name);

@@ -854,9 +854,14 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
     let criticalFailTotal = 0;
     let criticalTotal = 0;
     let significantTotal = 0;
+    let calculatedTotalErrors = 0;
     
     errorFields.forEach(field => {
         const count = audit[field.key] ? parseInt(audit[field.key]) : 0;
+        // Only count error parameters (not achievements/bonuses) in total
+        if (field.parameter_type === 'error' || !field.parameter_type) {
+            calculatedTotalErrors += count;
+        }
         if (count > 0) {
             if (field.severity === 'Critical Fail') {
                 criticalFailTotal += count;
@@ -867,6 +872,9 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
             }
         }
     });
+    
+    // Use calculated total instead of stored total_errors_count to ensure accuracy
+    const totalErrorsCount = calculatedTotalErrors;
     
     // Determine column header based on field types
     let statusColumnHeader = 'Status';
@@ -1130,9 +1138,9 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
                     Error Details
                 </h3>
                 <div style="display: flex; gap: 0.2425rem;">
-                    <span style="background: #dc2626; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: ${criticalFailTotal}</span>
-                    <span style="background: #f59e0b; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: ${criticalTotal}</span>
-                    <span style="background: #3b82f6; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: ${significantTotal}</span>
+                    <span id="errorDetailsCriticalFailTotal" style="background: #dc2626; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical Fail: ${criticalFailTotal}</span>
+                    <span id="errorDetailsCriticalTotal" style="background: #f59e0b; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Critical: ${criticalTotal}</span>
+                    <span id="errorDetailsSignificantTotal" style="background: #3b82f6; color: #ffffff; padding: 0.1617rem 0.3234rem; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 700; font-family: 'Poppins', sans-serif; white-space: nowrap;">Significant: ${significantTotal}</span>
                 </div>
             </div>
             
@@ -1179,19 +1187,19 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Total Errors</p>
-                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.totalErrorsCount || '0'}</div>
+                    <div id="totalErrorsCountDisplay" style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${totalErrorsCount}</div>
                 </div>
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
-                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalFailTotal}</div>
+                    <div id="criticalFailTotalDisplay" style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalFailTotal}</div>
                 </div>
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical</p>
-                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalTotal}</div>
+                    <div id="criticalTotalDisplay" style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalTotal}</div>
                 </div>
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
-                    <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${significantTotal}</div>
+                    <div id="significantTotalDisplay" style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${significantTotal}</div>
                 </div>
             </div>
         </div>
@@ -1801,7 +1809,16 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
         setTimeout(() => {
             populateEditFormFields(audit);
             // Update score display after form is populated
+            // This will recalculate based on current form values
             updateAverageScoreDisplay();
+            
+            // Also update the currentAudit object with the calculated score
+            // so it matches what's displayed
+            const calculatedScore = calculateNewScore();
+            if (currentAudit) {
+                currentAudit.averageScore = calculatedScore;
+                currentAudit.average_score = calculatedScore;
+            }
         }, 100);
     }
 
@@ -5611,6 +5628,91 @@ function updateAverageScoreDisplay() {
             headerElement.style.background = 'linear-gradient(135deg, #d41212 0%, #b91c1c 100%)';
         }
     }
+    
+    // Recalculate and update error counts based on current form values
+    if (currentErrorFields && currentErrorFields.length > 0) {
+        let totalErrors = 0;
+        let criticalFailTotal = 0;
+        let criticalTotal = 0;
+        let significantTotal = 0;
+        
+        currentErrorFields.forEach(field => {
+            let errorCount = 0;
+            
+            // Get current value from form
+            if (field.field_type === 'radio') {
+                const selectedRadio = document.querySelector(`input[name="${field.key}"]:checked`);
+                if (selectedRadio) {
+                    const value = parseInt(selectedRadio.value) || 0;
+                    // For error parameters: YES (1) = error
+                    // For achievement/bonus: NO (0) = error
+                    if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
+                        errorCount = value === 0 ? 1 : 0;
+                    } else {
+                        errorCount = value;
+                    }
+                }
+            } else {
+                // Counter field
+                const fieldInput = document.getElementById(field.key);
+                if (fieldInput) {
+                    errorCount = parseInt(fieldInput.value) || 0;
+                }
+            }
+            
+            // Only count errors (not achievements/bonuses) in total
+            if (field.parameter_type === 'error' || !field.parameter_type) {
+                totalErrors += errorCount;
+            }
+            
+            // Count by severity
+            if (errorCount > 0) {
+                if (field.severity === 'Critical Fail') {
+                    criticalFailTotal += errorCount;
+                } else if (field.severity === 'Critical') {
+                    criticalTotal += errorCount;
+                } else if (field.severity === 'Significant') {
+                    significantTotal += errorCount;
+                }
+            }
+        });
+        
+        // Update total errors count display
+        const totalErrorsDisplay = document.getElementById('totalErrorsCountDisplay');
+        if (totalErrorsDisplay) {
+            totalErrorsDisplay.textContent = totalErrors.toString();
+        }
+        
+        // Update critical fail total displays
+        const criticalFailDisplay = document.getElementById('criticalFailTotalDisplay');
+        if (criticalFailDisplay) {
+            criticalFailDisplay.textContent = criticalFailTotal.toString();
+        }
+        const errorDetailsCriticalFail = document.getElementById('errorDetailsCriticalFailTotal');
+        if (errorDetailsCriticalFail) {
+            errorDetailsCriticalFail.textContent = `Critical Fail: ${criticalFailTotal}`;
+        }
+        
+        // Update critical total displays
+        const criticalDisplay = document.getElementById('criticalTotalDisplay');
+        if (criticalDisplay) {
+            criticalDisplay.textContent = criticalTotal.toString();
+        }
+        const errorDetailsCritical = document.getElementById('errorDetailsCriticalTotal');
+        if (errorDetailsCritical) {
+            errorDetailsCritical.textContent = `Critical: ${criticalTotal}`;
+        }
+        
+        // Update significant total displays
+        const significantDisplay = document.getElementById('significantTotalDisplay');
+        if (significantDisplay) {
+            significantDisplay.textContent = significantTotal.toString();
+        }
+        const errorDetailsSignificant = document.getElementById('errorDetailsSignificantTotal');
+        if (errorDetailsSignificant) {
+            errorDetailsSignificant.textContent = `Significant: ${significantTotal}`;
+        }
+    }
 }
 
 // Check if any changes were made
@@ -6198,7 +6300,67 @@ async function saveAuditChanges() {
             auditData.recommendations = recommendationsTextarea.value.trim() || null;
         }
         
+        // Collect parameter comments from all comment input fields
+        // Comments should be saved even if error count is 0
+        const parameterComments = {};
+        if (currentErrorFields && currentErrorFields.length > 0) {
+            currentErrorFields.forEach(field => {
+                const commentInputs = document.querySelectorAll(`input[data-param-key="${field.key}"]`);
+                const comments = [];
+                commentInputs.forEach(input => {
+                    // Include all comments, even empty ones (to handle deletion)
+                    const commentValue = input.value ? input.value.trim() : '';
+                    comments.push(commentValue);
+                });
+                
+                // Filter out empty comments at the end
+                const nonEmptyComments = comments.filter(c => c.length > 0);
+                
+                // Always update the parameter comment entry if there are comment inputs OR if there are existing comments
+                // This allows us to save comments even if error count is 0, and also delete comments if cleared
+                // Check if there are existing comments for this parameter
+                const existingParamComments = (currentAudit?.parameterComments || currentAudit?.parameter_comments || {})[field.key];
+                const hasExistingComments = existingParamComments && existingParamComments.comments && existingParamComments.comments.length > 0;
+                
+                if (commentInputs.length > 0 || hasExistingComments) {
+                    // Get current user email for commented_by
+                    const userEmail = getCurrentUserEmail() || '';
+                    if (nonEmptyComments.length > 0) {
+                        // Save comments if there are any
+                        parameterComments[field.key] = {
+                            comments: nonEmptyComments,
+                            commented_at: new Date().toISOString(),
+                            commented_by: userEmail
+                        };
+                    } else if (commentInputs.length > 0) {
+                        // If comment inputs exist but are all empty, remove the parameter comment entry
+                        // Set to null to explicitly remove it
+                        parameterComments[field.key] = null;
+                    }
+                    // If no comment inputs but existing comments, preserve existing comments
+                    // (don't add to parameterComments, they'll be preserved in mergedComments)
+                }
+            });
+        }
+        
+        // Merge with existing parameter comments
+        // Start with existing comments, then update with new/cleared comments
+        const existingComments = currentAudit?.parameterComments || currentAudit?.parameter_comments || {};
+        const mergedComments = { ...existingComments };
+        
+        // Update merged comments with new values (including nulls for deletions)
+        Object.keys(parameterComments).forEach(key => {
+            if (parameterComments[key] === null) {
+                // Remove the comment entry if it was cleared
+                delete mergedComments[key];
+            } else {
+                // Update with new comments
+                mergedComments[key] = parameterComments[key];
+            }
+        });
+        
         // Important: If error count is 0, ensure feedback is cleared and count is 0
+        // BUT DO NOT clear comments - comments should be saved even if error count is 0
         errorInputs.forEach(input => {
             // For radio buttons, use name; for number inputs, use id
             const fieldId = input.type === 'radio' ? input.name : (input.id || input.name);
@@ -6210,12 +6372,39 @@ async function saveAuditChanges() {
             }
             
             // If error count is 0, clear any feedback for this field
+            // But preserve comments - they should be saved even if error count is 0
             if (errorValue === 0) {
                 auditData[`feedback_${fieldId}`] = null;
                 // Ensure the error count field is also set to 0
                 auditData[fieldId] = 0;
             }
         });
+        
+        // Calculate total errors count from current form values
+        let totalErrorsCount = 0;
+        if (currentErrorFields && currentErrorFields.length > 0) {
+            currentErrorFields.forEach(field => {
+                // Only count error parameters (not achievements/bonuses)
+                if (field.parameter_type === 'error' || !field.parameter_type) {
+                    let errorCount = 0;
+                    
+                    if (field.field_type === 'radio') {
+                        const selectedRadio = document.querySelector(`input[name="${field.key}"]:checked`);
+                        if (selectedRadio) {
+                            const value = parseInt(selectedRadio.value) || 0;
+                            errorCount = value;
+                        }
+                    } else {
+                        const fieldInput = document.getElementById(field.key);
+                        if (fieldInput) {
+                            errorCount = parseInt(fieldInput.value) || 0;
+                        }
+                    }
+                    
+                    totalErrorsCount += errorCount;
+                }
+            });
+        }
         
         // Build update payload
         const updatePayload = {};
@@ -6228,6 +6417,21 @@ async function saveAuditChanges() {
                 updatePayload[key] = auditData[key];
             }
         });
+        
+        // Add calculated total_errors_count
+        updatePayload.total_errors_count = totalErrorsCount;
+        
+        // Calculate and add average_score based on current form values
+        // Use the same calculation logic as the display
+        const calculatedAverageScore = calculateNewScore();
+        // Ensure it's saved as a number (not string) and rounded to 2 decimal places
+        updatePayload.average_score = parseFloat(calculatedAverageScore.toFixed(2));
+        
+        console.log('Calculated average score:', calculatedAverageScore, 'Will save as:', updatePayload.average_score);
+        
+        // Add parameter comments (always include, even if empty, to ensure comments are saved)
+        // Comments should be saved even if error count is 0
+        updatePayload.parameter_comments = mergedComments;
         
         // Helper function to retry database operations on schema cache errors
         async function retryOnSchemaCacheError(operation, maxRetries = 3) {
@@ -6283,8 +6487,16 @@ async function saveAuditChanges() {
             alert('✓ Audit changes saved successfully!');
         }
         
-        // Reload the page to show updated data
-        location.reload();
+        // Redirect to audit-view.html to see the changes
+        // Use the already-declared variables from the beginning of the function
+        const scorecardId = urlParams.get('scorecard');
+        
+        if (auditId && scorecardId && tableName) {
+            window.location.href = `audit-view.html?id=${auditId}&scorecard=${scorecardId}&table=${tableName}`;
+        } else {
+            // Fallback to reload if parameters are missing
+            location.reload();
+        }
         
     } catch (error) {
         console.error('Error saving audit changes:', error);

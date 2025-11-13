@@ -780,6 +780,16 @@
             height: 0.6562rem;
         }
 
+        .auditor-list-item input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .auditor-list-item:has(input[type="checkbox"]:disabled) {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .auditor-list-actions {
             display: flex;
             gap: 0.375rem;
@@ -948,15 +958,7 @@
                             <h3 class="auditors-title">Select Quality Analyst(s)</h3>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.75rem; flex: 1; min-height: 0;">
-                            <div style="display: flex; flex-direction: column; gap: 0.375rem; flex: 1; min-height: 0;">
-                                <label style="font-size: 0.6094rem; font-weight: 600; color: #374151; flex-shrink: 0;">
-                                    <span style="color: #ef4444;">*</span> Quality Analyst(s):
-                                </label>
-                                <div class="auditors-list-container" id="auditorsListContainer">
-                                    <!-- Quality Analyst list will be populated here -->
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.375rem; flex-shrink: 0; margin-top: auto;">
+                            <div style="display: flex; flex-direction: column; gap: 0.375rem; flex-shrink: 0;">
                                 <label style="font-size: 0.6094rem; font-weight: 600; color: #374151;">
                                     <span style="color: #ef4444;">*</span> Audits per employee:
                                 </label>
@@ -964,6 +966,14 @@
                                     <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.max(0, bulkAuditCount - 1))">−</button>
                                     <input type="number" id="bulkAuditCountRight" min="0" max="10" value="0" class="audit-count-input" onchange="updateBulkAuditCount(parseInt(this.value) || 0)" oninput="updateBulkAuditCount(parseInt(this.value) || 0)" style="width: 3rem;">
                                     <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.min(10, bulkAuditCount + 1))">+</button>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.375rem; flex: 1; min-height: 0;">
+                                <label style="font-size: 0.6094rem; font-weight: 600; color: #374151; flex-shrink: 0;">
+                                    <span style="color: #ef4444;">*</span> Quality Analyst(s):
+                                </label>
+                                <div class="auditors-list-container" id="auditorsListContainer">
+                                    <!-- Quality Analyst list will be populated here -->
                                 </div>
                             </div>
                             <button class="btn-assign" onclick="performBulkAssignment()" id="assignButtonRight" disabled style="width: 100%; flex-shrink: 0;">Assign Audits</button>
@@ -2051,14 +2061,28 @@ function populateQADropdown() {
         return;
     }
     
+    // Calculate total audits and audits per auditor
+    let totalAudits = 0;
+    selectedEmployees.forEach((data) => {
+        totalAudits += data.auditCount;
+    });
+    
+    const selectedAuditorCount = selectedQualityAnalysts.size;
+    const auditsPerAuditor = selectedAuditorCount > 0 ? Math.ceil(totalAudits / selectedAuditorCount) : 0;
+    
+    // Check if audit count is set (required for selection)
+    const canSelectAuditors = bulkAuditCount > 0;
+    
     // Add individual QA items (audits will be distributed evenly among selected auditors)
-            qualityAnalysts.forEach(qa => {
+    qualityAnalysts.forEach(qa => {
         const listItem = document.createElement('div');
         listItem.className = 'auditor-list-item';
+        const isSelected = selectedQualityAnalysts.has(qa.email);
+        
         listItem.onclick = function(e) {
-            if (e.target.type !== 'checkbox') {
+            if (e.target.type !== 'checkbox' && canSelectAuditors) {
                 const checkbox = listItem.querySelector('input[type="checkbox"]');
-                if (checkbox) {
+                if (checkbox && !checkbox.disabled) {
                     checkbox.checked = !checkbox.checked;
                     checkbox.dispatchEvent(new Event('change'));
                 }
@@ -2069,10 +2093,15 @@ function populateQADropdown() {
         checkbox.type = 'checkbox';
         checkbox.id = `qa-checkbox-${qa.email}`;
         checkbox.value = qa.email;
-        checkbox.checked = selectedQualityAnalysts.has(qa.email);
+        checkbox.checked = isSelected;
+        checkbox.disabled = !canSelectAuditors;
         checkbox.addEventListener('change', function(e) {
             e.stopPropagation();
-            toggleQASelection(qa.email, this.checked);
+            if (canSelectAuditors) {
+                toggleQASelection(qa.email, this.checked);
+            } else {
+                this.checked = false;
+            }
         });
         
         const avatar = document.createElement('div');
@@ -2080,13 +2109,27 @@ function populateQADropdown() {
         const initials = qa.name ? qa.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'QA';
         avatar.textContent = initials;
         
+        const nameContainer = document.createElement('div');
+        nameContainer.style.cssText = 'display: flex; align-items: center; justify-content: space-between; flex: 1; gap: 0.375rem;';
+        
         const name = document.createElement('p');
         name.className = 'auditor-name';
         name.textContent = qa.name || qa.email;
+        name.style.margin = '0';
+        
+        nameContainer.appendChild(name);
+        
+        // Show audit count badge if auditor is selected
+        if (isSelected && auditsPerAuditor > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'auditor-badge';
+            badge.textContent = `${auditsPerAuditor} audit${auditsPerAuditor !== 1 ? 's' : ''}`;
+            nameContainer.appendChild(badge);
+        }
         
         listItem.appendChild(checkbox);
         listItem.appendChild(avatar);
-        listItem.appendChild(name);
+        listItem.appendChild(nameContainer);
         container.appendChild(listItem);
     });
     
@@ -2096,9 +2139,12 @@ function populateQADropdown() {
     
     const selectAllBtn = document.createElement('button');
     selectAllBtn.textContent = 'Select All';
+    selectAllBtn.disabled = !canSelectAuditors;
     selectAllBtn.onclick = function(e) {
         e.stopPropagation();
-        selectAllQAs();
+        if (canSelectAuditors) {
+            selectAllQAs();
+        }
     };
     
     const clearBtn = document.createElement('button');
@@ -2367,7 +2413,6 @@ function createGroupElement(groupName, employees, groupBy) {
 function createEmployeeElement(employee) {
     const initials = employee.name ? employee.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
     const isSelected = selectedEmployees.has(employee.email);
-    const auditCount = isSelected ? selectedEmployees.get(employee.email).auditCount : 1;
     
     return `
         <div class="employee-item" onclick="handleEmployeeRowClick(event, '${employee.email}')">
@@ -2385,21 +2430,7 @@ function createEmployeeElement(employee) {
                     </p>
                 </div>
             </div>
-            <div class="counter-container" onclick="event.stopPropagation()">
-                <button type="button" class="counter-btn" 
-                        onclick="updateAuditCount('${employee.email}', Math.max(1, (selectedEmployees.get('${employee.email}')?.auditCount || 1) - 1))"
-                        ${!isSelected ? 'disabled' : ''}
-                        data-email="${employee.email}">−</button>
-                <input type="number" class="audit-count-input" min="1" max="10" value="${auditCount}"
-                       data-email="${employee.email}"
-                       readonly
-                       ${!isSelected ? 'disabled' : ''}>
-                <button type="button" class="counter-btn"
-                        onclick="updateAuditCount('${employee.email}', Math.min(10, (selectedEmployees.get('${employee.email}')?.auditCount || 1) + 1))"
-                        ${!isSelected ? 'disabled' : ''}
-                        data-email="${employee.email}">+</button>
-            </div>
-            </div>
+        </div>
         `;
 }
 
@@ -2426,8 +2457,8 @@ function toggleGroupSelection(groupId, checked) {
 }
 
 function handleEmployeeRowClick(event, email) {
-    // Don't toggle if clicking on counter container or checkbox (they handle their own clicks)
-    if (event.target.closest('.counter-container') || event.target.type === 'checkbox') {
+    // Don't toggle if clicking on checkbox (it handles its own clicks)
+    if (event.target.type === 'checkbox') {
         return;
     }
     
@@ -2472,6 +2503,8 @@ function toggleEmployeeSelection(email, selected) {
     
     // Re-render to update the UI
     applyFiltersAndGroup();
+    // Update auditors list to refresh audit count badges
+    populateQADropdown();
     updateAssignButton();
 }
 
@@ -2516,15 +2549,30 @@ function updateRightPanel() {
 }
 
 function toggleQASelection(qaEmail, selected) {
+    // Prevent selection if audit count is not set
+    if (selected && bulkAuditCount <= 0) {
+        alert('Please set "Audits per employee" before selecting auditors.');
+        return;
+    }
+    
     if (selected) {
         selectedQualityAnalysts.add(qaEmail);
     } else {
         selectedQualityAnalysts.delete(qaEmail);
     }
+    
+    // Re-render to update audit count badges
+    populateQADropdown();
     updateAssignButton();
 }
 
 function selectAllQAs() {
+    // Prevent selection if audit count is not set
+    if (bulkAuditCount <= 0) {
+        alert('Please set "Audits per employee" before selecting auditors.');
+        return;
+    }
+    
     selectedQualityAnalysts.clear();
     qualityAnalysts.forEach(qa => {
         selectedQualityAnalysts.add(qa.email);
@@ -2554,11 +2602,15 @@ function selectAllVisible() {
         }
     });
     applyFiltersAndGroup();
+    // Update auditors list to refresh audit count badges
+    populateQADropdown();
 }
 
 function deselectAll() {
     selectedEmployees.clear();
     applyFiltersAndGroup();
+    // Update auditors list to refresh audit count badges
+    populateQADropdown();
 }
 
 function updateBulkAuditCount(count) {
@@ -2575,6 +2627,8 @@ function updateBulkAuditCount(count) {
         inputRight.value = bulkAuditCount;
         if (bulkAuditCount === 0) {
             inputRight.classList.add('error');
+            // Clear all auditor selections if count is set to 0
+            selectedQualityAnalysts.clear();
         } else {
             inputRight.classList.remove('error');
         }
@@ -2585,6 +2639,8 @@ function updateBulkAuditCount(count) {
         data.auditCount = bulkAuditCount;
     });
     
+    // Re-render auditors list to update disabled state and audit count badges
+    populateQADropdown();
     updateAssignButton();
     applyFiltersAndGroup();
 }
