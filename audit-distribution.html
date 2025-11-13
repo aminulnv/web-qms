@@ -15,6 +15,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -1196,15 +1197,9 @@ async function initializePage() {
             return;
         }
 
-        // Check user role and restrict access for employees/agents
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const userRole = userInfo.role || '';
-        
-        if (userRole === 'Employee') {
-            // Show access denied message and redirect employees to home page
-            alert('Access Denied: You do not have permission to access this page. Only Quality Analysts, Supervisors, and Admins can access Audit Distribution.');
-            window.location.href = 'home.html';
-            return;
+        // Check page access using centralized access control
+        if (!window.accessControl || !window.accessControl.enforcePageAccess('audit-distribution.html')) {
+            return; // Access denied, user will be redirected
         }
 
         // Load users first (needed for lookups)

@@ -298,6 +298,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -7371,19 +7372,9 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     console.log('DOMContentLoaded fired');
     
-    // Check if user is an Employee - Employees should not be able to access create-audit page
-    try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const userRole = userInfo.role || '';
-        
-        if (userRole === 'Employee') {
-            // Redirect Employee users to home page
-            alert('You do not have permission to access this page.');
-            window.location.href = 'home.html';
-            return;
-        }
-    } catch (error) {
-        console.error('Error checking user role:', error);
+    // Check page access using centralized access control
+    if (!window.accessControl || !window.accessControl.enforcePageAccess('audit-form.html')) {
+        return; // Access denied, user will be redirected
     }
     
     // Initialize form immediately - the submit handler will wait for Supabase
@@ -8508,22 +8499,10 @@ async function loadAssignmentFromURL(assignmentId) {
             return;
         }
         
-        // Check if assignment belongs to current user
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const userRole = userInfo.role || '';
-        const isAgent = userRole === 'Employee';
-        const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
-        
-        // For agents, check if they are the employee being audited
-        // For auditors, check if they are the auditor
-        const assignmentEmployeeEmail = (assignment.employee_email || '').toLowerCase().trim();
-        const assignmentAuditorEmail = (assignment.auditor_email || '').toLowerCase().trim();
-        const hasPermission = isAgent 
-            ? assignmentEmployeeEmail === currentUserEmail
-            : assignmentAuditorEmail === currentUserEmail;
-        
-        if (!hasPermission) {
-            alert('You do not have permission to access this assignment.');
+        // Check resource access using centralized access control
+        const resourceAccess = window.accessControl?.canAccessResource('audit_assignment', assignment);
+        if (!resourceAccess || !resourceAccess.allowed) {
+            alert(resourceAccess?.reason || 'You do not have permission to access this assignment.');
             // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
             return;

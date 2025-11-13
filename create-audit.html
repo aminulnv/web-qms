@@ -7894,6 +7894,13 @@ let calibrationInteractionId = null;
 let calibrationScorecardId = null;
 let calibrationTableName = null;
 
+// ATA mode detection
+let isATAMode = false;
+let ataAuditId = null;
+let ataTableName = null;
+let ataScorecardId = null;
+let originalAuditData = null; // Store original audit data for comparison
+
 // Check if we're in calibration mode
 function checkCalibrationMode() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -7920,6 +7927,28 @@ function checkCalibrationMode() {
     return false;
 }
 
+// Check if we're in ATA mode
+function checkATAMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ata = urlParams.get('ata');
+    
+    if (ata === 'true') {
+        isATAMode = true;
+        ataAuditId = urlParams.get('auditId');
+        ataTableName = urlParams.get('table');
+        ataScorecardId = urlParams.get('scorecard');
+        
+        console.log('ATA mode detected:', {
+            auditId: ataAuditId,
+            tableName: ataTableName,
+            scorecardId: ataScorecardId
+        });
+        
+        return true;
+    }
+    return false;
+}
+
 async function loadAuditForEditing() {
     const urlParams = new URLSearchParams(window.location.search);
     const auditId = urlParams.get('edit');
@@ -7929,6 +7958,12 @@ async function loadAuditForEditing() {
     // Check for calibration mode first
     if (checkCalibrationMode()) {
         await loadCalibrationSampleAudit();
+        return;
+    }
+    
+    // Check for ATA mode
+    if (checkATAMode()) {
+        await loadATAOriginalAudit();
         return;
     }
     
@@ -8672,6 +8707,444 @@ async function populateFormWithCalibrationSample(sampleAudit) {
 
     } catch (error) {
         console.error('Error populating calibration form:', error);
+    }
+}
+
+// Load ATA original audit and populate form
+async function loadATAOriginalAudit() {
+    try {
+        if (!isATAMode || !ataAuditId || !ataTableName) {
+            console.error('Missing ATA parameters');
+            alert('Missing ATA review parameters. Please go back and try again.');
+            return;
+        }
+
+        console.log('Loading ATA original audit...');
+
+        // Load the original audit from database
+        const { data, error: auditError } = await window.supabaseClient
+            .from(ataTableName)
+            .select('*')
+            .eq('id', ataAuditId)
+            .single();
+
+        if (auditError || !data) {
+            alert('Error loading original audit: ' + (auditError?.message || 'Audit not found'));
+            return;
+        }
+
+        // Store original audit data for comparison
+        originalAuditData = data;
+
+        // Get scorecard info
+        if (ataScorecardId) {
+            const { data: scorecardData, error: scorecardError } = await window.supabaseClient
+                .from('scorecards')
+                .select('*')
+                .eq('id', ataScorecardId)
+                .single();
+
+            if (!scorecardError && scorecardData) {
+                currentScorecard = scorecardData;
+            }
+        }
+
+        // Show the audit form modal
+        const auditFormModal = document.getElementById('auditFormModal');
+        if (auditFormModal) {
+            auditFormModal.style.display = 'flex';
+        }
+
+        // Hide pending audits section
+        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
+        if (pendingAuditsSection) {
+            pendingAuditsSection.style.display = 'none';
+        }
+
+        // Update header to indicate ATA mode
+        const formHeader = document.getElementById('auditFormHeader');
+        const scorecardDisplay = document.getElementById('formScorecardDisplay');
+        if (formHeader && scorecardDisplay) {
+            const h2 = formHeader.querySelector('h2');
+            if (h2) h2.textContent = 'Audit The Auditor (ATA) Review';
+            scorecardDisplay.innerHTML = '<svg style="width: 0.5659rem; height: 0.5659rem; display: inline-block; vertical-align: middle; margin-right: 0.2425rem;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg> ATA Review Mode';
+        }
+        
+        // Update page title
+        document.title = 'ATA Review | QMS';
+        const pageHeading = document.querySelector('.page-heading');
+        if (pageHeading) {
+            pageHeading.textContent = 'Audit The Auditor (ATA) Review';
+        }
+
+        // Populate form with original audit data (read-only for some fields)
+        await populateFormWithATAOriginal(data);
+
+        // Start timer
+        if (window.resetTimer && window.startTimer) {
+            window.resetTimer();
+            window.startTimer();
+        }
+
+        // Show timer
+        const auditTimer = document.getElementById('auditTimer');
+        if (auditTimer) {
+            auditTimer.style.display = 'flex';
+        }
+
+    } catch (error) {
+        console.error('Error loading ATA original audit:', error);
+        alert('Error loading ATA original audit: ' + error.message);
+    }
+}
+
+// Populate form with ATA original audit (make certain fields read-only, allow re-scoring)
+async function populateFormWithATAOriginal(originalAudit) {
+    try {
+        // First, ensure employees are loaded
+        await loadEmployees();
+        
+        // Load scorecard parameters
+        if (ataScorecardId) {
+            await loadScorecardParameters(ataScorecardId);
+            // Wait for parameters to render
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        // Employee name dropdown (read-only - from original audit)
+        const employeeSelect = document.getElementById('employeeName');
+        if (employeeSelect && originalAudit.employee_email) {
+            for (let i = 0; i < employeeSelect.options.length; i++) {
+                if (employeeSelect.options[i].dataset.email === originalAudit.employee_email) {
+                    employeeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            employeeSelect.disabled = true;
+            employeeSelect.style.backgroundColor = 'transparent';
+            employeeSelect.style.color = 'white';
+            employeeSelect.style.cursor = 'not-allowed';
+            employeeSelect.style.opacity = '0.9';
+        }
+
+        // Employee information (read-only - from original audit)
+        const employeeEmail = document.getElementById('employeeEmail');
+        const employeeType = document.getElementById('employeeType');
+        const employeeDepartment = document.getElementById('employeeDepartment');
+        const countryOfEmployee = document.getElementById('countryOfEmployee');
+
+        if (employeeEmail) {
+            employeeEmail.value = originalAudit.employee_email || '';
+            employeeEmail.readOnly = true;
+            employeeEmail.style.backgroundColor = 'transparent';
+            employeeEmail.style.color = 'white';
+            employeeEmail.style.cursor = 'not-allowed';
+            employeeEmail.style.opacity = '0.9';
+        }
+
+        if (employeeType) {
+            employeeType.value = originalAudit.employee_type || '';
+            employeeType.readOnly = true;
+            employeeType.style.backgroundColor = 'transparent';
+            employeeType.style.color = 'white';
+            employeeType.style.cursor = 'not-allowed';
+            employeeType.style.opacity = '0.9';
+        }
+
+        if (employeeDepartment) {
+            employeeDepartment.value = originalAudit.employee_department || '';
+            employeeDepartment.readOnly = true;
+            employeeDepartment.style.backgroundColor = 'transparent';
+            employeeDepartment.style.color = 'white';
+            employeeDepartment.style.cursor = 'not-allowed';
+            employeeDepartment.style.opacity = '0.9';
+        }
+
+        if (countryOfEmployee) {
+            countryOfEmployee.value = originalAudit.country_of_employee || '';
+            countryOfEmployee.disabled = true;
+            countryOfEmployee.style.backgroundColor = 'transparent';
+            countryOfEmployee.style.color = 'white';
+            countryOfEmployee.style.cursor = 'not-allowed';
+            countryOfEmployee.style.opacity = '0.9';
+        }
+
+        // Interaction details (read-only - from original audit)
+        const interactionId = document.getElementById('interactionId');
+        const interactionDate = document.getElementById('interactionDate');
+        const channel = document.getElementById('channel');
+        const clientEmail = document.getElementById('clientEmail');
+
+        if (interactionId) {
+            interactionId.value = originalAudit.interaction_id || '';
+            interactionId.readOnly = true;
+            interactionId.style.backgroundColor = 'transparent';
+            interactionId.style.color = 'white';
+            interactionId.style.cursor = 'not-allowed';
+            interactionId.style.opacity = '0.9';
+        }
+
+        if (interactionDate) {
+            interactionDate.value = originalAudit.interaction_date || '';
+            interactionDate.readOnly = true;
+            interactionDate.style.backgroundColor = 'transparent';
+            interactionDate.style.color = 'white';
+            interactionDate.style.cursor = 'not-allowed';
+            interactionDate.style.opacity = '0.9';
+        }
+
+        if (channel) {
+            channel.value = originalAudit.channel || '';
+            channel.disabled = true;
+            channel.style.backgroundColor = 'transparent';
+            channel.style.color = 'white';
+            channel.style.cursor = 'not-allowed';
+            channel.style.opacity = '0.9';
+        }
+
+        if (clientEmail) {
+            clientEmail.value = originalAudit.client_email || '';
+            clientEmail.readOnly = true;
+            clientEmail.style.backgroundColor = 'transparent';
+            clientEmail.style.color = 'white';
+            clientEmail.style.cursor = 'not-allowed';
+            clientEmail.style.opacity = '0.9';
+        }
+
+        // Audit type and validation (read-only)
+        const auditType = document.getElementById('auditType');
+        const validationStatus = document.getElementById('validationStatus');
+
+        if (auditType) {
+            auditType.value = originalAudit.audit_type || '';
+            auditType.disabled = true;
+            auditType.style.backgroundColor = 'transparent';
+            auditType.style.color = 'white';
+            auditType.style.cursor = 'not-allowed';
+            auditType.style.opacity = '0.9';
+        }
+
+        if (validationStatus) {
+            validationStatus.value = 'Validated';
+            validationStatus.disabled = true;
+            validationStatus.style.backgroundColor = '#f3f4f6';
+            validationStatus.style.cursor = 'not-allowed';
+        }
+
+        // Pre/post status (read-only)
+        const agentPreStatus = document.getElementById('agentPreStatus');
+        const agentPostStatus = document.getElementById('agentPostStatus');
+
+        if (agentPreStatus) {
+            agentPreStatus.value = originalAudit.agent_pre_status || '';
+            agentPreStatus.disabled = true;
+            agentPreStatus.style.backgroundColor = 'transparent';
+            agentPreStatus.style.color = 'white';
+            agentPreStatus.style.cursor = 'not-allowed';
+            agentPreStatus.style.opacity = '0.9';
+        }
+
+        if (agentPostStatus) {
+            agentPostStatus.value = originalAudit.agent_post_status || '';
+            agentPostStatus.disabled = true;
+            agentPostStatus.style.backgroundColor = 'transparent';
+            agentPostStatus.style.color = 'white';
+            agentPostStatus.style.cursor = 'not-allowed';
+            agentPostStatus.style.opacity = '0.9';
+        }
+
+        // Transcript (read-only - supervisor reviews the same conversation)
+        const transcript = document.getElementById('transcript');
+        if (transcript) {
+            transcript.value = originalAudit.transcript || '';
+            transcript.readOnly = true;
+            transcript.style.backgroundColor = '#f3f4f6';
+            transcript.style.cursor = 'not-allowed';
+        }
+
+        // Scorecard select (read-only - already selected)
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect) {
+            scorecardSelect.disabled = true;
+            const headerElement = document.getElementById('auditFormHeader');
+            if (headerElement && headerElement.contains(scorecardSelect)) {
+                scorecardSelect.style.backgroundColor = 'transparent';
+                scorecardSelect.style.color = 'white';
+                scorecardSelect.style.opacity = '0.9';
+            } else {
+                scorecardSelect.style.backgroundColor = '#f3f4f6';
+            }
+            scorecardSelect.style.cursor = 'not-allowed';
+        }
+
+        // Error parameters (EDITABLE - supervisor re-scores)
+        // Pre-populate with original values so supervisor can see what was scored
+        // Supervisor can then change them as needed
+        if (currentParameters && currentParameters.length > 0) {
+            currentParameters.forEach(param => {
+                const originalValue = originalAudit[param.field_id] || 0;
+                
+                if (param.field_type === 'radio') {
+                    const radioYes = document.getElementById(`${param.field_id}_yes`);
+                    const radioNo = document.getElementById(`${param.field_id}_no`);
+                    if (radioYes && radioNo) {
+                        // Radio buttons: 1 = yes, 0 = no
+                        if (originalValue === 1 || originalValue === '1') {
+                            radioYes.checked = true;
+                        } else {
+                            radioNo.checked = true;
+                        }
+                    }
+                } else {
+                    const field = document.getElementById(param.field_id);
+                    if (field) {
+                        field.value = originalValue;
+                    }
+                }
+                
+                // Pre-populate feedback from original audit (supervisor can modify)
+                const feedbackKey = `feedback_${param.field_id}`;
+                const originalFeedback = originalAudit[feedbackKey];
+                const feedbackField = document.getElementById(feedbackKey);
+                if (feedbackField && originalFeedback) {
+                    if (Array.isArray(originalFeedback)) {
+                        feedbackField.value = originalFeedback.join('\n');
+                    } else if (typeof originalFeedback === 'string') {
+                        feedbackField.value = originalFeedback;
+                    }
+                }
+            });
+        }
+
+        // Initialize score calculation
+        if (typeof calculateAverageScore === 'function') {
+            calculateAverageScore();
+        }
+
+        console.log('ATA form populated with original audit data');
+
+    } catch (error) {
+        console.error('Error populating ATA form:', error);
+    }
+}
+
+// Save ATA review result
+async function saveATAResult(auditPayload, auditData) {
+    try {
+        // Get current user info (supervisor)
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const supervisorEmail = userInfo.email || '';
+        const supervisorName = userInfo.name || '';
+
+        if (!originalAuditData) {
+            throw new Error('Original audit data not found');
+        }
+
+        // Calculate accuracy score (how close supervisor's score is to original)
+        // Accuracy = 100 - |supervisor_score - original_score|
+        const originalScore = parseFloat(originalAuditData.average_score) || 0;
+        const supervisorScore = parseFloat(auditPayload.average_score) || 0;
+        const scoreDifference = Math.abs(supervisorScore - originalScore);
+        const accuracyScore = Math.max(0, 100 - scoreDifference);
+
+        // Calculate discrepancies (differences between original and supervisor's review)
+        const discrepancies = {
+            score_difference: (supervisorScore - originalScore).toFixed(2),
+            passing_status_changed: originalAuditData.passing_status !== auditPayload.passing_status,
+            parameter_differences: {}
+        };
+
+        // Compare parameter values
+        if (currentParameters && currentParameters.length > 0) {
+            currentParameters.forEach(param => {
+                const originalValue = originalAuditData[param.field_id] || 0;
+                const supervisorValue = auditPayload[param.field_id] || 0;
+                
+                if (originalValue !== supervisorValue) {
+                    discrepancies.parameter_differences[param.field_id] = {
+                        original: originalValue,
+                        supervisor: supervisorValue,
+                        difference: supervisorValue - originalValue
+                    };
+                }
+            });
+        }
+
+        // Get scorecard passing threshold
+        let passingThreshold = 85;
+        if (currentScorecard && currentScorecard.passing_threshold) {
+            passingThreshold = parseFloat(currentScorecard.passing_threshold);
+        }
+
+        // Determine passing status based on supervisor's score
+        const ataPassingStatus = supervisorScore >= passingThreshold ? 'Passing' : 'Not Passing';
+
+        // Generate ID for ATA review
+        const ataReviewId = `ata_${ataAuditId}_${Date.now()}`;
+
+        const ataReview = {
+            id: ataReviewId,
+            audit_id: ataAuditId,
+            audit_table_name: ataTableName,
+            scorecard_id: ataScorecardId || null,
+            
+            // Original audit information (denormalized)
+            original_auditor_email: originalAuditData.auditor_email || null,
+            original_auditor_name: originalAuditData.auditor_name || null,
+            original_employee_email: originalAuditData.employee_email || null,
+            original_employee_name: originalAuditData.employee_name || null,
+            original_interaction_id: originalAuditData.interaction_id || null,
+            original_score: originalScore,
+            original_passing_status: originalAuditData.passing_status || null,
+            original_submitted_at: originalAuditData.submitted_at || null,
+            
+            // Supervisor who performed the ATA review
+            supervisor_email: supervisorEmail,
+            supervisor_name: supervisorName,
+            
+            // ATA review results
+            ata_review_score: supervisorScore,
+            ata_passing_status: ataPassingStatus,
+            ata_accuracy_score: parseFloat(accuracyScore.toFixed(2)),
+            discrepancies: discrepancies,
+            feedback: auditPayload.recommendations || null,
+            
+            // Review metadata
+            reviewed_at: new Date().toISOString()
+        };
+
+        console.log('Saving ATA review:', ataReview);
+
+        const { data, error } = await window.supabaseClient
+            .from('ata_reviews')
+            .insert([ataReview])
+            .select();
+
+        if (error) throw error;
+
+        console.log('ATA review saved successfully:', data);
+
+        await window.confirmationDialog.show({
+            title: 'ATA Review Submitted!',
+            message: `Your ATA review has been submitted successfully. Accuracy Score: ${accuracyScore.toFixed(2)}%`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+
+        // Close the form
+        closeAuditForm();
+
+        // Redirect back to ATA page
+        window.location.href = 'ata.html';
+
+    } catch (error) {
+        console.error('Error saving ATA review:', error);
+        await window.confirmationDialog.show({
+            title: 'Submission Error',
+            message: 'Failed to submit ATA review: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
     }
 }
 
@@ -9460,10 +9933,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Is editing pending audit:', isEditingPendingAudit);
                 console.log('Current editing audit ID:', currentEditingAuditId);
                 console.log('Is calibration mode:', isCalibrationMode);
+                console.log('Is ATA mode:', isATAMode);
                 
                 // If in calibration mode, save to calibration_results instead
                 if (isCalibrationMode) {
                     await saveCalibrationResult(auditPayload, auditData);
+                    return;
+                }
+                
+                // If in ATA mode, save to ata_reviews instead
+                if (isATAMode) {
+                    await saveATAResult(auditPayload, auditData);
                     return;
                 }
                 

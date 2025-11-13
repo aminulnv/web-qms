@@ -685,13 +685,13 @@
                 </div>
             </div>
 
-            <!-- Acknowledgment Rate -->
+            <!-- Acknowledgement Pending Count -->
             <div class="kpi-card" id="kpiCardAcknowledgment" data-filter-type="acknowledgment">
                 <div class="kpi-header">
-                    <div class="kpi-label">Acknowledgment Rate</div>
+                    <div class="kpi-label">Acknowledgement Pending Count</div>
                     <div class="kpi-date" id="kpi6Date" style="display: none;">-</div>
                 </div>
-                <div class="kpi-value" id="acknowledgmentRate">-</div>
+                <div class="kpi-value" id="acknowledgmentRate" style="color: #f59e0b;">-</div>
                 <div class="kpi-change positive" id="acknowledgmentCount">-</div>
                 <div class="kpi-chart-container">
                     <canvas id="trendChart6"></canvas>
@@ -1647,9 +1647,9 @@ document.addEventListener('DOMContentLoaded', function() {
             reversalCountEl.textContent = `${reversals.length.toLocaleString()} reversals (${pendingReversals.toLocaleString()} pending)`;
             reversalCountEl.className = 'kpi-change negative';
         }
-        if (acknowledgmentRateEl) acknowledgmentRateEl.textContent = `${acknowledgmentRate}%`;
+        if (acknowledgmentRateEl) acknowledgmentRateEl.textContent = pendingAcknowledgments.toLocaleString();
         if (acknowledgmentCountEl) {
-            acknowledgmentCountEl.textContent = `${acknowledged.length.toLocaleString()} acknowledged (${pendingAcknowledgments.toLocaleString()} pending)`;
+            acknowledgmentCountEl.textContent = `Acknowledged: ${acknowledged.length.toLocaleString()} out of ${total.toLocaleString()}`;
             acknowledgmentCountEl.className = 'kpi-change positive';
         }
         if (notPassingAuditsEl) notPassingAuditsEl.textContent = notPassing.toLocaleString();
@@ -1826,8 +1826,8 @@ document.addEventListener('DOMContentLoaded', function() {
             { 
                 id: 'trendChart6', 
                 trend: trends.acknowledgmentRate,
-                borderColor: trends.acknowledgmentRate ? '#10b981' : '#ef4444',
-                backgroundColor: trends.acknowledgmentRate ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)'
             },
             { 
                 id: 'trendChart7', 
@@ -2632,11 +2632,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         matchesKpiFilter = reversalRequested != null && reversalRequested !== '';
                         break;
                     case 'acknowledgment':
+                        // Filter for pending acknowledgments (not acknowledged)
                         const status = audit.acknowledgementStatus || audit.acknowledgement_status || '';
-                        matchesKpiFilter = status && (
+                        const isAcknowledged = status && (
                             status.toLowerCase().includes('acknowledged') || 
                             status === 'Acknowledged'
                         );
+                        matchesKpiFilter = !isAcknowledged; // Show pending (not acknowledged)
                         break;
                     case 'errors':
                         // Filter audits with errors > 0

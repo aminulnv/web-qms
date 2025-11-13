@@ -334,6 +334,9 @@ let currentWeek = null;
 let currentWeekYear = null;
 let dateFilter = { start: null, end: null };
 let useWeekFilter = true;
+let presenceChannel = null;
+let onlineAuditors = new Set(); // Track online auditor emails
+let heartbeatInterval = null;
 
 // ============================================================================
 // Initialize Page
@@ -378,6 +381,9 @@ async function initializeDashboard() {
         
         // Load assignments and update dashboard
         await loadAssignments();
+        
+        // Setup presence tracking after everything is loaded
+        await setupPresenceTracking();
         
     } catch (error) {
         console.error('Error initializing dashboard:', error);
@@ -680,6 +686,8 @@ async function updateTeamStats() {
     if (cachedStats && currentTab === 0) {
         console.log('Rendering cached team stats immediately');
         renderTeamStats(cachedStats);
+        // Update online status indicators after rendering
+        setTimeout(() => updateOnlineStatusIndicators(), 100);
     }
     
     // Always fetch fresh data in background
@@ -963,6 +971,8 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         if (currentTab === 0) {
             console.log('Updating UI with fresh team stats');
             renderTeamStats(statsData);
+            // Update online status indicators after rendering
+            setTimeout(() => updateOnlineStatusIndicators(), 100);
         } else {
             console.log('Skipping team stats render - user switched to tab', currentTab);
         }
@@ -1077,9 +1087,10 @@ function renderTeamStats(statsData) {
     // Update table with all Quality Analysts
     const tableBody = document.getElementById('performanceTableBody');
     tableBody.innerHTML = auditorStats.map(stats => `
-        <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}">
-            <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Name">
+        <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(4.5rem, 1.2fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6; ${stats.isCurrentUser ? 'background-color: #f0fdf4;' : ''}" data-auditor-email="${escapeHtml(stats.email)}">
+            <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600; display: flex; align-items: center;" data-label="Name">
                 ${escapeHtml(stats.name)}${stats.isCurrentUser ? ' <span style="color: var(--primary-color); font-size: 0.5625rem;">(You)</span>' : ''}
+                ${onlineAuditors.has(stats.email) ? '<span class="online-indicator" style="display: inline-block; width: 0.5rem; height: 0.5rem; background-color: #10b981; border-radius: 50%; margin-left: 0.375rem; border: 0.125rem solid var(--white); box-shadow: 0 0 0 0.125rem var(--primary-color);" title="Online"></span>' : ''}
             </div>
             <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
             <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
@@ -1095,6 +1106,9 @@ function renderTeamStats(statsData) {
             </div>
         </div>
     `).join('');
+    
+    // Update online status indicators after rendering
+    setTimeout(() => updateOnlineStatusIndicators(), 100);
 }
 
 async function updateStandupView() {
@@ -2053,6 +2067,177 @@ function isDateInRange(date, filterStart, filterEnd) {
 }
 
 // ============================================================================
+// Realtime Presence Functions
+// ============================================================================
+async function setupPresenceTracking() {
+    try {
+        if (!window.supabaseClient || !currentUserEmail) {
+            console.warn('Cannot setup presence: Supabase or user email not available');
+            return;
+        }
+
+        // Get user info to check role
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userRole = userInfo.role;
+
+        // Only track presence for Quality Analysts (auditors)
+        if (userRole !== 'Quality Analyst') {
+            return;
+        }
+
+        // Create a channel for auditor presence
+        const channelName = 'auditor-presence';
+        presenceChannel = window.supabaseClient.channel(channelName, {
+            config: {
+                presence: {
+                    key: currentUserEmail, // Use email as presence key
+                }
+            }
+        });
+
+        // Track current user's presence
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                updateOnlineAuditors();
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                console.log('User joined:', key, newPresences);
+                updateOnlineAuditors();
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                console.log('User left:', key, leftPresences);
+                updateOnlineAuditors();
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    // Track current user as online
+                    await trackPresence();
+                    
+                    // Set up heartbeat to keep presence alive
+                    startHeartbeat();
+                }
+            });
+    } catch (error) {
+        console.error('Error setting up presence tracking:', error);
+    }
+}
+
+async function trackPresence() {
+    try {
+        if (!presenceChannel) return;
+
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userRole = userInfo.role;
+
+        // Only track presence for Quality Analysts (auditors)
+        if (userRole !== 'Quality Analyst') {
+            return;
+        }
+
+        await presenceChannel.track({
+            email: currentUserEmail,
+            name: userInfo.name || currentUserEmail,
+            role: userRole,
+            online_at: new Date().toISOString(),
+            page: 'auditor-dashboard'
+        });
+    } catch (error) {
+        console.error('Error tracking presence:', error);
+    }
+}
+
+function startHeartbeat() {
+    // Clear any existing heartbeat
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+    }
+
+    // Send heartbeat every 30 seconds to keep presence alive
+    heartbeatInterval = setInterval(async () => {
+        await trackPresence();
+    }, 30000); // 30 seconds
+}
+
+function stopHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
+}
+
+function updateOnlineAuditors() {
+    try {
+        if (!presenceChannel) return;
+
+        const state = presenceChannel.presenceState();
+        const newOnlineAuditors = new Set();
+
+        // Extract online auditor emails from presence state
+        Object.values(state).forEach((presences) => {
+            presences.forEach((presence) => {
+                if (presence.role === 'Quality Analyst' && presence.email) {
+                    newOnlineAuditors.add(presence.email);
+                }
+            });
+        });
+
+        onlineAuditors = newOnlineAuditors;
+        
+        // Update the UI to reflect online status
+        updateOnlineStatusIndicators();
+    } catch (error) {
+        console.error('Error updating online auditors:', error);
+    }
+}
+
+function updateOnlineStatusIndicators() {
+    // Update status indicators in the table
+    const tableBody = document.getElementById('performanceTableBody');
+    if (!tableBody) return;
+
+    // Find all rows and update their online status
+    const rows = tableBody.querySelectorAll('div[data-auditor-email]');
+    rows.forEach(row => {
+        const auditorEmail = row.dataset.auditorEmail;
+        const nameCell = row.querySelector('[data-label="Name"]');
+        
+        if (nameCell && auditorEmail) {
+            if (onlineAuditors.has(auditorEmail)) {
+                // Add or update online indicator
+                let indicator = nameCell.querySelector('.online-indicator');
+                if (!indicator) {
+                    indicator = document.createElement('span');
+                    indicator.className = 'online-indicator';
+                    indicator.style.cssText = 'display: inline-block; width: 0.5rem; height: 0.5rem; background-color: #10b981; border-radius: 50%; margin-left: 0.375rem; border: 0.125rem solid var(--white); box-shadow: 0 0 0 0.125rem var(--primary-color);';
+                    indicator.title = 'Online';
+                    nameCell.appendChild(indicator);
+                }
+            } else {
+                // Remove online indicator
+                const indicator = nameCell.querySelector('.online-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+        }
+    });
+}
+
+async function cleanupPresence() {
+    try {
+        stopHeartbeat();
+        
+        if (presenceChannel) {
+            await presenceChannel.untrack();
+            await presenceChannel.unsubscribe();
+            presenceChannel = null;
+        }
+    } catch (error) {
+        console.error('Error cleaning up presence:', error);
+    }
+}
+
+// ============================================================================
 // Utility Functions
 // ============================================================================
 function escapeHtml(text) {
@@ -2060,6 +2245,13 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// ============================================================================
+// Cleanup on page unload
+// ============================================================================
+window.addEventListener('beforeunload', async () => {
+    await cleanupPresence();
+});
 </script>
 
 
