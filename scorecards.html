@@ -1987,13 +1987,34 @@ async function handleScorecardSubmit(e) {
                 }
                 
                 // Insert new scorecard version
-                const { data: newScorecard, error: scorecardError } = await window.supabaseClient
+                // Try with default_for_channels first, fallback without it if column doesn't exist
+                let newScorecard;
+                const { data, error } = await window.supabaseClient
                     .from('scorecards')
                     .insert([scorecardData])
                     .select()
                     .single();
                 
-                if (scorecardError) throw scorecardError;
+                if (error) {
+                    // If error is about missing column, retry without default_for_channels
+                    if (error.message && error.message.includes('default_for_channels') && scorecardData.default_for_channels) {
+                        const scorecardDataWithoutDefault = { ...scorecardData };
+                        delete scorecardDataWithoutDefault.default_for_channels;
+                        
+                        const { data: retryData, error: retryError } = await window.supabaseClient
+                            .from('scorecards')
+                            .insert([scorecardDataWithoutDefault])
+                            .select()
+                            .single();
+                        
+                        if (retryError) throw retryError;
+                        newScorecard = retryData;
+                    } else {
+                        throw error;
+                    }
+                } else {
+                    newScorecard = data;
+                }
                 
                 // Insert parameters for new version
                 const parametersWithScorecardId = parameters.map(p => ({
@@ -2030,12 +2051,28 @@ async function handleScorecardSubmit(e) {
                     updateData.allow_over_100 = scorecardData.allow_over_100;
                 }
                 
+                // Try update with default_for_channels first, fallback without it if column doesn't exist
                 const { error: updateError } = await window.supabaseClient
                     .from('scorecards')
                     .update(updateData)
                     .eq('id', scorecardId);
                 
-                if (updateError) throw updateError;
+                if (updateError) {
+                    // If error is about missing column, retry without default_for_channels
+                    if (updateError.message && updateError.message.includes('default_for_channels') && updateData.default_for_channels) {
+                        const updateDataWithoutDefault = { ...updateData };
+                        delete updateDataWithoutDefault.default_for_channels;
+                        
+                        const { error: retryError } = await window.supabaseClient
+                            .from('scorecards')
+                            .update(updateDataWithoutDefault)
+                            .eq('id', scorecardId);
+                        
+                        if (retryError) throw retryError;
+                    } else {
+                        throw updateError;
+                    }
+                }
                 
                 await window.confirmationDialog.show({
                     title: 'Success!',
@@ -2125,13 +2162,34 @@ async function handleScorecardSubmit(e) {
                 console.warn('Table validation warning:', verifyError.message);
             }
             
-            const { data: newScorecard, error: scorecardError } = await window.supabaseClient
+            // Try insert with default_for_channels first, fallback without it if column doesn't exist
+            let newScorecard;
+            const { data, error: scorecardError } = await window.supabaseClient
                 .from('scorecards')
                 .insert([scorecardData])
                 .select()
                 .single();
             
-            if (scorecardError) throw scorecardError;
+            if (scorecardError) {
+                // If error is about missing column, retry without default_for_channels
+                if (scorecardError.message && scorecardError.message.includes('default_for_channels') && scorecardData.default_for_channels) {
+                    const scorecardDataWithoutDefault = { ...scorecardData };
+                    delete scorecardDataWithoutDefault.default_for_channels;
+                    
+                    const { data: retryData, error: retryError } = await window.supabaseClient
+                        .from('scorecards')
+                        .insert([scorecardDataWithoutDefault])
+                        .select()
+                        .single();
+                    
+                    if (retryError) throw retryError;
+                    newScorecard = retryData;
+                } else {
+                    throw scorecardError;
+                }
+            } else {
+                newScorecard = data;
+            }
             
             const parametersWithScorecardId = parameters.map(p => ({
                 ...p,

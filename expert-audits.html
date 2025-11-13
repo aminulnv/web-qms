@@ -802,8 +802,85 @@ document.addEventListener('DOMContentLoaded', function() {
     // Week and date filter state
     let currentWeek = null;
     let currentWeekYear = null;
-    let useWeekFilter = true;
+    let useWeekFilter = false; // Default to month view instead of week view
     let dateFilter = { start: null, end: null };
+    
+    // Cache configuration
+    const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes cache duration
+    
+    // Cache helper functions
+    function getCacheKey() {
+        // Make cache user-specific
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userEmail = (userInfo.email || 'anonymous').toLowerCase().trim();
+        return `expert_audits_cache_${userEmail}`;
+    }
+    
+    function getCacheTimestampKey() {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userEmail = (userInfo.email || 'anonymous').toLowerCase().trim();
+        return `expert_audits_cache_timestamp_${userEmail}`;
+    }
+    
+    function getCachedAudits() {
+        try {
+            const cacheKey = getCacheKey();
+            const timestampKey = getCacheTimestampKey();
+            const cachedData = localStorage.getItem(cacheKey);
+            const cachedTimestamp = localStorage.getItem(timestampKey);
+            
+            if (!cachedData || !cachedTimestamp) {
+                return null;
+            }
+            
+            const timestamp = parseInt(cachedTimestamp, 10);
+            const now = Date.now();
+            
+            // Check if cache is still valid
+            if (now - timestamp > CACHE_DURATION_MS) {
+                // Cache expired, clear it
+                localStorage.removeItem(cacheKey);
+                localStorage.removeItem(timestampKey);
+                return null;
+            }
+            
+            return JSON.parse(cachedData);
+        } catch (error) {
+            console.error('Error reading cache:', error);
+            return null;
+        }
+    }
+    
+    function setCachedAudits(audits) {
+        try {
+            const cacheKey = getCacheKey();
+            const timestampKey = getCacheTimestampKey();
+            localStorage.setItem(cacheKey, JSON.stringify(audits));
+            localStorage.setItem(timestampKey, Date.now().toString());
+        } catch (error) {
+            console.error('Error writing cache:', error);
+            // If storage is full, try to clear old cache
+            try {
+                const cacheKey = getCacheKey();
+                const timestampKey = getCacheTimestampKey();
+                localStorage.removeItem(cacheKey);
+                localStorage.removeItem(timestampKey);
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        }
+    }
+    
+    function clearCache() {
+        try {
+            const cacheKey = getCacheKey();
+            const timestampKey = getCacheTimestampKey();
+            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(timestampKey);
+        } catch (error) {
+            console.error('Error clearing cache:', error);
+        }
+    }
     
     // Initialize user info
     function initializeUserInfo() {
@@ -927,19 +1004,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize user info first
     initializeUserInfo();
     
-    // Initialize week filter
-    initializeWeekFilter();
+    // Initialize month filter (default view)
+    initializeMonthFilter();
     
     // Setup event listeners for week navigation and date picker
     function setupHeaderActionListeners() {
         // Week navigation buttons
         const prevWeekBtn = document.getElementById('prevWeekBtn');
         const nextWeekBtn = document.getElementById('nextWeekBtn');
+        const weekDisplay = document.getElementById('weekDisplay');
+        
         if (prevWeekBtn) {
             prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
         }
         if (nextWeekBtn) {
             nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+        }
+        
+        // Make week display clickable to switch to week view when in month view
+        if (weekDisplay) {
+            weekDisplay.addEventListener('click', function() {
+                if (!useWeekFilter) {
+                    switchToWeekView();
+                }
+            });
         }
 
         // Date button
@@ -1009,13 +1097,29 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePage();
     
     // Load audits from Supabase
-    async function loadAudits() {
+    async function loadAudits(forceRefresh = false) {
         try {
             if (!window.supabaseClient) {
                 console.error('Supabase client not initialized');
                 return;
             }
             
+            // Check cache first (unless force refresh)
+            if (!forceRefresh) {
+                const cachedAudits = getCachedAudits();
+                if (cachedAudits && Array.isArray(cachedAudits) && cachedAudits.length >= 0) {
+                    console.log('Loading audits from cache...');
+                    allAudits = cachedAudits;
+                    // Ensure filters are applied after loading from cache
+                    // Use setTimeout to ensure DOM is ready and filters are initialized
+                    setTimeout(() => {
+                        filterAudits();
+                    }, 0);
+                    return;
+                }
+            }
+            
+            console.log('Loading audits from database...');
             let combinedAudits = [];
             
             // If no specific scorecard is selected, load from ALL scorecard tables
@@ -1294,16 +1398,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 allAudits = [];
             }
             
-            filteredAudits = [...allAudits];
-            updateStatistics();
+            // Save to cache
+            setCachedAudits(allAudits);
             
-            // Always render, even if empty
-            renderAudits();
+            // Apply filters (which will update statistics and render)
+            filterAudits();
         } catch (error) {
             console.error('Error loading audits:', error);
             console.error('Stack trace:', error.stack);
             allAudits = [];
             filteredAudits = [];
+            
+            // Clear cache on error
+            clearCache();
             
             // Show error in UI
             if (auditList) {
@@ -1313,7 +1420,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>`;
             }
             
-            renderAudits();
+            // Still apply filters to update statistics (will be empty)
+            filterAudits();
         }
     }
     
@@ -2082,43 +2190,75 @@ document.addEventListener('DOMContentLoaded', function() {
         updateWeekDisplay();
     }
 
+    function initializeMonthFilter() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        
+        // Get first day of current month
+        const firstDay = new Date(year, month, 1);
+        const firstDayStr = firstDay.toISOString().split('T')[0];
+        
+        // Get last day of current month
+        const lastDay = new Date(year, month + 1, 0);
+        const lastDayStr = lastDay.toISOString().split('T')[0];
+        
+        // Set date filter to current month
+        dateFilter.start = firstDayStr;
+        dateFilter.end = lastDayStr;
+        useWeekFilter = false;
+        
+        // Update date input fields
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const dateBtnTextEl = document.getElementById('dateBtnText');
+        
+        if (startDateEl) startDateEl.value = firstDayStr;
+        if (endDateEl) endDateEl.value = lastDayStr;
+        
+        // Update date button text to show current month
+        if (dateBtnTextEl) {
+            const start = firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const end = lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            dateBtnTextEl.textContent = `${start} - ${end}`;
+        }
+        
+        // Update week display to show it's disabled
+        updateWeekDisplay();
+    }
+
     function updateWeekDisplay() {
         const weekTextEl = document.getElementById('weekText');
         const prevWeekBtn = document.getElementById('prevWeekBtn');
         const nextWeekBtn = document.getElementById('nextWeekBtn');
         const weekDisplay = document.getElementById('weekDisplay');
         
+        // Initialize current week if not set
+        if (currentWeek === null) {
+            const today = new Date();
+            currentWeek = getWeekNumber(today);
+            currentWeekYear = today.getFullYear();
+        }
+        
         if (weekTextEl) {
             if (useWeekFilter && currentWeek !== null) {
                 weekTextEl.textContent = `Week ${currentWeek}`;
             } else {
-                weekTextEl.textContent = '-';
+                weekTextEl.textContent = `Week ${currentWeek || '-'}`;
             }
         }
         
-        // Disable/enable week navigation buttons based on date range filter
+        // Always enable week navigation buttons - they can switch to week view when clicked
         if (prevWeekBtn) {
-            if (useWeekFilter) {
-                prevWeekBtn.disabled = false;
-                prevWeekBtn.style.opacity = '1';
-                prevWeekBtn.style.cursor = 'pointer';
-            } else {
-                prevWeekBtn.disabled = true;
-                prevWeekBtn.style.opacity = '0.5';
-                prevWeekBtn.style.cursor = 'not-allowed';
-            }
+            prevWeekBtn.disabled = false;
+            prevWeekBtn.style.opacity = '1';
+            prevWeekBtn.style.cursor = 'pointer';
         }
         
         if (nextWeekBtn) {
-            if (useWeekFilter) {
-                nextWeekBtn.disabled = false;
-                nextWeekBtn.style.opacity = '1';
-                nextWeekBtn.style.cursor = 'pointer';
-            } else {
-                nextWeekBtn.disabled = true;
-                nextWeekBtn.style.opacity = '0.5';
-                nextWeekBtn.style.cursor = 'not-allowed';
-            }
+            nextWeekBtn.disabled = false;
+            nextWeekBtn.style.opacity = '1';
+            nextWeekBtn.style.cursor = 'pointer';
         }
         
         // Update week display styling
@@ -2127,15 +2267,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 weekDisplay.style.backgroundColor = 'var(--primary-color)';
                 weekDisplay.style.color = 'var(--white)';
                 weekDisplay.style.borderColor = 'var(--primary-color)';
+                weekDisplay.style.cursor = 'default';
             } else {
                 weekDisplay.style.backgroundColor = '#f3f4f6';
                 weekDisplay.style.color = '#6b7280';
                 weekDisplay.style.borderColor = '#e5e7eb';
+                weekDisplay.style.cursor = 'pointer';
             }
         }
     }
 
     function navigateWeek(direction) {
+        // Initialize current week if not set
+        if (currentWeek === null) {
+            const today = new Date();
+            currentWeek = getWeekNumber(today);
+            currentWeekYear = today.getFullYear();
+        }
+        
         currentWeek += direction;
         
         if (currentWeek > 52) {
@@ -2146,7 +2295,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentWeekYear -= 1;
         }
         
-        updateWeekDisplay();
+        // Switch to week view when navigating
         useWeekFilter = true;
         dateFilter.start = null;
         dateFilter.end = null;
@@ -2156,6 +2305,31 @@ document.addEventListener('DOMContentLoaded', function() {
         if (startDateEl) startDateEl.value = '';
         if (endDateEl) endDateEl.value = '';
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+        
+        updateWeekDisplay();
+        filterAudits();
+    }
+    
+    // Function to switch to week view when week display is clicked
+    function switchToWeekView() {
+        // Initialize current week if not set
+        if (currentWeek === null) {
+            const today = new Date();
+            currentWeek = getWeekNumber(today);
+            currentWeekYear = today.getFullYear();
+        }
+        
+        useWeekFilter = true;
+        dateFilter.start = null;
+        dateFilter.end = null;
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const dateBtnTextEl = document.getElementById('dateBtnText');
+        if (startDateEl) startDateEl.value = '';
+        if (endDateEl) endDateEl.value = '';
+        if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+        
+        updateWeekDisplay();
         filterAudits();
     }
 
@@ -2176,9 +2350,8 @@ document.addEventListener('DOMContentLoaded', function() {
             useWeekFilter = false;
             updateWeekDisplay(); // Update week display to show "-"
         } else {
-            if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
-            useWeekFilter = true;
-            updateWeekDisplay(); // Update week display to show week number
+            // If both dates are cleared, reset to current month view
+            initializeMonthFilter();
         }
 
         const dateDropdown = document.getElementById('dateDropdown');
@@ -2187,18 +2360,10 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.clearDateFilter = function() {
-        dateFilter.start = null;
-        dateFilter.end = null;
-        const startDateEl = document.getElementById('startDate');
-        const endDateEl = document.getElementById('endDate');
-        const dateBtnTextEl = document.getElementById('dateBtnText');
+        // Reset to current month view instead of week view
+        initializeMonthFilter();
         const dateDropdown = document.getElementById('dateDropdown');
-        if (startDateEl) startDateEl.value = '';
-        if (endDateEl) endDateEl.value = '';
-        if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         if (dateDropdown) dateDropdown.classList.remove('active');
-        useWeekFilter = true;
-        updateWeekDisplay(); // Update week display to show week number
         filterAudits();
     };
     
@@ -2227,8 +2392,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateFilter.start || dateFilter.end) {
             useWeekFilter = false;
             dateFilteredAudits = dateFilteredAudits.filter(a => {
-                const submitted = new Date(a.submittedAt || a.submitted_at);
-                if (dateFilter.start && submitted < new Date(dateFilter.start)) return false;
+                const submittedDate = a.submittedAt || a.submitted_at;
+                if (!submittedDate) return false;
+                
+                const submitted = new Date(submittedDate);
+                if (isNaN(submitted.getTime())) return false; // Invalid date
+                
+                if (dateFilter.start) {
+                    const startDate = new Date(dateFilter.start);
+                    startDate.setHours(0, 0, 0, 0);
+                    if (submitted < startDate) return false;
+                }
                 if (dateFilter.end) {
                     const endDate = new Date(dateFilter.end);
                     endDate.setHours(23, 59, 59, 999);
@@ -2239,7 +2413,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (useWeekFilter && currentWeek !== null) {
             const weekDates = getWeekDates(currentWeek, currentWeekYear);
             dateFilteredAudits = dateFilteredAudits.filter(a => {
-                const submitted = new Date(a.submittedAt || a.submitted_at);
+                const submittedDate = a.submittedAt || a.submitted_at;
+                if (!submittedDate) return false;
+                
+                const submitted = new Date(submittedDate);
+                if (isNaN(submitted.getTime())) return false; // Invalid date
+                
                 return submitted >= weekDates.start && submitted <= weekDates.end;
             });
         }

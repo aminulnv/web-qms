@@ -1068,7 +1068,7 @@ function generateErrorDetails(audit, errorFields) {
                 </div>
             </div>
             
-        <!-- Avg Score, Passing Status & Post-Status -->
+        <!-- Avg Score & Passing Status -->
         <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                 <div>
@@ -1078,10 +1078,6 @@ function generateErrorDetails(audit, errorFields) {
                 <div>
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
                     <div style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.passingStatus || 'N/A'}</div>
-                </div>
-                <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Post-Status</p>
-                    <div style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.agentPostStatus || 'N/A'}</div>
                 </div>
             </div>
         </div>
@@ -1105,18 +1101,6 @@ function generateErrorDetails(audit, errorFields) {
                     <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
                     <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${significantTotal}</div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Pre/Post Status -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(6.0644rem, 1fr)); gap: 0.6469rem; margin-bottom: 0.6469rem;">
-            <div style="background: #f0fdf4; padding: 0.4852rem; border-radius: 0.2425rem; border: 0.0304rem solid #bbf7d0;">
-                <p style="font-size: 0.4447rem; color: #166534; margin: 0 0 0.1617rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0122rem; font-weight: 600;">Pre-Status</p>
-                <p style="font-size: 0.5659rem; color: #15803d; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPreStatus || 'N/A'}</p>
-            </div>
-            <div style="background: #f0f9ff; padding: 0.4852rem; border-radius: 0.2425rem; border: 0.0304rem solid #bae6fd;">
-                <p style="font-size: 0.4447rem; color: #075985; margin: 0 0 0.1617rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0122rem; font-weight: 600;">Post-Status</p>
-                <p style="font-size: 0.5659rem; color: #0369a1; margin: 0; font-family: 'Poppins', sans-serif; font-weight: 600;">${audit.agentPostStatus || 'N/A'}</p>
             </div>
         </div>
     `;

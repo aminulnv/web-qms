@@ -252,6 +252,20 @@
             color: var(--error-color);
         }
 
+        .coming-soon-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            background-color: var(--gray-50);
+            color: var(--text-secondary);
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.75rem;
+            font-size: 0.6562rem;
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+        }
+
         .kpi-chart-container {
             height: 2.1094rem;
             margin-top: 0.75rem;
@@ -786,7 +800,7 @@
         <!-- Performance Analytics - Left 2/3 -->
         <div class="dashboard-card">
             <div class="card-header">
-                <div class="card-title">Performance Analytics</div>
+                <div class="card-title">Audit Frequency</div>
                 <select class="action-btn" style="padding: 0.2812rem 0.5625rem; cursor: pointer;" id="analyticsPeriod">
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -1376,9 +1390,10 @@ function updateKPIs() {
     // Update KPI cards
     // Hide date display
     document.getElementById('kpi0Date').textContent = '';
-    document.getElementById('kpi0Value').textContent = interactionCount.toLocaleString();
-    document.getElementById('kpi0Change').textContent = `${interactionChange >= 0 ? '+' : ''}${Math.round(interactionChange)}% than previous period`;
-    document.getElementById('kpi0Change').className = `kpi-change ${interactionChange >= 0 ? 'positive' : 'negative'}`;
+    // Show "Coming Soon" chip instead of numbers for Interaction Count
+    document.getElementById('kpi0Value').innerHTML = '<span class="coming-soon-chip">Coming Soon</span>';
+    document.getElementById('kpi0Change').textContent = '';
+    document.getElementById('kpi0Change').style.display = 'none';
 
     document.getElementById('kpi1Date').textContent = '';
     document.getElementById('kpi1Value').textContent = completedAudits.toLocaleString();
