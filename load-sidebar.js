@@ -116,6 +116,9 @@ class SidebarLoader {
       
       // Load employee reversal updates count (for employees)
       this.updateEmployeeReversalUpdatesCount()
+      
+      // Load pending acknowledgments count
+      this.updatePendingAcknowledgmentsCount()
     } catch (error) {
       // Error loading sidebar
       // Fallback: show a message or use existing sidebar
@@ -193,6 +196,7 @@ class SidebarLoader {
                     <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
                 <span>Audit Reports</span>
+                <span class="notification-badge" id="acknowledgmentNotificationBadge" style="display: none;">0</span>
             </a>
         </li>
 
@@ -961,6 +965,114 @@ class SidebarLoader {
   }
 
   /**
+   * Update pending acknowledgments count badge
+   */
+  async updatePendingAcknowledgmentsCount() {
+    try {
+      if (!window.supabaseClient) {
+        // Supabase not initialized yet, try again after a delay
+        setTimeout(() => this.updatePendingAcknowledgmentsCount(), 1000)
+        return
+      }
+
+      // Get user info to check if they are an employee/agent
+      const userInfo = this.getUserInfo()
+      const isAgent = userInfo && userInfo.role === 'Employee'
+      const currentUserEmail = userInfo ? (userInfo.email || '').toLowerCase().trim() : ''
+
+      // Load scorecards first
+      const { data: scorecards, error: scorecardsError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+
+      if (scorecardsError) {
+        console.warn('Error loading scorecards for acknowledgment count:', scorecardsError)
+        return
+      }
+
+      if (!scorecards || scorecards.length === 0) {
+        this.setAcknowledgmentBadgeCount(0)
+        return
+      }
+
+      // Count pending acknowledgments from all scorecard tables
+      // Pending means: acknowledgement_status is null, empty, or 'Pending'
+      let totalPending = 0
+      for (const scorecard of scorecards) {
+        try {
+          // Build query - need to select employee_email as well if filtering by agent
+          let query = window.supabaseClient
+            .from(scorecard.table_name)
+            .select('acknowledgement_status,employee_email')
+
+          // If employee/agent, filter by their email
+          if (isAgent && currentUserEmail) {
+            query = query.eq('employee_email', currentUserEmail)
+          }
+
+          const { data, error } = await query
+
+          if (error) {
+            // If error is about column not existing, skip this table
+            if (error.code === 'PGRST116' || error.code === '42703' || error.message?.includes('acknowledgement_status')) {
+              continue
+            }
+            console.warn(`Error counting acknowledgments from ${scorecard.table_name}:`, error)
+            continue
+          }
+
+          if (data && data.length > 0) {
+            // Filter for pending acknowledgments: null, empty string, or 'Pending'
+            // Also do additional client-side filtering for employees to ensure exact email match
+            const pending = data.filter(audit => {
+              // For employees, ensure exact email match (case-insensitive)
+              if (isAgent && currentUserEmail) {
+                const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim()
+                if (auditEmployeeEmail !== currentUserEmail) {
+                  return false
+                }
+              }
+              
+              // Check if acknowledgment is pending
+              const status = audit.acknowledgement_status
+              return !status || status.trim() === '' || status === 'Pending'
+            })
+            totalPending += pending.length
+          }
+        } catch (err) {
+          // If column doesn't exist, skip this table
+          if (err.message?.includes('acknowledgement_status') || err.code === 'PGRST116' || err.code === '42703') {
+            continue
+          }
+          console.warn(`Exception counting acknowledgments from ${scorecard.table_name}:`, err)
+          continue
+        }
+      }
+
+      this.setAcknowledgmentBadgeCount(totalPending)
+    } catch (error) {
+      console.error('Error updating pending acknowledgments count:', error)
+      // Don't show badge on error
+      this.setAcknowledgmentBadgeCount(0)
+    }
+  }
+
+  /**
+   * Set the acknowledgment badge count
+   */
+  setAcknowledgmentBadgeCount(count) {
+    const badge = document.getElementById('acknowledgmentNotificationBadge')
+    if (!badge) return
+
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count.toString()
+      badge.style.display = 'inline-flex'
+    } else {
+      badge.style.display = 'none'
+    }
+  }
+
+  /**
    * Hide menu items for employees based on their role
    */
   hideEmployeeMenuItems() {
@@ -1048,6 +1160,12 @@ window.updateReversalBadgeCount = async function() {
   const sidebarLoader = new SidebarLoader()
   await sidebarLoader.updatePendingReversalsCount()
   await sidebarLoader.updateEmployeeReversalUpdatesCount()
+}
+
+// Global function to update acknowledgment badge count (can be called from other pages)
+window.updateAcknowledgmentBadgeCount = async function() {
+  const sidebarLoader = new SidebarLoader()
+  await sidebarLoader.updatePendingAcknowledgmentsCount()
 }
 
 // Initialize the sidebar loader

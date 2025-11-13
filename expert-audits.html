@@ -1432,6 +1432,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Save to cache
             setCachedAudits(allAudits);
             
+            // Update acknowledgment badge in sidebar
+            if (window.updateAcknowledgmentBadgeCount) {
+                window.updateAcknowledgmentBadgeCount();
+            }
+            
             // Apply filters (which will update statistics and render)
             filterAudits();
         } catch (error) {
