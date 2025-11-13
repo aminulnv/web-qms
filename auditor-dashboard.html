@@ -666,13 +666,18 @@ async function updateDashboard() {
 // Note: updateYourStats() function has been moved to create-audit.html
 
 async function updateTeamStats() {
+    // Only proceed if we're still on Team Stats tab
+    if (currentTab !== 0) {
+        return;
+    }
+    
     const period = getCurrentPeriodDates();
     const filterKey = JSON.stringify(currentFilters);
     const cacheKey = getCacheKey('teamStats', currentUserEmail, period) + '_' + btoa(filterKey).slice(0, 20);
     
-    // Check cache first and render immediately
+    // Check cache first and render immediately (only if still on Team Stats tab)
     const cachedStats = getCachedData(cacheKey);
-    if (cachedStats) {
+    if (cachedStats && currentTab === 0) {
         console.log('Rendering cached team stats immediately');
         renderTeamStats(cachedStats);
     }
@@ -954,9 +959,13 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         };
         setCachedData(cacheKey, statsData);
         
-        // Update UI with fresh data
-        console.log('Updating UI with fresh team stats');
-        renderTeamStats(statsData);
+        // Update UI with fresh data (only if still on Team Stats tab)
+        if (currentTab === 0) {
+            console.log('Updating UI with fresh team stats');
+            renderTeamStats(statsData);
+        } else {
+            console.log('Skipping team stats render - user switched to tab', currentTab);
+        }
         
     } catch (error) {
         console.error('Error loading team stats:', error);
@@ -1089,6 +1098,191 @@ function renderTeamStats(statsData) {
 }
 
 async function updateStandupView() {
+    // Only proceed if we're still on Standup View tab
+    if (currentTab !== 1) {
+        return;
+    }
+    
+    // Update UI structure immediately (cards, table headers) - instant feedback
+    renderStandupViewStructure();
+    
+    const period = getCurrentPeriodDates();
+    const cacheKey = getCacheKey('standupView', currentUserEmail, period);
+    
+    // Check cache first and render immediately (only if still on Standup View tab)
+    const cachedStandupData = getCachedData(cacheKey);
+    if (cachedStandupData && currentTab === 1) {
+        console.log('Rendering cached standup view immediately');
+        renderStandupViewData(cachedStandupData);
+    }
+    
+    // Always fetch fresh data in background
+    fetchAndCacheStandupView(cacheKey);
+}
+
+// Render the UI structure immediately (cards, table headers) - no data needed
+function renderStandupViewStructure() {
+    // Update table header for standup view immediately
+    const tableHeader = document.getElementById('tableHeader');
+    if (tableHeader) {
+        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr)';
+        tableHeader.style.display = 'grid';
+        tableHeader.style.gap = '0.75rem';
+        tableHeader.style.alignItems = 'center';
+        tableHeader.innerHTML = `
+            <div>Channel</div>
+            <div>Assigned</div>
+            <div>Completed</div>
+            <div>Remaining</div>
+            <div>Progress Meter</div>
+        `;
+    }
+    
+    // Show loading state in table body
+    const tableBody = document.getElementById('performanceTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #6b7280;">Loading...</div>';
+    }
+    
+    // Update card labels immediately (values will be updated when data loads)
+    const stat1Label = document.getElementById('stat1Label');
+    if (stat1Label) stat1Label.textContent = 'ASSIGNED';
+    
+    // Update 3rd card to COVERAGE
+    const remainingCard = document.querySelector('#remainingCount')?.closest('div[style*="background-color: var(--dark-forest)"]');
+    if (remainingCard) {
+        const label = remainingCard.querySelector('div[style*="font-size: 0.6562rem"]');
+        if (label) label.textContent = 'COVERAGE';
+    }
+    
+    // Update 4th card to PASSING RATE
+    const stat4Card = document.getElementById('stat4Count')?.closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat4Card) {
+        stat4Card.style.display = 'flex';
+        const label = stat4Card.querySelector('#stat4Label');
+        if (label) label.textContent = 'PASSING RATE';
+    }
+    
+    // Update 5th card to REVERSALS
+    const stat5Label = document.getElementById('stat5Label');
+    if (stat5Label) stat5Label.textContent = 'REVERSALS';
+    
+    // Hide 6th card (AVG DURATION)
+    const stat6Card = document.getElementById('stat6Count')?.closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat6Card) {
+        stat6Card.style.display = 'none';
+    }
+}
+
+// Render standup view data (called with cached or fresh data)
+function renderStandupViewData(standupData) {
+    const {
+        totalAssigned,
+        completed,
+        percentage,
+        coveragePercent,
+        passingRate,
+        standupReversalCount,
+        channelStats
+    } = standupData;
+    
+    // Update stat cards
+    const stat1Count = document.getElementById('stat1Count');
+    if (stat1Count) stat1Count.textContent = totalAssigned || 0;
+    
+    const completedCount = document.getElementById('completedCount');
+    if (completedCount) completedCount.textContent = completed || 0;
+    
+    const targetAchieved = document.getElementById('targetAchieved');
+    if (targetAchieved) targetAchieved.textContent = `${percentage || 0}% Target Achieved`;
+    
+    // Update 3rd card to COVERAGE with progress bar
+    const remainingCard = document.querySelector('#remainingCount')?.closest('div[style*="background-color: var(--dark-forest)"]');
+    if (remainingCard) {
+        const countDiv = remainingCard.querySelector('#remainingCount');
+        if (countDiv) {
+            countDiv.style.fontSize = '2.625rem';
+            countDiv.textContent = (coveragePercent || 0) + '%';
+            
+            // Add/update progress bar
+            let progressContainer = remainingCard.querySelector('.progress-bar-container');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-bar-container';
+                progressContainer.style.cssText = 'width: 100%; height: 0.375rem; background-color: rgba(255,255,255,0.2); border-radius: 0.1875rem; overflow: hidden; margin-top: 0.375rem;';
+                countDiv.parentElement.appendChild(progressContainer);
+            }
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.1875rem; transition: width 0.3s ease; width: ${coveragePercent || 0}%;"></div>`;
+        }
+    }
+    
+    // Update 4th card to PASSING RATE with progress bar
+    const stat4Card = document.getElementById('stat4Count')?.closest('div[style*="background-color: var(--dark-forest)"]');
+    if (stat4Card) {
+        const countDiv = stat4Card.querySelector('#stat4Count');
+        if (countDiv) {
+            countDiv.style.fontSize = '2.625rem';
+            countDiv.textContent = (passingRate || 0) + '%';
+            
+            const subtitle = stat4Card.querySelector('#stat4Subtitle');
+            if (subtitle) subtitle.textContent = '';
+            
+            // Add/update progress bar
+            let progressContainer = stat4Card.querySelector('.progress-bar-container');
+            if (!progressContainer) {
+                progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-bar-container';
+                progressContainer.style.cssText = 'width: 100%; height: 0.375rem; background-color: rgba(255,255,255,0.2); border-radius: 0.1875rem; overflow: hidden; margin-top: 0.375rem;';
+                countDiv.parentElement.appendChild(progressContainer);
+            }
+            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.1875rem; transition: width 0.3s ease; width: ${passingRate || 0}%;"></div>`;
+        }
+    }
+    
+    // Update 5th card to REVERSALS
+    const stat5Count = document.getElementById('stat5Count');
+    if (stat5Count) stat5Count.textContent = standupReversalCount || 0;
+    
+    const stat5Subtitle = document.getElementById('stat5Subtitle');
+    if (stat5Subtitle) stat5Subtitle.textContent = '';
+    
+    // Update table with channel statistics
+    const tableBody = document.getElementById('performanceTableBody');
+    if (tableBody) {
+        if (!channelStats || Object.keys(channelStats).length === 0) {
+            tableBody.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #6b7280;">No channel data available</div>';
+        } else {
+            const sortedChannels = Object.keys(channelStats).sort();
+            tableBody.innerHTML = sortedChannels.map(channel => {
+                const stats = channelStats[channel];
+                
+                return `
+                    <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6;">
+                        <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Channel">${escapeHtml(channel)}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned || 0}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed || 0}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining || 0}</div>
+                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage || 0}%</span>
+                                <div style="flex: 1; height: 0.5625rem; background-color: var(--dark-forest); border-radius: 0.2812rem; overflow: hidden; position: relative;">
+                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.2812rem; transition: width 0.3s ease; width: ${stats.percentage || 0}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+async function fetchAndCacheStandupView(cacheKey) {
+    // Only proceed if we're still on Standup View tab
+    if (currentTab !== 1) {
+        return;
+    }
+    
     try {
         // Load all audit assignments (same as Team Stats)
         const { data, error } = await window.supabaseClient
@@ -1187,18 +1381,45 @@ async function updateStandupView() {
         // Calculate coverage percentage
         const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
-        // Calculate passing rate from completed audits
+        // Calculate passing rate from all audits (matching expert-audits.html logic)
         let passingRate = 0;
+        let totalAudits = 0;
+        let passedAudits = 0;
+        
         try {
-            const { data: completedAudits, error: auditsError } = await window.supabaseClient
-                .from('audits')
-                .select('final_score')
-                .eq('status', 'completed')
-                .not('final_score', 'is', null);
+            // Get all scorecard tables
+            const { data: scorecards, error: scError } = await window.supabaseClient
+                .from('scorecards')
+                .select('table_name')
+                .eq('is_active', true);
             
-            if (!auditsError && completedAudits && completedAudits.length > 0) {
-                const passedAudits = completedAudits.filter(audit => parseFloat(audit.final_score) >= 60);
-                passingRate = Math.round((passedAudits.length / completedAudits.length) * 100);
+            if (!scError && scorecards && scorecards.length > 0) {
+                // Query all scorecard tables for audits
+                for (const scorecard of scorecards) {
+                    try {
+                        const { data: audits, error: auditError } = await window.supabaseClient
+                            .from(scorecard.table_name)
+                            .select('passing_status');
+                        
+                        if (!auditError && audits && audits.length > 0) {
+                            audits.forEach(audit => {
+                                totalAudits++;
+                                const passingStatus = audit.passing_status || audit.passingStatus;
+                                const normalizedStatus = normalizePassingStatus(passingStatus);
+                                if (normalizedStatus === 'Passed') {
+                                    passedAudits++;
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.warn(`Error loading audits from ${scorecard.table_name}:`, err);
+                    }
+                }
+                
+                // Calculate pass rate (matching expert-audits.html: passed / total * 100)
+                if (totalAudits > 0) {
+                    passingRate = Math.round((passedAudits / totalAudits) * 100);
+                }
             }
         } catch (error) {
             console.error('Error calculating passing rate:', error);
@@ -1233,70 +1454,6 @@ async function updateStandupView() {
         }
         
         console.log('Standup View - Reversal count:', standupReversalCount);
-        
-        // Update stat cards
-        document.getElementById('stat1Label').textContent = 'ASSIGNED';
-        document.getElementById('stat1Count').textContent = totalAssigned;
-        document.getElementById('completedCount').textContent = completed;
-        document.getElementById('targetAchieved').textContent = `${percentage}% Target Achieved`;
-        
-        // Update 3rd card to COVERAGE with progress bar
-        const remainingCard = document.querySelector('#remainingCount').closest('div[style*="background-color: var(--dark-forest)"]');
-        if (remainingCard) {
-            const label = remainingCard.querySelector('div[style*="font-size: 0.6562rem"]');
-            if (label) label.textContent = 'COVERAGE';
-            
-            const countDiv = remainingCard.querySelector('#remainingCount');
-            countDiv.style.fontSize = '2.625rem';
-            countDiv.textContent = coveragePercent + '%';
-            
-            // Add/update progress bar
-            let progressContainer = remainingCard.querySelector('.progress-bar-container');
-            if (!progressContainer) {
-                progressContainer = document.createElement('div');
-                progressContainer.className = 'progress-bar-container';
-                progressContainer.style.cssText = 'width: 100%; height: 0.375rem; background-color: rgba(255,255,255,0.2); border-radius: 0.1875rem; overflow: hidden; margin-top: 0.375rem;';
-                countDiv.parentElement.appendChild(progressContainer);
-            }
-            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.1875rem; transition: width 0.3s ease; width: ${coveragePercent}%;"></div>`;
-        }
-        
-        // Update 4th card to PASSING RATE with progress bar
-        const stat4Card = document.getElementById('stat4Count').closest('div[style*="background-color: var(--dark-forest)"]');
-        if (stat4Card) {
-            stat4Card.style.display = 'flex';
-            
-            const label = stat4Card.querySelector('#stat4Label');
-            if (label) label.textContent = 'PASSING RATE';
-            
-            const countDiv = stat4Card.querySelector('#stat4Count');
-            countDiv.style.fontSize = '2.625rem';
-            countDiv.textContent = passingRate + '%';
-            
-            const subtitle = stat4Card.querySelector('#stat4Subtitle');
-            if (subtitle) subtitle.textContent = '';
-            
-            // Add/update progress bar
-            let progressContainer = stat4Card.querySelector('.progress-bar-container');
-            if (!progressContainer) {
-                progressContainer = document.createElement('div');
-                progressContainer.className = 'progress-bar-container';
-                progressContainer.style.cssText = 'width: 100%; height: 0.375rem; background-color: rgba(255,255,255,0.2); border-radius: 0.1875rem; overflow: hidden; margin-top: 0.375rem;';
-                countDiv.parentElement.appendChild(progressContainer);
-            }
-            progressContainer.innerHTML = `<div style="height: 100%; background: linear-gradient(90deg, #10b981, #34d399); border-radius: 0.1875rem; transition: width 0.3s ease; width: ${passingRate}%;"></div>`;
-        }
-        
-        // Update 5th card to REVERSALS
-        document.getElementById('stat5Label').textContent = 'REVERSALS';
-        document.getElementById('stat5Count').textContent = standupReversalCount;
-        document.getElementById('stat5Subtitle').textContent = '';
-        
-        // Hide 6th card (AVG DURATION)
-        const stat6Card = document.getElementById('stat6Count').closest('div[style*="background-color: var(--dark-forest)"]');
-        if (stat6Card) {
-            stat6Card.style.display = 'none';
-        }
         
         // Group assignments by channel
         const channelStats = {};
@@ -1335,52 +1492,33 @@ async function updateStandupView() {
             stats.percentage = stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0;
         });
         
-        // Update table header for standup view
-        const tableHeader = document.getElementById('tableHeader');
-        tableHeader.style.gridTemplateColumns = 'minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr)';
-        tableHeader.style.display = 'grid';
-        tableHeader.style.gap = '0.75rem';
-        tableHeader.style.alignItems = 'center';
-        tableHeader.innerHTML = `
-            <div>Channel</div>
-            <div>Assigned</div>
-            <div>Completed</div>
-            <div>Remaining</div>
-            <div>Progress Meter</div>
-        `;
+        // Cache the computed data
+        const standupData = {
+            totalAssigned,
+            completed,
+            percentage,
+            coveragePercent,
+            passingRate,
+            standupReversalCount,
+            channelStats
+        };
+        setCachedData(cacheKey, standupData);
         
-        // Sort channels by name
-        const sortedChannels = Object.keys(channelStats).sort();
-        
-        // Update table with channel statistics
-        const tableBody = document.getElementById('performanceTableBody');
-        if (sortedChannels.length === 0) {
-            tableBody.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #6b7280;">No channel data available</div>';
+        // Update UI with fresh data (only if still on Standup View tab)
+        if (currentTab === 1) {
+            console.log('Updating UI with fresh standup view data');
+            renderStandupViewData(standupData);
         } else {
-        tableBody.innerHTML = sortedChannels.map(channel => {
-            const stats = channelStats[channel];
-            
-            return `
-                    <div style="display: grid; grid-template-columns: minmax(5.2734rem, 2fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(3.5156rem, 1fr) minmax(7.0312rem, 2fr); gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6;">
-                    <div style="font-size: 0.6562rem; color: var(--text-color); font-weight: 600;" data-label="Channel">${escapeHtml(channel)}</div>
-                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Assigned">${stats.assigned}</div>
-                    <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Completed">${stats.completed}</div>
-                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Remaining">${stats.remaining}</div>
-                        <div style="font-size: 0.6562rem; color: var(--text-color);" data-label="Progress">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span style="font-size: 0.6562rem; font-weight: 600; color: var(--text-color); min-width: 1.875rem;">${stats.percentage}%</span>
-                                <div style="flex: 1; height: 0.5625rem; background-color: var(--dark-forest); border-radius: 0.2812rem; overflow: hidden; position: relative;">
-                                    <div style="height: 100%; background: var(--success-color); border-radius: 0.2812rem; transition: width 0.3s ease; width: ${stats.percentage}%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-            `;
-            }).join('');
+            console.log('Skipping standup view render - user switched to tab', currentTab);
         }
         
     } catch (error) {
         console.error('Error loading standup view:', error);
+        // Show error in table
+        const tableBody = document.getElementById('performanceTableBody');
+        if (tableBody && currentTab === 1) {
+            tableBody.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #ef4444;">Error loading data. Please try again.</div>';
+        }
     }
 }
 
@@ -1859,6 +1997,28 @@ window.clearDateFilter = function() {
     updateWeekDisplay(); // Update week display to show week number
     applyFilters();
 };
+
+// Helper function to normalize passing status (handles both old and new values)
+// Matching expert-audits.html implementation
+function normalizePassingStatus(status) {
+    if (!status) return status;
+    
+    // Convert to string and trim
+    const statusStr = String(status).trim();
+    
+    // Convert old values to new ones for consistency
+    // Handle "Passing", "Pass", "passed" (case-insensitive)
+    if (statusStr === 'Passing' || statusStr === 'Pass' || statusStr.toLowerCase() === 'passed') {
+        return 'Passed';
+    }
+    // Handle "Not Passing", "Not Pass", "not passed" (case-insensitive)
+    if (statusStr === 'Not Passing' || statusStr === 'Not Pass' || statusStr.toLowerCase() === 'not passed') {
+        return 'Not Passed';
+    }
+    
+    // Return as-is if already normalized or unknown
+    return statusStr;
+}
 
 // Helper function to check if date is within filter range
 function isDateInRange(date, filterStart, filterEnd) {
