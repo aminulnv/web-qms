@@ -1313,6 +1313,20 @@ async function loadScorecards(channelFilter = null) {
                 const channelsList = scorecard.channels.split(',').map(c => c.trim());
                 return channelsList.includes(channelFilter);
             });
+            
+            // Sort scorecards: default ones first, then by created_at
+            filteredScorecards.sort((a, b) => {
+                const aIsDefault = a.default_for_channels && a.default_for_channels.split(',').map(c => c.trim()).includes(channelFilter);
+                const bIsDefault = b.default_for_channels && b.default_for_channels.split(',').map(c => c.trim()).includes(channelFilter);
+                
+                if (aIsDefault && !bIsDefault) return -1;
+                if (!aIsDefault && bIsDefault) return 1;
+                
+                // If both are default or neither, sort by created_at (newest first)
+                const aDate = new Date(a.created_at || 0);
+                const bDate = new Date(b.created_at || 0);
+                return bDate - aDate;
+            });
         }
         
         scorecardSelect.innerHTML = '<option value="">Select a scorecard...</option>';
@@ -1321,7 +1335,17 @@ async function loadScorecards(channelFilter = null) {
             filteredScorecards.forEach(scorecard => {
                 const option = document.createElement('option');
                 option.value = scorecard.id;
-                option.textContent = scorecard.name;
+                
+                // Add "(Default)" indicator if this is the default scorecard for the channel
+                let displayName = scorecard.name;
+                if (channelFilter && scorecard.default_for_channels) {
+                    const defaultChannels = scorecard.default_for_channels.split(',').map(c => c.trim());
+                    if (defaultChannels.includes(channelFilter)) {
+                        displayName += ' (Default)';
+                    }
+                }
+                
+                option.textContent = displayName;
                 option.dataset.threshold = scorecard.passing_threshold;
                 option.dataset.tableName = scorecard.table_name;
                 option.dataset.channels = scorecard.channels || '';
@@ -1329,6 +1353,7 @@ async function loadScorecards(channelFilter = null) {
             });
             
             // Auto-select the first scorecard if available (whether one or multiple)
+            // This will be the default one if it exists, otherwise the newest one
             if (filteredScorecards.length > 0) {
                 scorecardSelect.value = filteredScorecards[0].id;
                 await loadScorecardParameters(filteredScorecards[0].id);

@@ -603,6 +603,15 @@
                                 <!-- Channel checkboxes will be dynamically generated here -->
                             </div>
                             <small style="font-size: 0.4219rem; color: #6b7280; display: block; margin-top: 0.1875rem;">Select at least one channel where this scorecard will be used.</small>
+                            
+                            <!-- Default Scorecard Selection -->
+                            <div id="defaultChannelsContainer" style="display: none; margin-top: 0.5625rem; padding: 0.5625rem; background: #f0fdf4; border: 0.0469rem solid #86efac; border-radius: 0.1875rem;">
+                                <label style="font-size: 0.5156rem; font-weight: 600; color: #166534; margin-bottom: 0.375rem; display: block;">Set as Default Scorecard for Channels</label>
+                                <div id="defaultChannelsCheckboxes" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.375rem;">
+                                    <!-- Default channel checkboxes will be dynamically generated here -->
+                                </div>
+                                <small style="font-size: 0.4219rem; color: #166534; display: block; margin-top: 0.1875rem;">When multiple scorecards are active for a channel, the default one will be selected automatically.</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -860,6 +869,7 @@ function initializeChannelCheckboxes() {
             cb.checked = this.checked;
         });
         updateSelectAllState();
+        updateDefaultChannelsUI();
     });
     
     // Add individual channel checkboxes
@@ -875,7 +885,10 @@ function initializeChannelCheckboxes() {
         checkbox.style.cssText = 'width: 0.6562rem; height: 0.6562rem; cursor: pointer; accent-color: #1A733E;';
         
         // Add event listener to update select all state when individual checkboxes change
-        checkbox.addEventListener('change', updateSelectAllState);
+        checkbox.addEventListener('change', function() {
+            updateSelectAllState();
+            updateDefaultChannelsUI();
+        });
         
         const label = document.createElement('span');
         label.textContent = channel;
@@ -926,6 +939,7 @@ function setSelectedChannels(channelsString) {
     
     if (!channelsString) {
         updateSelectAllState();
+        updateDefaultChannelsUI();
         return;
     }
     
@@ -938,6 +952,69 @@ function setSelectedChannels(channelsString) {
     
     // Update select all state after setting channels
     updateSelectAllState();
+    updateDefaultChannelsUI();
+}
+
+// Update default channels UI based on selected channels
+function updateDefaultChannelsUI() {
+    const selectedChannels = getSelectedChannels();
+    const defaultContainer = document.getElementById('defaultChannelsContainer');
+    const defaultCheckboxes = document.getElementById('defaultChannelsCheckboxes');
+    
+    if (selectedChannels.length === 0) {
+        defaultContainer.style.display = 'none';
+        return;
+    }
+    
+    // Show the default channels section
+    defaultContainer.style.display = 'block';
+    
+    // Clear existing checkboxes
+    defaultCheckboxes.innerHTML = '';
+    
+    // Create checkboxes for each selected channel
+    selectedChannels.forEach(channel => {
+        const checkboxWrapper = document.createElement('label');
+        checkboxWrapper.style.cssText = 'display: flex; align-items: center; gap: 0.2812rem; cursor: pointer; padding: 0.1875rem;';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = 'defaultChannels';
+        checkbox.value = channel;
+        checkbox.className = 'default-channel-checkbox';
+        checkbox.style.cssText = 'width: 0.6562rem; height: 0.6562rem; cursor: pointer; accent-color: #166534;';
+        
+        const label = document.createElement('span');
+        label.textContent = `Default for ${channel}`;
+        label.style.cssText = 'font-size: 0.5156rem; color: #166534; user-select: none; font-weight: 500;';
+        
+        checkboxWrapper.appendChild(checkbox);
+        checkboxWrapper.appendChild(label);
+        defaultCheckboxes.appendChild(checkboxWrapper);
+    });
+}
+
+// Get selected default channels
+function getDefaultChannels() {
+    const checkboxes = document.querySelectorAll('.default-channel-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Set default channels (for editing)
+function setDefaultChannels(defaultChannelsString) {
+    // Uncheck all first
+    document.querySelectorAll('.default-channel-checkbox').forEach(cb => cb.checked = false);
+    
+    if (!defaultChannelsString) {
+        return;
+    }
+    
+    // Parse comma-separated string and check matching boxes
+    const defaultChannels = defaultChannelsString.split(',').map(c => c.trim());
+    defaultChannels.forEach(channel => {
+        const checkbox = document.querySelector(`.default-channel-checkbox[value="${channel}"]`);
+        if (checkbox) checkbox.checked = true;
+    });
 }
 
 // Validate at least one channel is selected
@@ -1219,6 +1296,11 @@ async function openScorecardModal(scorecard = null) {
         // Set selected channels
         setSelectedChannels(scorecard.channels || '');
         
+        // Set default channels if they exist
+        if (scorecard.default_for_channels) {
+            setDefaultChannels(scorecard.default_for_channels);
+        }
+        
         // Trigger scoring type change to show/hide hybrid options
         handleScoringTypeChange();
         
@@ -1491,8 +1573,8 @@ function addParameterRow(param = null) {
     const row = document.createElement('div');
     row.className = 'parameter-row';
     row.innerHTML = `
-        <input type="text" placeholder="Parameter Name" value="${param ? escapeHtml(param.error_name) : ''}" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
-        <input type="number" placeholder="Points" value="${param ? param.penalty_points : ''}" min="0" step="0.01" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
+        <input type="text" class="param-name-input" placeholder="Parameter Name" value="${param ? escapeHtml(param.error_name) : ''}" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
+        <input type="number" class="param-points-input" placeholder="Points" value="${param ? param.penalty_points : ''}" min="0" step="0.01" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
         <select required class="param-type-select" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;" title="Parameter Type" onchange="updateCategoryField(this)">
             <option value="">Type</option>
             <option value="error" ${defaultParamType === 'error' ? 'selected' : ''}>Error</option>
@@ -1511,8 +1593,8 @@ function addParameterRow(param = null) {
             <option value="counter" ${defaultFieldType === 'counter' ? 'selected' : ''}>Counter</option>
             <option value="radio" ${defaultFieldType === 'radio' ? 'selected' : ''}>Yes/No</option>
         </select>
-        <input type="text" placeholder="field_id" value="${param ? escapeHtml(param.field_id) : ''}" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
-        <input type="text" placeholder="Description (optional)" value="${param && param.description ? escapeHtml(param.description) : ''}" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
+        <input type="text" class="param-field-id-input" placeholder="field_id" value="${param ? escapeHtml(param.field_id) : ''}" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
+        <input type="text" class="param-description-input" placeholder="Description (optional)" value="${param && param.description ? escapeHtml(param.description) : ''}" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
         <label style="display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Causes automatic fail regardless of score">
             <input type="checkbox" class="is-fail-all-checkbox" ${isFailAll ? 'checked' : ''} style="width: 0.75rem; height: 0.75rem; cursor: pointer; accent-color: #ef4444;">
         </label>
@@ -1672,6 +1754,10 @@ async function handleScorecardSubmit(e) {
     const selectedChannels = getSelectedChannels();
     const channelsString = selectedChannels.join(', ');
     
+    // Get default channels as comma-separated string
+    const defaultChannels = getDefaultChannels();
+    const defaultChannelsString = defaultChannels.join(', ');
+    
     const scorecardData = {
         name: document.getElementById('scorecardName').value,
         description: document.getElementById('scorecardDescription').value,
@@ -1681,6 +1767,12 @@ async function handleScorecardSubmit(e) {
         scoring_type: scoringType,
         created_by: (await window.SupabaseAuth.getCurrentUser())?.email || 'unknown'
     };
+    
+    // Only include default_for_channels if there are default channels selected
+    // This allows graceful degradation if the column doesn't exist yet
+    if (defaultChannelsString) {
+        scorecardData.default_for_channels = defaultChannelsString;
+    }
     
     // Add hybrid-specific fields
     if (scoringType === 'hybrid') {
@@ -1693,18 +1785,44 @@ async function handleScorecardSubmit(e) {
     const parameters = [];
     
     parameterRows.forEach((row, index) => {
-        const inputs = row.querySelectorAll('input, select');
-        const paramType = inputs[2].value; // parameter_type
+        // Use specific class selectors to ensure we get the correct values
+        const nameInput = row.querySelector('.param-name-input');
+        const pointsInput = row.querySelector('.param-points-input');
+        const typeSelect = row.querySelector('.param-type-select');
+        const categorySelect = row.querySelector('.param-category-select');
+        const fieldTypeSelect = row.querySelector('.field-type-select');
+        const fieldIdInput = row.querySelector('.param-field-id-input');
+        const descriptionInput = row.querySelector('.param-description-input');
         const isFailAllCheckbox = row.querySelector('.is-fail-all-checkbox');
         
+        // Validate that all required fields are present
+        if (!nameInput || !pointsInput || !typeSelect || !categorySelect || !fieldTypeSelect || !fieldIdInput) {
+            console.error('Missing required parameter fields in row', index, row);
+            return; // Skip this row if required fields are missing
+        }
+        
+        const paramType = typeSelect.value;
+        const errorName = nameInput.value.trim();
+        const points = parseFloat(pointsInput.value);
+        const category = categorySelect.value.trim();
+        const fieldType = fieldTypeSelect.value;
+        const fieldId = fieldIdInput.value.replace(/[^a-zA-Z0-9_]/g, '');
+        const description = descriptionInput ? descriptionInput.value.trim() : '';
+        
+        // Skip empty rows
+        if (!errorName || isNaN(points) || !paramType || !category || !fieldType || !fieldId) {
+            console.warn('Skipping incomplete parameter row', index);
+            return;
+        }
+        
         parameters.push({
-            error_name: inputs[0].value,
-            penalty_points: parseFloat(inputs[1].value),
+            error_name: errorName,
+            penalty_points: points,
             parameter_type: paramType,
-            error_category: inputs[3].value,
-            field_type: inputs[4].value,
-            field_id: inputs[5].value.replace(/[^a-zA-Z0-9_]/g, ''),
-            description: inputs[6].value.trim() || null, // description is the 7th input (index 6)
+            error_category: category,
+            field_type: fieldType,
+            field_id: fieldId,
+            description: description || null,
             points_direction: (paramType === 'error') ? 'subtract' : 'add',
             requires_feedback: true,
             display_order: index + 1,
@@ -1793,6 +1911,13 @@ async function handleScorecardSubmit(e) {
                     field_id: p.field_id,
                     error_name: p.error_name
                 }));
+                
+                // Debug: Log parameters being sent to RPC
+                console.log('Creating new version audit table with parameters:', {
+                    table_name: scorecardData.table_name,
+                    parameters: tableParams,
+                    full_parameters: parameters
+                });
                 
                 const { data: rpcResult, error: rpcError } = await window.supabaseClient
                     .rpc('create_audit_table', {
@@ -1895,6 +2020,7 @@ async function handleScorecardSubmit(e) {
                     name: scorecardData.name,
                     description: scorecardData.description,
                     channels: scorecardData.channels,
+                    default_for_channels: scorecardData.default_for_channels,
                     passing_threshold: scorecardData.passing_threshold
                 };
                 
@@ -1924,6 +2050,13 @@ async function handleScorecardSubmit(e) {
                 field_id: p.field_id,
                 error_name: p.error_name
             }));
+            
+            // Debug: Log parameters being sent to RPC
+            console.log('Creating audit table with parameters:', {
+                table_name: scorecardData.table_name,
+                parameters: tableParams,
+                full_parameters: parameters
+            });
             
             const { data: rpcResult, error: rpcError } = await window.supabaseClient
                 .rpc('create_audit_table', {
