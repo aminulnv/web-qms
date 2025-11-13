@@ -208,6 +208,17 @@ function isCurrentUserAgent() {
     return role === 'Employee';
 }
 
+// Check if current user is the auditor of the current audit
+function isCurrentUserAuditor() {
+    if (!currentUserEmail || !currentAudit) {
+        return false;
+    }
+    
+    // Compare emails (case-insensitive)
+    const auditAuditorEmail = currentAudit.auditorEmail || currentAudit.auditor_email || '';
+    return auditAuditorEmail.toLowerCase() === currentUserEmail.toLowerCase();
+}
+
 // Helper function to check if acknowledgement status is considered "acknowledged" (locked, no edits/comments)
 function isAcknowledgedStatus(status) {
     if (!status) return false;
@@ -1595,6 +1606,21 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
         `;
     }
     
+    // Generate delete button HTML (only if current user is the auditor)
+    let deleteButtonHtml = '';
+    const showDeleteButton = isCurrentUserAuditor();
+    if (showDeleteButton) {
+        deleteButtonHtml = `
+                <button id="deleteAuditBtn" onclick="deleteCurrentAudit()" style="padding: 0.4852rem 1.2937rem; background-color: #dc2626; color: white; border: none; border-radius: 0.2425rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.3234rem;">
+                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Delete Audit
+                </button>
+        `;
+    }
+    
     // Generate save button HTML for edit mode
     let saveButtonHtml = '';
     if (mode === 'edit') {
@@ -1726,6 +1752,7 @@ function renderAudit(audit, auditScorecard, errorFields, mode = 'view') {
                 ${timerHtml}
                 ${employeeButtonsHtml}
                 ${editButtonHtml}
+                ${deleteButtonHtml}
                 ${saveButtonHtml}
             </div>
         </div>
@@ -6106,6 +6133,7 @@ async function processReversalDecision(decision) {
 // Make functions globally accessible
 window.approveReversal = approveReversal;
 window.rejectReversal = rejectReversal;
+window.deleteCurrentAudit = deleteCurrentAudit;
 
 // Save Audit Changes Function
 async function saveAuditChanges() {
@@ -6261,6 +6289,103 @@ async function saveAuditChanges() {
     } catch (error) {
         console.error('Error saving audit changes:', error);
         alert('Error saving audit changes: ' + error.message);
+    }
+}
+
+// Delete Audit Function
+async function deleteCurrentAudit() {
+    // Verify that current user is the auditor
+    if (!isCurrentUserAuditor()) {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Access Denied',
+                message: 'Only the auditor who created this audit can delete it.',
+                confirmText: 'OK',
+                type: 'error'
+            });
+        } else {
+            alert('Only the auditor who created this audit can delete it.');
+        }
+        return;
+    }
+    
+    if (!currentAudit || !currentTableName) {
+        alert('Error: Audit data not loaded');
+        return;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = await window.confirmationDialog.show({
+        title: 'Delete Audit?',
+        message: `Are you sure you want to delete this audit?\n\nEmployee: ${currentAudit.employeeName || currentAudit.employee_name || 'Unknown'}\nInteraction ID: ${currentAudit.interactionId || currentAudit.interaction_id || 'N/A'}\n\nThis action cannot be undone. The audit will be permanently deleted and any related assignments will be reset to pending.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        type: 'warning'
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+        const auditId = currentAudit.id;
+        
+        // First, find and update audit_assignments that reference this audit
+        const { data: assignments, error: assignmentsError } = await window.supabaseClient
+            .from('audit_assignments')
+            .select('id')
+            .eq('audit_id', auditId);
+        
+        if (assignmentsError) {
+            console.error('Error finding audit assignments:', assignmentsError);
+            // Continue with deletion even if we can't find assignments
+        } else if (assignments && assignments.length > 0) {
+            // Update all assignments to pending status
+            const assignmentIds = assignments.map(a => a.id);
+            const { error: updateError } = await window.supabaseClient
+                .from('audit_assignments')
+                .update({
+                    status: 'pending',
+                    completed_at: null,
+                    audit_id: null
+                })
+                .in('id', assignmentIds);
+            
+            if (updateError) {
+                console.error('Error updating audit assignments:', updateError);
+                // Continue with deletion even if update fails
+            } else {
+                console.log(`Updated ${assignmentIds.length} assignment(s) to pending status`);
+            }
+        }
+        
+        // Delete the audit from the table
+        const { error: deleteError } = await window.supabaseClient
+            .from(currentTableName)
+            .delete()
+            .eq('id', auditId);
+        
+        if (deleteError) {
+            throw deleteError;
+        }
+        
+        // Show success message
+        await window.confirmationDialog.show({
+            title: 'Success!',
+            message: 'Audit deleted successfully. Any related assignments have been reset to pending status.',
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Redirect to expert-audits page or go back
+        window.location.href = 'expert-audits.html';
+        
+    } catch (error) {
+        console.error('Error deleting audit:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to delete audit: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
     }
 }
 
