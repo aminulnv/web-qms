@@ -8,6 +8,15 @@ class SidebarLoader {
   constructor() {
     this.sidebarContainer = null
     this.isLoaded = false
+    this.notificationUpdateIntervals = {
+      reversals: null,
+      employeeReversals: null,
+      acknowledgments: null
+    }
+    // Cache duration: 5 minutes (same as expert-audits.html)
+    this.CACHE_DURATION_MS = 5 * 60 * 1000
+    // Update interval: 5 minutes
+    this.UPDATE_INTERVAL_MS = 5 * 60 * 1000
   }
 
   /**
@@ -111,14 +120,20 @@ class SidebarLoader {
       // Hide menu items for employees
       this.hideEmployeeMenuItems()
       
-      // Load pending reversals count (for auditors)
+      // Load notification counts from cache first (fast), then update from database
+      this.loadNotificationCountsFromCache()
+      
+      // Load pending reversals count (for auditors) - will update cache
       this.updatePendingReversalsCount()
       
-      // Load employee reversal updates count (for employees)
+      // Load employee reversal updates count (for employees) - will update cache
       this.updateEmployeeReversalUpdatesCount()
       
-      // Load pending acknowledgments count
+      // Load pending acknowledgments count - will update cache
       this.updatePendingAcknowledgmentsCount()
+      
+      // Set up intervals to update counts periodically
+      this.setupNotificationUpdateIntervals()
     } catch (error) {
       // Error loading sidebar
       // Fallback: show a message or use existing sidebar
@@ -771,6 +786,134 @@ class SidebarLoader {
   }
 
   /**
+   * Get cache key for notification counts (user-specific)
+   */
+  getNotificationCacheKey(type) {
+    const userInfo = this.getUserInfo()
+    const userEmail = userInfo ? (userInfo.email || 'anonymous').toLowerCase().trim() : 'anonymous'
+    return `notification_count_${type}_${userEmail}`
+  }
+
+  /**
+   * Get cache timestamp key for notification counts
+   */
+  getNotificationCacheTimestampKey(type) {
+    const userInfo = this.getUserInfo()
+    const userEmail = userInfo ? (userInfo.email || 'anonymous').toLowerCase().trim() : 'anonymous'
+    return `notification_count_${type}_timestamp_${userEmail}`
+  }
+
+  /**
+   * Get cached notification count
+   */
+  getCachedNotificationCount(type) {
+    try {
+      const cacheKey = this.getNotificationCacheKey(type)
+      const timestampKey = this.getNotificationCacheTimestampKey(type)
+      const cachedData = localStorage.getItem(cacheKey)
+      const cachedTimestamp = localStorage.getItem(timestampKey)
+
+      if (!cachedData || !cachedTimestamp) {
+        return null
+      }
+
+      const timestamp = parseInt(cachedTimestamp, 10)
+      const now = Date.now()
+
+      // Check if cache is still valid
+      if (now - timestamp > this.CACHE_DURATION_MS) {
+        // Cache expired, clear it
+        localStorage.removeItem(cacheKey)
+        localStorage.removeItem(timestampKey)
+        return null
+      }
+
+      return parseInt(cachedData, 10)
+    } catch (error) {
+      console.error(`Error reading notification count cache for ${type}:`, error)
+      return null
+    }
+  }
+
+  /**
+   * Set cached notification count
+   */
+  setCachedNotificationCount(type, count) {
+    try {
+      const cacheKey = this.getNotificationCacheKey(type)
+      const timestampKey = this.getNotificationCacheTimestampKey(type)
+      localStorage.setItem(cacheKey, count.toString())
+      localStorage.setItem(timestampKey, Date.now().toString())
+    } catch (error) {
+      console.error(`Error writing notification count cache for ${type}:`, error)
+    }
+  }
+
+  /**
+   * Load notification counts from cache and display them immediately
+   */
+  loadNotificationCountsFromCache() {
+    // Load reversal count from cache
+    const cachedReversals = this.getCachedNotificationCount('reversals')
+    if (cachedReversals !== null) {
+      this.setReversalBadgeCount(cachedReversals)
+    }
+
+    // Load employee reversal count from cache
+    const cachedEmployeeReversals = this.getCachedNotificationCount('employeeReversals')
+    if (cachedEmployeeReversals !== null) {
+      this.setEmployeeReversalBadgeCount(cachedEmployeeReversals)
+    }
+
+    // Load acknowledgment count from cache
+    const cachedAcknowledgments = this.getCachedNotificationCount('acknowledgments')
+    if (cachedAcknowledgments !== null) {
+      this.setAcknowledgmentBadgeCount(cachedAcknowledgments)
+    }
+  }
+
+  /**
+   * Set up intervals to update notification counts periodically
+   */
+  setupNotificationUpdateIntervals() {
+    // Clear any existing intervals
+    this.clearNotificationUpdateIntervals()
+
+    // Set up interval for reversals (for auditors)
+    this.notificationUpdateIntervals.reversals = setInterval(() => {
+      this.updatePendingReversalsCount()
+    }, this.UPDATE_INTERVAL_MS)
+
+    // Set up interval for employee reversals (for employees)
+    this.notificationUpdateIntervals.employeeReversals = setInterval(() => {
+      this.updateEmployeeReversalUpdatesCount()
+    }, this.UPDATE_INTERVAL_MS)
+
+    // Set up interval for acknowledgments
+    this.notificationUpdateIntervals.acknowledgments = setInterval(() => {
+      this.updatePendingAcknowledgmentsCount()
+    }, this.UPDATE_INTERVAL_MS)
+  }
+
+  /**
+   * Clear notification update intervals
+   */
+  clearNotificationUpdateIntervals() {
+    if (this.notificationUpdateIntervals.reversals) {
+      clearInterval(this.notificationUpdateIntervals.reversals)
+      this.notificationUpdateIntervals.reversals = null
+    }
+    if (this.notificationUpdateIntervals.employeeReversals) {
+      clearInterval(this.notificationUpdateIntervals.employeeReversals)
+      this.notificationUpdateIntervals.employeeReversals = null
+    }
+    if (this.notificationUpdateIntervals.acknowledgments) {
+      clearInterval(this.notificationUpdateIntervals.acknowledgments)
+      this.notificationUpdateIntervals.acknowledgments = null
+    }
+  }
+
+  /**
    * Update pending reversals count badge
    */
   async updatePendingReversalsCount() {
@@ -828,11 +971,18 @@ class SidebarLoader {
         }
       }
 
+      // Update cache and badge
+      this.setCachedNotificationCount('reversals', totalPending)
       this.setReversalBadgeCount(totalPending)
     } catch (error) {
       console.error('Error updating pending reversals count:', error)
-      // Don't show badge on error
-      this.setReversalBadgeCount(0)
+      // Don't show badge on error, but keep cached value if available
+      const cachedCount = this.getCachedNotificationCount('reversals')
+      if (cachedCount !== null) {
+        this.setReversalBadgeCount(cachedCount)
+      } else {
+        this.setReversalBadgeCount(0)
+      }
     }
   }
 
@@ -935,10 +1085,18 @@ class SidebarLoader {
         }
       }
 
+      // Update cache and badge
+      this.setCachedNotificationCount('employeeReversals', totalResponded)
       this.setEmployeeReversalBadgeCount(totalResponded)
     } catch (error) {
       console.error('Error updating employee reversal updates count:', error)
-      this.setEmployeeReversalBadgeCount(0)
+      // Keep cached value if available
+      const cachedCount = this.getCachedNotificationCount('employeeReversals')
+      if (cachedCount !== null) {
+        this.setEmployeeReversalBadgeCount(cachedCount)
+      } else {
+        this.setEmployeeReversalBadgeCount(0)
+      }
     }
   }
 
@@ -1049,11 +1207,18 @@ class SidebarLoader {
         }
       }
 
+      // Update cache and badge
+      this.setCachedNotificationCount('acknowledgments', totalPending)
       this.setAcknowledgmentBadgeCount(totalPending)
     } catch (error) {
       console.error('Error updating pending acknowledgments count:', error)
-      // Don't show badge on error
-      this.setAcknowledgmentBadgeCount(0)
+      // Keep cached value if available
+      const cachedCount = this.getCachedNotificationCount('acknowledgments')
+      if (cachedCount !== null) {
+        this.setAcknowledgmentBadgeCount(cachedCount)
+      } else {
+        this.setAcknowledgmentBadgeCount(0)
+      }
     }
   }
 
@@ -1168,16 +1333,48 @@ window.updateAcknowledgmentBadgeCount = async function() {
   await sidebarLoader.updatePendingAcknowledgmentsCount()
 }
 
-// Initialize the sidebar loader
-function initSidebar() {
+// Global function to force refresh all notification counts (bypasses cache)
+window.refreshAllNotificationCounts = async function() {
   const sidebarLoader = new SidebarLoader()
-  sidebarLoader.init()
+  // Clear cache to force refresh
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const userEmail = (userInfo.email || 'anonymous').toLowerCase().trim()
+    localStorage.removeItem(`notification_count_reversals_${userEmail}`)
+    localStorage.removeItem(`notification_count_reversals_timestamp_${userEmail}`)
+    localStorage.removeItem(`notification_count_employeeReversals_${userEmail}`)
+    localStorage.removeItem(`notification_count_employeeReversals_timestamp_${userEmail}`)
+    localStorage.removeItem(`notification_count_acknowledgments_${userEmail}`)
+    localStorage.removeItem(`notification_count_acknowledgments_timestamp_${userEmail}`)
+  } catch (error) {
+    console.error('Error clearing notification cache:', error)
+  }
+  // Update all counts
+  await sidebarLoader.updatePendingReversalsCount()
+  await sidebarLoader.updateEmployeeReversalUpdatesCount()
+  await sidebarLoader.updatePendingAcknowledgmentsCount()
 }
 
-  // Initialize when DOM is ready
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSidebar)
-  } else {
-    // DOM is already loaded
-    initSidebar()
+// Store sidebar loader instance globally for cleanup
+let globalSidebarLoader = null
+
+// Initialize the sidebar loader
+function initSidebar() {
+  globalSidebarLoader = new SidebarLoader()
+  globalSidebarLoader.init()
+}
+
+// Clean up intervals when page unloads
+window.addEventListener('beforeunload', () => {
+  if (globalSidebarLoader) {
+    globalSidebarLoader.clearNotificationUpdateIntervals()
   }
+})
+
+// Initialize when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initSidebar)
+} else {
+  // DOM is already loaded
+  initSidebar()
+}
