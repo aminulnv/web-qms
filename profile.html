@@ -114,7 +114,7 @@
                                 <span id="teamSupervisorName" class="text-gray-700 font-semibold text-right">-</span>
                 </div>
                             <div id="qualitySupervisorStat" class="flex justify-between items-center hidden">
-                                <span class="text-gray-600 text-sm">Quality Supervisor</span>
+                                <span class="text-gray-600 text-sm">Quality Mentor</span>
                                 <span id="qualitySupervisorName" class="text-gray-700 font-semibold text-right">-</span>
                     </div>
                 </div>
@@ -433,21 +433,21 @@ function updateStats(userData) {
         }
     }
     
-    // Quality Supervisor
+    // Quality Mentor
     const qualitySupervisorStat = document.getElementById('qualitySupervisorStat');
     const qualitySupervisorName = document.getElementById('qualitySupervisorName');
-    if (userData.quality_supervisor) {
+    if (userData.quality_mentor) {
         // Try to find supervisor by email (case-insensitive)
         const supervisor = allUsers.find(u => 
-            u.email && userData.quality_supervisor && 
-            u.email.toLowerCase() === userData.quality_supervisor.toLowerCase()
+            u.email && userData.quality_mentor && 
+            u.email.toLowerCase() === userData.quality_mentor.toLowerCase()
         );
         if (qualitySupervisorName) {
             if (supervisor && supervisor.name) {
                 qualitySupervisorName.textContent = supervisor.name;
             } else {
                 // If supervisor not found, show email as fallback
-                qualitySupervisorName.textContent = userData.quality_supervisor;
+                qualitySupervisorName.textContent = userData.quality_mentor;
             }
         }
         if (qualitySupervisorStat) {

@@ -1318,7 +1318,7 @@ async function loadAllUsers() {
   try {
     const { data, error } = await window.supabaseClient
       .from('users')
-      .select('email, name, role, channel, quality_supervisor')
+      .select('email, name, role, channel, quality_mentor')
       .eq('is_active', true);
     
     if (error) throw error;

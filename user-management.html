@@ -607,7 +607,7 @@
         .users-table td:nth-child(9) { width: 9%; } /* Team Supervisor */
         
         .users-table th:nth-child(10),
-        .users-table td:nth-child(10) { width: 9%; } /* Quality Supervisor */
+        .users-table td:nth-child(10) { width: 9%; } /* Quality Mentor */
         
         .users-table th:nth-child(11),
         .users-table td:nth-child(11) { width: 7%; } /* Role */
@@ -845,7 +845,7 @@
                         <option value="">Change Team Supervisor...</option>
                     </select>
                     <select id="bulkEditQualitySupervisor" class="bulk-edit-select">
-                        <option value="">Change Quality Supervisor...</option>
+                        <option value="">Change Quality Mentor...</option>
                     </select>
                     <select id="bulkEditRole" class="bulk-edit-select">
                         <option value="">Change Role...</option>
@@ -909,9 +909,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="editUserQualitySupervisor">Quality Supervisor</label>
+                    <label for="editUserQualitySupervisor">Quality Mentor</label>
                     <select id="editUserQualitySupervisor">
-                        <option value="">Select Quality Supervisor</option>
+                        <option value="">Select Quality Mentor</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1036,9 +1036,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="createUserQualitySupervisor">Quality Supervisor</label>
+                    <label for="createUserQualitySupervisor">Quality Mentor</label>
                     <select id="createUserQualitySupervisor">
-                        <option value="">Select Quality Supervisor</option>
+                        <option value="">Select Quality Mentor</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1338,7 +1338,7 @@ function renderUsersTable() {
                     <th>Team</th>
                     <th>Designation</th>
                     <th>Team<br>Supervisor</th>
-                    <th>Quality<br>Supervisor</th>
+                    <th>Quality<br>Mentor</th>
                     <th>Role</th>
                     <th>Country</th>
                     <th>Status</th>
@@ -1365,8 +1365,8 @@ function createUserRow(user) {
     const teamSupervisorName = user.team_supervisor 
         ? (allUsers.find(u => u.email === user.team_supervisor)?.name || user.team_supervisor)
         : '-';
-    const qualitySupervisorName = user.quality_supervisor 
-        ? (allUsers.find(u => u.email === user.quality_supervisor)?.name || user.quality_supervisor)
+    const qualitySupervisorName = user.quality_mentor 
+        ? (allUsers.find(u => u.email === user.quality_mentor)?.name || user.quality_mentor)
         : '-';
     
     const isSelected = selectedUsers.has(user.email);
@@ -1441,7 +1441,7 @@ function filterUsers() {
             (user.designation && user.designation.toLowerCase().includes(searchTerm)) ||
             (user.team && user.team.toLowerCase().includes(searchTerm)) ||
             (user.team_supervisor && user.team_supervisor.toLowerCase().includes(searchTerm)) ||
-            (user.quality_supervisor && user.quality_supervisor.toLowerCase().includes(searchTerm));
+            (user.quality_mentor && user.quality_mentor.toLowerCase().includes(searchTerm));
         
         const matchesRole = !roleFilter || user.role === roleFilter;
         const matchesDepartment = !departmentFilter || user.department === departmentFilter;
@@ -1490,7 +1490,7 @@ function editUser(userEmail) {
     document.getElementById('editUserChannel').value = user.channel || '';
     document.getElementById('editUserTeam').value = user.team || '';
     document.getElementById('editUserTeamSupervisor').value = user.team_supervisor || '';
-    document.getElementById('editUserQualitySupervisor').value = user.quality_supervisor || '';
+    document.getElementById('editUserQualitySupervisor').value = user.quality_mentor || '';
     document.getElementById('editUserDesignation').value = user.designation || '';
     document.getElementById('editUserEmployeeId').value = user.employee_id || '';
     document.getElementById('editUserStatus').value = user.is_active ? 'true' : 'false';
@@ -1520,7 +1520,7 @@ function populateSupervisorDropdowns() {
     
     // Clear existing options except the first one
     teamSupervisorSelect.innerHTML = '<option value="">Select Team Supervisor</option>';
-    qualitySupervisorSelect.innerHTML = '<option value="">Select Quality Supervisor</option>';
+    qualitySupervisorSelect.innerHTML = '<option value="">Select Quality Mentor</option>';
     
     // Sort users by name for easier selection
     const sortedUsers = [...allUsers].sort((a, b) => {
@@ -1562,7 +1562,7 @@ async function saveUserChanges() {
         channel: document.getElementById('editUserChannel').value,
         team: document.getElementById('editUserTeam').value,
         team_supervisor: document.getElementById('editUserTeamSupervisor').value,
-        quality_supervisor: document.getElementById('editUserQualitySupervisor').value,
+        quality_mentor: document.getElementById('editUserQualitySupervisor').value,
         designation: document.getElementById('editUserDesignation').value,
         employee_id: document.getElementById('editUserEmployeeId').value,
         is_active: document.getElementById('editUserStatus').value === 'true'
@@ -1716,7 +1716,7 @@ function populateCreateSupervisorDropdowns() {
     
     // Clear existing options except the first one
     teamSupervisorSelect.innerHTML = '<option value="">Select Team Supervisor</option>';
-    qualitySupervisorSelect.innerHTML = '<option value="">Select Quality Supervisor</option>';
+    qualitySupervisorSelect.innerHTML = '<option value="">Select Quality Mentor</option>';
     
     // Sort users by name for easier selection
     const sortedUsers = [...allUsers].sort((a, b) => {
@@ -1758,7 +1758,7 @@ async function createNewUser() {
         channel: document.getElementById('createUserChannel').value,
         team: document.getElementById('createUserTeam').value,
         team_supervisor: document.getElementById('createUserTeamSupervisor').value,
-        quality_supervisor: document.getElementById('createUserQualitySupervisor').value,
+        quality_mentor: document.getElementById('createUserQualitySupervisor').value,
         designation: document.getElementById('createUserDesignation').value,
         employee_id: document.getElementById('createUserEmployeeId').value,
         country: document.getElementById('createUserCountry').value,
@@ -1860,7 +1860,7 @@ function downloadSampleCSV() {
             'Employee ID': 'EMP001',
             'Country': 'Bangladesh',
             'Team Supervisor': 'supervisor@example.com',
-            'Quality Supervisor': 'qa@example.com',
+            'Quality Mentor': 'qa@example.com',
             'Status': 'Active'
         },
         {
@@ -1874,7 +1874,7 @@ function downloadSampleCSV() {
             'Employee ID': 'EMP002',
             'Country': 'Bangladesh',
             'Team Supervisor': '',
-            'Quality Supervisor': '',
+            'Quality Mentor': '',
             'Status': 'Active'
         }
     ];
@@ -1969,7 +1969,7 @@ function mapCSVRowToUser(row) {
         employee_id: (row['Employee ID'] || row['Employee ID'] || row['employee_id'] || '').trim() || null,
         country: (row['Country'] || row['country'] || '').trim() || null,
         team_supervisor: (row['Team Supervisor'] || row['Team Supervisor'] || row['team_supervisor'] || '').trim() || null,
-        quality_supervisor: (row['Quality Supervisor'] || row['Quality Supervisor'] || row['quality_supervisor'] || '').trim() || null,
+        quality_mentor: (row['Quality Mentor'] || row['Quality Supervisor'] || row['quality_mentor'] || row['quality_supervisor'] || '').trim() || null,
         is_active: (row['Status'] || row['status'] || 'Active').toLowerCase() === 'active',
         login_count: 0,
         last_login: null
@@ -2240,7 +2240,7 @@ function populateBulkEditDropdowns() {
         });
     }
     
-    // Populate Quality Supervisor dropdown
+    // Populate Quality Mentor dropdown
     const qualitySupervisorSelect = document.getElementById('bulkEditQualitySupervisor');
     if (qualitySupervisorSelect) {
         const sortedUsers = [...allUsers].sort((a, b) => {
@@ -2249,7 +2249,7 @@ function populateBulkEditDropdowns() {
             return nameA.localeCompare(nameB);
         });
         
-        qualitySupervisorSelect.innerHTML = '<option value="">Change Quality Supervisor...</option>';
+        qualitySupervisorSelect.innerHTML = '<option value="">Change Quality Mentor...</option>';
         sortedUsers.forEach(user => {
             if (user.name && user.email) {
                 const option = document.createElement('option');
@@ -2287,7 +2287,7 @@ async function applyBulkEdit() {
     if (team) updates.team = team;
     if (channel) updates.channel = channel;
     if (teamSupervisor) updates.team_supervisor = teamSupervisor;
-    if (qualitySupervisor) updates.quality_supervisor = qualitySupervisor;
+    if (qualitySupervisor) updates.quality_mentor = qualitySupervisor;
     if (role) updates.role = role;
     
     // Build confirmation message
@@ -2301,7 +2301,7 @@ async function applyBulkEdit() {
     }
     if (qualitySupervisor) {
         const supervisor = allUsers.find(u => u.email === qualitySupervisor);
-        message += `• Quality Supervisor: ${supervisor ? supervisor.name : qualitySupervisor}\n`;
+        message += `• Quality Mentor: ${supervisor ? supervisor.name : qualitySupervisor}\n`;
     }
     if (role) message += `• Role: ${role}\n`;
     

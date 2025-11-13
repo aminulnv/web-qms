@@ -822,7 +822,7 @@
                 <circle cx="8.5" cy="7" r="4"/>
                 <polyline points="17 11 19 13 23 9"/>
             </svg>
-            Auto Assign by Supervisor
+            Auto Assign to Quality Mentors
         </button>
     </div>
 
@@ -854,7 +854,7 @@
                         <option value="none" selected>None</option>
                         <option value="channel">Channel</option>
                         <option value="team">Team</option>
-                        <option value="quality_supervisor">Quality Supervisor</option>
+                        <option value="quality_mentor">Quality Mentor</option>
                         <option value="team_supervisor">Team Supervisor</option>
                         <option value="department">Department</option>
                         <option value="country">Country</option>
@@ -885,9 +885,9 @@
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label class="filter-label">Filter by Quality Supervisor</label>
+                    <label class="filter-label">Filter by Quality Mentor</label>
                     <select id="qualitySupervisorFilter" class="filter-select" onchange="applyFiltersAndGroup()">
-                        <option value="">All Supervisors</option>
+                        <option value="">All Mentors</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -2172,9 +2172,9 @@ function populateFilters() {
     
     // Populate quality supervisor filter
     const qsFilter = document.getElementById('qualitySupervisorFilter');
-    const uniqueQS = [...new Set(allEmployees.map(e => e.quality_supervisor).filter(Boolean))];
+    const uniqueQS = [...new Set(allEmployees.map(e => e.quality_mentor).filter(Boolean))];
     
-    qsFilter.innerHTML = '<option value="">All Supervisors</option>';
+    qsFilter.innerHTML = '<option value="">All Mentors</option>';
     
     // Create options with names and sort by name
     const supervisorOptions = uniqueQS.map(qs => {
@@ -2234,7 +2234,7 @@ function applyFiltersAndGroup() {
         const matchesTeam = !teamFilter || emp.team === teamFilter;
         const matchesDepartment = !departmentFilter || emp.department === departmentFilter;
         const matchesCountry = !countryFilter || emp.country === countryFilter;
-        const matchesQS = !qsFilter || emp.quality_supervisor === qsFilter;
+        const matchesQS = !qsFilter || emp.quality_mentor === qsFilter;
         const matchesTS = !tsFilter || emp.team_supervisor === tsFilter;
         const matchesSearch = !searchTerm || 
             (emp.name && emp.name.toLowerCase().includes(searchTerm)) ||
@@ -2270,7 +2270,7 @@ function groupEmployees(employees, groupBy) {
         let groupKey = emp[groupBy] || 'Unassigned';
         
         // Get supervisor name if grouping by supervisor
-        if ((groupBy === 'quality_supervisor' || groupBy === 'team_supervisor') && groupKey !== 'Unassigned') {
+        if ((groupBy === 'quality_mentor' || groupBy === 'team_supervisor') && groupKey !== 'Unassigned') {
             const supervisor = allUsers.find(u => u.email === groupKey);
             if (supervisor) groupKey = supervisor.name;
         }
@@ -2593,10 +2593,10 @@ function updateBulkAuditCount(count) {
 // Auto-Assign by Supervisor
 // ============================================================================
 async function autoAssignBySupervisor() {
-    // Automatically switch to quality_supervisor grouping if not already
+    // Automatically switch to quality_mentor grouping if not already
     const groupBySelect = document.getElementById('groupBySelect');
-    if (groupBySelect.value !== 'quality_supervisor') {
-        groupBySelect.value = 'quality_supervisor';
+    if (groupBySelect.value !== 'quality_mentor') {
+        groupBySelect.value = 'quality_mentor';
         applyFiltersAndGroup();
     }
     
@@ -2624,16 +2624,16 @@ async function autoAssignBySupervisor() {
     
     // Use ALL employees, not just filtered ones
     allEmployees.forEach(emp => {
-        if (!emp.quality_supervisor) {
+        if (!emp.quality_mentor) {
             employeesWithoutSupervisor++;
             return;
         }
         
-        // Add ALL employees with quality supervisor (scorecard not required)
-            if (!supervisorGroups.has(emp.quality_supervisor)) {
-                supervisorGroups.set(emp.quality_supervisor, []);
+        // Add ALL employees with quality mentor (scorecard not required)
+            if (!supervisorGroups.has(emp.quality_mentor)) {
+                supervisorGroups.set(emp.quality_mentor, []);
             }
-            supervisorGroups.get(emp.quality_supervisor).push(emp);
+            supervisorGroups.get(emp.quality_mentor).push(emp);
             totalEmployees++;
             totalAudits += auditCount;
     });
@@ -2641,7 +2641,7 @@ async function autoAssignBySupervisor() {
     if (supervisorGroups.size === 0) {
         await window.confirmationDialog.show({
             title: 'No Valid Assignments',
-            message: 'No employees with assigned Quality Supervisors found.',
+            message: 'No employees with assigned Quality Mentors found.',
             confirmText: 'OK',
             type: 'warning'
         });
@@ -2656,10 +2656,10 @@ async function autoAssignBySupervisor() {
     message += `• ${totalAssignments} audit assignment${totalAssignments !== 1 ? 's' : ''}\n`;
     message += `• For ${totalEmployees} employee${totalEmployees !== 1 ? 's' : ''}\n`;
     message += `• ${auditCount} audits per employee\n`;
-    message += `• Assigned to ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}\n`;
+    message += `• Assigned to ${supervisorGroups.size} Quality Mentor${supervisorGroups.size !== 1 ? 's' : ''}\n`;
     
     if (employeesWithoutSupervisor > 0) {
-        message += `\nWarning: ${employeesWithoutSupervisor} employee${employeesWithoutSupervisor !== 1 ? 's' : ''} without Quality Supervisor will be skipped\n`;
+        message += `\nWarning: ${employeesWithoutSupervisor} employee${employeesWithoutSupervisor !== 1 ? 's' : ''} without Quality Mentor will be skipped\n`;
     }
     
     message += `\nNote: Auditors will select scorecards when performing audits.\n`;
@@ -2741,7 +2741,7 @@ async function autoAssignBySupervisor() {
         
         await window.confirmationDialog.show({
             title: 'Success!',
-            message: `Successfully created ${totalCreated} audit assignment${totalCreated !== 1 ? 's' : ''} across ${supervisorGroups.size} Quality Supervisor${supervisorGroups.size !== 1 ? 's' : ''}!`,
+            message: `Successfully created ${totalCreated} audit assignment${totalCreated !== 1 ? 's' : ''} across ${supervisorGroups.size} Quality Mentor${supervisorGroups.size !== 1 ? 's' : ''}!`,
             confirmText: 'OK',
             type: 'success'
         });
