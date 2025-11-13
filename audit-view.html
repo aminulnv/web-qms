@@ -250,7 +250,7 @@ function isCurrentUserAuditedEmployee() {
     return auditEmployeeEmail.toLowerCase() === currentUserEmail.toLowerCase();
 }
 
-// Check if current user is a Quality Analyst
+// Check if current user is a Quality Analyst or above (not an Agent/Employee)
 function isCurrentUserQualityAnalyst() {
     const userInfo = getCurrentUserInfo();
     if (!userInfo) {
@@ -258,7 +258,8 @@ function isCurrentUserQualityAnalyst() {
     }
     
     const role = userInfo.role || '';
-    return role === 'Quality Analyst';
+    // Allow Quality Analyst and any role above (not Employee)
+    return role !== 'Employee' && role !== '';
 }
 
 // Check if there's a pending reversal request
