@@ -113,6 +113,69 @@
             }
         }
 
+        /* Smart Loader Styles */
+        #auditSubmitLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #auditSubmitLoader.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .loader-content {
+            background: white;
+            border-radius: 0.6469rem;
+            padding: 2.425rem 3.234rem;
+            box-shadow: 0 0.8086rem 2.425rem rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 20rem;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        .loader-spinner {
+            width: 3.234rem;
+            height: 3.234rem;
+            border: 0.2425rem solid #e5e7eb;
+            border-top-color: #1A733E;
+            border-radius: 50%;
+            animation: loaderSpin 0.8s linear infinite;
+            margin: 0 auto 1.2937rem;
+        }
+
+        @keyframes loaderSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.6469rem;
+            font-weight: 600;
+            color: #374151;
+            margin: 0;
+        }
+
+        .loader-subtext {
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.4852rem;
+            color: #6b7280;
+            margin: 0.3234rem 0 0 0;
+        }
+
         /* Parts tooltip hover effect */
         .parts-tooltip-container:hover .parts-info-icon {
             background: #9ca3af !important;
@@ -644,6 +707,16 @@
 </div> <!-- End auditFormModal -->
 </div>
 </main>
+
+<!-- Smart Loader for Form Submission -->
+<div id="auditSubmitLoader">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <p class="loader-text">Submitting Audit...</p>
+        <p class="loader-subtext">Please wait while we process your submission</p>
+    </div>
+</div>
+
 <script>
 // ============================================================================
 // Dynamic Scorecard System
@@ -7884,10 +7957,21 @@ document.addEventListener('DOMContentLoaded', function() {
             
             isSubmitting = true;
             
+            // Show smart loader
+            const loader = document.getElementById('auditSubmitLoader');
+            if (loader) {
+                loader.classList.add('show');
+            }
+            
             console.log('===== FORM SUBMISSION STARTED =====');
             
             // Validate scorecard selection
             if (!currentScorecard || !currentParameters || currentParameters.length === 0) {
+                // Hide loader if validation fails
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
                 await window.confirmationDialog.show({
                     title: 'No Scorecard Selected',
                     message: 'Please select a scorecard before submitting the audit.',
@@ -7907,6 +7991,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (!window.supabaseClient) {
+                // Hide loader if Supabase client not ready
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
                 await window.confirmationDialog.show({
                     title: 'Initialization Error',
                     message: 'Supabase client not initialized. Please refresh the page and try again.',
@@ -7960,6 +8049,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Validate interaction ID is provided
             const interactionIdField = document.getElementById('interactionId');
             if (!interactionIdField || !interactionIdField.value || !interactionIdField.value.trim()) {
+                // Hide loader if validation fails
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
                 await window.confirmationDialog.show({
                     title: 'Validation Error',
                     message: 'Interaction ID is required. Please enter an Interaction ID before submitting.',
@@ -8013,6 +8107,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If there are validation errors, show them and stop submission
             if (validationErrors.length > 0) {
+                // Hide loader if validation fails
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
                 await window.confirmationDialog.show({
                     title: 'Validation Error',
                     message: 'Please fill in all required feedback fields:\n\n' + validationErrors.slice(0, 5).join('\n') + (validationErrors.length > 5 ? `\n... and ${validationErrors.length - 5} more` : ''),
@@ -8477,6 +8576,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
+                // Hide loader before showing success message
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
+                
                 // Show success message
                 const message = wasEditingExistingAudit ? 'Audit updated successfully!' : 'Audit submitted successfully!';
                 const confirmed = await window.confirmationDialog.show({
@@ -8538,6 +8643,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (err) {
                 console.error('Exception saving to Supabase:', err);
                 console.error('Exception stack:', err.stack);
+                
+                // Hide loader on error
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
+                
                 await window.confirmationDialog.show({
                     title: 'Error Saving Audit',
                     message: 'An error occurred while saving the audit: ' + err.message,
