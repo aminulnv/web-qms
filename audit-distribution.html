@@ -2269,6 +2269,17 @@ function applyFiltersAndGroup() {
     const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
     const groupBy = document.getElementById('groupBySelect').value;
     
+    // Save expanded groups state before re-rendering
+    const expandedGroups = new Set();
+    if (groupBy !== 'none') {
+        document.querySelectorAll('.group-content.expanded').forEach(content => {
+            const groupId = content.id.replace('content-', '');
+            if (groupId) {
+                expandedGroups.add(groupId);
+            }
+        });
+    }
+    
     // Apply filters
     filteredEmployees = allEmployees.filter(emp => {
         const matchesChannel = !channelFilter || emp.channel === channelFilter;
@@ -2297,7 +2308,7 @@ function applyFiltersAndGroup() {
     if (groupBy === 'none') {
         renderFlatList(filteredEmployees);
     } else {
-        renderGroups(groupEmployees(filteredEmployees, groupBy), groupBy);
+        renderGroups(groupEmployees(filteredEmployees, groupBy), groupBy, expandedGroups);
     }
     
     updateAssignButton();
