@@ -1758,6 +1758,10 @@ async function handleScorecardSubmit(e) {
     const defaultChannels = getDefaultChannels();
     const defaultChannelsString = defaultChannels.join(', ');
     
+    // Get user email from localStorage (consistent with other functions in this file)
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const userEmail = userInfo.email || 'unknown';
+    
     const scorecardData = {
         name: document.getElementById('scorecardName').value,
         description: document.getElementById('scorecardDescription').value,
@@ -1765,7 +1769,7 @@ async function handleScorecardSubmit(e) {
         table_name: document.getElementById('tableName').value.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
         channels: channelsString,
         scoring_type: scoringType,
-        created_by: (await window.SupabaseAuth.getCurrentUser())?.email || 'unknown'
+        created_by: userEmail
     };
     
     // Only include default_for_channels if there are default channels selected
