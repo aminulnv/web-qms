@@ -900,16 +900,32 @@
 
 <!-- View Session Details Modal -->
 <div id="viewSessionModal" class="modal">
-    <div class="modal-content" style="max-width: 42.1875rem;">
+    <div class="modal-content" style="max-width: 90vw; max-width: 75rem;">
         <div class="modal-header">
             <h3 id="viewSessionTitle">Calibration Session Details</h3>
             <button class="modal-close" onclick="closeViewSessionModal()">&times;</button>
         </div>
-        <div class="modal-body" id="viewSessionBody">
+        <div class="modal-body" id="viewSessionBody" style="max-height: 85vh; overflow-y: auto;">
             <!-- Session details will be loaded here -->
         </div>
         <div class="modal-footer">
             <button type="button" class="btn-secondary" onclick="closeViewSessionModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- View My Calibration Result Modal -->
+<div id="viewMyResultModal" class="modal">
+    <div class="modal-content" style="max-width: 90vw; max-width: 75rem;">
+        <div class="modal-header">
+            <h3 id="viewMyResultTitle">My Calibration Result</h3>
+            <button class="modal-close" onclick="closeViewMyResultModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="viewMyResultBody" style="max-height: 85vh; overflow-y: auto;">
+            <!-- Result details will be loaded here -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeViewMyResultModal()">Close</button>
         </div>
     </div>
 </div>
@@ -1806,7 +1822,7 @@ async function createCalibrationSession() {
 }
 
 async function viewSessionDetails(sessionId) {
-    const session = allSessions.find(s => s.id === sessionId);
+    const session = allSessions.find(s => s.id === sessionId) || myCalibrationSessions.find(s => s.id === sessionId);
     if (!session) return;
 
     const modal = document.getElementById('viewSessionModal');
@@ -1814,60 +1830,255 @@ async function viewSessionDetails(sessionId) {
     const modalBody = document.getElementById('viewSessionBody');
 
     modalTitle.textContent = session.name || 'Calibration Session Details';
+    modalBody.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div><p class="mt-2 text-sm text-gray-500">Loading session details...</p></div>';
+    modal.classList.add('active');
 
-    // Load calibration results if available
-    // This would typically come from a calibration_results table
-    const scorecard = allScorecards.find(s => s.id === session.scorecard_id);
-    
-    modalBody.innerHTML = `
-        <div style="margin-bottom: 1.125rem;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
-                <div>
-                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Status</label>
-                    <div style="font-size: 0.6562rem; color: #374151;">${session.status || 'Pending'}</div>
+    try {
+        const scorecard = allScorecards.find(s => s.id === session.scorecard_id);
+        
+        // Load calibration results
+        const { data: results, error } = await window.supabaseClient
+            .from('calibration_results')
+            .select('*')
+            .eq('calibration_session_id', sessionId)
+            .order('submitted_at', { ascending: false });
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        const calibrationResults = results || [];
+        const participants = Array.isArray(session.participants) ? session.participants : [];
+        
+        // Calculate agreement metrics
+        const scores = calibrationResults.map(r => parseFloat(r.average_score)).filter(s => !isNaN(s));
+        const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+        const scoreSpread = scores.length > 0 ? Math.max(...scores) - Math.min(...scores) : 0;
+        const stdDev = scores.length > 0 
+            ? Math.sqrt(scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length)
+            : 0;
+        
+        const threshold = 5;
+        const withinThreshold = scores.filter(score => Math.abs(score - avgScore) <= threshold).length;
+        const agreementRate = scores.length > 0 ? (withinThreshold / scores.length) * 100 : 0;
+        const consensusLevel = Math.max(0, 100 - (stdDev * 5));
+
+        // Build results HTML with Tailwind CSS
+        modalBody.innerHTML = `
+            <!-- Session Info -->
+            <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+                        <span class="inline-block px-2 py-1 text-xs font-semibold rounded ${
+                            session.status === 'active' ? 'bg-green-100 text-green-800' :
+                            session.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }">${session.status || 'Pending'}</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Scorecard</label>
+                        <div class="text-sm font-medium text-gray-900">${escapeHtml(scorecard?.name || 'Unknown')}</div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Created</label>
+                        <div class="text-sm text-gray-700">${new Date(session.created_at).toLocaleString()}</div>
+                    </div>
+                    ${session.deadline ? `
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Deadline</label>
+                        <div class="text-sm text-gray-700">${new Date(session.deadline).toLocaleString()}</div>
+                    </div>
+                    ` : ''}
                 </div>
-                <div>
-                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Scorecard</label>
-                    <div style="font-size: 0.6562rem; color: #374151;">${scorecard?.name || 'Unknown'}</div>
-                </div>
-                <div>
-                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Created</label>
-                    <div style="font-size: 0.6562rem; color: #374151;">${new Date(session.created_at).toLocaleString()}</div>
-                </div>
-                ${session.deadline ? `
-                <div>
-                    <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Deadline</label>
-                    <div style="font-size: 0.6562rem; color: #374151;">${new Date(session.deadline).toLocaleString()}</div>
+                ${session.description ? `
+                <div class="mt-3 pt-3 border-t border-blue-200">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                    <div class="text-sm text-gray-700">${escapeHtml(session.description)}</div>
                 </div>
                 ` : ''}
-            </div>
-            ${session.description ? `
-            <div style="margin-bottom: 0.75rem;">
-                <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Description</label>
-                <div style="font-size: 0.6562rem; color: #374151;">${escapeHtml(session.description)}</div>
-            </div>
-            ` : ''}
-            <div>
-                <label style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; display: block; margin-bottom: 0.1875rem;">Participants</label>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.375rem;">
-                    ${(Array.isArray(session.participants) ? session.participants : []).map(email => {
-                        const analyst = allQualityAnalysts.find(a => a.email === email);
-                        return `<span class="participant-badge">${escapeHtml(analyst?.name || email)}</span>`;
-                    }).join('')}
+                <div class="mt-3 pt-3 border-t border-blue-200">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Participants</label>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        ${participants.map(email => {
+                            const analyst = allQualityAnalysts.find(a => a.email === email);
+                            const hasResult = calibrationResults.some(r => r.participant_email === email);
+                            return `
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                                    hasResult ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                                }">
+                                    ${hasResult ? '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>' : ''}
+                                    ${escapeHtml(analyst?.name || email)}
+                                </span>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             </div>
-        </div>
-        <div style="margin-top: 1.125rem; padding-top: 0.75rem; border-top: 0.0469rem solid #e5e7eb;">
-            <h4 style="font-size: 0.6562rem; font-weight: 600; color: #374151; margin-bottom: 0.5625rem;">Calibration Results</h4>
-            <div style="color: #6b7280; font-size: 0.5625rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.1875rem;">
-                ${session.status === 'completed' 
-                    ? 'Calibration results will be displayed here once all participants complete their audits.'
-                    : 'Results will be available after the session is completed.'}
-            </div>
-        </div>
-    `;
 
-    modal.classList.add('active');
+            <!-- Results Summary Cards -->
+            ${calibrationResults.length > 0 ? `
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wide">Avg Score</span>
+                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold">${avgScore.toFixed(1)}%</div>
+                    <div class="text-xs opacity-75 mt-1">${calibrationResults.length} submission${calibrationResults.length !== 1 ? 's' : ''}</div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wide">Agreement</span>
+                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold">${agreementRate.toFixed(1)}%</div>
+                    <div class="text-xs opacity-75 mt-1">${withinThreshold}/${scores.length} within ±5%</div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wide">Score Spread</span>
+                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold">${scoreSpread.toFixed(1)}%</div>
+                    <div class="text-xs opacity-75 mt-1">${scores.length > 0 ? Math.min(...scores).toFixed(1) : 0}% - ${scores.length > 0 ? Math.max(...scores).toFixed(1) : 0}%</div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold opacity-90 uppercase tracking-wide">Consensus</span>
+                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold">${consensusLevel.toFixed(1)}%</div>
+                    <div class="text-xs opacity-75 mt-1">Std Dev: ${stdDev.toFixed(2)}</div>
+                </div>
+            </div>
+
+            <!-- Score Comparison Chart -->
+            <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Score Comparison
+                </h3>
+                <div class="h-64">
+                    <canvas id="sessionScoreChart-${sessionId}"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Results Table -->
+            <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Participant Results
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Participant</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Score</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Variance</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Critical Errors</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Submitted</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${calibrationResults.map((result, index) => {
+                                const variance = Math.abs(parseFloat(result.average_score) - avgScore);
+                                const varianceClass = variance <= 5 ? 'bg-green-100 text-green-800' : 
+                                                    variance <= 10 ? 'bg-yellow-100 text-yellow-800' : 
+                                                    'bg-red-100 text-red-800';
+                                const scoreClass = parseFloat(result.average_score) >= 80 ? 'text-green-600 font-bold' :
+                                                 parseFloat(result.average_score) >= 60 ? 'text-yellow-600 font-semibold' :
+                                                 'text-red-600 font-semibold';
+                                
+                                return `
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-semibold text-sm">
+                                                    ${(result.participant_name || result.participant_email || 'Unknown').charAt(0).toUpperCase()}
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-gray-900">${escapeHtml(result.participant_name || result.participant_email || 'Unknown')}</div>
+                                                    <div class="text-xs text-gray-500">${escapeHtml(result.participant_email || '')}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <span class="text-lg ${scoreClass}">${parseFloat(result.average_score).toFixed(1)}%</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full ${varianceClass}">
+                                                ${variance > 0 ? (variance > avgScore ? '+' : '') : ''}${variance.toFixed(1)}%
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <span class="text-sm text-gray-900">${result.critical_errors || 0}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                            ${new Date(result.submitted_at).toLocaleString()}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <button onclick="viewDetailedResult('${result.id}', '${sessionId}')" class="text-primary hover:text-primary-dark text-sm font-medium">
+                                                View Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            ` : `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-yellow-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Results Yet</h3>
+                <p class="text-sm text-gray-600">Calibration results will appear here once participants submit their audits.</p>
+                <p class="text-xs text-gray-500 mt-2">${participants.length - calibrationResults.length} of ${participants.length} participants remaining</p>
+            </div>
+            `}
+        `;
+
+        // Render chart if results exist
+        if (calibrationResults.length > 0 && typeof Chart !== 'undefined') {
+            setTimeout(() => {
+                renderSessionScoreChart(`sessionScoreChart-${sessionId}`, calibrationResults, avgScore);
+            }, 100);
+        }
+
+    } catch (error) {
+        console.error('Error loading session details:', error);
+        modalBody.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Error Loading Results</h3>
+                <p class="text-sm text-gray-600">${escapeHtml(error.message)}</p>
+            </div>
+        `;
+    }
 }
 
 function closeViewSessionModal() {
@@ -2014,9 +2225,333 @@ async function startCalibration(sessionId) {
     }
 }
 
-function viewMyCalibrationResult(sessionId) {
-    // TODO: Show the user's submitted calibration result
-    alert('View calibration result - to be implemented');
+async function viewMyCalibrationResult(sessionId) {
+    if (!currentUserEmail) {
+        alert('User email not found');
+        return;
+    }
+
+    const modal = document.getElementById('viewMyResultModal');
+    const modalTitle = document.getElementById('viewMyResultTitle');
+    const modalBody = document.getElementById('viewMyResultBody');
+
+    modalTitle.textContent = 'My Calibration Result';
+    modalBody.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div><p class="mt-2 text-sm text-gray-500">Loading result...</p></div>';
+    modal.classList.add('active');
+
+    try {
+        // Load user's calibration result
+        const { data: results, error } = await window.supabaseClient
+            .from('calibration_results')
+            .select('*')
+            .eq('calibration_session_id', sessionId)
+            .eq('participant_email', currentUserEmail)
+            .order('submitted_at', { ascending: false })
+            .limit(1);
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        if (!results || results.length === 0) {
+            modalBody.innerHTML = `
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
+                    <svg class="mx-auto h-12 w-12 text-yellow-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Result Found</h3>
+                    <p class="text-sm text-gray-600">You haven't submitted a calibration result for this session yet.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const result = results[0];
+        const session = allSessions.find(s => s.id === sessionId) || myCalibrationSessions.find(s => s.id === sessionId);
+        const scorecard = allScorecards.find(s => s.id === session?.scorecard_id);
+
+        // Load scorecard parameters for detailed breakdown
+        let parameters = [];
+        if (session?.scorecard_id) {
+            const { data: params } = await window.supabaseClient
+                .from('scorecard_parameters')
+                .select('*')
+                .eq('scorecard_id', session.scorecard_id)
+                .eq('is_active', true)
+                .order('display_order', { ascending: true });
+            parameters = params || [];
+        }
+
+        // Parse error and feedback parameters
+        const errorParams = result.error_parameters || {};
+        const feedbackParams = result.feedback_parameters || {};
+
+        // Build detailed result view
+        modalBody.innerHTML = `
+            <!-- Score Header -->
+            <div class="mb-6 bg-gradient-to-r from-primary to-primary-dark rounded-xl p-8 text-white shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">${escapeHtml(session?.name || 'Calibration Session')}</h2>
+                        <p class="text-primary-100 text-sm">${escapeHtml(scorecard?.name || 'Scorecard')}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-5xl font-bold mb-1">${parseFloat(result.average_score).toFixed(1)}%</div>
+                        <div class="text-sm text-primary-100">Your Score</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-primary-300">
+                    <div>
+                        <div class="text-xs text-primary-100 mb-1">Critical Errors</div>
+                        <div class="text-xl font-semibold">${result.critical_errors || 0}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-primary-100 mb-1">Significant Errors</div>
+                        <div class="text-xl font-semibold">${result.significant_error || 0}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-primary-100 mb-1">Submitted</div>
+                        <div class="text-sm font-medium">${new Date(result.submitted_at).toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameter Breakdown -->
+            ${parameters.length > 0 ? `
+            <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
+                        Parameter Breakdown
+                    </h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    ${parameters.map(param => {
+                        const errorValue = errorParams[param.field_id] || 0;
+                        const feedback = feedbackParams[`feedback_${param.field_id}`] || [];
+                        const maxScore = param.max_score || 10;
+                        const score = maxScore - (errorValue * (param.points_per_error || 1));
+                        const scorePercent = (score / maxScore) * 100;
+                        
+                        return `
+                            <div class="p-6 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-semibold text-gray-900 mb-1">${escapeHtml(param.parameter_name)}</h4>
+                                        <p class="text-xs text-gray-600">${escapeHtml(param.description || '')}</p>
+                                    </div>
+                                    <div class="ml-4 text-right">
+                                        <div class="text-lg font-bold ${scorePercent >= 80 ? 'text-green-600' : scorePercent >= 60 ? 'text-yellow-600' : 'text-red-600'}">
+                                            ${score.toFixed(1)}/${maxScore}
+                                        </div>
+                                        <div class="text-xs text-gray-500">${scorePercent.toFixed(0)}%</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                        <span>Errors: ${errorValue}</span>
+                                        <span>Points Deducted: ${(errorValue * (param.points_per_error || 1)).toFixed(1)}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full transition-all ${scorePercent >= 80 ? 'bg-green-500' : scorePercent >= 60 ? 'bg-yellow-500' : 'bg-red-500'}" 
+                                             style="width: ${scorePercent}%"></div>
+                                    </div>
+                                </div>
+                                ${feedback.length > 0 ? `
+                                <div class="mt-3 pt-3 border-t border-gray-200">
+                                    <div class="text-xs font-semibold text-gray-700 mb-2">Feedback:</div>
+                                    <ul class="space-y-1">
+                                        ${feedback.map(fb => `<li class="text-xs text-gray-600 flex items-start gap-2">
+                                            <svg class="w-3 h-3 text-primary mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>${escapeHtml(fb)}</span>
+                                        </li>`).join('')}
+                                    </ul>
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Transcript -->
+            ${result.transcript ? `
+            <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Transcript
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">${escapeHtml(result.transcript)}</div>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Recommendations -->
+            ${result.recommendations ? `
+            <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        Recommendations
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">${escapeHtml(result.recommendations)}</div>
+                </div>
+            </div>
+            ` : ''}
+        `;
+
+    } catch (error) {
+        console.error('Error loading calibration result:', error);
+        modalBody.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+                <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Error Loading Result</h3>
+                <p class="text-sm text-gray-600">${escapeHtml(error.message)}</p>
+            </div>
+        `;
+    }
+}
+
+function closeViewMyResultModal() {
+    const modal = document.getElementById('viewMyResultModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// View detailed result for a specific participant
+async function viewDetailedResult(resultId, sessionId) {
+    try {
+        const { data: result, error } = await window.supabaseClient
+            .from('calibration_results')
+            .select('*')
+            .eq('id', resultId)
+            .single();
+
+        if (error) throw error;
+
+        // Open in a new modal or expand in current view
+        // For now, we'll show an alert with key details, but this could be expanded
+        const session = allSessions.find(s => s.id === sessionId) || myCalibrationSessions.find(s => s.id === sessionId);
+        const scorecard = allScorecards.find(s => s.id === session?.scorecard_id);
+
+        // Create a detailed view modal (similar to viewMyCalibrationResult)
+        // For simplicity, we'll reuse the same modal structure
+        viewMyCalibrationResult(sessionId);
+        
+        // Scroll to top of modal
+        setTimeout(() => {
+            const modalBody = document.getElementById('viewMyResultBody');
+            if (modalBody) {
+                modalBody.scrollTop = 0;
+            }
+        }, 100);
+
+    } catch (error) {
+        console.error('Error loading detailed result:', error);
+        alert('Error loading result details: ' + error.message);
+    }
+}
+
+// Render score comparison chart for session
+function renderSessionScoreChart(canvasId, results, avgScore) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const labels = results.map((r, i) => {
+        const name = r.participant_name || r.participant_email || `Participant ${i + 1}`;
+        return name.length > 15 ? name.substring(0, 15) + '...' : name;
+    });
+    const scores = results.map(r => parseFloat(r.average_score));
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Participant Score',
+                    data: scores,
+                    backgroundColor: scores.map(score => {
+                        if (score >= 80) return 'rgba(16, 185, 129, 0.7)';
+                        if (score >= 60) return 'rgba(245, 158, 11, 0.7)';
+                        return 'rgba(239, 68, 68, 0.7)';
+                    }),
+                    borderColor: scores.map(score => {
+                        if (score >= 80) return 'rgb(16, 185, 129)';
+                        if (score >= 60) return 'rgb(245, 158, 11)';
+                        return 'rgb(239, 68, 68)';
+                    }),
+                    borderWidth: 2
+                },
+                {
+                    label: 'Average Score',
+                    data: Array(scores.length).fill(avgScore),
+                    type: 'line',
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.datasetIndex === 0) {
+                                return `Score: ${context.parsed.y.toFixed(1)}%`;
+                            } else {
+                                return `Average: ${context.parsed.y.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Reload my sessions after calibration submission
@@ -2028,6 +2563,15 @@ async function reloadMySessions() {
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.classList.remove('active');
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        document.querySelectorAll('.modal.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
     }
 });
 
