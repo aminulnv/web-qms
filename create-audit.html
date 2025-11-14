@@ -129,6 +129,72 @@
             background: #9ca3af !important;
         }
 
+        .run-ai-audit-btn {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            color: #1A733E;
+            border: 0.0304rem solid #1A733E;
+            padding: 0.2425rem 0.4852rem;
+            border-radius: 0.1617rem;
+            font-size: 0.4447rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.2425rem;
+            white-space: nowrap;
+            box-shadow: 0 0.0405rem 0.0808rem rgba(26, 115, 62, 0.1);
+        }
+
+        .run-ai-audit-btn:hover {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-color: #15582E;
+            color: #15582E;
+            box-shadow: 0 0.0808rem 0.1617rem rgba(26, 115, 62, 0.15);
+            transform: translateY(-0.0203rem);
+        }
+
+        .run-ai-audit-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 0.0203rem 0.0405rem rgba(26, 115, 62, 0.1);
+        }
+
+        /* Coming Soon Modal */
+        #comingSoonModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        #comingSoonModalContent {
+            background: white;
+            border-radius: 0.6469rem;
+            padding: 1.9406rem;
+            max-width: 25.875rem;
+            width: 90%;
+            box-shadow: 0 0.8086rem 2.4258rem rgba(0, 0, 0, 0.15);
+            animation: modalSlideIn 0.3s ease-out;
+            text-align: center;
+        }
+
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -516,6 +582,42 @@
                             </th>
                             <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>CX Score</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">CX Score</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Customer experience score rating from custom attributes (1-5 scale).</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Examples:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #10b981;">5</span> (Excellent), <span style="color: #f59e0b;">3</span> (Average), <span style="color: #ef4444;">1</span> (Poor)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>Length</span>
+                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
+                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Conversation Length</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Total number of conversation parts (messages) in the conversation.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
+                                                <p style="margin: 0; color: #9ca3af;">A conversation with 15 messages will show <span style="color: white; font-weight: 600;">15</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Status</span>
                                     <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
                                         <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
@@ -679,6 +781,57 @@
                         <div id="pullFilterRatingRangeError" style="display: none; color: #ef4444; font-size: 0.4043rem; margin-top: 0.1617rem;"></div>
                     </div>
                     
+                    <!-- CX Score Filter -->
+                    <div>
+                        <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">CX Score</label>
+                        <select id="pullFilterCxScoreType" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; margin-bottom: 0.3234rem;">
+                            <option value="">All CX Scores</option>
+                            <option value="hasScore">Has CX Score</option>
+                            <option value="noScore">No CX Score</option>
+                            <option value="exact">Exact Score</option>
+                            <option value="range">Score Range</option>
+                        </select>
+                        
+                        <!-- Exact CX Score Input (shown when "exact" is selected) -->
+                        <select id="pullFilterCxScoreExact" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; display: none; margin-bottom: 0.3234rem;">
+                            <option value="">Select Score</option>
+                            <option value="5">5</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1</option>
+                        </select>
+                        
+                        <!-- Range Inputs (shown when "range" is selected) -->
+                        <div id="pullFilterCxScoreRange" style="display: none; flex-direction: column; gap: 0.3234rem; margin-bottom: 0.3234rem;">
+                            <div style="display: flex; gap: 0.3234rem; align-items: center;">
+                                <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Min:</label>
+                                <input type="number" id="pullFilterCxScoreMin" min="1" max="5" placeholder="1" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
+                    </div>
+                            <div style="display: flex; gap: 0.3234rem; align-items: center;">
+                                <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Max:</label>
+                                <input type="number" id="pullFilterCxScoreMax" min="1" max="5" placeholder="5" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
+                    </div>
+                    </div>
+                        <div id="pullFilterCxScoreRangeError" style="display: none; color: #ef4444; font-size: 0.4043rem; margin-top: 0.1617rem;"></div>
+                    </div>
+                    
+                    <!-- Conversation Length Filter -->
+                    <div>
+                        <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">Conversation Length</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.3234rem;">
+                            <div style="display: flex; gap: 0.3234rem; align-items: center;">
+                                <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Min:</label>
+                                <input type="number" id="pullFilterLengthMin" min="0" placeholder="0" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
+                    </div>
+                            <div style="display: flex; gap: 0.3234rem; align-items: center;">
+                                <label style="font-size: 0.4043rem; color: #6b7280; white-space: nowrap;">Max:</label>
+                                <input type="number" id="pullFilterLengthMax" min="0" placeholder="Any" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;">
+                    </div>
+                    </div>
+                        <div id="pullFilterLengthRangeError" style="display: none; color: #ef4444; font-size: 0.4043rem; margin-top: 0.1617rem;"></div>
+                    </div>
+                    
                     <!-- Client Email/Name Search -->
                     <div>
                         <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">Search Client</label>
@@ -770,6 +923,8 @@
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Subject</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Product Type</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Rating</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">CX Score</th>
+                            <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Length</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">State</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Created</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Actions</th>
@@ -796,6 +951,28 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Coming Soon Modal -->
+    <div id="comingSoonModal" onclick="if(event.target === this) closeComingSoonDialog();">
+        <div id="comingSoonModalContent" onclick="event.stopPropagation();">
+            <div style="margin-bottom: 1.2937rem;">
+                <div style="width: 4.8516rem; height: 4.8516rem; margin: 0 auto 1.2937rem; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 0.0808rem solid #1A733E; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0.1617rem 0.3234rem rgba(26, 115, 62, 0.15);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A733E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                        <path d="M19 19L20.09 21.26L23 22L20.09 22.74L19 25L17.91 22.74L15 22L17.91 21.26L19 19Z"/>
+                        <path d="M5 19L6.09 21.26L9 22L6.09 22.74L5 25L3.91 22.74L1 22L3.91 21.26L5 19Z"/>
+                    </svg>
+                </div>
+                <h2 style="font-size: 1.2937rem; font-weight: 700; color: #1f2937; margin: 0 0 0.6469rem 0; font-family: 'Poppins', sans-serif;">AI Audit Coming Soon!</h2>
+                <p style="font-size: 0.8086rem; color: #6b7280; margin: 0; line-height: 1.6; font-family: 'Poppins', sans-serif;">
+                    We're working on an AI-powered audit feature that will automatically analyze conversations and generate audit reports. Stay tuned!
+                </p>
+            </div>
+            <button onclick="closeComingSoonDialog()" style="padding: 0.4852rem 1.2937rem; background: #1A733E; color: white; border: none; border-radius: 0.3234rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
+                Got it!
+            </button>
         </div>
     </div>
 
@@ -2355,7 +2532,7 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
                     </div>
                 </div>
                 ${displayEmail && displayEmail !== 'No email' ? `
-                    <div style="flex-shrink: 0;">
+                    <div style="flex-shrink: 0; display: flex; gap: 0.2425rem;">
                         <button 
                             class="pull-conversations-btn-group"
                             data-email="${escapeHtml(displayEmail)}"
@@ -2372,6 +2549,20 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
                             <span>Pull Conversations</span>
+                        </button>
+                        <button 
+                            class="run-ai-audit-btn-group run-ai-audit-btn"
+                            data-email="${escapeHtml(displayEmail)}"
+                            data-name="${escapeHtml(displayName)}"
+                            onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}');"
+                            title="Run AI Audit for ${escapeHtml(displayName)}"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                                <path d="M19 19L20.09 21.26L23 22L20.09 22.74L19 25L17.91 22.74L15 22L17.91 21.26L19 19Z"/>
+                                <path d="M5 19L6.09 21.26L9 22L6.09 22.74L5 25L3.91 22.74L1 22L3.91 21.26L5 19Z"/>
+                            </svg>
+                            <span>Run AI Audit</span>
                         </button>
                     </div>
                 ` : ''}
@@ -2614,7 +2805,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
             </div>
             ${actionButton ? `<div style="flex-shrink: 0;">${actionButton}</div>` : ''}
             ${displayEmail && displayEmail !== 'No email' ? `
-                <div style="flex-shrink: 0;">
+                <div style="flex-shrink: 0; display: flex; gap: 0.2425rem;">
                     <button 
                         class="pull-conversations-btn"
                         data-email="${escapeHtml(displayEmail)}"
@@ -2630,6 +2821,20 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                             <line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
                         <span>Pull Conversations</span>
+                    </button>
+                    <button 
+                        class="run-ai-audit-btn"
+                        data-email="${escapeHtml(displayEmail)}"
+                        data-name="${escapeHtml(displayName)}"
+                        onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}');"
+                        title="Run AI Audit for ${escapeHtml(displayName)}"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                            <path d="M19 19L20.09 21.26L23 22L20.09 22.74L19 25L17.91 22.74L15 22L17.91 21.26L19 19Z"/>
+                            <path d="M5 19L6.09 21.26L9 22L6.09 22.74L5 25L3.91 22.74L1 22L3.91 21.26L5 19Z"/>
+                        </svg>
+                        <span>Run AI Audit</span>
                     </button>
                 </div>
             ` : ''}
@@ -3348,6 +3553,8 @@ let pullConversationsFilters = {
     state: null,
     priority: null,
     rating: null,
+    cxScore: null,
+    conversationLength: null,
     clientSearch: null,
     conversationId: null
 };
@@ -4451,7 +4658,7 @@ function displayPullConversationsList(conversations) {
         tableBody.innerHTML = '';
     
     if (conversations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
         return;
     }
     
@@ -4471,6 +4678,23 @@ function displayPullConversationsList(conversations) {
         // Extract additional attributes
         const priority = conversation.priority || 'not_priority';
         const tags = conversation.tags?.tags || [];
+        
+        // Extract CX Score
+        const cxScore = conversation.custom_attributes?.["CX Score rating"] ?? null;
+        let cxScoreHtml = '-';
+        if (cxScore !== null && cxScore !== undefined) {
+            const cxScoreNum = parseInt(cxScore);
+            if (!isNaN(cxScoreNum)) {
+                const cxScoreColor = cxScoreNum >= 4 ? '#10b981' : cxScoreNum >= 3 ? '#f59e0b' : '#ef4444';
+                cxScoreHtml = `<span style="color: ${cxScoreColor}; font-weight: 600; font-size: 0.6875rem;">${cxScoreNum}</span>`;
+            }
+        }
+        
+        // Calculate conversation length
+        const conversationLength = conversation.conversation_parts?.conversation_parts?.length || 0;
+        const lengthDisplay = conversationLength > 0 
+            ? `<span style="font-size: 0.6875rem; color: #374151; font-weight: 500;">${conversationLength}</span>`
+            : '<span style="color: #9ca3af;">-</span>';
         
         // Format rating (compact)
         let ratingHtml = '-';
@@ -4528,6 +4752,8 @@ function displayPullConversationsList(conversations) {
                 <div style="max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
             </td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
+            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${lengthDisplay}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${stateBadge}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${priorityBadge}</td>
             <td style="padding: 0.375rem 0.5rem; vertical-align: middle; max-width: 15rem;">${tagsHtml}</td>
@@ -4927,6 +5153,44 @@ window.openPullConversationsFilterDialog = function() {
         }
         ratingTypeSelect.dispatchEvent(new Event('change'));
     }
+    
+    // Handle CX Score filter
+    const cxScoreFilter = pullConversationsFilters.cxScore;
+    if (cxScoreFilter) {
+        document.getElementById('pullFilterCxScoreType').value = cxScoreFilter.type || '';
+        if (cxScoreFilter.type === 'exact' && cxScoreFilter.value) {
+            document.getElementById('pullFilterCxScoreExact').value = cxScoreFilter.value;
+        } else if (cxScoreFilter.type === 'range') {
+            if (cxScoreFilter.min) document.getElementById('pullFilterCxScoreMin').value = cxScoreFilter.min;
+            if (cxScoreFilter.max) document.getElementById('pullFilterCxScoreMax').value = cxScoreFilter.max;
+        }
+    }
+    // Trigger change to show/hide conditional inputs for CX Score
+    const cxScoreTypeSelect = document.getElementById('pullFilterCxScoreType');
+    if (cxScoreTypeSelect) {
+        if (!cxScoreTypeSelect.hasAttribute('data-listener-attached')) {
+            cxScoreTypeSelect.addEventListener('change', function() {
+                const type = this.value;
+                const exactSelect = document.getElementById('pullFilterCxScoreExact');
+                const rangeDiv = document.getElementById('pullFilterCxScoreRange');
+                const errorDiv = document.getElementById('pullFilterCxScoreRangeError');
+                
+                if (exactSelect) exactSelect.style.display = type === 'exact' ? 'block' : 'none';
+                if (rangeDiv) rangeDiv.style.display = type === 'range' ? 'flex' : 'none';
+                if (errorDiv) errorDiv.style.display = 'none';
+            });
+            cxScoreTypeSelect.setAttribute('data-listener-attached', 'true');
+        }
+        cxScoreTypeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Handle Conversation Length filter
+    if (pullConversationsFilters.conversationLength) {
+        const lengthFilter = pullConversationsFilters.conversationLength;
+        if (lengthFilter.min !== undefined) document.getElementById('pullFilterLengthMin').value = lengthFilter.min;
+        if (lengthFilter.max !== undefined) document.getElementById('pullFilterLengthMax').value = lengthFilter.max;
+    }
+    
     document.getElementById('pullFilterClientSearch').value = pullConversationsFilters.clientSearch || '';
     document.getElementById('pullFilterConversationId').value = pullConversationsFilters.conversationId || '';
     
@@ -4950,6 +5214,47 @@ window.closePullConversationsFilterDialog = function() {
         modal.style.display = 'none';
     }
     document.body.style.overflow = '';
+};
+
+// Show Coming Soon Dialog
+window.showComingSoonDialog = function(employeeName) {
+    const modal = document.getElementById('comingSoonModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Optionally update the message to include employee name
+        if (employeeName) {
+            const message = modal.querySelector('p');
+            if (message) {
+                message.textContent = `We're working on an AI-powered audit feature for ${employeeName} that will automatically analyze conversations and generate audit reports. Stay tuned!`;
+            }
+        } else {
+            // Reset to default message if no employee name
+            const message = modal.querySelector('p');
+            if (message) {
+                message.textContent = `We're working on an AI-powered audit feature that will automatically analyze conversations and generate audit reports. Stay tuned!`;
+            }
+        }
+        
+        // Close on Escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeComingSoonDialog();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+};
+
+// Close Coming Soon Dialog
+window.closeComingSoonDialog = function() {
+    const modal = document.getElementById('comingSoonModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
 };
 
 // Apply filters to conversations
@@ -5011,6 +5316,82 @@ window.applyPullConversationsFilters = function() {
         }
     } else {
         pullConversationsFilters.rating = null;
+    }
+    
+    // Handle CX Score filter
+    const cxScoreType = getValue('pullFilterCxScoreType');
+    if (cxScoreType) {
+        if (cxScoreType === 'exact') {
+            const exactValue = getValue('pullFilterCxScoreExact');
+            if (exactValue) {
+                pullConversationsFilters.cxScore = {
+                    type: 'exact',
+                    value: exactValue
+                };
+            } else {
+                pullConversationsFilters.cxScore = null;
+            }
+        } else if (cxScoreType === 'range') {
+            const minEl = document.getElementById('pullFilterCxScoreMin');
+            const maxEl = document.getElementById('pullFilterCxScoreMax');
+            const min = minEl && minEl.value ? parseInt(minEl.value, 10) : null;
+            const max = maxEl && maxEl.value ? parseInt(maxEl.value, 10) : null;
+            
+            // Validate range
+            if (min !== null && max !== null) {
+                if (min < 1 || min > 5 || max < 1 || max > 5) {
+                    alert('CX Score range must be between 1 and 5.');
+                    return;
+                }
+                if (min > max) {
+                    alert('Minimum CX Score cannot be greater than maximum score.');
+                    return;
+                }
+                pullConversationsFilters.cxScore = {
+                    type: 'range',
+                    min: min,
+                    max: max
+                };
+            } else {
+                alert('Please enter both minimum and maximum scores for range filter.');
+                return;
+            }
+        } else if (cxScoreType === 'hasScore' || cxScoreType === 'noScore') {
+            pullConversationsFilters.cxScore = {
+                type: cxScoreType
+            };
+        } else {
+            pullConversationsFilters.cxScore = null;
+        }
+    } else {
+        pullConversationsFilters.cxScore = null;
+    }
+    
+    // Handle Conversation Length filter
+    const lengthMinEl = document.getElementById('pullFilterLengthMin');
+    const lengthMaxEl = document.getElementById('pullFilterLengthMax');
+    const lengthMin = lengthMinEl && lengthMinEl.value ? parseInt(lengthMinEl.value, 10) : null;
+    const lengthMax = lengthMaxEl && lengthMaxEl.value ? parseInt(lengthMaxEl.value, 10) : null;
+    
+    if (lengthMin !== null || lengthMax !== null) {
+        if (lengthMin !== null && lengthMin < 0) {
+            alert('Minimum conversation length cannot be negative.');
+            return;
+        }
+        if (lengthMax !== null && lengthMax < 0) {
+            alert('Maximum conversation length cannot be negative.');
+            return;
+        }
+        if (lengthMin !== null && lengthMax !== null && lengthMin > lengthMax) {
+            alert('Minimum conversation length cannot be greater than maximum length.');
+            return;
+        }
+        pullConversationsFilters.conversationLength = {
+            min: lengthMin !== null ? lengthMin : undefined,
+            max: lengthMax !== null ? lengthMax : undefined
+        };
+    } else {
+        pullConversationsFilters.conversationLength = null;
     }
     
     pullConversationsFilters.clientSearch = getValue('pullFilterClientSearch');
@@ -5134,6 +5515,45 @@ function filterPullConversations() {
         });
     }
     
+    // Filter by CX Score
+    if (pullConversationsFilters.cxScore) {
+        const cxFilter = pullConversationsFilters.cxScore;
+        if (cxFilter.type === 'hasScore') {
+            filtered = filtered.filter(conv => {
+                const cxScore = conv.custom_attributes?.["CX Score rating"];
+                return cxScore !== null && cxScore !== undefined;
+            });
+        } else if (cxFilter.type === 'noScore') {
+            filtered = filtered.filter(conv => {
+                const cxScore = conv.custom_attributes?.["CX Score rating"];
+                return cxScore === null || cxScore === undefined;
+            });
+        } else if (cxFilter.type === 'exact' && cxFilter.value !== undefined) {
+            filtered = filtered.filter(conv => {
+                const cxScore = conv.custom_attributes?.["CX Score rating"];
+                return cxScore !== null && cxScore !== undefined && parseInt(cxScore) === parseInt(cxFilter.value);
+            });
+        } else if (cxFilter.type === 'range' && cxFilter.min !== undefined && cxFilter.max !== undefined) {
+            filtered = filtered.filter(conv => {
+                const cxScore = conv.custom_attributes?.["CX Score rating"];
+                if (cxScore === null || cxScore === undefined) return false;
+                const scoreNum = parseInt(cxScore);
+                return !isNaN(scoreNum) && scoreNum >= cxFilter.min && scoreNum <= cxFilter.max;
+            });
+        }
+    }
+    
+    // Filter by Conversation Length
+    if (pullConversationsFilters.conversationLength) {
+        const lengthFilter = pullConversationsFilters.conversationLength;
+        filtered = filtered.filter(conv => {
+            const length = conv.conversation_parts?.conversation_parts?.length || 0;
+            const min = lengthFilter.min !== undefined ? lengthFilter.min : 0;
+            const max = lengthFilter.max !== undefined ? lengthFilter.max : Infinity;
+            return length >= min && length <= max;
+        });
+    }
+    
     console.log(`✅ Filtered from ${initialCount} to ${filtered.length} conversations`);
     
     pullConversationsFilteredList = filtered;
@@ -5149,6 +5569,8 @@ window.clearPullConversationsFilters = function() {
         state: null,
         priority: null,
         rating: null,
+        cxScore: null,
+        conversationLength: null,
         clientSearch: null,
         conversationId: null
     };
@@ -5210,6 +5632,38 @@ function updatePullConversationsActiveFilters() {
             activeFilters.push({ label: `Rating: ${ratingLabel}`, key: 'rating' });
         }
     }
+    // Handle CX Score filter display
+    if (pullConversationsFilters.cxScore) {
+        const cxFilter = pullConversationsFilters.cxScore;
+        let cxLabel = '';
+        if (cxFilter.type === 'hasScore') {
+            cxLabel = 'Has CX Score';
+        } else if (cxFilter.type === 'noScore') {
+            cxLabel = 'No CX Score';
+        } else if (cxFilter.type === 'exact' && cxFilter.value) {
+            cxLabel = `CX Score: ${cxFilter.value}`;
+        } else if (cxFilter.type === 'range' && cxFilter.min !== undefined && cxFilter.max !== undefined) {
+            cxLabel = `CX Score: ${cxFilter.min}-${cxFilter.max}`;
+        }
+        if (cxLabel) {
+            activeFilters.push({ label: cxLabel, key: 'cxScore' });
+        }
+    }
+    
+    // Handle Conversation Length filter display
+    if (pullConversationsFilters.conversationLength) {
+        const lengthFilter = pullConversationsFilters.conversationLength;
+        let lengthLabel = 'Length: ';
+        if (lengthFilter.min !== undefined && lengthFilter.max !== undefined) {
+            lengthLabel += `${lengthFilter.min}-${lengthFilter.max}`;
+        } else if (lengthFilter.min !== undefined) {
+            lengthLabel += `≥${lengthFilter.min}`;
+        } else if (lengthFilter.max !== undefined) {
+            lengthLabel += `≤${lengthFilter.max}`;
+        }
+        activeFilters.push({ label: lengthLabel, key: 'conversationLength' });
+    }
+    
     if (pullConversationsFilters.clientSearch) activeFilters.push({ label: `Client: ${pullConversationsFilters.clientSearch}`, key: 'clientSearch' });
     if (pullConversationsFilters.conversationId) activeFilters.push({ label: `ID: ${pullConversationsFilters.conversationId}`, key: 'conversationId' });
     
@@ -6398,7 +6852,7 @@ function displayEmployeeConversations() {
         if (listDiv) listDiv.style.display = 'block';
         const paginationDiv = document.getElementById('conversationsPagination');
         if (paginationDiv) paginationDiv.style.display = 'none';
-        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for this date range.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for this date range.</td></tr>';
         return;
     }
 
@@ -6448,6 +6902,23 @@ function displayEmployeeConversations() {
         const ratingHtml = generateStarRating(rating);
         const conversationId = conversation.id || 'N/A';
         
+        // Extract CX Score
+        const cxScore = conversation.custom_attributes?.["CX Score rating"] ?? null;
+        let cxScoreHtml = '-';
+        if (cxScore !== null && cxScore !== undefined) {
+            const cxScoreNum = parseInt(cxScore);
+            if (!isNaN(cxScoreNum)) {
+                const cxScoreColor = cxScoreNum >= 4 ? '#10b981' : cxScoreNum >= 3 ? '#f59e0b' : '#ef4444';
+                cxScoreHtml = `<span style="color: ${cxScoreColor}; font-weight: 600; font-size: 0.75rem;">${cxScoreNum}</span>`;
+            }
+        }
+        
+        // Calculate conversation length
+        const conversationLength = conversation.conversation_parts?.conversation_parts?.length || 0;
+        const lengthDisplay = conversationLength > 0 
+            ? `<span style="font-size: 0.75rem; color: #374151; font-weight: 500;">${conversationLength}</span>`
+            : '<span style="color: #9ca3af;">-</span>';
+        
         // Extract product type
         const productType = extractProductType(conversation);
         let productTypeBadge = '';
@@ -6488,6 +6959,8 @@ function displayEmployeeConversations() {
             </td>
             <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${productTypeBadge}</td>
             <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${ratingHtml}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
+            <td style="padding: 0.625rem 0.75rem; vertical-align: middle; text-align: center;">${lengthDisplay}</td>
             <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">${stateBadge}</td>
             <td style="padding: 0.625rem 0.75rem; vertical-align: middle; font-size: 0.875rem; color: #6b7280; white-space: nowrap;">${createdDate}</td>
             <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
