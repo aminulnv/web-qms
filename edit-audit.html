@@ -5319,6 +5319,38 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const detailedJustification = justificationParts.join('\n\n');
             
+            // Capture FULL audit state BEFORE updating (for activity log)
+            const fullAuditState = {
+                parameters: {},
+                feedback: {},
+                score: currentAudit.average_score || currentAudit.averageScore || 0,
+                passing_status: currentAudit.passing_status || currentAudit.passingStatus || '',
+                acknowledgement_status: currentAudit.acknowledgement_status || currentAudit.acknowledgementStatus || '',
+                // Capture all other relevant audit fields
+                audited_employee_email: currentAudit.audited_employee_email || currentAudit.auditedEmployeeEmail || null,
+                auditor_email: currentAudit.auditor_email || currentAudit.auditorEmail || null,
+                conversation_id: currentAudit.conversation_id || currentAudit.conversationId || null
+            };
+            
+            // Capture all parameter values
+            if (currentErrorFields && currentErrorFields.length > 0) {
+                currentErrorFields.forEach(field => {
+                    const fieldKey = field.key;
+                    const value = currentAudit[fieldKey] || 0;
+                    fullAuditState.parameters[fieldKey] = value;
+                    
+                    // Capture feedback
+                    const feedbackKey = `feedback_${fieldKey}`;
+                    const feedbackValue = currentAudit[feedbackKey] || null;
+                    fullAuditState.feedback[fieldKey] = feedbackValue;
+                });
+            }
+            
+            // Get user info for activity log
+            const userInfo = getCurrentUserInfo();
+            const logUserEmail = userInfo?.email || '';
+            const logUserName = userInfo?.name || userInfo?.email || 'Unknown';
+            
             // Gather form data - use column names that match the database schema
             // Based on actual schema: fnchat_cfd table does NOT have reversal_status column
             // Status is tracked via reversal_approved and reversal_responded_at fields
@@ -5373,6 +5405,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
+                // FIRST: Log the original state to activity log BEFORE updating
+                try {
+                    const activityLogData = {
+                        audit_id: currentAudit.id,
+                        scorecard_table_name: currentTableName,
+                        activity_type: 'reversal_requested',
+                        activity_timestamp: new Date().toISOString(),
+                        performed_by_email: logUserEmail,
+                        performed_by_name: logUserName,
+                        audit_state_snapshot: fullAuditState,
+                        parameters_snapshot: fullAuditState.parameters,
+                        feedback_snapshot: fullAuditState.feedback,
+                        score_snapshot: fullAuditState.score,
+                        passing_status_snapshot: fullAuditState.passing_status,
+                        reversal_type: reversalType,
+                        reversal_justification: `${reversalReason}: ${detailedJustification}`,
+                        change_reason: 'Reversal requested by audited employee',
+                        metadata: {
+                            reversal_metrics_parameters: selectedParameters,
+                            within_auditor_scope: document.getElementById('withinAuditorScope').checked,
+                            parameter_comments: parameterComments
+                        }
+                    };
+                    
+                    const { error: logError } = await window.supabaseClient
+                        .from('audit_activity_log')
+                        .insert(activityLogData);
+                    
+                    if (logError) {
+                        console.error('Error logging reversal request to activity log:', logError);
+                        // Don't throw - continue with reversal submission even if logging fails
+                    } else {
+                        console.log('Successfully logged reversal request to activity log');
+                    }
+                } catch (logErr) {
+                    console.error('Error creating activity log entry:', logErr);
+                    // Don't throw - continue with reversal submission
+                }
+                
+                // THEN: Update the audit record with reversal data
                 // First, try with parameter_comments included
                 let result = await retryOnSchemaCacheError(async () => {
                     return await window.supabaseClient
@@ -6298,6 +6370,37 @@ async function processReversalDecision(decision) {
     }
     
     try {
+        // FIRST: Retrieve the original state from activity log (when reversal was requested)
+        // This ensures we have the true original state, not the current state
+        let loggedOriginalState = null;
+        try {
+            const { data: reversalRequestLog, error: logFetchError } = await window.supabaseClient
+                .from('audit_activity_log')
+                .select('*')
+                .eq('audit_id', currentAudit.id)
+                .eq('activity_type', 'reversal_requested')
+                .order('activity_timestamp', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            
+            if (!logFetchError && reversalRequestLog) {
+                loggedOriginalState = {
+                    parameters: reversalRequestLog.parameters_snapshot || {},
+                    feedback: reversalRequestLog.feedback_snapshot || {},
+                    score: reversalRequestLog.score_snapshot || 0,
+                    passingStatus: reversalRequestLog.passing_status_snapshot || ''
+                };
+                console.log('Retrieved original state from activity log:', loggedOriginalState);
+            } else if (logFetchError) {
+                console.warn('Could not retrieve original state from activity log:', logFetchError);
+            }
+        } catch (logErr) {
+            console.warn('Error retrieving original state from activity log:', logErr);
+        }
+        
+        // Use logged original state if available, otherwise fall back to originalAuditState
+        const trueOriginalState = loggedOriginalState || originalAuditState;
+        
         // First, save all parameter changes
         const auditData = {};
         
@@ -6344,7 +6447,7 @@ async function processReversalDecision(decision) {
         // Get user info
         const userInfo = getCurrentUserInfo();
         const currentUserName = userInfo?.name || userInfo?.email || 'Unknown';
-        const currentUserEmail = userInfo?.email || currentUserEmail || '';
+        const logUserEmail = userInfo?.email || '';
         
         // Get reversal decision details
         const approvedBy = document.getElementById('reversalApprovedBy')?.value || currentUserName;
@@ -6365,7 +6468,7 @@ async function processReversalDecision(decision) {
         let parametersChangedCount = 0;
         let feedbackChangedCount = 0;
         
-        if (originalAuditState) {
+        if (trueOriginalState) {
             currentErrorFields.forEach(field => {
                 const fieldKey = field.key;
                 let currentValue = 0;
@@ -6382,7 +6485,7 @@ async function processReversalDecision(decision) {
                     }
                 }
                 
-                const originalValue = originalAuditState.parameters[fieldKey] || 0;
+                const originalValue = trueOriginalState.parameters[fieldKey] || 0;
                 if (currentValue !== originalValue) {
                     changedParameters[fieldKey] = {
                         original: originalValue,
@@ -6399,7 +6502,7 @@ async function processReversalDecision(decision) {
                     .map(ta => ta.value.trim())
                     .filter(v => v);
                 
-                const originalFeedback = originalAuditState.feedback[fieldKey];
+                const originalFeedback = trueOriginalState.feedback[fieldKey];
                 let originalFeedbacks = [];
                 if (originalFeedback) {
                     if (Array.isArray(originalFeedback)) {
@@ -6426,8 +6529,8 @@ async function processReversalDecision(decision) {
         }
         
         // Prepare audit update data
-        const originalScore = originalAuditState?.score || currentAudit.averageScore || currentAudit.average_score || 0;
-        const originalPassingStatus = originalAuditState?.passingStatus || currentAudit.passingStatus || currentAudit.passing_status || '';
+        const originalScore = trueOriginalState?.score || currentAudit.averageScore || currentAudit.average_score || 0;
+        const originalPassingStatus = trueOriginalState?.passingStatus || currentAudit.passingStatus || currentAudit.passing_status || '';
         
         // Set acknowledgement status to pending after reversal is processed
         const newAcknowledgementStatus = decision === 'approved' 
@@ -6464,6 +6567,60 @@ async function processReversalDecision(decision) {
         
         if (updateError) throw updateError;
         
+        // Log approval/rejection to activity log
+        try {
+            // Capture new state after update
+            const newAuditState = {
+                parameters: auditData,
+                feedback: feedbackByField,
+                score: decision === 'approved' ? newScore : originalScore,
+                passing_status: decision === 'approved' ? (isPassing ? 'Passing' : 'Not Passing') : originalPassingStatus,
+                acknowledgement_status: newAcknowledgementStatus
+            };
+            
+            const activityLogData = {
+                audit_id: currentAudit.id,
+                scorecard_table_name: currentTableName,
+                activity_type: decision === 'approved' ? 'reversal_approved' : 'reversal_rejected',
+                activity_timestamp: respondedAt.toISOString(),
+                performed_by_email: logUserEmail,
+                performed_by_name: currentUserName,
+                audit_state_snapshot: newAuditState,
+                parameters_snapshot: auditData,
+                feedback_snapshot: feedbackByField,
+                score_snapshot: newAuditState.score,
+                passing_status_snapshot: newAuditState.passing_status,
+                changes_made: {
+                    parameters: changedParameters,
+                    feedback: changedFeedback,
+                    score_change: decision === 'approved' ? (newScore - originalScore) : 0,
+                    passing_status_changed: decision === 'approved' && (isPassing !== (originalPassingStatus === 'Passing' || originalPassingStatus === 'Passed'))
+                },
+                change_reason: decision === 'approved' ? 'Reversal approved by quality analyst' : 'Reversal rejected by quality analyst',
+                metadata: {
+                    approved_by: approvedBy,
+                    delay_reason: delayReason,
+                    sla_hours: parseFloat(slaHours.toFixed(2)),
+                    parameters_changed_count: parametersChangedCount,
+                    feedback_changed_count: feedbackChangedCount
+                }
+            };
+            
+            const { error: activityLogError } = await window.supabaseClient
+                .from('audit_activity_log')
+                .insert(activityLogData);
+            
+            if (activityLogError) {
+                console.error('Error logging reversal decision to activity log:', activityLogError);
+                // Don't throw - audit update succeeded, logging is secondary
+            } else {
+                console.log('Successfully logged reversal decision to activity log');
+            }
+        } catch (activityLogErr) {
+            console.error('Error creating activity log entry for reversal decision:', activityLogErr);
+            // Don't throw - audit update succeeded
+        }
+        
         // Save to reversal_change_log table
         try {
             const changeLogData = {
@@ -6472,8 +6629,8 @@ async function processReversalDecision(decision) {
                 reversal_requested_at: reversalRequestedAt,
                 original_score: originalScore,
                 original_passing_status: originalPassingStatus,
-                original_parameters: originalAuditState?.parameters || {},
-                original_feedback: originalAuditState?.feedback || {},
+                original_parameters: trueOriginalState?.parameters || {},
+                original_feedback: trueOriginalState?.feedback || {},
                 changed_parameters: changedParameters,
                 changed_feedback: changedFeedback,
                 new_score: decision === 'approved' ? newScore : originalScore,
@@ -6485,9 +6642,9 @@ async function processReversalDecision(decision) {
                 reversal_decision: decision,
                 reversal_approved: decision === 'approved',
                 reversal_responded_at: respondedAt.toISOString(),
-                processed_by_email: currentUserEmailFromInfo,
+                processed_by_email: logUserEmail,
                 processed_by_name: currentUserName,
-                approved_by_email: currentUserEmailFromInfo,
+                approved_by_email: logUserEmail,
                 approved_by_name: approvedBy,
                 sla_hours: parseFloat(slaHours.toFixed(2)),
                 delay_reason: delayReason

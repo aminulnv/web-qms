@@ -311,10 +311,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if user is supervisor or above
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         const userRole = userInfo.role || '';
-        const allowedRoles = ['Supervisor', 'Quality Supervisor', 'Admin', 'Super Admin'];
+        const allowedRoles = ['Supervisor', 'Quality Supervisor', 'Quality Analyst', 'Admin', 'Super Admin'];
         
         if (!allowedRoles.includes(userRole)) {
-            alert('Access Denied: You do not have permission to access this page. Only Supervisors and above can access ATA.');
+            alert('Access Denied: You do not have permission to access this page. Only Supervisors, Quality Analysts, and above can access ATA.');
             window.location.href = 'home.html';
             return;
         }

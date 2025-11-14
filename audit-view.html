@@ -4699,6 +4699,38 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const detailedJustification = justificationParts.join('\n\n');
             
+            // Capture FULL audit state BEFORE updating (for activity log)
+            const fullAuditState = {
+                parameters: {},
+                feedback: {},
+                score: currentAudit.average_score || currentAudit.averageScore || 0,
+                passing_status: currentAudit.passing_status || currentAudit.passingStatus || '',
+                acknowledgement_status: currentAudit.acknowledgement_status || currentAudit.acknowledgementStatus || '',
+                // Capture all other relevant audit fields
+                audited_employee_email: currentAudit.audited_employee_email || currentAudit.auditedEmployeeEmail || null,
+                auditor_email: currentAudit.auditor_email || currentAudit.auditorEmail || null,
+                conversation_id: currentAudit.conversation_id || currentAudit.conversationId || null
+            };
+            
+            // Capture all parameter values
+            if (currentErrorFields && currentErrorFields.length > 0) {
+                currentErrorFields.forEach(field => {
+                    const fieldKey = field.key;
+                    const value = currentAudit[fieldKey] || 0;
+                    fullAuditState.parameters[fieldKey] = value;
+                    
+                    // Capture feedback
+                    const feedbackKey = `feedback_${fieldKey}`;
+                    const feedbackValue = currentAudit[feedbackKey] || null;
+                    fullAuditState.feedback[fieldKey] = feedbackValue;
+                });
+            }
+            
+            // Get user info for activity log
+            const userInfo = getCurrentUserInfo();
+            const logUserEmail = userInfo?.email || currentUserEmail || '';
+            const logUserName = userInfo?.name || userInfo?.email || 'Unknown';
+            
             // Gather form data - use column names that match the database schema
             // Based on actual schema: fnchat_cfd table does NOT have reversal_status column
             // Status is tracked via reversal_approved and reversal_responded_at fields
@@ -4759,6 +4791,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
+                // FIRST: Log the original state to activity log BEFORE updating
+                try {
+                    const activityLogData = {
+                        audit_id: currentAudit.id,
+                        scorecard_table_name: currentTableName,
+                        activity_type: 'reversal_requested',
+                        activity_timestamp: new Date().toISOString(),
+                        performed_by_email: logUserEmail,
+                        performed_by_name: logUserName,
+                        audit_state_snapshot: fullAuditState,
+                        parameters_snapshot: fullAuditState.parameters,
+                        feedback_snapshot: fullAuditState.feedback,
+                        score_snapshot: fullAuditState.score,
+                        passing_status_snapshot: fullAuditState.passing_status,
+                        reversal_type: reversalType,
+                        reversal_justification: `${reversalReason}: ${detailedJustification}`,
+                        change_reason: 'Reversal requested by audited employee',
+                        metadata: {
+                            reversal_metrics_parameters: selectedParameters,
+                            within_auditor_scope: document.getElementById('withinAuditorScope').checked,
+                            parameter_comments: parameterComments
+                        }
+                    };
+                    
+                    const { error: logError } = await window.supabaseClient
+                        .from('audit_activity_log')
+                        .insert(activityLogData);
+                    
+                    if (logError) {
+                        console.error('Error logging reversal request to activity log:', logError);
+                        // Don't throw - continue with reversal submission even if logging fails
+                    } else {
+                        console.log('Successfully logged reversal request to activity log');
+                    }
+                } catch (logErr) {
+                    console.error('Error creating activity log entry:', logErr);
+                    // Don't throw - continue with reversal submission
+                }
+                
+                // THEN: Update the audit record with reversal data
                 // First, try with parameter_comments included
                 let result = await retryOnSchemaCacheError(async () => {
                     return await window.supabaseClient
