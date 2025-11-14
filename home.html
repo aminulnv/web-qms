@@ -1038,11 +1038,35 @@ async function fetchAndCacheFilters(cacheKey) {
       if (!scError && scorecards) {
         const assignmentPromises = scorecards.map(async (scorecard) => {
           try {
-            const { data: audits, error } = await window.supabaseClient
+            // Try query with audit_status filter first
+            let { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('channel, employee_email, audit_status')
               .eq('auditor_email', currentUserEmail)
               .in('audit_status', ['pending', 'in_progress', 'completed']);
+            
+            // If error, try without audit_status filter (some tables may not have this column)
+            if (error) {
+              const retryQuery = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('channel, employee_email, audit_status')
+                .eq('auditor_email', currentUserEmail);
+              
+              if (!retryQuery.error && retryQuery.data) {
+                audits = retryQuery.data;
+                error = null;
+                // Filter client-side for audit_status if column exists
+                if (audits && audits.some(a => a.audit_status)) {
+                  audits = audits.filter(a => 
+                    !a.audit_status || ['pending', 'in_progress', 'completed'].includes(a.audit_status)
+                  );
+                }
+              } else {
+                // If still error, table might not have auditor_email column - skip this table silently
+                // Don't log warning as this is expected for some tables
+                return [];
+              }
+            }
             
             if (!error && audits) {
               return audits;
@@ -1600,13 +1624,50 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
         
         const assignmentPromises = scorecards.map(async (scorecard) => {
           try {
-            const { data: audits, error } = await window.supabaseClient
+            // Try query with audit_status filter first
+            let { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('*')
               .eq('auditor_email', currentUserEmail)
               .in('audit_status', ['pending', 'in_progress', 'completed'])
               .order('assignment_created_at', { ascending: false })
               .limit(20);
+            
+            // If error, try without audit_status filter (some tables may not have this column)
+            // Also try submitted_at if assignment_created_at doesn't exist
+            if (error) {
+              let retryQuery = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('*')
+                .eq('auditor_email', currentUserEmail)
+                .order('assignment_created_at', { ascending: false })
+                .limit(20);
+              
+              // If still error (assignment_created_at might not exist), try with submitted_at
+              if (retryQuery.error) {
+                retryQuery = await window.supabaseClient
+                  .from(scorecard.table_name)
+                  .select('*')
+                  .eq('auditor_email', currentUserEmail)
+                  .order('submitted_at', { ascending: false })
+                  .limit(20);
+              }
+              
+              if (!retryQuery.error && retryQuery.data) {
+                audits = retryQuery.data;
+                error = null;
+                // Filter client-side for audit_status if column exists
+                if (audits && audits.some(a => a.audit_status)) {
+                  audits = audits.filter(a => 
+                    !a.audit_status || ['pending', 'in_progress', 'completed'].includes(a.audit_status)
+                  );
+                }
+              } else {
+                // If still error, table might not have auditor_email column - skip this table silently
+                // Don't log warning as this is expected for some tables
+                return [];
+              }
+            }
             
             if (!error && audits) {
               return audits.map(audit => ({
@@ -1663,13 +1724,36 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
         const reversalPromises = reversalScorecards.map(async (scorecard) => {
           try {
             // For auditors: Only get unprocessed reversals (reversal_approved is null) - same as reversal.html
-            const { data: reversals, error } = await window.supabaseClient
+            // Try query with reversal filters first
+            let { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, interaction_id, interactionId')
               .not('reversal_requested_at', 'is', null)
               .is('reversal_approved', null) // Only unprocessed reversals
               .order('reversal_requested_at', { ascending: false })
               .limit(50);
+            
+            // If error, try without reversal_approved filter (some tables may not have this column)
+            if (error) {
+              const retryQuery = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, interaction_id, interactionId')
+                .not('reversal_requested_at', 'is', null)
+                .order('reversal_requested_at', { ascending: false })
+                .limit(50);
+              
+              if (!retryQuery.error && retryQuery.data) {
+                reversals = retryQuery.data;
+                error = null;
+                // Filter client-side for unprocessed reversals (reversal_approved is null)
+                if (reversals && reversals.some(r => r.reversal_approved !== undefined)) {
+                  reversals = reversals.filter(r => r.reversal_approved === null);
+                }
+              } else {
+                // If still error, table might not have reversal columns - skip this table silently
+                return [];
+              }
+            }
             
             if (!error && reversals && reversals.length > 0) {
               // Filter by email
@@ -2487,11 +2571,29 @@ async function fetchAndCacheStats(cacheKey, period) {
         // Parallelize all duration queries
         const durationPromises = scorecards.map(async (scorecard) => {
           try {
-            const { data: audits, error } = await window.supabaseClient
+            // Try query with audit_duration filter first
+            let { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('audit_duration, submitted_at, audit_timestamp')
               .eq(auditFilterField, currentUserEmail)
               .not('audit_duration', 'is', null);
+            
+            // If error, try without audit_duration filter (some tables may not have this column)
+            if (error) {
+              const retryQuery = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('audit_duration, submitted_at, audit_timestamp')
+                .eq(auditFilterField, currentUserEmail);
+              
+              if (!retryQuery.error && retryQuery.data) {
+                // Filter client-side for non-null audit_duration
+                audits = retryQuery.data.filter(a => a.audit_duration != null);
+                error = null;
+              } else {
+                // If still error, table might not have the filter field column - skip this table silently
+                return [];
+              }
+            }
             
             if (!error && audits) {
               // Apply date filter (week or date range)
@@ -2831,11 +2933,18 @@ async function fetchAndCacheStats(cacheKey, period) {
         // Parallelize all reversal count queries
         const reversalPromises = scorecards.map(async (scorecard) => {
           try {
-            const { data: allReversals, error: allError } = await window.supabaseClient
+            // Try query with reversal_requested_at filter first
+            let { data: allReversals, error: allError } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('reversal_requested_at, reversal_responded_at, ' + reversalFilterField)
               .not('reversal_requested_at', 'is', null)
               .limit(500);
+            
+            // If error, table might not have reversal_requested_at column - skip this table silently
+            if (allError) {
+              // Don't log warning as this is expected for some tables
+              return [];
+            }
             
             if (!allError && allReversals) {
               const normalizedCurrentEmail = currentUserEmail.toLowerCase().trim();
@@ -3272,13 +3381,50 @@ async function fetchAndCacheNotifications(cacheKey) {
     if (!scError && scorecards) {
       const assignmentPromises = scorecards.map(async (scorecard) => {
         try {
-          const { data: audits, error } = await window.supabaseClient
+          // Try query with audit_status filter first
+          let { data: audits, error } = await window.supabaseClient
             .from(scorecard.table_name)
             .select('*')
             .eq(notificationFilterField, currentUserEmail)
             .in('audit_status', ['pending', 'in_progress', 'completed'])
             .order('assignment_created_at', { ascending: false })
             .limit(20);
+          
+          // If error, try without audit_status filter (some tables may not have this column)
+          // Also try submitted_at if assignment_created_at doesn't exist
+          if (error) {
+            let retryQuery = await window.supabaseClient
+              .from(scorecard.table_name)
+              .select('*')
+              .eq(notificationFilterField, currentUserEmail)
+              .order('assignment_created_at', { ascending: false })
+              .limit(20);
+            
+            // If still error (assignment_created_at might not exist), try with submitted_at
+            if (retryQuery.error) {
+              retryQuery = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('*')
+                .eq(notificationFilterField, currentUserEmail)
+                .order('submitted_at', { ascending: false })
+                .limit(20);
+            }
+            
+            if (!retryQuery.error && retryQuery.data) {
+              audits = retryQuery.data;
+              error = null;
+              // Filter client-side for audit_status if column exists
+              if (audits && audits.some(a => a.audit_status)) {
+                audits = audits.filter(a => 
+                  !a.audit_status || ['pending', 'in_progress', 'completed'].includes(a.audit_status)
+                );
+              }
+            } else {
+              // If still error, table might not have the filter field column - skip this table silently
+              // Don't log warning as this is expected for some tables
+              return [];
+            }
+          }
           
           if (!error && audits) {
             return audits.map(audit => ({
@@ -3314,12 +3460,19 @@ async function fetchAndCacheNotifications(cacheKey) {
       for (const scorecard of reversalScorecards) {
         try {
           // Get all reversals and filter client-side for case-insensitive matching
-          const { data: auditReversals, error } = await window.supabaseClient
+          // Try query with reversal_requested_at filter first
+          let { data: auditReversals, error } = await window.supabaseClient
             .from(scorecard.table_name)
             .select('id, employee_name, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, acknowledgement_status, interaction_id, interactionId, submitted_at')
             .not('reversal_requested_at', 'is', null)
             .order('reversal_requested_at', { ascending: false })
             .limit(200);
+
+          // If error, table might not have reversal_requested_at column - skip this table silently
+          if (error) {
+            // Don't log warning as this is expected for some tables
+            continue;
+          }
 
           if (!error && auditReversals && auditReversals.length > 0) {
             // Filter reversals by email (case-insensitive)

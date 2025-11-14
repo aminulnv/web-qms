@@ -2612,7 +2612,6 @@ async function sendAuditEmailNotification(auditData, scorecard) {
 
 
 
-    |||||||||||||||||||||||||||||||||||||
 
 
 
@@ -4262,9 +4261,7 @@ async function sendAuditEmailNotification(auditData, scorecard) {
 
 
 
-    \
-    
-ok to n8n workflow
+// Send audit data to n8n workflow
 async function sendN8nWebhook(auditData, scorecard) {
     try {
         // Get n8n webhook URL from environment or use default
@@ -10582,19 +10579,75 @@ async function loadAssignmentFromURL(assignmentId) {
             await loadScorecards();
         }
         
+        // Show the full screen audit form modal
+        const auditFormModal = document.getElementById('auditFormModal');
+        if (auditFormModal) {
+            auditFormModal.style.display = 'flex';
+        }
+        
+        // Hide the assigned audits section
+        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
+        if (pendingAuditsSection) {
+            pendingAuditsSection.style.display = 'none';
+        }
+        
+        // Ensure employees are loaded before trying to select
+        await loadEmployees();
+        
         // Pre-fill employee information
         const employeeSelect = document.getElementById('employeeName');
+        let employeeFound = false;
         
         // Find and select the employee in dropdown
         if (employeeSelect && mappedAssignment.employee_email) {
+            const normalizedEmail = mappedAssignment.employee_email.toLowerCase().trim();
             for (let i = 0; i < employeeSelect.options.length; i++) {
-                if (employeeSelect.options[i].dataset.email === mappedAssignment.employee_email) {
+                const optionEmail = (employeeSelect.options[i].dataset.email || '').toLowerCase().trim();
+                if (optionEmail === normalizedEmail) {
                     employeeSelect.selectedIndex = i;
                     // Trigger change event to populate other fields
                     employeeSelect.dispatchEvent(new Event('change'));
+                    employeeFound = true;
+                    console.log('✅ Employee found and selected:', mappedAssignment.employee_email);
                     break;
                 }
             }
+        }
+        
+        if (!employeeFound && mappedAssignment.employee_email) {
+            console.warn('⚠️ Employee not found in dropdown for email:', mappedAssignment.employee_email);
+        }
+        
+        // Pre-fill channel if available in assignment
+        const channelField = document.getElementById('channel');
+        if (channelField && assignment.channel) {
+            channelField.value = assignment.channel;
+            console.log('✅ Channel pre-filled:', assignment.channel);
+        }
+        
+        // Pre-fill interaction date if available
+        const interactionDateField = document.getElementById('interactionDate');
+        if (interactionDateField && assignment.interaction_date) {
+            interactionDateField.value = assignment.interaction_date;
+            console.log('✅ Interaction date pre-filled:', assignment.interaction_date);
+        } else if (interactionDateField && assignment.created_at) {
+            // Use assignment creation date as fallback
+            const assignmentDate = new Date(assignment.created_at);
+            const dateStr = assignmentDate.toISOString().split('T')[0];
+            interactionDateField.value = dateStr;
+            console.log('✅ Interaction date pre-filled from assignment date:', dateStr);
+        }
+        
+        // Pre-fill client information if available
+        const clientNameField = document.getElementById('clientName');
+        const clientEmailField = document.getElementById('clientEmail');
+        if (clientNameField && assignment.client_name) {
+            clientNameField.value = assignment.client_name;
+            console.log('✅ Client name pre-filled:', assignment.client_name);
+        }
+        if (clientEmailField && assignment.client_email) {
+            clientEmailField.value = assignment.client_email;
+            console.log('✅ Client email pre-filled:', assignment.client_email);
         }
         
         // If assignment has a conversation_id, load that conversation
@@ -10630,7 +10683,23 @@ async function loadAssignmentFromURL(assignmentId) {
             }
         }
         
-        // Scroll to top to show scorecard selector
+        // Show and start the timer
+        const auditTimer = document.getElementById('auditTimer');
+        if (auditTimer) {
+            auditTimer.style.display = 'flex';
+            // Attach event listeners when timer is shown
+            if (window.attachTimerEventListeners) {
+                window.attachTimerEventListeners();
+            }
+        }
+        
+        // Reset and start the timer
+        if (window.resetTimer && window.startTimer) {
+            window.resetTimer();
+            window.startTimer();
+        }
+        
+        // Scroll to top to show form
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
     } catch (error) {
