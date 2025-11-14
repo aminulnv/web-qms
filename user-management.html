@@ -838,6 +838,9 @@
                     <select id="bulkEditTeam" class="bulk-edit-select">
                         <option value="">Change Team...</option>
                     </select>
+                    <select id="bulkEditDepartment" class="bulk-edit-select">
+                        <option value="">Change Department...</option>
+                    </select>
                     <select id="bulkEditChannel" class="bulk-edit-select">
                         <option value="">Change Channel...</option>
                     </select>
@@ -1077,7 +1080,7 @@ let availableChannels = [];
 let selectedUsers = new Set(); // Store selected user emails
 const availableDepartments = [
     'Admin, Compliance & Corporate Affairs',
-    'Business Development',
+    'Operations',
     "CEO's Office",
     'Client Experience',
     'Community & Partner Management',
@@ -1352,6 +1355,20 @@ function renderUsersTable() {
     `;
     
     usersTableContent.innerHTML = tableHTML;
+    
+    // Update select all checkbox state based on filtered users
+    const selectAllCheckbox = document.getElementById('selectAllUsers');
+    if (selectAllCheckbox) {
+        const filteredEmails = new Set(filteredUsers.map(u => u.email));
+        let selectedFilteredCount = 0;
+        filteredEmails.forEach(email => {
+            if (selectedUsers.has(email)) {
+                selectedFilteredCount++;
+            }
+        });
+        selectAllCheckbox.checked = selectedFilteredCount === filteredUsers.length && filteredUsers.length > 0;
+    }
+    
     populateBulkEditDropdowns();
 }
 
@@ -2147,17 +2164,35 @@ async function processBulkUpload() {
 
 // Bulk Edit Functions
 function toggleAllUsers(checked) {
-    filteredUsers.forEach(user => {
-        if (checked) {
+    // Get all filtered user emails
+    const filteredEmails = new Set(filteredUsers.map(u => u.email));
+    
+    if (checked) {
+        // When checking: First clear any selections not in filtered list, then select all filtered users
+        selectedUsers.forEach(email => {
+            if (!filteredEmails.has(email)) {
+                selectedUsers.delete(email);
+            }
+        });
+        // Select all filtered users
+        filteredUsers.forEach(user => {
             selectedUsers.add(user.email);
-        } else {
+        });
+    } else {
+        // When unchecking: Only deselect filtered users
+        filteredUsers.forEach(user => {
             selectedUsers.delete(user.email);
+        });
+    }
+    
+    // Update all checkboxes (only the visible/filtered ones)
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(cb => {
+        const email = cb.getAttribute('data-email');
+        if (filteredEmails.has(email)) {
+            cb.checked = checked;
         }
     });
-    
-    // Update all checkboxes
-    const checkboxes = document.querySelectorAll('.user-checkbox');
-    checkboxes.forEach(cb => cb.checked = checked);
     
     updateBulkActionsBar();
 }
@@ -2169,13 +2204,21 @@ function toggleUserSelection(email, selected) {
         selectedUsers.delete(email);
     }
     
-    // Update select all checkbox
+    // Update select all checkbox based on filtered users only
     const selectAllCheckbox = document.getElementById('selectAllUsers');
-    const allCheckboxes = document.querySelectorAll('.user-checkbox');
-    const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
+    const filteredEmails = new Set(filteredUsers.map(u => u.email));
+    
+    // Count how many filtered users are selected
+    let selectedFilteredCount = 0;
+    filteredEmails.forEach(email => {
+        if (selectedUsers.has(email)) {
+            selectedFilteredCount++;
+        }
+    });
     
     if (selectAllCheckbox) {
-        selectAllCheckbox.checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
+        // Check if all filtered users are selected
+        selectAllCheckbox.checked = selectedFilteredCount === filteredUsers.length && filteredUsers.length > 0;
     }
     
     updateBulkActionsBar();
@@ -2205,6 +2248,18 @@ function populateBulkEditDropdowns() {
             option.value = team;
             option.textContent = team;
             teamSelect.appendChild(option);
+        });
+    }
+    
+    // Populate Department dropdown
+    const departmentSelect = document.getElementById('bulkEditDepartment');
+    if (departmentSelect) {
+        departmentSelect.innerHTML = '<option value="">Change Department...</option>';
+        availableDepartments.forEach(department => {
+            const option = document.createElement('option');
+            option.value = department;
+            option.textContent = department;
+            departmentSelect.appendChild(option);
         });
     }
     
@@ -2271,13 +2326,14 @@ async function applyBulkEdit() {
     
     // Get values from bulk edit dropdowns
     const team = document.getElementById('bulkEditTeam').value;
+    const department = document.getElementById('bulkEditDepartment').value;
     const channel = document.getElementById('bulkEditChannel').value;
     const teamSupervisor = document.getElementById('bulkEditTeamSupervisor').value;
     const qualitySupervisor = document.getElementById('bulkEditQualitySupervisor').value;
     const role = document.getElementById('bulkEditRole').value;
     
     // Check if at least one field is filled
-    if (!team && !channel && !teamSupervisor && !qualitySupervisor && !role) {
+    if (!team && !department && !channel && !teamSupervisor && !qualitySupervisor && !role) {
         alert('Please select at least one field to update.');
         return;
     }
@@ -2285,6 +2341,7 @@ async function applyBulkEdit() {
     // Build update object
     const updates = {};
     if (team) updates.team = team;
+    if (department) updates.department = department;
     if (channel) updates.channel = channel;
     if (teamSupervisor) updates.team_supervisor = teamSupervisor;
     if (qualitySupervisor) updates.quality_mentor = qualitySupervisor;
@@ -2294,6 +2351,7 @@ async function applyBulkEdit() {
     let message = `Are you sure you want to update ${selectedEmails.length} user${selectedEmails.length !== 1 ? 's' : ''}?\n\n`;
     message += 'Changes to be applied:\n';
     if (team) message += `• Team: ${team}\n`;
+    if (department) message += `• Department: ${department}\n`;
     if (channel) message += `• Channel: ${channel}\n`;
     if (teamSupervisor) {
         const supervisor = allUsers.find(u => u.email === teamSupervisor);
@@ -2374,6 +2432,7 @@ async function applyBulkEdit() {
         
         // Reset bulk edit dropdowns
         document.getElementById('bulkEditTeam').value = '';
+        document.getElementById('bulkEditDepartment').value = '';
         document.getElementById('bulkEditChannel').value = '';
         document.getElementById('bulkEditTeamSupervisor').value = '';
         document.getElementById('bulkEditQualitySupervisor').value = '';
