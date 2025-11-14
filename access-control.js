@@ -112,9 +112,6 @@ class AccessControl {
       'settings.html': {
         allowedRoles: ['*'] // All authenticated users
       },
-      'intercom-admins.html': {
-        minRoleLevel: 2 // Quality Analyst and above
-      },
       'admin-conversations.html': {
         minRoleLevel: 2 // Quality Analyst and above
       },
