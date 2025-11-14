@@ -325,7 +325,7 @@ window.generateTranscriptSection = function(options = {}) {
 
     return `
         <div style="display: flex; flex-direction: column; gap: 0.3234rem; flex: 1; min-height: 0;">
-            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 60vh; max-height: 100vh; transition: height 0.3s ease; overflow: hidden;">
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0; border: 0.0304rem solid #e5e7eb; display: flex; flex-direction: column; flex: 1; min-height: 75vh; max-height: 100vh; transition: height 0.3s ease; overflow: hidden;">
                 <div style="background: #f9fafb; padding: 0.6469rem; border-bottom: 0.0304rem solid #e5e7eb; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.4852rem;">
                     ${transcriptInfoHtml}
                     <!-- Third Row: Collapsible Information Grid -->

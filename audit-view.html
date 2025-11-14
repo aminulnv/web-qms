@@ -1564,11 +1564,24 @@ function handleReversalStatusUI(audit) {
             statusBanner.style.background = '#d1fae5';
             statusBanner.style.color = '#065f46';
             statusBanner.style.border = '0.0352rem solid #10b981';
+            
+            // Get auditor's response if available
+            const auditorResponse = currentAudit?.reasonForReversalResponseDelay || currentAudit?.response_from_auditor || '';
+            const shouldShowResponse = (isCurrentUserQualityAnalyst() || isCurrentUserAuditedEmployee()) && auditorResponse && auditorResponse.trim();
+            
             statusBanner.innerHTML = `
                 <svg style="width: 0.9375rem; height: 0.9375rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
-                <span>✓ Reversal request has been approved. Score updated to ${currentAudit?.score_after_appeal || 'N/A'}%. Please review the updated audit and acknowledge or submit a new reversal if needed.</span>
+                <div style="flex: 1;">
+                    <div>✓ Reversal request has been approved. Score updated to ${currentAudit?.score_after_appeal || 'N/A'}%. Please review the updated audit and acknowledge or submit a new reversal if needed.</div>
+                    ${shouldShowResponse ? `
+                        <div style="margin-top: 0.5625rem; padding: 0.5625rem; background: rgba(255, 255, 255, 0.5); border-radius: 0.2812rem; border-left: 0.1875rem solid #10b981;">
+                            <div style="font-size: 0.5625rem; font-weight: 600; margin-bottom: 0.2812rem; text-transform: uppercase; letter-spacing: 0.05em;">Response From Auditor:</div>
+                            <div style="font-size: 0.6094rem; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(auditorResponse)}</div>
+                        </div>
+                    ` : ''}
+                </div>
             `;
             // After reversal is processed, enable both buttons again (new review cycle)
             // Don't hide buttons - allow user to acknowledge or submit new reversal
@@ -1587,11 +1600,24 @@ function handleReversalStatusUI(audit) {
             statusBanner.style.background = '#fee2e2';
             statusBanner.style.color = '#991b1b';
             statusBanner.style.border = '0.0352rem solid #ef4444';
+            
+            // Get auditor's response if available
+            const auditorResponse = currentAudit?.reasonForReversalResponseDelay || currentAudit?.response_from_auditor || '';
+            const shouldShowResponse = (isCurrentUserQualityAnalyst() || isCurrentUserAuditedEmployee()) && auditorResponse && auditorResponse.trim();
+            
             statusBanner.innerHTML = `
                 <svg style="width: 0.9375rem; height: 0.9375rem; flex-shrink: 0;" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
-                <span>Reversal request has been rejected. Please review the audit and acknowledge or submit a new reversal if needed.</span>
+                <div style="flex: 1;">
+                    <div>Reversal request has been rejected. Please review the audit and acknowledge or submit a new reversal if needed.</div>
+                    ${shouldShowResponse ? `
+                        <div style="margin-top: 0.5625rem; padding: 0.5625rem; background: rgba(255, 255, 255, 0.5); border-radius: 0.2812rem; border-left: 0.1875rem solid #ef4444;">
+                            <div style="font-size: 0.5625rem; font-weight: 600; margin-bottom: 0.2812rem; text-transform: uppercase; letter-spacing: 0.05em;">Response From Auditor:</div>
+                            <div style="font-size: 0.6094rem; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(auditorResponse)}</div>
+                        </div>
+                    ` : ''}
+                </div>
             `;
             // After reversal is processed, enable both buttons again (new review cycle)
             // Don't hide buttons - allow user to acknowledge or submit new reversal
@@ -1834,6 +1860,26 @@ function displaySubmittedReversalForm(audit) {
                         `}
                     </div>
                 </div>
+                
+                <!-- Auditor's Response (if reversal has been responded to) -->
+                ${(() => {
+                    const reversalRespondedAt = audit.reversalRespondedAt || audit.reversal_responded_at;
+                    const auditorResponse = audit.reasonForReversalResponseDelay || audit.response_from_auditor || '';
+                    const shouldShowResponse = (isCurrentUserQualityAnalyst() || isCurrentUserAuditedEmployee()) && reversalRespondedAt && auditorResponse && auditorResponse.trim();
+                    
+                    if (!shouldShowResponse) return '';
+                    
+                    return `
+                        <div>
+                            <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Response From Auditor
+                            </label>
+                            <div style="padding: 0.5625rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f0f9ff; border-left: 0.1875rem solid #3b82f6; color: #1e40af; white-space: pre-wrap; line-height: 1.6;">
+                                ${escapeHtml(auditorResponse)}
+                            </div>
+                        </div>
+                    `;
+                })()}
             </div>
         </div>
     `;
@@ -2225,7 +2271,9 @@ function displayConversationMessages(conversation) {
         return timeA - timeB;
     });
 
+    // Clear container and remove empty state message
     chatMessagesContainer.innerHTML = '';
+    chatMessagesContainer.style.gap = '0.3234rem';
     
     // Reset images array
     allConversationImages = [];
@@ -2245,16 +2293,130 @@ function displayConversationMessages(conversation) {
         } else {
             timestamp = new Date(part.created_at);
         }
+        
+        // Format timestamp for display
+        const timeStr = timestamp.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        const dateStr = timestamp.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        // Check if this is a system comment part type (should be displayed outside chat bubbles)
+        const systemCommentTypes = [
+            'user_became_idle',
+            'close',
+            'fin_guidance_applied',
+            'conversation_attribute_updated_by_admin',
+            'attribute_collected'
+        ];
+        const isSystemComment = systemCommentTypes.includes(partType);
+        
+        // If this is a system comment, render it differently (outside chat bubbles)
+        if (isSystemComment) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0.4043rem 0;
+                padding: 0 0.8086rem;
+            `;
+            
+            // Format the message body
+            let messageData;
+            try {
+                messageData = formatMessageBody(message);
+            } catch (e) {
+                console.error('Error formatting message body for system comment:', e);
+                messageData = { text: '', html: null, images: [] };
+            }
+            const formattedText = messageData?.text || '';
+            const formattedHtml = messageData?.html || null;
+            
+            // Create human-readable label for the part type
+            const partTypeLabels = {
+                'user_became_idle': 'User became idle',
+                'close': 'Conversation closed',
+                'fin_guidance_applied': 'Guidance applied',
+                'conversation_attribute_updated_by_admin': 'Attribute updated by admin',
+                'attribute_collected': 'Attribute collected'
+            };
+            const partTypeLabel = partTypeLabels[partType] || partType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            // Build the system comment content
+            let commentContent = '';
+            // Use text version for system comments to avoid HTML rendering issues
+            if (formattedText && formattedText.trim() !== '' && formattedText.trim() !== '{}') {
+                commentContent = formattedText;
+            } else if (part.body && String(part.body).trim() !== '') {
+                // Fallback: strip HTML tags from body and get plain text
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = String(part.body);
+                commentContent = tempDiv.textContent || tempDiv.innerText || '';
+            }
+            
+            // Escape HTML for safe display
+            if (commentContent) {
+                const tempEscDiv = document.createElement('div');
+                tempEscDiv.textContent = commentContent;
+                commentContent = tempEscDiv.innerHTML;
+            }
+            
+            messageDiv.innerHTML = `
+                <div style="
+                    background: #f3f4f6;
+                    border: 0.0304rem solid #e5e7eb;
+                    border-radius: 0.2426rem;
+                    padding: 0.3234rem 0.4852rem;
+                    max-width: 80%;
+                    text-align: center;
+                    font-size: 0.4447rem;
+                    color: #6b7280;
+                    line-height: 1.5;
+                ">
+                    <div style="
+                        font-weight: 600;
+                        color: #4b5563;
+                        margin-bottom: 0.1213rem;
+                        text-transform: uppercase;
+                        letter-spacing: 0.0405rem;
+                        font-size: 0.4043rem;
+                    ">${partTypeLabel.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}</div>
+                    ${commentContent ? `<div style="margin-top: 0.1617rem; color: #6b7280; font-size: 0.4447rem;">${commentContent}</div>` : ''}
+                    <div style="
+                        margin-top: 0.1617rem;
+                        font-size: 0.3639rem;
+                        color: #9ca3af;
+                        opacity: 0.8;
+                    ">${timeStr} • ${dateStr}</div>
+                </div>
+            `;
+            
+            chatMessagesContainer.appendChild(messageDiv);
+            return; // Skip normal message rendering for system comments
+        }
+        
+        // Continue with normal message rendering for non-system-comment parts
         const isUser = authorType === 'user' || authorType === 'contact';
-        // Detect AI/Bot messages
+        const isAdmin = authorType === 'admin' || authorType === 'team';
+        // Detect AI/Bot messages - be strict: only if explicitly bot type or has AI flags
+        // Don't check name for "ai" as admins might be labeled as "AI" but are actually agents
         const isAI = authorType === 'bot' || 
                     author.from_ai_agent === true || 
                     author.is_ai_answer === true ||
-                    (authorType === 'admin' && (author.name || '').toLowerCase().includes('ai'));
+                    (part.from_ai_agent === true) ||
+                    (part.is_ai_answer === true);
         
         // Format the message body to check if it has content
+        // This extracts images from HTML img tags and text-based [Image "..."] references
         const messageData = formatMessageBody(message);
         const formattedText = messageData.text;
+        const formattedHtml = messageData.html || null; // HTML with inline images
         const images = messageData.images || [];
         
         // Check if this is an email interaction
@@ -2266,37 +2428,29 @@ function displayConversationMessages(conversation) {
             Object.keys(part.email_message_metadata).length > 0);
         const emailMetadata = isEmail ? part.email_message_metadata : {};
         
-        // Debug logging for email detection
-        if (partType === 'open' || partType === 'comment') {
-            console.log(`Part ${part.id} (${partType}):`, {
-                hasEmailMetadataKey: 'email_message_metadata' in part,
-                hasEmailMetadata: !!part.email_message_metadata,
-                emailMetadataType: typeof part.email_message_metadata,
-                emailMetadataValue: part.email_message_metadata,
-                isEmail: isEmail,
-                subject: part.email_message_metadata?.subject || 'N/A',
-                allKeys: Object.keys(part).slice(0, 15) // First 15 keys to see structure
-            });
-        }
-        
-        if (isEmail) {
-            console.log('✅ Email detected:', {
-                partId: part.id,
-                partType: partType,
-                subject: emailMetadata.subject,
-                from: emailMetadata.email_address_headers?.find(h => h.type === 'from')?.email_address,
-                to: emailMetadata.email_address_headers?.find(h => h.type === 'to')?.email_address,
-                hasAttachments: (part.attachments || []).length > 0
-            });
-        }
-        
         // Extract attachments from attachments array (separate from body images)
         const attachments = part.attachments || [];
-        const attachmentImages = attachments
-            .filter(att => att.type === 'upload' && att.content_type && att.content_type.startsWith('image/'))
-            .map(att => att.url);
+        
+        // Extract image attachments - check multiple possible structures
+        const attachmentImages = [];
+        attachments.forEach(att => {
+            // Check if it's an image attachment
+            const isImage = (
+                (att.type === 'upload' || att.type === 'image' || !att.type) &&
+                (
+                    (att.content_type && att.content_type.startsWith('image/')) ||
+                    (att.url && /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(att.url))
+                ) &&
+                att.url
+            );
+            
+            if (isImage && att.url) {
+                attachmentImages.push(att.url);
+            }
+        });
         
         // Combine body images and attachment images
+        // Body images come first (they appear inline in text), then attachments
         const allImages = [...images, ...attachmentImages];
         
         // Add images to global array with their index for viewer navigation
@@ -2309,35 +2463,49 @@ function displayConversationMessages(conversation) {
             });
         });
         
-        // Skip empty messages or non-comment parts (like assignments, system messages, etc.)
-        // BUT allow email interactions even if part_type is not 'comment' or 'note'
-        // Only show parts that have actual text content, images, attachments, or email metadata
-        if ((!formattedText || formattedText.trim() === '' || formattedText.trim() === '{}') && 
-            allImages.length === 0 && 
-            attachments.length === 0 && 
-            !isEmail) {
-            return; // Skip this part
+        // REMOVED: No longer skipping any parts - show ALL parts in the chatbox
+        // Always display parts so users can see everything, even if empty
+        
+        // Check what content this part has (for display purposes)
+        const hasBody = !!(part.body && String(part.body).trim() !== '');
+        const hasText = !!(formattedText && formattedText.trim() !== '' && formattedText.trim() !== '{}');
+        const hasHtml = !!formattedHtml;
+        const hasImages = allImages.length > 0;
+        const hasAttachments = attachments.length > 0;
+        
+        // Build content info badge to show in UI what this part contains
+        // Always show part_type for all parts
+        let contentInfoBadge = '';
+        const contentTypes = [];
+        
+        // Always include part_type first
+        if (partType) {
+            contentTypes.push(`Type: ${partType}`);
         }
         
-        // Also skip if part type is not a comment, note, or email
-        // Email interactions can have part_type: "open" or "comment" (both can have email_message_metadata)
-        // Only show: comment, note, or any part with email_message_metadata
-        if (!isEmail && partType !== 'comment' && partType !== 'note') {
-            return; // Skip non-comment parts (unless it's an email)
-        }
+        // Then add content types
+        if (hasText || hasHtml) contentTypes.push('Text');
+        if (hasImages) contentTypes.push(`${allImages.length} Image${allImages.length > 1 ? 's' : ''}`);
+        if (hasAttachments) contentTypes.push(`${attachments.length} Attachment${attachments.length > 1 ? 's' : ''}`);
+        if (isEmail) contentTypes.push('Email');
         
-        // Format timestamp
-        const timeStr = timestamp.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: true 
-        });
-        const dateStr = timestamp.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
-        });
+        // Always show badge if we have part_type or any content
+        if (contentTypes.length > 0 || partType) {
+            contentInfoBadge = `<div style="
+                font-size: 0.3639rem;
+                color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.7)'};
+                margin-bottom: 0.1617rem;
+                padding: 0.1213rem 0.2426rem;
+                background: ${isUser ? '#f3f4f6' : 'rgba(255,255,255,0.1)'};
+                border-radius: 0.1617rem;
+                display: inline-block;
+            ">
+                ${contentTypes.length > 0 ? contentTypes.join(' • ') : (partType ? `Part Type: ${partType}` : 'Empty Part')}
+            </div>`;
+        }
 
         // Determine message type for avatar and styling
+        // Important: Agents should be green, AI should be dark gray
         const messageType = isUser ? 'user' : (isAI ? 'ai' : 'agent');
         const avatar = generateAvatar(authorName, messageType);
         
@@ -2351,32 +2519,29 @@ function displayConversationMessages(conversation) {
                 color: #374151;
                 border: 0.0304rem solid #e5e7eb;
                 border-radius: 0.4852rem 0.4852rem 0.4852rem 0.1617rem;
-                max-width: 75%;
+                max-width: 100%;
+                width: fit-content;
                 margin-right: auto;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                box-sizing: border-box;
+                margin-left: 0;
             `
             : isAI
             ? `
                 background: #1d1d1d;
                 color: white;
                 border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
-                max-width: 75%;
+                max-width: 100%;
+                width: fit-content;
                 margin-left: auto;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                box-sizing: border-box;
+                margin-right: 0;
             `
             : `
                 background: #1A733E;
                 color: white;
                 border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
-                max-width: 75%;
+                max-width: 100%;
+                width: fit-content;
                 margin-left: auto;
-                word-wrap: break-word;
-                overflow-wrap: break-word;
-                box-sizing: border-box;
+                margin-right: 0;
             `;
 
         // Build email header if this is an email
@@ -2492,33 +2657,14 @@ function displayConversationMessages(conversation) {
             attachmentsHTML += '</div>';
         }
 
-        // Build images HTML
+        // Build images HTML (for images that aren't inline in text)
         let imagesHTML = '';
-        if (allImages.length > 0) {
-            imagesHTML = '<div style="margin-top: 0.3234rem; display: flex; flex-wrap: wrap; gap: 0.3234rem; max-width: 100%; box-sizing: border-box;">';
+        if (allImages.length > 0 && !formattedHtml) {
+            imagesHTML = '<div style="margin-top: 0.3234rem; display: flex; flex-wrap: wrap; gap: 0.3234rem;">';
             allImages.forEach((imgSrc, idx) => {
                 const globalIndex = imageStartIndex + idx;
-                imagesHTML += `
-                    <img 
-                        src="${escapeHtml(imgSrc)}" 
-                        alt="Attachment ${idx + 1}"
-                        onclick="openImageViewer(${globalIndex})"
-                        style="
-                            max-width: 100%;
-                            width: auto;
-                            height: auto;
-                            max-height: 200px;
-                            border-radius: 0.3234rem;
-                            cursor: pointer;
-                            object-fit: cover;
-                            border: 0.0304rem solid ${isUser ? '#e5e7eb' : 'rgba(255,255,255,0.3)'};
-                            transition: transform 0.2s ease, box-shadow 0.2s ease;
-                            box-sizing: border-box;
-                        "
-                        onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0.1617rem 0.4852rem rgba(0,0,0,0.2)'"
-                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'"
-                    />
-                `;
+                const escapedSrc = escapeHtmlAttribute(imgSrc);
+                imagesHTML += `<img src="${escapedSrc}" alt="Attachment ${idx + 1}" onclick="window.openImageViewer(${globalIndex})" style="max-width: 200px; max-height: 200px; border-radius: 0.3234rem; cursor: pointer; object-fit: cover; border: 0.0304rem solid ${isUser ? '#e5e7eb' : 'rgba(255,255,255,0.3)'}; transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0.1617rem 0.4852rem rgba(0,0,0,0.2)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'" onerror="console.error('Failed to load image:', this.src);" loading="lazy" />`;
             });
             imagesHTML += '</div>';
         }
@@ -2530,11 +2676,12 @@ function displayConversationMessages(conversation) {
         // Avatar alignment: Client on left, Agent/AI on right
         const avatarAlign = isUser ? 'flex-start' : 'flex-end';
         const avatarMargin = isUser ? 'margin-right: 0.3234rem;' : 'margin-left: 0.3234rem;';
+        const avatarOrder = isUser ? '1' : '3';
         
         // Avatar HTML - Client left, Agent/AI right
         // For AI, use the image avatar; for others, use gradient with initials
         const avatarHTML = isAI ? `
-            <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${isUser ? '1' : '2'};">
+            <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${avatarOrder};">
                 <div style="
                     width: 1.455rem;
                     height: 1.455rem;
@@ -2549,7 +2696,7 @@ function displayConversationMessages(conversation) {
                     position: relative;
                     overflow: hidden;
                 ">
-                    <img src="assests/logos/ai_avatar.webp" alt="AI Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'position: relative; z-index: 1; text-shadow: 0 0.0203rem 0.0405rem rgba(0,0,0,0.2); color: ${avatar.textColor}; font-size: 0.5257rem; font-weight: 700;\\'>${avatar.initials}</span>';" />
+                    <img src="./assests/logos/ai_avatar.webp" alt="AI Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="console.error('AI avatar image failed to load:', this.src); this.style.display='none'; this.parentElement.innerHTML='<span style=\\'position: relative; z-index: 1; text-shadow: 0 0.0203rem 0.0405rem rgba(0,0,0,0.2); color: ${avatar.textColor}; font-size: 0.5257rem; font-weight: 700;\\'>${avatar.initials}</span>';" />
                 </div>
                 <span style="
                     font-size: 0.3639rem;
@@ -2561,7 +2708,7 @@ function displayConversationMessages(conversation) {
                 ">${avatar.label}</span>
             </div>
         ` : `
-            <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${isUser ? '1' : '2'};">
+            <div style="display: flex; flex-direction: column; align-items: ${avatarAlign}; margin-bottom: 0.2426rem; ${avatarMargin} flex-shrink: 0; order: ${avatarOrder};">
                 <div style="
                     width: 1.455rem;
                     height: 1.455rem;
@@ -2597,21 +2744,39 @@ function displayConversationMessages(conversation) {
             display: flex;
             flex-direction: row;
             align-items: flex-start;
-            margin-bottom: 0.6469rem;
-            justify-content: ${isUser ? 'flex-start' : 'flex-end'};
+            margin-bottom: 0;
             width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
+            justify-content: ${isUser ? 'flex-start' : 'flex-end'};
+            gap: 0.3234rem;
         `;
         
         messageDiv.innerHTML = `
             ${isUser ? avatarHTML : ''}
-            <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isUser ? 'flex-start' : 'flex-end'}; order: ${isUser ? '2' : '1'}; min-width: 0; max-width: 100%; box-sizing: border-box;">
-                <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle} word-wrap: break-word; overflow-wrap: break-word; box-sizing: border-box;">
-                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isUser ? 'flex-start' : 'flex-end'}; order: ${isUser ? '2' : '1'}; min-width: 0; max-width: calc(100% - 3.5rem);">
+                <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle} word-wrap: break-word; overflow-wrap: break-word;">
+                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
                 ${emailHeaderHTML}
-                ${formattedText ? `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'}; max-width: 100%; box-sizing: border-box;">${formattedText}</div>` : ''}
-                ${imagesHTML}
+                ${contentInfoBadge}
+                ${formattedHtml ? renderMessageWithInlineImages(formattedHtml, images, imageStartIndex, part.id, isUser) : 
+                  (hasText ? 
+                    `<div class="message-text-content" data-original-text="${escapeHtml(formattedText.replace(/"/g, '&quot;'))}" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#374151' : 'white'};">${formattedText}</div>` : 
+                    (partType && partType.trim() !== '' ? 
+                        `<div class="message-text-content" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.8)'}; font-style: italic;">
+                            <span style="text-transform: uppercase; font-weight: 600; letter-spacing: 0.0405rem; font-size: 0.4447rem; opacity: 0.8;">${escapeHtml(partType)}</span>
+                            ${hasBody ? '<span style="margin-left: 0.2426rem; font-size: 0.4043rem; opacity: 0.6;">(body exists but no displayable content)</span>' : ''}
+                        </div>` : 
+                        (hasBody || hasImages || hasAttachments || isEmail ? 
+                            `<div class="message-text-content" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.8)'}; font-style: italic;">
+                                <span style="opacity: 0.7;">Part ID: ${part.id}</span>
+                                ${hasBody ? '<span style="margin-left: 0.2426rem;">• Has body (no displayable text)</span>' : ''}
+                            </div>` : 
+                            `<div class="message-text-content" data-message-id="${part.id}" style="font-size: 0.5257rem; line-height: 1.5; margin-top: ${isEmail ? '0.2426rem' : '0'}; margin-bottom: ${(allImages.length > 0 || attachments.length > 0) ? '0.3234rem' : '0'}; color: ${isUser ? '#9ca3af' : 'rgba(255,255,255,0.5)'}; font-style: italic;">
+                                <span style="opacity: 0.6;">Empty part (ID: ${part.id})</span>
+                            </div>`
+                        )
+                    )
+                )}
+                ${!formattedHtml && imagesHTML ? imagesHTML : ''}
                 ${attachmentsHTML}
                 </div>
             </div>
@@ -2621,11 +2786,13 @@ function displayConversationMessages(conversation) {
         chatMessagesContainer.appendChild(messageDiv);
     });
 
-    // Scroll to bottom
-    const transcriptChatView = document.getElementById('transcriptChatView');
-    if (transcriptChatView) {
-        transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
-    }
+    // Scroll to bottom after a brief delay to ensure DOM is updated
+    setTimeout(() => {
+        const transcriptChatView = document.getElementById('transcriptChatView');
+        if (transcriptChatView) {
+            transcriptChatView.scrollTop = transcriptChatView.scrollHeight;
+        }
+    }, 100);
 }
 
 // Language detection function - simple heuristic to detect non-English text
@@ -2838,21 +3005,21 @@ window.translateChatMessages = translateChatMessages;
 
 // Format message body (handle HTML/plain text and extract images)
 function formatMessageBody(body) {
-    if (!body) return { text: '', images: [] };
+    if (!body) return { text: '', images: [], html: null };
     
     // If body is an object, extract text
     if (typeof body === 'object') {
         // Handle empty objects
-        if (Object.keys(body).length === 0) return { text: '', images: [] };
+        if (Object.keys(body).length === 0) return { text: '', images: [], html: null };
         
         // Check for text content in various possible fields
         if (body.plaintext) {
             const text = String(body.plaintext).trim();
-            return { text: text ? escapeHtml(text) : '', images: [] };
+            return { text: text ? escapeHtml(text) : '', images: [], html: null };
         }
         if (body.text) {
             const text = String(body.text).trim();
-            return { text: text ? escapeHtml(text) : '', images: [] };
+            return { text: text ? escapeHtml(text) : '', images: [], html: null };
         }
         if (body.body) {
             return parseHtmlBody(String(body.body));
@@ -2865,48 +3032,177 @@ function formatMessageBody(body) {
         
         // If object has no text content, return empty
         // Don't stringify as that would just show "{}"
-        return { text: '', images: [] };
+        return { text: '', images: [], html: null };
     }
     
     // Handle string body (which may contain HTML)
     return parseHtmlBody(String(body));
 }
 
-// Parse HTML body to extract text and images
+// Parse HTML body to extract text and images (preserve inline images)
+// Handles both HTML <img> tags and text-based [Image "..."] references
 function parseHtmlBody(htmlBody) {
-    if (!htmlBody) return { text: '', images: [] };
+    if (!htmlBody) return { text: '', images: [], html: '' };
     
-    // Create a temporary div to parse HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlBody;
-    
-    // Extract all images
+    const htmlString = String(htmlBody);
     const images = [];
+    let processedHtml = htmlString;
+    
+    // Step 1: Extract images from HTML <img> tags
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlString;
+    
     const imgTags = tempDiv.querySelectorAll('img');
-    imgTags.forEach((img, index) => {
+    let imageIndex = 0;
+    
+    imgTags.forEach((img) => {
         const src = img.getAttribute('src') || '';
         if (src) {
-            // Decode HTML entities in URL
-            const decodedSrc = src
-                .replace(/&amp;/g, '&')
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"');
+            // Decode HTML entities in URL (but preserve the original URL structure)
+            let decodedSrc = src;
+            // Only decode if it's clearly an HTML entity, not part of URL encoding
+            if (src.includes('&amp;') && !src.includes('?')) {
+                decodedSrc = src.replace(/&amp;/g, '&');
+            }
             images.push(decodedSrc);
+            
+            // Replace img tag with a placeholder
+            const placeholder = document.createTextNode(`__IMAGE_PLACEHOLDER_${imageIndex}__`);
+            if (img.parentNode) {
+                img.parentNode.replaceChild(placeholder, img);
+            }
+            imageIndex++;
         }
     });
     
-    // Remove image tags and extract text
-    imgTags.forEach(img => img.remove());
-    const text = tempDiv.textContent || tempDiv.innerText || '';
-    const cleanedText = text.trim();
+    // Get HTML with placeholders from img tags
+    processedHtml = tempDiv.innerHTML;
     
-    // Return empty if text is empty or just whitespace/JSON-like structures
-    if (!cleanedText || cleanedText === '{}' || cleanedText === '[]' || cleanedText === 'null' || cleanedText === 'undefined') {
-        return { text: '', images: images };
+    // Step 2: Extract images from text-based [Image "..."] references
+    // Pattern: [Image "URL"] or [Image 'URL'] or [Image URL]
+    // Need to handle URLs with query parameters that might contain quotes
+    // More robust pattern: [Image "..."], [Image '...'], or [Image ...]
+    const imageReferencePattern = /\[Image\s+(?:"([^"]+)"|'([^']+)'|([^\]]+))\]/gi;
+    let match;
+    const textImageMatches = [];
+    
+    // Find all matches and their positions
+    while ((match = imageReferencePattern.exec(htmlString)) !== null) {
+        // match[1] = double-quoted URL, match[2] = single-quoted URL, match[3] = unquoted URL
+        const imageUrl = match[1] || match[2] || match[3];
+        const fullMatch = match[0];
+        const matchIndex = match.index;
+        
+        if (imageUrl && imageUrl.trim() && !images.includes(imageUrl.trim())) {
+            const trimmedUrl = imageUrl.trim();
+            // Only add if not already found in HTML img tags
+            textImageMatches.push({
+                url: trimmedUrl,
+                fullMatch: fullMatch,
+                index: matchIndex,
+                placeholderIndex: imageIndex
+            });
+            images.push(trimmedUrl);
+            imageIndex++;
+        }
     }
     
-    return { text: escapeHtml(cleanedText), images: images };
+    // Replace text-based image references with placeholders (in reverse order to preserve indices)
+    textImageMatches.reverse().forEach(match => {
+        const placeholder = `__IMAGE_PLACEHOLDER_${match.placeholderIndex}__`;
+        processedHtml = processedHtml.substring(0, match.index) + 
+                      placeholder + 
+                      processedHtml.substring(match.index + match.fullMatch.length);
+    });
+    
+    // Step 3: Sanitize HTML using DOMPurify (security + clean HTML)
+    if (typeof DOMPurify !== 'undefined') {
+        processedHtml = DOMPurify.sanitize(processedHtml, {
+            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+            ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+            ALLOW_DATA_ATTR: false,
+            KEEP_CONTENT: true,
+            RETURN_DOM: false,
+            RETURN_DOM_FRAGMENT: false
+        });
+    }
+    
+    // Step 4: Extract plain text for fallback (remove placeholders)
+    const tempDiv2 = document.createElement('div');
+    tempDiv2.innerHTML = processedHtml;
+    const plainText = tempDiv2.textContent || tempDiv2.innerText || '';
+    const cleanedText = plainText.replace(/__IMAGE_PLACEHOLDER_\d+__/g, '').trim();
+    
+    // Return HTML with placeholders, plain text, and images array
+    return { 
+        text: cleanedText, 
+        images: images, 
+        html: processedHtml // HTML with image placeholders, sanitized and preserving formatting
+    };
+}
+
+// Escape HTML attribute value (for src attributes, preserve URL structure)
+// Important: Only escape characters that would break HTML attributes
+// Don't double-encode URL parameters (they're already properly encoded)
+function escapeHtmlAttribute(value) {
+    if (!value) return '';
+    const str = String(value);
+    
+    // Only escape characters that would break the HTML attribute
+    // Preserve URL structure including query parameters
+    return str
+        .replace(/&/g, '&amp;')  // Must escape & first
+        .replace(/"/g, '&quot;')  // Escape quotes
+        .replace(/'/g, '&#x27;')  // Escape single quotes
+        .replace(/</g, '&lt;')    // Escape <
+        .replace(/>/g, '&gt;');   // Escape >
+    
+    // Note: We don't escape spaces, slashes, or other URL characters
+    // as they're already properly encoded in the URL
+}
+
+// Render message with inline images (replace placeholders with actual image elements)
+function renderMessageWithInlineImages(htmlWithPlaceholders, images, imageStartIndex, messageId, isUser) {
+    if (!htmlWithPlaceholders) return '';
+    
+    let renderedHtml = htmlWithPlaceholders;
+    let replacedCount = 0;
+    
+    // Replace each image placeholder with an actual image element
+    images.forEach((imgSrc, idx) => {
+        const globalIndex = imageStartIndex + idx;
+        const placeholder = `__IMAGE_PLACEHOLDER_${idx}__`;
+        
+        // Escape the image src for HTML attribute (preserve URL structure)
+        // Only escape characters that would break the HTML attribute, preserve URL structure
+        const escapedSrc = escapeHtmlAttribute(imgSrc);
+        
+        // Create image HTML with proper styling and click handler
+        // Use proper attribute escaping for src, but don't double-encode URL parameters
+        const imageHtml = `<img src="${escapedSrc}" alt="Image ${idx + 1}" onclick="window.openImageViewer(${globalIndex})" onerror="console.error('Failed to load image:', this.src); this.style.display='none';" style="max-width: 100%; max-height: 20rem; border-radius: 0.3234rem; margin: 0.3234rem 0; cursor: pointer; display: block; box-shadow: 0 0.1213rem 0.2426rem rgba(0,0,0,0.1); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 0.2426rem 0.4852rem rgba(0,0,0,0.15)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0.1213rem 0.2426rem rgba(0,0,0,0.1)';" loading="lazy" />`;
+        
+        if (renderedHtml.includes(placeholder)) {
+            renderedHtml = renderedHtml.replace(placeholder, imageHtml);
+            replacedCount++;
+        } else {
+            console.warn(`⚠️ Image placeholder ${placeholder} not found in HTML for message ${messageId}`);
+        }
+    });
+    
+    // Clean up any remaining placeholders (shouldn't happen, but just in case)
+    const remainingPlaceholders = (renderedHtml.match(/__IMAGE_PLACEHOLDER_\d+__/g) || []).length;
+    if (remainingPlaceholders > 0) {
+        console.warn(`⚠️ ${remainingPlaceholders} image placeholders not replaced in message ${messageId}`);
+        renderedHtml = renderedHtml.replace(/__IMAGE_PLACEHOLDER_\d+__/g, '');
+    }
+    
+    // Add CSS class based on message type for styling
+    const messageClass = isUser ? '' : 'agent-message';
+    const textColor = isUser ? '#374151' : 'white';
+    
+    return `<div class="message-text-content ${messageClass}" data-message-id="${messageId}" style="font-size: 0.5257rem; line-height: 1.6; word-wrap: break-word; margin-top: 0; margin-bottom: 0; color: ${textColor};">
+        ${renderedHtml}
+    </div>`;
 }
 
 // Store all images from conversation for image viewer
@@ -2914,7 +3210,7 @@ let allConversationImages = [];
 let currentImageIndex = 0;
 
 // Open image viewer modal
-function openImageViewer(index) {
+window.openImageViewer = function(index) {
     if (!allConversationImages || allConversationImages.length === 0) return;
     
     currentImageIndex = Math.max(0, Math.min(index, allConversationImages.length - 1));
@@ -2948,7 +3244,7 @@ function openImageViewer(index) {
         // Focus on modal for keyboard navigation
         modal.focus();
     }
-}
+};
 
 // Close image viewer modal
 function closeImageViewer() {
