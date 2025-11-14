@@ -2363,7 +2363,7 @@ function renderFlatList(employees) {
     container.appendChild(flatListContainer);
 }
 
-function renderGroups(groups, groupBy) {
+function renderGroups(groups, groupBy, expandedGroups = new Set()) {
     const container = document.getElementById('groupedEmployeesContainer');
     const emptyState = document.getElementById('emptyState');
     
@@ -2384,6 +2384,17 @@ function renderGroups(groups, groupBy) {
     sortedGroups.forEach(([groupName, employees]) => {
         const groupDiv = createGroupElement(groupName, employees, groupBy);
         container.appendChild(groupDiv);
+        
+        // Restore expanded state if this group was previously expanded
+        const groupId = `group-${groupName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        if (expandedGroups.has(groupId)) {
+            const content = document.getElementById(`content-${groupId}`);
+            const expand = document.getElementById(`expand-${groupId}`);
+            if (content && expand) {
+                content.classList.add('expanded');
+                expand.classList.add('expanded');
+            }
+        }
     });
 }
 
