@@ -722,7 +722,7 @@ async function loadAuditFromURL() {
             reversalRespondedAt: data.reversal_responded_at,
             reversalStatus: data.reversal_status, // Map reversal_status
             slaInHours: data.sla_in_hours,
-            reasonForReversalResponseDelay: data.reason_for_reversal_response_delay,
+            reasonForReversalResponseDelay: data.response_from_auditor,
             reversalApproved: data.reversal_approved,
             withinAuditorScope: data.within_auditor_scope,
             scoreBeforeAppeal: data.score_before_appeal,
@@ -5839,7 +5839,7 @@ function displayReversalApprovalInterface(audit) {
                 
                 <div style="margin-bottom: 0.5625rem;">
                     <label style="display: block; font-size: 0.6562rem; font-weight: 600; color: #374151; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif;">
-                        Response Delay Reason (if applicable)
+                        Response From Auditor
                     </label>
                     <textarea id="reversalDelayReason" rows="2" placeholder="Explain if response took longer than expected..." style="width: 100%; padding: 0.375rem 0.5625rem; border: 0.0625rem solid #d1d5db; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; resize: vertical; box-sizing: border-box;"></textarea>
                 </div>
@@ -6129,7 +6129,7 @@ async function processReversalDecision(decision) {
             reversal_responded_at: respondedAt.toISOString(),
             reversal_approved_by: approvedBy,
             reversal_resolved_by: currentUserName,
-            reason_for_reversal_response_delay: delayReason,
+            response_from_auditor: delayReason,
             sla_in_hours: parseFloat(slaHours.toFixed(2)),
             acknowledgement_status: newAcknowledgementStatus,
             acknowledgement_status_updated_at: respondedAt.toISOString()

@@ -137,7 +137,7 @@ function transformRecord(csvRecord, index) {
         reversal_requested_at: parseDateTime(cleanRecord['Reversal Requested At']),
         reversal_responded_at: parseDateTime(cleanRecord['Reversal Responded At']),
         sla_in_hours: parseFloat(cleanRecord['SLA (In Hours)']),
-        reason_for_reversal_response_delay: cleanRecord['Reason for Reversal Response Delay'] || null,
+        response_from_auditor: cleanRecord['Reason for Reversal Response Delay'] || null,
         reversal_approved: parseBoolean(cleanRecord['Reversal Approved?']),
         within_auditor_scope: parseBoolean(cleanRecord["Within Auditor's Scope?"]),
         score_before_appeal: parseFloat(cleanRecord['Score Before Appeal']),
