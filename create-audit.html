@@ -1920,11 +1920,6 @@ function toggleAllAuditsView() {
     
     // Reload audits with new view
     loadPendingAudits();
-    // Only load AI results if there are any (don't show empty section)
-    // loadAIAuditResults(); // Load AI-audited conversations
-    
-    // Set up real-time subscription for AI audit results
-    setupAIAuditRealtimeSubscription();
 }
 
 // Sort pending audits based on current sort order
@@ -2559,7 +2554,7 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
                             class="run-ai-audit-btn-group run-ai-audit-btn"
                             data-email="${escapeHtml(displayEmail)}"
                             data-name="${escapeHtml(displayName)}"
-                            onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}', '${escapeHtml(displayEmail)}');"
+                            onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}');"
                             title="Run AI Audit for ${escapeHtml(displayName)}"
                         >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2613,11 +2608,6 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         const canEdit = !isAgent;
         const badgeSize = isNested ? '0.4852rem' : '0.4447rem';
         const badgePadding = isNested ? '0.1617rem 0.4043rem' : '0.0808rem 0.3234rem';
-        
-        // AI indicator badge
-        const isAIGenerated = audit.source_type === 'ai_generated';
-        const aiBadge = isAIGenerated && audit.ai_processed ? 
-            `<span style="background-color: #dbeafe; color: #1e40af; padding: ${isNested ? '0.1617rem 0.4852rem' : badgePadding}; border-radius: 9999px; font-size: ${isNested ? '0.4852rem' : badgeSize}; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; height: 1.2935rem; margin-left: 0.3234rem;">🤖 AI</span>` : '';
         
         if (audit.status === 'completed') {
             // Status chip - very light greenish indicator for completed (pill-shaped)
@@ -2736,7 +2726,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                 
                 <!-- Middle: Crucial Info (Status Chip + Conversation ID, Employee, Date) -->
                 <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1; min-width: 0; overflow: hidden;">
-                    ${statusBadge}${aiBadge}
+                    ${statusBadge}
                     ${conversationId ? `
                         <div style="display: flex; align-items: center; gap: 0.2425rem; flex-shrink: 0;">
                             <svg style="width: 0.8886rem; height: 0.8886rem; color: #2563eb; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2803,7 +2793,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                         <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
                             ${escapeHtml(displayName)}
                         </h4>
-                        ${statusBadge}${aiBadge}
+                        ${statusBadge}
                         ${conversationLinkHTML}
                     </div>
                     <p style="margin: 0; font-size: 0.4852rem; color: #6b7280; display: flex; align-items: center; gap: 0.2425rem; flex-wrap: wrap;">
@@ -2836,7 +2826,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                         class="run-ai-audit-btn"
                         data-email="${escapeHtml(displayEmail)}"
                         data-name="${escapeHtml(displayName)}"
-                        onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}', '${escapeHtml(displayEmail)}');"
+                        onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}');"
                         title="Run AI Audit for ${escapeHtml(displayName)}"
                     >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -4659,7 +4649,6 @@ async function fetchConversationsForCurrentUser(selectedDate) {
 function updateProgressIndicator(percentage, message) {
     const statusElement = document.getElementById('pullConversationsStatus');
     const progressBar = document.getElementById('pullConversationsProgressBar');
-    const aiAuditProgressBar = document.getElementById('aiAuditProgressBar'); // For AI audit modal
     const progressText = document.getElementById('pullConversationsProgress');
     
     if (statusElement) {
@@ -4668,11 +4657,6 @@ function updateProgressIndicator(percentage, message) {
     
     if (progressBar) {
         progressBar.style.width = `${percentage}%`;
-    }
-    
-    // Update AI audit progress bar if it exists (for AI audit modal)
-    if (aiAuditProgressBar) {
-        aiAuditProgressBar.style.width = `${percentage}%`;
     }
     
     if (progressText && percentage === 100) {
@@ -5298,1990 +5282,44 @@ window.closePullConversationsFilterDialog = function() {
     document.body.style.overflow = '';
 };
 
-// Show AI Audit Dialog
-window.showComingSoonDialog = async function(employeeName, employeeEmail) {
-    // Show warning dialog FIRST before showing date/scorecard selection
-    const userConfirmed = await showPrototypeWarningDialog();
-    if (!userConfirmed) {
-        return; // User cancelled, don't show the modal
-    }
-    
-    // Store employee info for AI audit
-    window.currentAIAuditEmployee = {
-        name: employeeName || '',
-        email: employeeEmail || ''
-    };
-    
-    // Show AI audit modal (date and scorecard selection)
-    showAIAuditModal(employeeName, employeeEmail);
-};
-
-// Show AI Audit Modal
-function showAIAuditModal(employeeName, employeeEmail) {
+// Show Coming Soon Dialog
+window.showComingSoonDialog = function(employeeName) {
     const modal = document.getElementById('comingSoonModal');
-    if (!modal) return;
-    
-    // Update modal content for AI audit
-    const modalContent = modal.querySelector('#comingSoonModalContent');
-    if (modalContent) {
-        modalContent.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2937rem;">
-                <h2 style="font-size: 1.2937rem; font-weight: 700; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif;">
-                    🤖 AI Audit for ${escapeHtml(employeeName || 'Employee')}
-                </h2>
-                <button onclick="closeAIAuditModal()" style="background: #f3f4f6; border: none; border-radius: 50%; width: 1.9406rem; height: 1.9406rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6b7280; font-size: 1.2937rem; line-height: 1; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">×</button>
-            </div>
-            
-            <div id="aiAuditStep1" style="display: block;">
-                <p style="font-size: 0.8086rem; color: #6b7280; margin-bottom: 1.2937rem; line-height: 1.6;">
-                    Select a date and scorecard to generate AI audits. The system will analyze conversations and pre-fill audit forms.
-                </p>
-                
-                <div style="margin-bottom: 1.2937rem;">
-                    <label style="display: block; font-size: 0.7278rem; font-weight: 600; color: #374151; margin-bottom: 0.4043rem;">
-                        Audit Date
-                    </label>
-                    <input type="date" id="aiAuditDate" style="width: 100%; padding: 0.4852rem; border: 0.0405rem solid #d1d5db; border-radius: 0.3234rem; font-size: 0.8086rem; font-family: 'Poppins', sans-serif;">
-                </div>
-                
-                <div style="margin-bottom: 1.2937rem;">
-                    <label style="display: block; font-size: 0.7278rem; font-weight: 600; color: #374151; margin-bottom: 0.4043rem;">
-                        Select Scorecard
-                    </label>
-                    <div id="aiAuditScorecardsContainer" style="max-height: 200px; min-height: 200px; height: 200px; overflow-y: auto; overflow-x: hidden; border: 0.0405rem solid #e5e7eb; border-radius: 0.3234rem; padding: 0.4043rem; background: #f9fafb; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f9fafb;">
-                        <div style="text-align: center; padding: 1.5rem; color: #6b7280; font-size: 0.8086rem;">
-                            Loading scorecards...
-                        </div>
-                    </div>
-                    <input type="hidden" id="aiAuditScorecard" value="">
-                </div>
-                
-                <button onclick="loadConversationsForAIAudit()" style="width: 100%; padding: 0.6469rem; background: #1A733E; color: white; border: none; border-radius: 0.3234rem; font-size: 0.8086rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
-                    Load Conversations
-                </button>
-            </div>
-            
-            <div id="aiAuditStep2" style="display: none;">
-                <div id="aiAuditLoading" style="text-align: center; padding: 2rem;">
-                    <div style="font-size: 0.8086rem; color: #6b7280; margin-bottom: 1rem;">Loading conversations...</div>
-                    <div style="width: 100%; height: 0.4043rem; background: #e5e7eb; border-radius: 0.2022rem; overflow: hidden;">
-                        <div id="aiAuditProgressBar" style="height: 100%; background: #1A733E; width: 0%; transition: width 0.3s;"></div>
-                    </div>
-                </div>
-                
-                <div id="aiAuditConversationsList" style="display: none; max-height: 400px; overflow-y: auto; margin-bottom: 1.2937rem;">
-                    <div style="font-size: 0.7278rem; font-weight: 600; color: #374151; margin-bottom: 0.6469rem;">
-                        Select up to 10 conversations to audit:
-                    </div>
-                    <div id="aiAuditConversationsContainer"></div>
-                </div>
-                
-                <div id="aiAuditStep2Actions" style="display: none; display: flex; gap: 0.6469rem;">
-                    <button onclick="showAIAuditModal('${escapeHtml(employeeName || '')}', '${escapeHtml(employeeEmail || '')}')" style="flex: 1; padding: 0.6469rem; background: #f3f4f6; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.3234rem; font-size: 0.8086rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer;">
-                        Back
-                    </button>
-                    <button onclick="processAIAudits()" id="processAIAuditBtn" style="flex: 2; padding: 0.6469rem; background: #1A733E; color: white; border: none; border-radius: 0.3234rem; font-size: 0.8086rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
-                        Process Selected (<span id="selectedCount">0</span>)
-                    </button>
-                </div>
-            </div>
-            
-            <div id="aiAuditStep3" style="display: none;">
-                <div style="text-align: center; padding: 2rem;">
-                    <div style="font-size: 1.1321rem; font-weight: 600; color: #1f2937; margin-bottom: 0.6469rem;">Processing AI Audits...</div>
-                    <div style="font-size: 0.8086rem; color: #6b7280; margin-bottom: 1.2937rem;" id="aiAuditStatus">Initializing...</div>
-                    <div style="width: 100%; height: 0.4043rem; background: #e5e7eb; border-radius: 0.2022rem; overflow: hidden;">
-                        <div id="aiAuditProcessingBar" style="height: 100%; background: #1A733E; width: 0%; transition: width 0.3s;"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // Set default date to yesterday
-    setTimeout(() => {
-        const dateInput = document.getElementById('aiAuditDate');
-        if (dateInput) {
-            const today = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(today.getDate() - 1);
-            dateInput.value = yesterday.toISOString().split('T')[0];
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Optionally update the message to include employee name
+        if (employeeName) {
+            const message = modal.querySelector('p');
+            if (message) {
+                message.textContent = `We're working on an AI-powered audit feature for ${employeeName} that will automatically analyze conversations and generate audit reports. Stay tuned!`;
+            }
+        } else {
+            // Reset to default message if no employee name
+            const message = modal.querySelector('p');
+            if (message) {
+                message.textContent = `We're working on an AI-powered audit feature that will automatically analyze conversations and generate audit reports. Stay tuned!`;
+            }
         }
         
-        // Load scorecards
-        loadScorecardsForAIAudit();
-    }, 100);
-    
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    
-    // Close on Escape key
-    const escapeHandler = (e) => {
-        if (e.key === 'Escape') {
-            closeAIAuditModal();
-            document.removeEventListener('keydown', escapeHandler);
-        }
-    };
-    document.addEventListener('keydown', escapeHandler);
-}
-
-// Close AI Audit Modal
-window.closeAIAuditModal = function() {
-    // Stop polling if it's running
-    if (window.stopAIAuditPolling && typeof window.stopAIAuditPolling === 'function') {
-        window.stopAIAuditPolling();
+        // Close on Escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeComingSoonDialog();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
     }
-    
+};
+
+// Close Coming Soon Dialog
+window.closeComingSoonDialog = function() {
     const modal = document.getElementById('comingSoonModal');
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = '';
-    }
-    window.currentAIAuditEmployee = null;
-    window.selectedAIAuditConversations = [];
-};
-
-// Close Coming Soon Dialog (alias for compatibility)
-window.closeComingSoonDialog = function() {
-    closeAIAuditModal();
-};
-
-// Global variables for AI audit
-if (!window.currentAIAuditEmployee) window.currentAIAuditEmployee = null;
-if (!window.selectedAIAuditConversations) window.selectedAIAuditConversations = [];
-if (!window.currentAIAuditBatchId) window.currentAIAuditBatchId = null;
-// Persistent storage for AI audit conversation IDs (survives after progress is cleared)
-if (!window.persistentAIAuditConversations) window.persistentAIAuditConversations = {};
-
-// Load scorecards for AI audit and display as selectable cards
-async function loadScorecardsForAIAudit() {
-    const container = document.getElementById('aiAuditScorecardsContainer');
-    const hiddenInput = document.getElementById('aiAuditScorecard');
-    
-    if (!container) {
-        console.error('aiAuditScorecardsContainer element not found');
-        return;
-    }
-    
-    try {
-        console.log('Loading scorecards for AI audit...');
-        const { data, error } = await window.supabaseClient
-            .from('scorecards')
-            .select('*')
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
-        
-        if (error) {
-            console.error('Error loading scorecards:', error);
-            throw error;
-        }
-        
-        console.log(`✅ Loaded ${data?.length || 0} active scorecards from database`);
-        console.log('📋 Scorecards data:', data);
-        
-        // Verify all are actually active
-        if (data && data.length > 0) {
-            const inactiveInResults = data.filter(s => s.is_active !== true);
-            if (inactiveInResults.length > 0) {
-                console.warn('⚠️ Found inactive scorecards in results:', inactiveInResults);
-            }
-        }
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6b7280; font-size: 0.8086rem;">No active scorecards found</div>';
-            return;
-        }
-        
-        // Clear container
-        container.innerHTML = '';
-        
-        // Find fnchat_v2 scorecard to auto-select
-        const fnchatV2Scorecard = data.find(scorecard => scorecard.table_name === 'fnchat_v2');
-        const defaultSelectedId = fnchatV2Scorecard ? fnchatV2Scorecard.id : (data.length > 0 ? data[0].id : null);
-        
-        // Create scorecard cards
-        let cardsCreated = 0;
-        data.forEach((scorecard, index) => {
-            console.log(`Creating card ${index + 1}/${data.length}: ${scorecard.name} (ID: ${scorecard.id}, Active: ${scorecard.is_active})`);
-            const isSelected = scorecard.id === defaultSelectedId;
-            const card = document.createElement('div');
-            card.className = 'ai-scorecard-card';
-            card.dataset.scorecardId = scorecard.id;
-            card.style.cssText = `
-                padding: 0.4852rem 0.6469rem;
-                margin-bottom: 0.4043rem;
-                border: 0.0808rem solid ${isSelected ? '#1A733E' : '#e5e7eb'};
-                border-radius: 0.2425rem;
-                background: ${isSelected ? '#f0fdf4' : 'white'};
-                cursor: pointer;
-                transition: all 0.2s;
-                position: relative;
-                flex-shrink: 0;
-                width: 100%;
-                box-sizing: border-box;
-            `;
-            
-            card.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.4852rem;">
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 0.7278rem; font-weight: 600; color: #1f2937; margin-bottom: 0.1617rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${escapeHtml(scorecard.name || 'Unnamed Scorecard')}
-                        </div>
-                        <div style="font-size: 0.5659rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${escapeHtml(scorecard.table_name || 'N/A')}${scorecard.passing_threshold ? ` • ${scorecard.passing_threshold}%` : ''}
-                        </div>
-                    </div>
-                    ${isSelected ? `
-                        <div style="width: 1.1321rem; height: 1.1321rem; border-radius: 50%; background: #1A733E; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                        </div>
-                    ` : `
-                        <div style="width: 1.1321rem; height: 1.1321rem; border-radius: 50%; border: 0.0808rem solid #d1d5db; flex-shrink: 0;"></div>
-                    `}
-                </div>
-            `;
-            
-            // Add click handler
-            card.addEventListener('click', function() {
-                const clickedScorecardId = this.dataset.scorecardId;
-                
-                // Remove selection from all cards
-                container.querySelectorAll('.ai-scorecard-card').forEach(c => {
-                    c.style.borderColor = '#e5e7eb';
-                    c.style.background = 'white';
-                    const circle = c.querySelector('div[style*="border-radius: 50%"]');
-                    if (circle && circle.querySelector('svg')) {
-                        circle.innerHTML = '';
-                        circle.style.border = '0.0808rem solid #d1d5db';
-                        circle.style.background = 'transparent';
-                    }
-                });
-                
-                // Select this card
-                this.style.borderColor = '#1A733E';
-                this.style.background = '#f0fdf4';
-                const circle = this.querySelector('div[style*="border-radius: 50%"]');
-                if (circle) {
-                    circle.innerHTML = `
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                    `;
-                    circle.style.background = '#1A733E';
-                    circle.style.border = 'none';
-                }
-                
-                // Update hidden input
-                if (hiddenInput) {
-                    hiddenInput.value = clickedScorecardId;
-                }
-                
-                // Find the scorecard name for logging
-                const selectedScorecard = data.find(s => s.id === clickedScorecardId);
-                console.log('Selected scorecard:', selectedScorecard?.name || clickedScorecardId, clickedScorecardId);
-            });
-            
-            // Add hover effect
-            card.addEventListener('mouseenter', function() {
-                if (this.style.borderColor !== 'rgb(26, 115, 62)' && this.style.borderColor !== '#1A733E') {
-                    this.style.borderColor = '#9ca3af';
-                    this.style.background = '#f9fafb';
-                }
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                if (this.style.borderColor !== 'rgb(26, 115, 62)' && this.style.borderColor !== '#1A733E') {
-                    this.style.borderColor = '#e5e7eb';
-                    this.style.background = 'white';
-                }
-            });
-            
-            container.appendChild(card);
-            cardsCreated++;
-            console.log(`✅ Card created and appended: ${scorecard.name}`);
-            
-            // Remove margin from last card
-            if (index === data.length - 1) {
-                card.style.marginBottom = '0';
-            }
-        });
-        
-        // Verify all cards were created
-        const cardsInDOM = container.querySelectorAll('.ai-scorecard-card').length;
-        console.log(`📊 Summary: ${data.length} scorecards fetched, ${cardsCreated} cards created, ${cardsInDOM} cards in DOM`);
-        
-        if (cardsCreated !== data.length) {
-            console.error(`❌ Mismatch! Expected ${data.length} cards but created ${cardsCreated}`);
-        }
-        
-        if (cardsInDOM !== cardsCreated) {
-            console.error(`❌ Mismatch! Created ${cardsCreated} cards but only ${cardsInDOM} in DOM`);
-        }
-        
-        // Set default selection
-        if (defaultSelectedId && hiddenInput) {
-            hiddenInput.value = defaultSelectedId;
-            console.log('Auto-selected scorecard:', fnchatV2Scorecard ? 'fnchat_v2' : 'first scorecard');
-        }
-        
-        console.log(`✅ Displayed ${cardsCreated} scorecard cards successfully`);
-        
-    } catch (error) {
-        console.error('Error loading scorecards:', error);
-        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #ef4444; font-size: 0.8086rem;">Error loading scorecards. Please try again.</div>';
-    }
-}
-
-// Filter and rank conversations based on CSAT, CX Score, and conversation length
-// Returns top 10 conversations with rank field
-function filterAndRankConversations(conversations) {
-    if (!conversations || !Array.isArray(conversations)) {
-        return [];
-    }
-    
-    // Step 1: Filter out conversations missing required fields
-    const validConversations = conversations.filter(conv => {
-        const csat = conv.conversation_rating?.rating;
-        const cxScoreRaw = conv.custom_attributes?.["CX Score rating"];
-        const conversationLength = conv.conversation_parts?.conversation_parts?.length;
-        
-        // All three fields must be present and valid
-        // CSAT must be a valid number
-        const csatNum = csat !== null && csat !== undefined && csat !== '' ? Number(csat) : NaN;
-        // CX Score must be a valid number
-        const cxScoreNum = cxScoreRaw !== null && cxScoreRaw !== undefined && cxScoreRaw !== '' ? Number(cxScoreRaw) : NaN;
-        // Conversation length must be a valid number (0 is allowed)
-        const lengthNum = conversationLength !== null && conversationLength !== undefined ? Number(conversationLength) : NaN;
-        
-        return (
-            !isNaN(csatNum) && isFinite(csatNum) &&
-            !isNaN(cxScoreNum) && isFinite(cxScoreNum) &&
-            !isNaN(lengthNum) && isFinite(lengthNum) && lengthNum >= 0
-        );
-    });
-    
-    // Step 2: Map to standardized format and extract values
-    const mappedConversations = validConversations.map(conv => {
-        const csat = Number(conv.conversation_rating?.rating);
-        const cxScoreRaw = conv.custom_attributes?.["CX Score rating"];
-        const cxScore = Number(cxScoreRaw);
-        const conversationLength = Number(conv.conversation_parts?.conversation_parts?.length || 0);
-        
-        return {
-            ...conv, // Keep original conversation data
-            conversation_id: conv.id,
-            csat: csat,
-            cx_score: cxScore,
-            conversation_length: conversationLength
-        };
-    });
-    
-    // Step 3: Sort by ranking rules:
-    // 1. Lowest CSAT first (highest priority)
-    // 2. If CSAT ties: Lowest CX Score first
-    // 3. If both tie: Highest conversation length first
-    mappedConversations.sort((a, b) => {
-        // Primary: Lowest CSAT
-        if (a.csat !== b.csat) {
-            return a.csat - b.csat;
-        }
-        
-        // Tie-breaker 1: Lowest CX Score
-        if (a.cx_score !== b.cx_score) {
-            return a.cx_score - b.cx_score;
-        }
-        
-        // Tie-breaker 2: Highest conversation length
-        return b.conversation_length - a.conversation_length;
-    });
-    
-    // Step 4: Return top 10 (or all if less than 10) with rank field
-    return mappedConversations.slice(0, 10).map((conv, index) => ({
-        ...conv,
-        rank: index + 1
-    }));
-}
-
-// Load conversations for AI audit
-window.loadConversationsForAIAudit = async function() {
-    const dateInput = document.getElementById('aiAuditDate');
-    const scorecardSelect = document.getElementById('aiAuditScorecard');
-    const employee = window.currentAIAuditEmployee;
-    
-    if (!dateInput || !dateInput.value) {
-        alert('Please select a date');
-        return;
-    }
-    
-    if (!scorecardSelect || !scorecardSelect.value) {
-        alert('Please select a scorecard');
-        return;
-    }
-    
-    if (!employee || !employee.email) {
-        alert('Employee information not found');
-        return;
-    }
-    
-    document.getElementById('aiAuditStep1').style.display = 'none';
-    document.getElementById('aiAuditStep2').style.display = 'block';
-    document.getElementById('aiAuditLoading').style.display = 'block';
-    document.getElementById('aiAuditConversationsList').style.display = 'none';
-    document.getElementById('aiAuditStep2Actions').style.display = 'none';
-    
-    try {
-        pullConversationsAdminId = null;
-        pullConversationsAdminName = employee.name;
-        pullConversationsAdminEmail = employee.email;
-        
-        await findAdminIdForEmployee(employee.email);
-        
-        if (!pullConversationsAdminId) {
-            throw new Error('Admin ID not found for employee');
-        }
-        
-        const selectedDate = dateInput.value;
-        await fetchConversationsForCurrentUser(selectedDate);
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const conversations = pullConversationsList || [];
-        
-        if (conversations.length === 0) {
-            document.getElementById('aiAuditLoading').innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <div style="font-size: 0.8086rem; color: #6b7280;">No conversations found for ${selectedDate}</div>
-                </div>
-            `;
-            return;
-        }
-        
-        // Filter and rank conversations using new rules
-        const top10 = filterAndRankConversations(conversations);
-        displayAIAuditConversations(top10);
-        
-        document.getElementById('aiAuditLoading').style.display = 'none';
-        document.getElementById('aiAuditConversationsList').style.display = 'block';
-        document.getElementById('aiAuditStep2Actions').style.display = 'flex';
-        
-    } catch (error) {
-        console.error('Error loading conversations:', error);
-        document.getElementById('aiAuditLoading').innerHTML = `
-            <div style="text-align: center; padding: 2rem;">
-                <div style="font-size: 0.8086rem; color: #ef4444;">Error: ${error.message}</div>
-            </div>
-        `;
-    }
-};
-
-// Display conversations for AI audit selection
-function displayAIAuditConversations(conversations) {
-    const container = document.getElementById('aiAuditConversationsContainer');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    window.selectedAIAuditConversations = [];
-    
-    conversations.forEach((conversation, index) => {
-        const clientName = extractClientName(conversation) || 'Unknown';
-        const conversationId = (conversation.conversation_id || conversation.id || 'N/A').toString();
-        const subject = conversation.source?.subject || (conversation.source?.body ? conversation.source.body.substring(0, 50) : '') || 'No subject';
-        
-        // Use new standardized fields if available, fallback to original structure
-        const csat = conversation.csat !== undefined ? conversation.csat : (conversation.conversation_rating?.rating || '-');
-        const cxScore = conversation.cx_score !== undefined ? conversation.cx_score : (conversation.custom_attributes?.["CX Score rating"] ?? null);
-        const length = conversation.conversation_length !== undefined ? conversation.conversation_length : (conversation.conversation_parts?.conversation_parts?.length || 0);
-        const rank = conversation.rank || (index + 1);
-        
-        const item = document.createElement('div');
-        item.style.cssText = 'padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.3234rem; margin-bottom: 0.4852rem; background: white; cursor: pointer; transition: all 0.2s;';
-        item.onmouseover = function() { this.style.borderColor = '#1A733E'; this.style.backgroundColor = '#f0fdf4'; };
-        item.onmouseout = function() { this.style.borderColor = '#e5e7eb'; this.style.backgroundColor = 'white'; };
-        
-        item.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 0.6469rem;">
-                <input type="checkbox" class="ai-audit-conversation-checkbox" data-conversation-id="${conversation.id || conversation.conversation_id}" data-index="${index}" style="width: 1rem; height: 1rem; cursor: pointer;" onchange="updateAIAuditSelection()">
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; color: #1f2937; font-size: 0.8086rem; margin-bottom: 0.2425rem;">${escapeHtml(clientName)}</div>
-                    <div style="font-size: 0.7278rem; color: #6b7280; margin-bottom: 0.2425rem;">${escapeHtml(subject)}</div>
-                    <div style="display: flex; gap: 0.6469rem; font-size: 0.6469rem; color: #6b7280;">
-                        <span>ID: ${conversationId}</span>
-                        <span>⭐ CSAT: ${csat !== '-' ? csat + '/5' : 'N/A'}</span>
-                        <span>CX: ${cxScore !== null ? cxScore : 'N/A'}</span>
-                        <span>Length: ${length}</span>
-                        <span style="font-weight: 600; color: #1A733E;">Rank: #${rank}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        container.appendChild(item);
-    });
-}
-
-// Update AI audit selection
-window.updateAIAuditSelection = function() {
-    const checkboxes = document.querySelectorAll('.ai-audit-conversation-checkbox');
-    const selected = [];
-    
-    checkboxes.forEach(cb => {
-        if (cb.checked) {
-            const conversationId = cb.dataset.conversationId;
-            const index = parseInt(cb.dataset.index);
-            const conversations = pullConversationsList || [];
-            if (conversations[index]) {
-                selected.push(conversations[index]);
-            }
-        }
-    });
-    
-    window.selectedAIAuditConversations = selected;
-    
-    const selectedCount = document.getElementById('selectedCount');
-    if (selectedCount) {
-        selectedCount.textContent = selected.length;
-    }
-    
-    const processBtn = document.getElementById('processAIAuditBtn');
-    if (processBtn) {
-        processBtn.disabled = selected.length === 0;
-        processBtn.style.opacity = selected.length === 0 ? '0.5' : '1';
-    }
-};
-
-// Show prototype warning confirmation dialog
-function showPrototypeWarningDialog() {
-    return new Promise((resolve) => {
-        // Create modal overlay
-        const overlay = document.createElement('div');
-        overlay.id = 'prototypeWarningOverlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            font-family: 'Poppins', sans-serif;
-        `;
-        
-        // Create modal content
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            background: white;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        `;
-        
-        modal.innerHTML = `
-            <div style="margin-bottom: 1.5rem;">
-                <h2 style="font-size: 1.25rem; font-weight: 700; color: #dc2626; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <span>⚠️</span>
-                    <span>PROTOTYPE VERSION WARNING</span>
-                </h2>
-                <p style="font-size: 0.875rem; color: #374151; margin-bottom: 1rem; line-height: 1.6;">
-                    This AI Audit feature is currently in prototype development and is <strong>not complete</strong>.
-                </p>
-                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 0.375rem; margin-bottom: 1rem;">
-                    <p style="font-size: 0.875rem; font-weight: 600; color: #92400e; margin: 0 0 0.5rem 0;">IMPORTANT:</p>
-                    <ul style="font-size: 0.875rem; color: #78350f; margin: 0; padding-left: 1.25rem; line-height: 1.8;">
-                        <li>This is a <strong>prototype version</strong> - results may be incomplete or inaccurate</li>
-                        <li><strong>Auditor's judgment and review is REQUIRED</strong> for all AI-generated audits</li>
-                        <li>Do not rely solely on AI-generated data - always verify and validate results</li>
-                        <li>The system may produce errors or incomplete information</li>
-                    </ul>
-                </div>
-                <p style="font-size: 0.875rem; color: #6b7280; line-height: 1.6;">
-                    By proceeding, you acknowledge that you understand this is a prototype and will use your professional judgment when reviewing AI-generated audit results.
-                </p>
-            </div>
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button id="prototypeWarningCancel" style="padding: 0.625rem 1.25rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
-                    Cancel
-                </button>
-                <button id="prototypeWarningConfirm" style="padding: 0.625rem 1.25rem; background: #dc2626; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#b91c1c'" onmouseout="this.style.backgroundColor='#dc2626'">
-                    I Understand, Continue
-                </button>
-            </div>
-        `;
-        
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-        document.body.style.overflow = 'hidden';
-        
-        // Handle button clicks
-        const cancelBtn = document.getElementById('prototypeWarningCancel');
-        const confirmBtn = document.getElementById('prototypeWarningConfirm');
-        
-        const cleanup = () => {
-            document.body.removeChild(overlay);
-            document.body.style.overflow = '';
-        };
-        
-        cancelBtn.onclick = () => {
-            cleanup();
-            resolve(false);
-        };
-        
-        confirmBtn.onclick = () => {
-            cleanup();
-            resolve(true);
-        };
-        
-        // Close on overlay click
-        overlay.onclick = (e) => {
-            if (e.target === overlay) {
-                cleanup();
-                resolve(false);
-            }
-        };
-    });
-}
-
-// Process AI audits
-window.processAIAudits = async function() {
-    const selected = window.selectedAIAuditConversations;
-    const employee = window.currentAIAuditEmployee;
-    const dateInput = document.getElementById('aiAuditDate');
-    const scorecardSelect = document.getElementById('aiAuditScorecard');
-    
-    if (!selected || selected.length === 0) {
-        alert('Please select at least one conversation');
-        return;
-    }
-    
-    if (!employee || !employee.email) {
-        alert('Employee information not found');
-        return;
-    }
-    
-    if (!dateInput || !dateInput.value) {
-        alert('Date not found');
-        return;
-    }
-    
-    if (!scorecardSelect || !scorecardSelect.value) {
-        alert('Scorecard not selected');
-        return;
-    }
-    
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    const auditorEmail = userInfo.email || '';
-    
-    try {
-        const supabaseUrl = window.SupabaseConfig?.url || '';
-        const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
-        
-        if (!supabaseUrl || !supabaseAnonKey) {
-            throw new Error('Supabase configuration not found');
-        }
-        
-        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/ai-audit-processor`;
-        
-        // Send request to n8n
-        const response = await fetch(edgeFunctionUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${supabaseAnonKey}`,
-                'apikey': supabaseAnonKey,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                conversations: selected,
-                employee_email: employee.email,
-                employee_name: employee.name,
-                scorecard_id: scorecardSelect.value,
-                audit_date: dateInput.value,
-                auditor_email: auditorEmail
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `HTTP ${response.status}`);
-        }
-        
-        const result = await response.json();
-        const batchId = result.batch_id;
-        
-        // Store batch info for progress tracking
-        window.currentAIAuditBatchId = batchId;
-        window.currentAIAuditConversations = selected.map(c => c.id);
-        
-        // Close modal immediately
-        closeAIAuditModal();
-        
-        // Show progress in AI audit results section
-        showAIAuditProgress(batchId, selected, employee, dateInput.value, scorecardSelect.value);
-        
-        // Start polling for results (in background)
-        pollForAIAuditResults(batchId);
-        
-    } catch (error) {
-        console.error('Error processing AI audits:', error);
-        alert('Error processing AI audits: ' + error.message);
-        closeAIAuditModal();
-    }
-};
-
-// Poll for AI audit results (checking ai_audit_results table)
-async function pollForAIAuditResults(batchId) {
-    let attempts = 0;
-    const maxAttempts = 120; // 10 minutes max (120 * 5 seconds)
-    
-    // Get expected count from aiAuditProgress if available, otherwise from selectedAIAuditConversations
-    const expectedCount = window.aiAuditProgress?.total || window.selectedAIAuditConversations?.length || 0;
-    
-    // Store polling interval so we can clear it if needed
-    let pollInterval = null;
-    let isPolling = true;
-    
-    // Store polling state globally so we can stop it
-    window.stopAIAuditPolling = () => {
-        console.log('🛑 Stopping AI audit polling');
-        isPolling = false;
-        if (pollInterval) {
-            clearTimeout(pollInterval);
-            pollInterval = null;
-        }
-    };
-    
-    console.log(`🔄 Starting polling for batch_id: ${batchId}, expecting ${expectedCount} results`);
-    
-    // Add a manual close button after 30 seconds if still polling
-    const addManualCloseButton = () => {
-        const statusEl = document.getElementById('aiAuditStatus');
-        const step3Container = document.getElementById('aiAuditStep3');
-        if (step3Container && !step3Container.querySelector('.manual-close-btn')) {
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'manual-close-btn';
-            closeBtn.textContent = 'Close & Show Results';
-            closeBtn.style.cssText = `
-                margin-top: 1rem;
-                padding: 0.6469rem 1.2937rem;
-                background: #6b7280;
-                color: white;
-                border: none;
-                border-radius: 0.3234rem;
-                cursor: pointer;
-                font-size: 0.8086rem;
-                font-weight: 600;
-                font-family: 'Poppins', sans-serif;
-                transition: all 0.2s;
-            `;
-            closeBtn.onmouseover = () => closeBtn.style.backgroundColor = '#4b5563';
-            closeBtn.onmouseout = () => closeBtn.style.backgroundColor = '#6b7280';
-            closeBtn.onclick = () => {
-                console.log('🛑 Manual close button clicked - stopping polling');
-                isPolling = false;
-                if (pollInterval) {
-                    clearTimeout(pollInterval);
-                    pollInterval = null;
-                }
-                closeAIAuditModal();
-                loadAIAuditResults();
-            };
-            step3Container.appendChild(closeBtn);
-        }
-    };
-    
-    const poll = async () => {
-        if (!isPolling) {
-            console.log('🛑 Polling stopped');
-            return; // Stop if manually closed
-        }
-        
-        attempts++;
-        
-        try {
-            // Get the list of conversation IDs we're tracking
-            const trackingConversationIds = window.aiAuditProgress?.conversationIds || [];
-            const scorecardId = window.aiAuditProgress?.scorecardId;
-            const auditDate = window.aiAuditProgress?.auditDate;
-            
-            if (!trackingConversationIds || trackingConversationIds.length === 0) {
-                console.warn('⚠️ No conversation IDs to track');
-                return;
-            }
-            
-            console.log(`🔍 [Poll ${attempts}/${maxAttempts}] Fallback check for ${trackingConversationIds.length} conversations...`);
-            console.log(`📋 [Poll] Tracking conversation IDs:`, trackingConversationIds);
-            console.log(`📋 [Poll] Scorecard ID:`, scorecardId);
-            console.log(`📋 [Poll] Audit Date:`, auditDate);
-            
-            // Simplified polling - just as a fallback/verification
-            // Real-time subscription should handle most updates
-            let query = window.supabaseClient
-                .from('ai_audit_results')
-                .select('id, conversation_id, created_at, batch_id, created_by, assignment_id, scorecard_id, audit_date')
-                .in('conversation_id', trackingConversationIds);
-            
-            if (scorecardId) {
-                query = query.eq('scorecard_id', scorecardId);
-            }
-            
-            if (auditDate) {
-                query = query.eq('audit_date', auditDate);
-            }
-            
-            const { data, error } = await query;
-            
-            if (error) {
-                console.error('❌ Error in fallback poll:', error);
-                // Continue polling
-                if (attempts < maxAttempts) {
-                    pollInterval = setTimeout(poll, 10000); // 10 seconds for fallback
-                }
-                return;
-            }
-            
-            const processed = data?.length || 0;
-            const progress = expectedCount > 0 ? (processed / expectedCount) * 100 : 0;
-            
-            console.log(`📊 [Poll ${attempts}] Query returned ${processed} results`);
-            console.log(`📋 [Poll] Found conversation IDs:`, data?.map(r => String(r.conversation_id)) || []);
-            
-            // Check which conversations are missing
-            const foundIds = (data || []).map(r => String(r.conversation_id));
-            const missingIds = trackingConversationIds.filter(id => !foundIds.includes(String(id)));
-            if (missingIds.length > 0) {
-                console.log(`⚠️ [Poll] Missing conversation IDs (not in database yet):`, missingIds);
-            }
-            
-            console.log(`📊 [Poll ${attempts}] Fallback found ${processed}/${expectedCount} results`);
-            
-            // Update progress bar
-            const progressBar = document.getElementById('aiAuditProcessingBar');
-            const statusEl = document.getElementById('aiAuditStatus');
-            
-            if (progressBar) {
-                progressBar.style.width = `${40 + (progress * 0.6)}%`;
-            }
-            if (statusEl) {
-                statusEl.textContent = `Processed ${processed}/${expectedCount} conversations...`;
-            }
-            
-            // SIMPLIFIED: Just update any conversations that have results
-            if (data && data.length > 0 && window.aiAuditProgress) {
-                data.forEach(result => {
-                    const conversationId = String(result.conversation_id);
-                    console.log(`  ✅ [Poll] Found result for conversation ${conversationId} - updating`);
-                    // updateAIAuditProgress will handle duplicate checking
-                    updateAIAuditProgress(conversationId, 'completed', result);
-                });
-            }
-            
-            // Check if all are done - use aiAuditProgress.total if available
-            const totalExpected = window.aiAuditProgress?.total || expectedCount;
-            if (processed >= totalExpected && totalExpected > 0) {
-                console.log(`✅ [Poll ${attempts}] All results found! (${processed}/${totalExpected})`);
-                
-                isPolling = false;
-                if (pollInterval) {
-                    clearTimeout(pollInterval);
-                    pollInterval = null;
-                }
-                
-                // Hide progress section and show results after a delay
-                console.log('🎉 All AI audits completed via polling! Hiding progress and showing results...');
-                setTimeout(() => {
-                    const progressContainer = document.getElementById('aiAuditProgressContainer');
-                    if (progressContainer) {
-                        progressContainer.style.display = 'none';
-                    }
-                    // IMPORTANT: Preserve conversation IDs before clearing progress
-                    const batchId = window.aiAuditProgress?.batchId;
-                    const conversationIds = window.aiAuditProgress?.conversationIds || [];
-                    console.log('💾 Preserving conversation IDs before clearing progress:', conversationIds);
-                    
-                    // Clear progress tracking (but conversation IDs are already stored in persistentAIAuditConversations)
-                    window.currentAIAuditBatchId = null;
-                    window.aiAuditProgress = null;
-                    // Reload results to show completed ones - pass conversation IDs to ensure they're displayed
-                    loadAIAuditResults(conversationIds);
-                }, 2000);
-                return;
-            }
-            
-            // If we've been polling for 30 seconds, add manual close button
-            if (attempts === 3) { // 3 * 10 seconds = 30 seconds
-                console.log('⏰ Adding manual close button after 30 seconds');
-                addManualCloseButton();
-            }
-            
-            // Check for timeout
-            if (attempts >= maxAttempts) {
-                console.warn(`⏰ [Poll] Timeout reached. Found ${processed}/${expectedCount} results`);
-                if (statusEl) {
-                    statusEl.textContent = `Timeout: ${processed}/${expectedCount} processed. Click "Close & Show Results" to view what's available.`;
-                    statusEl.style.color = '#f59e0b';
-                }
-                addManualCloseButton();
-                isPolling = false;
-                return;
-            }
-            
-            // Continue polling (less frequently - every 10 seconds as fallback)
-            if (attempts < maxAttempts) {
-                pollInterval = setTimeout(poll, 10000); // 10 seconds for fallback
-            }
-            
-        } catch (error) {
-            console.error(`❌ [Poll ${attempts}] Error:`, error);
-            
-            const statusEl = document.getElementById('aiAuditStatus');
-            
-            if (attempts >= maxAttempts) {
-                if (statusEl) {
-                    statusEl.textContent = `Error: ${error.message}. Click "Close & Show Results" to view what's available.`;
-                    statusEl.style.color = '#ef4444';
-                }
-                addManualCloseButton();
-                isPolling = false;
-            } else {
-                // Continue polling even on error (might be temporary)
-                console.log(`🔄 [Poll ${attempts}] Retrying in 10 seconds...`);
-                pollInterval = setTimeout(poll, 10000); // 10 seconds for fallback
-            }
-        }
-    };
-    
-    // Start polling
-    poll();
-    
-    // Store cleanup function globally so it can be called if needed
-    window.stopAIAuditPolling = () => {
-        console.log('🛑 stopAIAuditPolling called');
-        isPolling = false;
-        if (pollInterval) {
-            clearTimeout(pollInterval);
-            pollInterval = null;
-        }
-    };
-}
-
-// Real-time subscription for AI audit results
-let aiAuditSubscription = null;
-window.batchAIAuditSubscription = null;
-
-// Set up a dedicated real-time subscription for the current batch
-function setupBatchRealtimeSubscription(batchId, conversationIds, scorecardId, auditDate) {
-    // Clean up any existing batch subscription
-    if (window.batchAIAuditSubscription) {
-        console.log('🧹 Cleaning up existing batch subscription');
-        window.supabaseClient.removeChannel(window.batchAIAuditSubscription);
-        window.batchAIAuditSubscription = null;
-    }
-    
-    if (!window.supabaseClient) {
-        console.error('❌ Supabase client not available');
-        return;
-    }
-    
-    // Normalize conversation IDs to strings for consistent comparison
-    const normalizedIds = conversationIds.map(id => String(id));
-    console.log('🔔 Setting up dedicated real-time subscription for batch:', batchId);
-    console.log('📋 Normalized conversation IDs:', normalizedIds);
-    console.log('📋 Normalized IDs (detailed):', normalizedIds.map((id, idx) => `[${idx}]: "${id}"`));
-    
-    // Create a unique channel name for this batch
-    const channelName = `ai_audit_batch_${batchId}_${Date.now()}`;
-    
-    window.batchAIAuditSubscription = window.supabaseClient
-        .channel(channelName)
-        .on(
-            'postgres_changes',
-            {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'ai_audit_results'
-            },
-            (payload) => {
-                console.log('🔔 [REALTIME] INSERT event:', payload);
-                handleRealtimeUpdate(payload.new, normalizedIds, scorecardId, auditDate);
-            }
-        )
-        .on(
-            'postgres_changes',
-            {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'ai_audit_results'
-            },
-            (payload) => {
-                console.log('🔔 [REALTIME] UPDATE event:', payload);
-                handleRealtimeUpdate(payload.new, normalizedIds, scorecardId, auditDate);
-            }
-        )
-        .subscribe((status) => {
-            console.log('🔔 [REALTIME] Subscription status:', status);
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ Real-time subscription active');
-                // Immediately check existing data (in case data was inserted before subscription)
-                checkExistingResults(normalizedIds, scorecardId, auditDate);
-            } else if (status === 'CHANNEL_ERROR') {
-                console.error('❌ Real-time subscription error');
-            } else if (status === 'TIMED_OUT') {
-                console.warn('⏰ Real-time subscription timed out - retrying...');
-                setTimeout(() => {
-                    setupBatchRealtimeSubscription(batchId, normalizedIds, scorecardId, auditDate);
-                }, 2000);
-            }
-        });
-}
-
-// Handle real-time updates - SIMPLIFIED: Just update if conversation is tracked
-function handleRealtimeUpdate(result, normalizedIds, scorecardId, auditDate) {
-    if (!result || !result.conversation_id) {
-        console.warn('⚠️ [REALTIME] Invalid result:', result);
-        return;
-    }
-    
-    const convId = String(result.conversation_id);
-    console.log('🔔 [REALTIME] Received update for conversation:', convId);
-    console.log('📋 [REALTIME] Tracking list:', normalizedIds);
-    console.log('📋 [REALTIME] Result scorecard_id:', result.scorecard_id, 'Expected:', scorecardId);
-    console.log('📋 [REALTIME] Result audit_date:', result.audit_date, 'Expected:', auditDate);
-    
-    // Simple check: Is this conversation in our tracking list?
-    const isTracking = normalizedIds.some(id => String(id) === convId);
-    
-    // Optional: Check scorecard and date if provided
-    const scorecardMatches = !scorecardId || result.scorecard_id === scorecardId;
-    const dateMatches = !auditDate || result.audit_date === auditDate;
-    
-    console.log('🔍 [REALTIME] Match check:', {
-        isTracking,
-        scorecardMatches,
-        dateMatches,
-        willUpdate: isTracking && scorecardMatches && dateMatches
-    });
-    
-    if (isTracking && scorecardMatches && dateMatches) {
-        console.log('✅ [REALTIME] New data for conversation', convId, '- updating UI');
-        // Just update - no complex state checking
-        updateAIAuditProgress(convId, 'completed', result);
-    } else {
-        console.log('ℹ️ [REALTIME] Ignoring - not tracking conversation', convId, {
-            reason: !isTracking ? 'not in tracking list' : !scorecardMatches ? 'scorecard mismatch' : 'date mismatch'
-        });
-    }
-}
-
-// Check for existing results (in case data was inserted before subscription)
-async function checkExistingResults(normalizedIds, scorecardId, auditDate) {
-    console.log('🔍 [REALTIME] Checking for existing results...');
-    
-    let query = window.supabaseClient
-        .from('ai_audit_results')
-        .select('*')
-        .in('conversation_id', normalizedIds);
-    
-    if (scorecardId) query = query.eq('scorecard_id', scorecardId);
-    if (auditDate) query = query.eq('audit_date', auditDate);
-    
-    const { data, error } = await query;
-    
-    if (error) {
-        console.error('❌ Error checking existing results:', error);
-        return;
-    }
-    
-    if (data && data.length > 0) {
-        console.log(`✅ [REALTIME] Found ${data.length} existing results, updating...`);
-        data.forEach(result => {
-            const convId = String(result.conversation_id);
-            updateAIAuditProgress(convId, 'completed', result);
-        });
-    } else {
-        console.log('ℹ️ [REALTIME] No existing results found');
-    }
-}
-
-// Set up real-time subscription to watch for new AI audit results (general subscription)
-function setupAIAuditRealtimeSubscription() {
-    // Clean up existing subscription if any
-    if (aiAuditSubscription) {
-        console.log('🧹 Cleaning up existing AI audit subscription');
-        window.supabaseClient.removeChannel(aiAuditSubscription);
-        aiAuditSubscription = null;
-    }
-    
-    if (!window.supabaseClient) {
-        console.warn('⚠️ Supabase client not available - cannot set up real-time subscription');
-        return;
-    }
-    
-    console.log('🔔 Setting up real-time subscription for AI audit results (all users)');
-    
-    // Subscribe to all INSERT/UPDATE/DELETE events on ai_audit_results table (no created_by filter)
-    aiAuditSubscription = window.supabaseClient
-        .channel('ai_audit_results_channel')
-        .on(
-            'postgres_changes',
-            {
-                event: '*', // Listen to INSERT, UPDATE, DELETE
-                schema: 'public',
-                table: 'ai_audit_results'
-                // No filter - listen to all changes
-            },
-            (payload) => {
-                console.log('🔔 Real-time update received:', payload);
-                
-                // Get current user info to filter updates
-                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-                const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
-                
-                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                    console.log('✅ New/updated AI audit result detected:', payload.new);
-                    
-                    // Only process updates for the current user
-                    const resultCreatedBy = (payload.new?.created_by || '').toLowerCase().trim();
-                    if (currentUserEmail && resultCreatedBy !== currentUserEmail) {
-                        console.log('ℹ️ [GENERAL SUB] Ignoring update - not for current user', {
-                            resultCreatedBy,
-                            currentUserEmail
-                        });
-                        return; // Skip this update
-                    }
-                    
-                    const conversationId = String(payload.new?.conversation_id || ''); // Normalize to string
-                    console.log('  📋 Conversation ID:', conversationId);
-                    console.log('  📋 Batch ID:', payload.new?.batch_id);
-                    console.log('  📋 Tracking conversation IDs:', window.aiAuditProgress?.conversationIds);
-                    
-                    // SIMPLIFIED: Check if this conversation is being tracked
-                    if (window.aiAuditProgress && window.aiAuditProgress.conversationIds) {
-                        const isTracking = window.aiAuditProgress.conversationIds.some(id => String(id) === conversationId);
-                        
-                        if (isTracking) {
-                            console.log('✅ [GENERAL SUB] New result for tracked conversation', conversationId);
-                            updateAIAuditProgress(conversationId, 'completed', payload.new);
-                        }
-                    }
-                    
-                    // Reload AI audit results to show new/updated results (only for current user)
-                    loadAIAuditResults();
-                } else if (payload.eventType === 'DELETE') {
-                    // For DELETE, check if it was the current user's result
-                    const deletedCreatedBy = (payload.old?.created_by || '').toLowerCase().trim();
-                    if (currentUserEmail && deletedCreatedBy !== currentUserEmail) {
-                        console.log('ℹ️ [GENERAL SUB] Ignoring delete - not for current user');
-                        return; // Skip this update
-                    }
-                    
-                    console.log('🗑️ AI audit result deleted - reloading results');
-                    loadAIAuditResults();
-                }
-            }
-        )
-        .subscribe((status) => {
-            console.log('🔔 AI Audit Subscription status:', status);
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ Successfully subscribed to AI audit results updates');
-            } else if (status === 'CHANNEL_ERROR') {
-                console.error('❌ Error subscribing to AI audit results updates');
-            } else if (status === 'TIMED_OUT') {
-                console.warn('⏰ Subscription timed out - retrying...');
-                // Retry subscription after a delay
-                setTimeout(() => {
-                    setupAIAuditRealtimeSubscription();
-                }, 2000);
-            }
-        });
-    
-    // Make it globally accessible for cleanup
-    window.setupAIAuditRealtimeSubscription = setupAIAuditRealtimeSubscription;
-}
-
-// Clean up subscription when leaving the page
-window.addEventListener('beforeunload', function() {
-    if (aiAuditSubscription) {
-        console.log('🧹 Cleaning up AI audit subscription on page unload');
-        window.supabaseClient.removeChannel(aiAuditSubscription);
-        aiAuditSubscription = null;
-    }
-    if (window.batchAIAuditSubscription) {
-        console.log('🧹 Cleaning up batch AI audit subscription on page unload');
-        window.supabaseClient.removeChannel(window.batchAIAuditSubscription);
-        window.batchAIAuditSubscription = null;
-    }
-});
-
-// Initialize subscription when page loads (if Supabase client is ready)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        // Wait a bit for Supabase client to be initialized
-        setTimeout(() => {
-            if (window.supabaseClient) {
-                setupAIAuditRealtimeSubscription();
-            }
-        }, 1000);
-    });
-} else {
-    // DOM already loaded
-    setTimeout(() => {
-        if (window.supabaseClient) {
-            setupAIAuditRealtimeSubscription();
-        }
-    }, 1000);
-}
-
-// Debug function to check AI audit state
-window.debugAIAuditState = function() {
-    console.log('=== AI AUDIT STATE DEBUG ===');
-    console.log('1. Progress tracking:', window.aiAuditProgress);
-    console.log('2. Batch ID:', window.currentAIAuditBatchId);
-    console.log('3. Batch subscription status:', window.batchAIAuditSubscription ? 'Active' : 'None');
-    console.log('4. General subscription status:', aiAuditSubscription ? 'Active' : 'None');
-    console.log('5. Progress items in DOM:', Array.from(document.querySelectorAll('[id^="ai_progress_"]')).map(el => ({
-        id: el.id,
-        conversationId: el.dataset.conversationId,
-        innerHTML: el.innerHTML.substring(0, 100)
-    })));
-    
-    // Check database directly
-    if (window.aiAuditProgress?.conversationIds) {
-        const convIds = window.aiAuditProgress.conversationIds;
-        console.log('6. Checking database for conversation IDs:', convIds);
-        
-        window.supabaseClient
-            .from('ai_audit_results')
-            .select('conversation_id, batch_id, created_at, scorecard_id, audit_date')
-            .in('conversation_id', convIds)
-            .then(({ data, error }) => {
-                console.log('7. Database results:', { data, error });
-                if (data) {
-                    console.log(`   Found ${data.length} results in database`);
-                    data.forEach(r => {
-                        console.log(`   - Conversation ${r.conversation_id}: batch=${r.batch_id}, date=${r.audit_date}`);
-                    });
-                }
-            });
-    }
-};
-
-// Debug function to check AI audit results (can be called from browser console)
-window.debugAIAuditResults = async function(batchId) {
-    console.log('🔍 Debugging AI Audit Results for batch:', batchId);
-    
-    if (!batchId) {
-        console.error('❌ No batch_id provided');
-        return;
-    }
-    
-    // Check with batch_id
-    const { data: withBatch, error: err1 } = await window.supabaseClient
-        .from('ai_audit_results')
-        .select('*')
-        .eq('batch_id', batchId);
-    
-    if (err1) {
-        console.error('❌ Error querying with batch_id:', err1);
-    } else {
-        console.log(`✅ Results with batch_id "${batchId}":`, withBatch);
-        console.log(`   Count: ${withBatch?.length || 0}`);
-    }
-    
-    // Check all recent results
-    const { data: recent, error: err2 } = await window.supabaseClient
-        .from('ai_audit_results')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-    
-    if (err2) {
-        console.error('❌ Error querying recent results:', err2);
-    } else {
-        console.log('📋 Recent results (last 10):', recent);
-        console.log(`   Count: ${recent?.length || 0}`);
-    }
-    
-    return { withBatch, recent };
-};
-
-// Load and display AI audit results (filtered by conversation_id)
-async function loadAIAuditResults(preservedConversationIds = null) {
-    try {
-        console.log('🔍 Loading AI audit results');
-        
-        // Get conversation IDs to load - prioritize preserved IDs, then check persistent storage, then load recent
-        let conversationIdsToLoad = preservedConversationIds;
-        
-        // If no preserved IDs provided, try to get from persistent storage
-        if (!conversationIdsToLoad || conversationIdsToLoad.length === 0) {
-            // Get all conversation IDs from persistent storage
-            const allPersistedIds = [];
-            Object.values(window.persistentAIAuditConversations || {}).forEach(batch => {
-                if (batch.conversationIds && Array.isArray(batch.conversationIds)) {
-                    allPersistedIds.push(...batch.conversationIds.map(id => String(id)));
-                }
-            });
-            if (allPersistedIds.length > 0) {
-                conversationIdsToLoad = [...new Set(allPersistedIds)];
-                console.log('📋 Using conversation IDs from persistent storage:', conversationIdsToLoad);
-            }
-        }
-        
-        // Load AI audit results - query by conversation_id only
-        let query = window.supabaseClient
-            .from('ai_audit_results')
-            .select(`
-                *,
-                scorecards:scorecard_id (id, name, table_name)
-            `);
-        
-        // If we have specific conversation IDs to load, filter by them
-        if (conversationIdsToLoad && conversationIdsToLoad.length > 0) {
-            query = query.in('conversation_id', conversationIdsToLoad);
-            console.log('🔍 Loading results for specific conversations:', conversationIdsToLoad);
-        } else {
-            // Otherwise, just load recent results
-            query = query.order('created_at', { ascending: false }).limit(100);
-            console.log('🔍 Loading recent 100 results (no specific conversation IDs)');
-        }
-        
-        const { data: aiResults, error } = await query;
-        
-        if (error) throw error;
-        
-        console.log(`✅ Loaded ${aiResults?.length || 0} AI audit results`);
-        
-        // Display AI results - pass conversation IDs to ensure all are shown
-        displayAIAuditResults(aiResults || [], conversationIdsToLoad);
-        
-    } catch (error) {
-        console.error('Error loading AI audit results:', error);
-        alert('Error loading AI audit results: ' + error.message);
-    }
-}
-
-// Show progress for AI audit processing in the results section
-function showAIAuditProgress(batchId, conversations, employee, auditDate, scorecardId) {
-    console.log('📊 Showing progress for batch:', batchId, 'with', conversations.length, 'conversations');
-    
-    // Ensure AI results section exists
-    let aiResultsSection = document.getElementById('aiAuditResultsSection');
-    if (!aiResultsSection) {
-        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
-        if (pendingAuditsSection && pendingAuditsSection.parentNode) {
-            aiResultsSection = document.createElement('div');
-            aiResultsSection.id = 'aiAuditResultsSection';
-            aiResultsSection.style.cssText = 'background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%; display: block; margin-top: 0.6469rem;';
-            pendingAuditsSection.parentNode.insertBefore(aiResultsSection, pendingAuditsSection.nextSibling);
-        } else {
-            const container = document.querySelector('.main-content') || document.querySelector('main') || document.body;
-            if (container) {
-                aiResultsSection = document.createElement('div');
-                aiResultsSection.id = 'aiAuditResultsSection';
-                aiResultsSection.style.cssText = 'background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%; display: block; margin-top: 0.6469rem;';
-                container.appendChild(aiResultsSection);
-            } else {
-                console.error('Could not find container for AI results section');
-                return;
-            }
-        }
-    }
-    
-    // Make sure section is visible when showing progress
-    if (aiResultsSection) {
-        aiResultsSection.style.display = 'block';
-    }
-    
-    // Create progress header
-    aiResultsSection.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4852rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E;">
-            <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-                </svg>
-                <span>🤖 AI-Audited Conversations</span>
-                <span id="aiAuditProgressCount" style="background-color: #1A733E; color: white; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 600; min-width: 0.9704rem; text-align: center;">0/${conversations.length}</span>
-            </h3>
-        </div>
-        <div id="aiAuditProgressContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <!-- Progress items will be added here -->
-        </div>
-        <div id="aiAuditResultsList" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;"></div>
-    `;
-    
-    const progressContainer = document.getElementById('aiAuditProgressContainer');
-    const conversationIds = conversations.map(c => {
-        // Extract conversation ID - handle both object and string formats
-        const id = c.id || c;
-        return String(id); // Ensure it's a string for consistent matching
-    });
-    
-    console.log('📋 Creating progress items for conversations:', conversationIds);
-    console.log('📋 Conversation IDs (detailed):', conversationIds.map((id, idx) => `[${idx}]: ${id} (type: ${typeof id})`));
-    
-    // Create progress item for each conversation
-    conversationIds.forEach((conversationId, index) => {
-        const progressItem = document.createElement('div');
-        progressItem.id = `ai_progress_${conversationId}`;
-        progressItem.dataset.conversationId = String(conversationId); // Store as string
-        progressItem.style.cssText = 'padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; display: flex; justify-content: space-between; align-items: center;';
-        progressItem.innerHTML = `
-            <div style="flex: 1;">
-                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 1rem; height: 1rem; border: 2px solid #d1d5db; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <span>Conversation ${conversationId}</span>
-                </div>
-                <div style="font-size: 0.75rem; color: #6b7280;">
-                    Processing with AI...
-                </div>
-            </div>
-            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">
-                Pending
-            </div>
-        `;
-        progressContainer.appendChild(progressItem);
-    });
-    
-    // Scroll to progress section
-    aiResultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    
-    // Store progress tracking data
-    window.aiAuditProgress = {
-        batchId: batchId,
-        total: conversations.length,
-        completed: 0,
-        conversationIds: conversationIds,
-        employee: employee,
-        auditDate: auditDate,
-        scorecardId: scorecardId,
-        // Status map to track each conversation's state
-        statusMap: {}
-    };
-    
-    // Initialize status map for all conversations
-    conversationIds.forEach(id => {
-        const idStr = String(id);
-        window.aiAuditProgress.statusMap[idStr] = {
-            status: 'pending',
-            result: null
-        };
-    });
-    
-    // PERSISTENT STORAGE: Store conversation IDs with metadata so they survive after progress is cleared
-    // Use batchId as key to group conversations by batch
-    if (!window.persistentAIAuditConversations[batchId]) {
-        window.persistentAIAuditConversations[batchId] = {
-            conversationIds: conversationIds,
-            employee: employee,
-            auditDate: auditDate,
-            scorecardId: scorecardId,
-            createdAt: new Date().toISOString()
-        };
-        console.log('💾 Stored persistent conversation IDs for batch:', batchId, conversationIds);
-    }
-    
-    // CRITICAL: Set up dedicated real-time subscription for this batch
-    setupBatchRealtimeSubscription(batchId, conversationIds, scorecardId, auditDate);
-}
-
-// Update progress for a specific conversation
-function updateAIAuditProgress(conversationId, status, result = null) {
-    console.log(`🔄 [updateAIAuditProgress] Updating progress for conversation ${conversationId}, status: ${status}`);
-    
-    // Try to find progress item - conversationId might be string or number
-    // Try multiple methods to find the element
-    const convIdStr = String(conversationId);
-    let progressItem = document.getElementById(`ai_progress_${conversationId}`);
-    if (!progressItem) {
-        progressItem = document.getElementById(`ai_progress_${convIdStr}`);
-    }
-    if (!progressItem) {
-        // Try finding by data attribute (kebab-case)
-        progressItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
-    }
-    if (!progressItem) {
-        progressItem = document.querySelector(`[data-conversation-id="${convIdStr}"]`);
-    }
-    if (!progressItem) {
-        // Try finding all progress items and match by data attribute
-        const allProgressItems = document.querySelectorAll('[id^="ai_progress_"]');
-        for (const item of allProgressItems) {
-            const itemConvId = item.dataset.conversationId || item.getAttribute('data-conversation-id');
-            if (String(itemConvId) === convIdStr || String(itemConvId) === String(conversationId)) {
-                progressItem = item;
-                break;
-            }
-        }
-    }
-    
-    if (!progressItem) {
-        console.warn(`⚠️ [updateAIAuditProgress] Progress item not found for conversation ${conversationId}`);
-        console.log('🔍 Available progress items:', Array.from(document.querySelectorAll('[id^="ai_progress_"]')).map(el => el.id));
-        return;
-    }
-    
-    console.log(`✅ [updateAIAuditProgress] Found progress item for conversation ${conversationId}`);
-    
-    if (status === 'completed') {
-        const convIdStr = String(conversationId);
-        
-        // SIMPLIFIED: Just check if already completed in status map to avoid duplicate work
-        // But always update UI if we have a result
-        const alreadyCompleted = window.aiAuditProgress?.statusMap?.[convIdStr]?.status === 'completed';
-        
-        if (alreadyCompleted && result && window.aiAuditProgress.statusMap[convIdStr].result?.id === result.id) {
-            console.log(`⏭️ [updateAIAuditProgress] Already processed ${conversationId}`);
-            return;
-        }
-        
-        console.log(`✅ [updateAIAuditProgress] Updating UI for conversation ${conversationId}`);
-        
-        // Update UI immediately
-        progressItem.style.background = '#f0fdf4';
-        progressItem.style.borderColor = '#10b981';
-        
-        // Check if result has an assignment_id - if yes, show "View Audit", else show "Start Audit"
-        const hasAssignment = result && result.assignment_id !== null;
-        const resultId = result?.id || '';
-        const buttonHTML = hasAssignment 
-            ? `<button onclick="window.location.href='audit-form.html?assignment=${result.assignment_id}'" style="padding: 0.5rem 1rem; background-color: #6b7280; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#4b5563'" onmouseout="this.style.backgroundColor='#6b7280'">View Audit</button>`
-            : `<button onclick="createAssignmentFromAIResult('${resultId}')" style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#2d9a5a'" onmouseout="this.style.backgroundColor='#1A733E'">Start Audit</button>`;
-        
-        progressItem.innerHTML = `
-            <div style="flex: 1;">
-                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: #10b981; font-size: 1rem;">✓</span>
-                    <span>Conversation ${conversationId}</span>
-                </div>
-                <div style="font-size: 0.75rem; color: #059669;">
-                    AI audit completed successfully
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <div style="font-size: 0.75rem; color: #10b981; font-weight: 600; margin-right: 0.5rem;">
-                    Completed
-                </div>
-                ${buttonHTML}
-            </div>
-        `;
-        
-        console.log(`✅ [updateAIAuditProgress] UI updated for conversation ${conversationId}`);
-        
-        // Update status map
-        if (window.aiAuditProgress) {
-            if (!window.aiAuditProgress.statusMap) {
-                window.aiAuditProgress.statusMap = {};
-            }
-            window.aiAuditProgress.statusMap[convIdStr] = {
-                status: 'completed',
-                result: result
-            };
-            
-            // Recalculate completed count
-            const completedCount = Object.values(window.aiAuditProgress.statusMap)
-                .filter(s => s.status === 'completed').length;
-            window.aiAuditProgress.completed = completedCount;
-            
-            console.log(`📊 [updateAIAuditProgress] Progress: ${completedCount}/${window.aiAuditProgress.total}`);
-            
-            // Update progress badge
-            const countEl = document.getElementById('aiAuditProgressCount');
-            if (countEl) {
-                countEl.textContent = `${completedCount}/${window.aiAuditProgress.total}`;
-            }
-            
-            // If all completed, hide progress section after a delay
-            if (completedCount >= window.aiAuditProgress.total) {
-                console.log('🎉 All AI audits completed!');
-                setTimeout(() => {
-                    const progressContainer = document.getElementById('aiAuditProgressContainer');
-                    if (progressContainer) {
-                        progressContainer.style.display = 'none';
-                    }
-                    // IMPORTANT: Preserve conversation IDs before clearing progress
-                    const batchId = window.aiAuditProgress?.batchId;
-                    const conversationIds = window.aiAuditProgress?.conversationIds || [];
-                    console.log('💾 Preserving conversation IDs before clearing progress:', conversationIds);
-                    
-                    // Clear progress tracking (but conversation IDs are already stored in persistentAIAuditConversations)
-                    window.currentAIAuditBatchId = null;
-                    window.aiAuditProgress = null;
-                    // Reload results - this will show/hide section based on whether results exist
-                    // Pass conversation IDs to ensure they're displayed
-                    loadAIAuditResults(conversationIds);
-                }, 2000);
-            }
-        }
-    } else if (status === 'error') {
-        progressItem.style.background = '#fef2f2';
-        progressItem.style.borderColor = '#ef4444';
-        progressItem.innerHTML = `
-            <div style="flex: 1;">
-                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: #ef4444; font-size: 1rem;">✗</span>
-                    <span>Conversation ${conversationId}</span>
-                </div>
-                <div style="font-size: 0.75rem; color: #dc2626;">
-                    Error processing
-                </div>
-            </div>
-            <div style="font-size: 0.75rem; color: #dc2626; font-weight: 600;">
-                Error
-            </div>
-        `;
-    }
-}
-
-// Display AI audit results
-function displayAIAuditResults(results, conversationIdsToShow = null) {
-    // Find or create AI results section
-    let aiResultsSection = document.getElementById('aiAuditResultsSection');
-    
-    // Check if there's active progress
-    const progressContainer = document.getElementById('aiAuditProgressContainer');
-    const isProgressShowing = progressContainer && progressContainer.style.display !== 'none' && window.aiAuditProgress;
-    
-    // Get conversation IDs to display - prioritize provided IDs, then from progress, then from results
-    let allConversationIds = conversationIdsToShow;
-    
-    if (!allConversationIds || allConversationIds.length === 0) {
-        // Try to get from progress tracking
-        if (window.aiAuditProgress && window.aiAuditProgress.conversationIds) {
-            allConversationIds = window.aiAuditProgress.conversationIds.map(id => String(id));
-            console.log('📋 Using conversation IDs from progress tracking:', allConversationIds);
-        } else {
-            // Try to get from persistent storage
-            const allPersistedIds = [];
-            Object.values(window.persistentAIAuditConversations || {}).forEach(batch => {
-                if (batch.conversationIds && Array.isArray(batch.conversationIds)) {
-                    allPersistedIds.push(...batch.conversationIds.map(id => String(id)));
-                }
-            });
-            if (allPersistedIds.length > 0) {
-                allConversationIds = [...new Set(allPersistedIds)];
-                console.log('📋 Using conversation IDs from persistent storage:', allConversationIds);
-            } else {
-                // Fallback: use conversation IDs from results
-                const resultsMap = {};
-                results.forEach(result => {
-                    const convId = String(result.conversation_id);
-                    resultsMap[convId] = result;
-                });
-                allConversationIds = Object.keys(resultsMap);
-                console.log('📋 Using conversation IDs from results:', allConversationIds);
-            }
-        }
-    } else {
-        // Normalize provided IDs to strings
-        allConversationIds = allConversationIds.map(id => String(id));
-    }
-    
-    // Remove duplicates
-    allConversationIds = [...new Set(allConversationIds)];
-    
-    // If no conversation IDs at all and no progress, hide the section
-    if ((!allConversationIds || allConversationIds.length === 0) && !isProgressShowing) {
-        if (aiResultsSection) {
-            aiResultsSection.style.display = 'none';
-        }
-        return; // Don't create or show section if there's nothing to display
-    }
-    
-    if (!aiResultsSection) {
-        // Try to find pendingAuditsSection first (the main container)
-        const pendingAuditsSection = document.getElementById('pendingAuditsSection');
-        if (pendingAuditsSection && pendingAuditsSection.parentNode) {
-            // Create section after pendingAuditsSection
-            aiResultsSection = document.createElement('div');
-            aiResultsSection.id = 'aiAuditResultsSection';
-            aiResultsSection.style.cssText = 'background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%; display: block; margin-top: 0.6469rem;';
-            aiResultsSection.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4852rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E;">
-                    <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-                        </svg>
-                        <span>🤖 AI-Audited Conversations</span>
-                        <span style="background-color: #1A733E; color: white; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 600; min-width: 0.9704rem; text-align: center;">${allConversationIds.length}</span>
-                    </h3>
-                </div>
-                <div id="aiAuditResultsList" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
-            `;
-            pendingAuditsSection.parentNode.insertBefore(aiResultsSection, pendingAuditsSection.nextSibling);
-        } else {
-            // Fallback: try to find any container or use body
-            const container = document.querySelector('.main-content') || document.querySelector('main') || document.body;
-            if (container) {
-                aiResultsSection = document.createElement('div');
-                aiResultsSection.id = 'aiAuditResultsSection';
-                aiResultsSection.style.cssText = 'background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%; display: block; margin-top: 0.6469rem;';
-                aiResultsSection.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4852rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E;">
-                        <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
-                            </svg>
-                            <span>🤖 AI-Audited Conversations</span>
-                            <span style="background-color: #1A733E; color: white; padding: 0.0808rem 0.3234rem; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 600; min-width: 0.9704rem; text-align: center;">${allConversationIds.length}</span>
-                        </h3>
-                    </div>
-                    <div id="aiAuditResultsList" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
-                `;
-                container.appendChild(aiResultsSection);
-            } else {
-                console.error('Could not find container to insert AI results section');
-                return;
-            }
-        }
-    }
-    
-    // Show the section since we have results or progress
-    if (aiResultsSection) {
-        aiResultsSection.style.display = 'block';
-    }
-    
-    const list = document.getElementById('aiAuditResultsList');
-    if (!list) {
-        // If list doesn't exist, it might be because progress is showing - that's okay
-        return;
-    }
-    
-    const isProgressShowingCheck = progressContainer && progressContainer.style.display !== 'none';
-    
-    // Create a map of results by conversation_id for quick lookup
-    const resultsMap = {};
-    results.forEach(result => {
-        const convId = String(result.conversation_id);
-        if (!resultsMap[convId] || new Date(result.created_at) > new Date(resultsMap[convId].created_at)) {
-            resultsMap[convId] = result; // Keep the most recent result for each conversation
-        }
-    });
-    
-    // allConversationIds is already set above from the prioritized sources
-    // Sort for consistent display
-    allConversationIds.sort();
-    
-    // Update count in header
-    const countSpan = aiResultsSection.querySelector('h3 span[style*="background-color: #1A733E"]');
-    if (countSpan && !countSpan.id) { // Don't update if it's the progress count
-        countSpan.textContent = allConversationIds.length;
-    }
-    
-    // Don't clear the list - instead, update or create items for each conversation
-    // This ensures we show all requested conversations, even if they're still processing
-    
-    allConversationIds.forEach(conversationId => {
-        const result = resultsMap[conversationId];
-        const existingCard = list.querySelector(`[data-conversation-id="${conversationId}"]`);
-        
-        // If result exists, update the card; if not, create a pending card
-        if (result) {
-            // Update or create card for completed result
-            if (existingCard) {
-                // Update existing card
-                existingCard.remove();
-            }
-            
-            const card = createAIResultCard(result, conversationId);
-            list.appendChild(card);
-        } else {
-            // No result yet - show pending status
-            if (!existingCard) {
-                const card = createPendingAICard(conversationId);
-                list.appendChild(card);
-            } else {
-                // Card exists, just update status if needed
-                const statusDiv = existingCard.querySelector('[data-status]');
-                if (statusDiv) {
-                    statusDiv.textContent = 'Processing...';
-                    statusDiv.style.color = '#6b7280';
-                }
-            }
-        }
-    });
-    
-    // If no conversations at all, hide the section
-    if (allConversationIds.length === 0) {
-        // Hide the section if there are no conversations to show
-        if (aiResultsSection && !isProgressShowing) {
-            aiResultsSection.style.display = 'none';
-        }
-        return;
-    }
-}
-
-// Helper function to create a result card
-function createAIResultCard(result, conversationId) {
-    const card = document.createElement('div');
-    card.setAttribute('data-result-id', result.id);
-    card.setAttribute('data-conversation-id', String(conversationId));
-    card.style.cssText = 'padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;';
-    
-    const scorecardName = result.scorecards?.name || 'Unknown Scorecard';
-    const createdDate = new Date(result.created_at).toLocaleDateString();
-    const hasAssignment = result.assignment_id !== null;
-    
-    // Show different button based on assignment status
-    let buttonHTML = '';
-    if (hasAssignment) {
-        // Already assigned - show "View Audit" button
-        buttonHTML = `
-            <button 
-                onclick="window.location.href='audit-form.html?assignment=${result.assignment_id}'"
-                style="padding: 0.5rem 1rem; background-color: #6b7280; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                onmouseover="this.style.backgroundColor='#4b5563'"
-                onmouseout="this.style.backgroundColor='#6b7280'"
-            >
-                View Audit
-            </button>
-        `;
-    } else {
-        // Not assigned - show "Proceed" button
-        buttonHTML = `
-            <button 
-                onclick="createAssignmentFromAIResult('${result.id}')"
-                style="padding: 0.5rem 1rem; background-color: #1A733E; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                onmouseover="this.style.backgroundColor='#15582E'"
-                onmouseout="this.style.backgroundColor='#1A733E'"
-            >
-                Proceed
-            </button>
-        `;
-    }
-    
-    card.innerHTML = `
-        <div style="flex: 1;">
-            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>Conversation ID: ${escapeHtml(conversationId)}</span>
-                ${hasAssignment ? '<span style="background-color: #dbeafe; color: #1e40af; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600;">Assigned</span>' : '<span style="background-color: #d1fae5; color: #065f46; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600;">Ready</span>'}
-            </div>
-            ${result.employee_name ? `<div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">${escapeHtml(result.employee_name)} (${escapeHtml(result.employee_email)})</div>` : ''}
-            <div style="font-size: 0.875rem; color: #6b7280;">
-                Scorecard: ${escapeHtml(scorecardName)} | Date: ${createdDate}
-                ${result.ai_confidence_score ? ` | Confidence: ${(result.ai_confidence_score * 100).toFixed(1)}%` : ''}
-            </div>
-        </div>
-        ${buttonHTML}
-    `;
-    
-    return card;
-}
-
-// Helper function to create a pending card
-function createPendingAICard(conversationId) {
-    const card = document.createElement('div');
-    card.setAttribute('data-conversation-id', String(conversationId));
-    card.style.cssText = 'padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;';
-    
-    card.innerHTML = `
-        <div style="flex: 1;">
-            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                <div style="width: 1rem; height: 1rem; border: 2px solid #d1d5db; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <span>Conversation ID: ${escapeHtml(conversationId)}</span>
-                <span style="background-color: #fef3c7; color: #92400e; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600;">Processing</span>
-            </div>
-            <div style="font-size: 0.875rem; color: #6b7280;" data-status>
-                AI audit in progress...
-            </div>
-        </div>
-        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">
-            Pending
-        </div>
-    `;
-    
-    return card;
-}
-
-// Create assignment from AI result when user clicks "Start Audit"
-window.createAssignmentFromAIResult = async function(aiResultId) {
-    try {
-        // Get the AI result
-        const { data: aiResult, error: fetchError } = await window.supabaseClient
-            .from('ai_audit_results')
-            .select(`
-                *,
-                scorecards:scorecard_id (id, name, table_name)
-            `)
-            .eq('id', aiResultId)
-            .single();
-        
-        if (fetchError || !aiResult) {
-            throw new Error('AI result not found');
-        }
-        
-        // Check if assignment already exists
-        if (aiResult.assignment_id) {
-            // Assignment already created, navigate to it
-            window.location.href = `audit-form.html?assignment=${aiResult.assignment_id}`;
-            return;
-        }
-        
-        // Get current user (auditor)
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const auditorEmail = userInfo.email || '';
-        
-        if (!auditorEmail) {
-            throw new Error('User email not found. Please log in again.');
-        }
-        
-        // Get employee's country from users table
-        let countryOfEmployee = null;
-        if (aiResult.employee_email) {
-            const { data: employee, error: employeeError } = await window.supabaseClient
-                .from('users')
-                .select('country')
-                .eq('email', aiResult.employee_email)
-                .eq('is_active', true)
-                .single();
-            
-            if (!employeeError && employee && employee.country) {
-                countryOfEmployee = employee.country;
-                console.log('✅ [createAssignmentFromAIResult] Found employee country:', countryOfEmployee);
-            }
-        }
-        
-        // Create assignment with AI data pre-filled
-        const { data: assignment, error: createError } = await window.supabaseClient
-            .from('audit_assignments')
-            .insert({
-                employee_email: aiResult.employee_email,
-                employee_name: aiResult.employee_name,
-                auditor_email: auditorEmail,
-                scorecard_id: aiResult.scorecard_id,
-                conversation_id: aiResult.conversation_id,
-                status: 'pending',
-                source_type: 'ai_generated',
-                ai_scorecard_data: aiResult.ai_scorecard_data,
-                ai_processed: true,
-                ai_processed_at: aiResult.created_at,
-                assigned_by: auditorEmail
-            })
-            .select()
-            .single();
-        
-        if (createError) {
-            throw createError;
-        }
-        
-        // Link AI result to assignment
-        await window.supabaseClient
-            .from('ai_audit_results')
-            .update({ assignment_id: assignment.id })
-            .eq('id', aiResultId);
-        
-        // Navigate to audit form
-        window.location.href = `audit-form.html?assignment=${assignment.id}`;
-        
-    } catch (error) {
-        console.error('Error creating assignment from AI result:', error);
-        alert('Error: ' + error.message);
     }
 };
 
@@ -9755,12 +7793,6 @@ function renderErrorParameters() {
 
 // Clear error parameters
 function clearErrorParameters() {
-    // Don't clear if loading from assignment
-    if (window.isLoadingFromAssignment) {
-        console.log('🚩 [clearErrorParameters] Skipping clear - isLoadingFromAssignment is true');
-        return;
-    }
-    
     const container = document.getElementById('errorParametersContainer');
     container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 1.2937rem; color: #6b7280; font-size: 0.5659rem;"><p>Please select a scorecard above to load error parameters.</p></div>';
 }
@@ -10385,7 +8417,6 @@ window.closeAuditForm = async function() {
     
     // Reload and show pending audits
     await loadPendingAudits();
-    await loadAIAuditResults(); // Load AI-audited conversations
     
     // Update stats after closing form
     await updateYourStats();
@@ -10538,8 +8569,8 @@ async function loadAuditForEditing() {
             }
         }
         
-        // Populate form fields with audit data (use smooth version to prevent glitching)
-        await populateFormWithAuditDataSmoothly(data);
+        // Populate form fields with audit data
+        await populateFormWithAuditData(data);
         
         // Update header to indicate editing mode
         const formHeader = document.getElementById('formScorecardDisplay');
@@ -10570,183 +8601,10 @@ async function loadAuditForEditing() {
 }
 
 // ============================================================================
-// State Management for AI Pre-fill
-// ============================================================================
-
-// Global state for form population
-const formPopulationState = {
-    isPopulating: false,
-    isCancelled: false,
-    currentOperation: null,
-    pendingUpdates: []
-};
-
-// Cancel any ongoing population operation
-function cancelFormPopulation() {
-    formPopulationState.isCancelled = true;
-    formPopulationState.isPopulating = false;
-    formPopulationState.currentOperation = null;
-    formPopulationState.pendingUpdates = [];
-}
-
-// Batch DOM updates using requestAnimationFrame
-function batchDOMUpdates(updates) {
-    return new Promise((resolve) => {
-        requestAnimationFrame(() => {
-            // Disable transitions temporarily for smoother updates
-            const style = document.createElement('style');
-            style.textContent = '* { transition: none !important; }';
-            document.head.appendChild(style);
-            
-            // Apply all updates
-            updates.forEach(update => {
-                try {
-                    update();
-                } catch (e) {
-                    console.warn('Error applying DOM update:', e);
-                }
-            });
-            
-            // Re-enable transitions after a frame
-            requestAnimationFrame(() => {
-                document.head.removeChild(style);
-                resolve();
-            });
-        });
-    });
-}
-
-// Debounce function for preventing rapid updates
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// ============================================================================
-// Helper Functions for AI Data Loading
-// ============================================================================
-
-// Show/hide AI loading indicator on error parameters section
-function showAILoadingIndicator(show = true) {
-    const container = document.getElementById('errorParametersContainer');
-    if (!container) return;
-    
-    if (show) {
-        // Remove any existing loading indicator
-        const existing = container.querySelector('.ai-loading-indicator');
-        if (existing) existing.remove();
-        
-        // Create loading indicator
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.className = 'ai-loading-indicator';
-        loadingIndicator.style.cssText = `
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 1.2937rem;
-            background: #eff6ff;
-            border: 0.0304rem solid #bfdbfe;
-            border-radius: 0.3234rem;
-            margin-bottom: 0.6469rem;
-            color: #1e40af;
-            font-size: 0.6469rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4852rem;
-        `;
-        loadingIndicator.innerHTML = `
-            <svg style="width: 1.2937rem; height: 1.2937rem; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
-                <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/>
-            </svg>
-            <span>🤖 AI Analyzed Data Loading...</span>
-        `;
-        
-        // Add spin animation if not already in styles
-        if (!document.getElementById('ai-loading-spin-style')) {
-            const style = document.createElement('style');
-            style.id = 'ai-loading-spin-style';
-            style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-            document.head.appendChild(style);
-        }
-        
-        container.insertBefore(loadingIndicator, container.firstChild);
-    } else {
-        // Remove loading indicator with fade out
-        const loadingIndicator = container.querySelector('.ai-loading-indicator');
-        if (loadingIndicator) {
-            loadingIndicator.style.transition = 'opacity 0.3s ease';
-            loadingIndicator.style.opacity = '0';
-            setTimeout(() => {
-                if (loadingIndicator.parentNode) {
-                    loadingIndicator.remove();
-                }
-            }, 300);
-        }
-    }
-}
-
-// Populate form with AI data smoothly using requestAnimationFrame to prevent glitching
-async function populateFormWithAuditDataSmoothly(audit) {
-    // Cancel any ongoing operation
-    cancelFormPopulation();
-    
-    // Set new operation state
-    formPopulationState.isPopulating = true;
-    formPopulationState.isCancelled = false;
-    formPopulationState.currentOperation = 'populate';
-    
-    return new Promise((resolve) => {
-        // Use requestAnimationFrame to ensure smooth rendering
-        requestAnimationFrame(async () => {
-            try {
-                await populateFormWithAuditData(audit);
-                
-                // Wait for one more frame to ensure all DOM updates are complete
-                requestAnimationFrame(() => {
-                    formPopulationState.isPopulating = false;
-                    formPopulationState.currentOperation = null;
-                    resolve();
-                });
-            } catch (error) {
-                console.error('Error populating AI data smoothly:', error);
-                formPopulationState.isPopulating = false;
-                formPopulationState.currentOperation = null;
-                resolve(); // Resolve anyway to continue
-            }
-        });
-    });
-}
-
-// ============================================================================
 // Populate Form with Audit Data
 // ============================================================================
 async function populateFormWithAuditData(audit) {
-    // Prevent concurrent population operations
-    if (formPopulationState.isPopulating) {
-        console.warn('Form population already in progress, cancelling previous operation');
-        cancelFormPopulation();
-        // Wait a bit for cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    
-    // Check if operation was cancelled
-    if (formPopulationState.isCancelled) {
-        return;
-    }
-    
     try {
-        // Collect all DOM updates to batch them
-        const domUpdates = [];
-        
         // Populate employee information
         const employeeSelect = document.getElementById('employeeName');
         const employeeEmail = document.getElementById('employeeEmail');
@@ -10757,12 +8615,10 @@ async function populateFormWithAuditData(audit) {
         if (employeeSelect && audit.employee_email) {
             // Wait for employee options to be populated if not ready
             let attempts = 0;
-            while (employeeSelect.options.length === 0 && attempts < 50 && !formPopulationState.isCancelled) {
+            while (employeeSelect.options.length === 0 && attempts < 50) {
                 await new Promise(resolve => setTimeout(resolve, 100));
                 attempts++;
             }
-            
-            if (formPopulationState.isCancelled) return;
             
             // Find and select the employee in dropdown
             let employeeFound = false;
@@ -10770,17 +8626,9 @@ async function populateFormWithAuditData(audit) {
             for (let i = 0; i < employeeSelect.options.length; i++) {
                 const optionEmail = (employeeSelect.options[i].dataset.email || '').toLowerCase().trim();
                 if (optionEmail === normalizedEmail) {
-                    domUpdates.push(() => {
-                        employeeSelect.selectedIndex = i;
-                        // Trigger change event to populate other fields (only once)
-                        if (!employeeSelect.dataset.populating) {
-                            employeeSelect.dataset.populating = 'true';
-                            employeeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                            setTimeout(() => {
-                                delete employeeSelect.dataset.populating;
-                            }, 500);
-                        }
-                    });
+                    employeeSelect.selectedIndex = i;
+                    // Trigger change event to populate other fields
+                    employeeSelect.dispatchEvent(new Event('change'));
                     employeeFound = true;
                     break;
                 }
@@ -10792,27 +8640,10 @@ async function populateFormWithAuditData(audit) {
         }
         
         // Set employee fields directly from audit data (in case dropdown selection fails)
-        if (employeeEmail) {
-            domUpdates.push(() => { employeeEmail.value = audit.employee_email || ''; });
-        }
-        if (employeeType) {
-            domUpdates.push(() => { employeeType.value = audit.employee_type || ''; });
-        }
-        if (employeeDepartment) {
-            domUpdates.push(() => { employeeDepartment.value = audit.employee_department || ''; });
-        }
-        if (countryOfEmployee) {
-            domUpdates.push(() => { countryOfEmployee.value = audit.country_of_employee || ''; });
-        }
-        
-        // Batch employee field updates
-        await batchDOMUpdates(domUpdates);
-        domUpdates.length = 0;
-        
-        // Wait a bit for employee change event to complete before populating other fields
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        if (formPopulationState.isCancelled) return;
+        if (employeeEmail) employeeEmail.value = audit.employee_email || '';
+        if (employeeType) employeeType.value = audit.employee_type || '';
+        if (employeeDepartment) employeeDepartment.value = audit.employee_department || '';
+        if (countryOfEmployee) countryOfEmployee.value = audit.country_of_employee || '';
         
         // Populate interaction details
         const interactionId = document.getElementById('interactionId');
@@ -10820,160 +8651,83 @@ async function populateFormWithAuditData(audit) {
         const channel = document.getElementById('channel');
         const clientEmail = document.getElementById('clientEmail');
         
-        if (interactionId) {
-            domUpdates.push(() => { interactionId.value = audit.interaction_id || audit.interactionId || ''; });
-        }
-        if (interactionDate) {
-            domUpdates.push(() => { interactionDate.value = audit.interaction_date || audit.interactionDate || ''; });
-        }
-        if (channel) {
-            domUpdates.push(() => { channel.value = audit.channel || ''; });
-        }
-        // Populate client email - check both formats and ensure it's set
-        if (clientEmail) {
-            const clientEmailValue = audit.client_email || audit.clientEmail || '';
-            if (clientEmailValue) {
-                domUpdates.push(() => { clientEmail.value = clientEmailValue; });
-            }
-        }
+        if (interactionId) interactionId.value = audit.interaction_id || '';
+        if (interactionDate) interactionDate.value = audit.interaction_date || '';
+        if (channel) channel.value = audit.channel || '';
+        if (clientEmail) clientEmail.value = audit.client_email || '';
         
         // Populate audit type and validation
         const auditType = document.getElementById('auditType');
         const validationStatus = document.getElementById('validationStatus');
         
-        if (auditType) {
-            domUpdates.push(() => { auditType.value = audit.audit_type || ''; });
-        }
-        if (validationStatus) {
-            domUpdates.push(() => { validationStatus.value = audit.validation_status || ''; });
-        }
+        if (auditType) auditType.value = audit.audit_type || '';
+        if (validationStatus) validationStatus.value = audit.validation_status || '';
         
         // Populate pre/post status
         const agentPreStatus = document.getElementById('agentPreStatus');
         const agentPostStatus = document.getElementById('agentPostStatus');
         
-        if (agentPreStatus) {
-            domUpdates.push(() => { agentPreStatus.value = audit.agent_pre_status || ''; });
-        }
-        if (agentPostStatus) {
-            domUpdates.push(() => { agentPostStatus.value = audit.agent_post_status || ''; });
-        }
+        if (agentPreStatus) agentPreStatus.value = audit.agent_pre_status || '';
+        if (agentPostStatus) agentPostStatus.value = audit.agent_post_status || '';
         
         // Populate transcript and recommendations
         const transcript = document.getElementById('transcript');
         const recommendations = document.getElementById('recommendations');
         
-        if (transcript) {
-            domUpdates.push(() => { transcript.value = audit.transcript || ''; });
-        }
-        if (recommendations) {
-            domUpdates.push(() => { recommendations.value = audit.recommendations || ''; });
-        }
-        
-        // Batch interaction field updates
-        await batchDOMUpdates(domUpdates);
-        domUpdates.length = 0;
+        if (transcript) transcript.value = audit.transcript || '';
+        if (recommendations) recommendations.value = audit.recommendations || '';
         
         // Wait for scorecard parameters to be fully loaded and rendered
         let attempts = 0;
-        while ((!currentParameters || currentParameters.length === 0) && attempts < 30 && !formPopulationState.isCancelled) {
+        while ((!currentParameters || currentParameters.length === 0) && attempts < 30) {
             await new Promise(resolve => setTimeout(resolve, 100));
             attempts++;
         }
-        
-        if (formPopulationState.isCancelled) return;
         
         if (attempts >= 30) {
             console.warn('Timeout waiting for scorecard parameters to load');
         }
         
-        // Check if this is an AI pre-filled audit
-        const isAIPrefilled = audit.source_type === 'ai_generated' && audit.ai_processed && audit.ai_scorecard_data;
-        
-        if (isAIPrefilled) {
-            // Show AI indicator (batch this update)
-            domUpdates.push(() => {
-                const formHeader = document.getElementById('auditFormHeader');
-                if (formHeader) {
-                    const existingBadge = formHeader.querySelector('.ai-prefilled-badge');
-                    if (!existingBadge) {
-                        const badge = document.createElement('div');
-                        badge.className = 'ai-prefilled-badge';
-                        badge.style.cssText = 'display: inline-flex; align-items: center; gap: 0.3234rem; background: #dbeafe; color: #1e40af; padding: 0.2425rem 0.4852rem; border-radius: 0.3234rem; font-size: 0.6469rem; font-weight: 600; margin-left: 0.6469rem;';
-                        badge.innerHTML = '🤖 AI Pre-filled';
-                        formHeader.appendChild(badge);
-                    }
-                }
-            });
-            await batchDOMUpdates(domUpdates);
-            domUpdates.length = 0;
-        }
-        
-        // Populate error parameters - use AI data if available, otherwise use regular audit data
-        const dataSource = isAIPrefilled && audit.ai_scorecard_data ? audit.ai_scorecard_data : audit;
-        
+        // Populate error parameters
         if (currentParameters && currentParameters.length > 0) {
-            // Collect all parameter updates
-            const parameterUpdates = [];
-            const feedbackUpdates = [];
-            
-            for (const param of currentParameters) {
-                if (formPopulationState.isCancelled) return;
-                
-                // Get value from AI data or regular audit data
-                let fieldValue = dataSource[param.field_id];
-                
-                // If AI data, ensure we get the count value
-                if (isAIPrefilled && audit.ai_scorecard_data && audit.ai_scorecard_data[param.field_id] !== undefined) {
-                    fieldValue = audit.ai_scorecard_data[param.field_id];
-                }
+            currentParameters.forEach(param => {
+                const fieldValue = audit[param.field_id];
                 
                 if (param.field_type === 'radio') {
                     // Set radio button selection
                     const radioYes = document.getElementById(`${param.field_id}_yes`);
                     const radioNo = document.getElementById(`${param.field_id}_no`);
                     
-                    parameterUpdates.push(() => {
-                        if (fieldValue === 1 || fieldValue === true || fieldValue === 'true' || fieldValue === '1') {
-                            if (radioYes) radioYes.checked = true;
-                            if (radioNo) radioNo.checked = false;
-                        } else {
-                            if (radioNo) radioNo.checked = true;
-                            if (radioYes) radioYes.checked = false;
-                        }
-                    });
+                    if (fieldValue === 1 || fieldValue === true || fieldValue === 'true' || fieldValue === '1') {
+                        if (radioYes) radioYes.checked = true;
+                    } else {
+                        if (radioNo) radioNo.checked = true;
+                    }
                 } else {
                     // Set counter value
                     const field = document.getElementById(param.field_id);
                     const counterValue = fieldValue || 0;
-                    const displayElement = document.getElementById(`${param.field_id}_display`);
+                    if (field) {
+                        field.value = counterValue;
+                    }
                     
-                    parameterUpdates.push(() => {
-                        if (field) {
-                            field.value = counterValue;
+                    // Update plain text display
+                    const displayElement = document.getElementById(`${param.field_id}_display`);
+                    if (displayElement) {
+                        displayElement.textContent = counterValue;
+                        // Update color based on value
+                        if (counterValue > 0) {
+                            displayElement.style.color = '#ef4444';
+                            displayElement.style.fontWeight = '700';
+                        } else {
+                            displayElement.style.color = '#1f2937';
+                            displayElement.style.fontWeight = '700';
                         }
-                        if (displayElement) {
-                            displayElement.textContent = counterValue;
-                            // Update color based on value
-                            if (counterValue > 0) {
-                                displayElement.style.color = '#ef4444';
-                                displayElement.style.fontWeight = '700';
-                            } else {
-                                displayElement.style.color = '#1f2937';
-                                displayElement.style.fontWeight = '700';
-                            }
-                        }
-                    });
+                    }
                 }
                 
                 // Populate feedback - handle both old format (string) and new format (JSON array)
-                // Check AI data first, then regular audit data
-                let feedbackData = null;
-                if (isAIPrefilled && audit.ai_scorecard_data && audit.ai_scorecard_data[`feedback_${param.field_id}`]) {
-                    feedbackData = audit.ai_scorecard_data[`feedback_${param.field_id}`];
-                } else {
-                    feedbackData = audit[`feedback_${param.field_id}`];
-                }
+                const feedbackData = audit[`feedback_${param.field_id}`];
                 let feedbackArray = [];
                 
                 if (feedbackData) {
@@ -10995,12 +8749,7 @@ async function populateFormWithAuditData(audit) {
                 
                 // Update feedback boxes based on error count first, then populate values
                 const paramType = param.parameter_type || 'error';
-                const fieldType = param.field_type || 'counter';
-                
-                // Batch feedback box updates
-                feedbackUpdates.push(() => {
-                    updateFeedbackBoxesForParameter(param.field_id, fieldType, paramType);
-                });
+                updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', paramType);
                 
                 // Populate feedback values into the boxes
                 if (feedbackArray.length > 0) {
@@ -11008,42 +8757,24 @@ async function populateFormWithAuditData(audit) {
                     if (feedbackContainer) {
                         feedbackArray.forEach((feedbackText, index) => {
                             const feedbackId = `feedback_${param.field_id}_${index}`;
-                            feedbackUpdates.push(() => {
-                                const textarea = document.getElementById(feedbackId);
-                                if (textarea && feedbackText) {
-                                    textarea.value = feedbackText;
-                                    // Trigger auto-expand
-                                    requestAnimationFrame(() => {
-                                        textarea.style.height = 'auto';
-                                        const scrollHeightRem = textarea.scrollHeight / 16;
-                                        textarea.style.height = Math.min(scrollHeightRem, 50.0) + 'rem';
-                                    });
-                                }
-                            });
+                            const textarea = document.getElementById(feedbackId);
+                            if (textarea && feedbackText) {
+                                textarea.value = feedbackText;
+                                // Trigger auto-expand
+                                setTimeout(() => {
+                                    textarea.style.height = 'auto';
+                                    const scrollHeightRem = textarea.scrollHeight / 16;
+                                    textarea.style.height = Math.min(scrollHeightRem, 50.0) + 'rem';
+                                }, 100);
+                            }
                         });
                     }
                 }
-            }
-            
-            // Batch all parameter updates
-            if (parameterUpdates.length > 0) {
-                await batchDOMUpdates(parameterUpdates);
-            }
-            
-            // Batch all feedback box updates
-            if (feedbackUpdates.length > 0) {
-                await batchDOMUpdates(feedbackUpdates);
-            }
+            });
         }
         
-        // Recalculate scores (debounced to prevent multiple rapid calculations)
-        if (formPopulationState.isCancelled) return;
-        
-        requestAnimationFrame(() => {
-            if (!formPopulationState.isCancelled) {
-                calculateAverageScore();
-            }
-        });
+        // Recalculate scores
+        calculateAverageScore();
         
         console.log('Form populated with audit data');
         
@@ -12092,8 +9823,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Load pending audits when page loads (all assigned audits)
         loadPendingAudits();
-        // Don't load AI results on page load - only load when needed (when user processes AI audits or when results exist)
-        // loadAIAuditResults(); // Load AI-audited conversations
         
         // Initialize date selector for pull conversations
         const pullConversationsDateInput = document.getElementById('pullConversationsDate');
@@ -12235,10 +9964,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const scorecardSelect = document.getElementById('scorecardSelect');
         if (scorecardSelect) {
             scorecardSelect.addEventListener('change', async function() {
-                // Don't clear form if we're in edit mode or loading from assignment
-                if (isEditingExistingAudit || window.isLoadingFromAssignment) {
-                    console.log('🚩 [scorecardSelect change] Skipping clear - isEditingExistingAudit:', isEditingExistingAudit, 'isLoadingFromAssignment:', window.isLoadingFromAssignment);
-                    return; // Let the assignment/edit mode handler manage the scorecard selection
+                // Don't clear form if we're in edit mode
+                if (isEditingExistingAudit) {
+                    return; // Let the edit mode handler manage the scorecard selection
                 }
                 
                 const selectedValue = this.value;
@@ -12265,12 +9993,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const channelSelect = document.getElementById('channel');
         if (channelSelect) {
             channelSelect.addEventListener('change', async function() {
-                // ========== CRITICAL: Don't reload scorecards if loading from assignment ==========
-                if (window.isLoadingFromAssignment) {
-                    console.log('🚩 [channelSelect change] Skipping scorecard reload - isLoadingFromAssignment is true');
-                    return; // Exit early to prevent scorecard reload
-                }
-                
                 const selectedChannel = this.value;
                 await autoSelectScorecardByChannel(selectedChannel);
             });
@@ -12992,7 +10714,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Reload pending audits (in case there are more)
                 await loadPendingAudits();
-    await loadAIAuditResults(); // Load AI-audited conversations
                 
                 // Update stats after submission
                 await updateYourStats();
@@ -13070,7 +10791,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Reload and show pending audits
                 await loadPendingAudits();
-    await loadAIAuditResults(); // Load AI-audited conversations
                 
                 // Update stats
                 await updateYourStats();
@@ -13193,17 +10913,8 @@ async function loadAssignmentFromURL(assignmentId) {
             scorecards: {
                 id: scorecardId,
                 table_name: assignmentTable
-            },
-            // Include AI data if available
-            ai_scorecard_data: assignment.ai_scorecard_data,
-            ai_processed: assignment.ai_processed,
-            source_type: assignment.source_type
+            }
         };
-        
-        // Show AI indicator if this is an AI-generated audit
-        if (assignment.source_type === 'ai_generated' && assignment.ai_processed) {
-            console.log('🤖 Loading AI pre-filled audit');
-        }
         
         // Start the assigned audit
         console.log('Starting audit from assignment:', mappedAssignment);
