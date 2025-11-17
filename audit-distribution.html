@@ -817,6 +817,42 @@
             border-color: #1A733E;
         }
 
+        /* Pagination Styles */
+        .pagination-btn {
+            padding: 0.2812rem 0.5625rem;
+            border: 0.0469rem solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 0.1875rem;
+            font-size: 0.6094rem;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 1.875rem;
+            text-align: center;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            border-color: #1A733E;
+            color: #1A733E;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #1A733E;
+            color: white;
+            border-color: #1A733E;
+        }
+
+        .pagination-btn.active:hover {
+            background: #15582E;
+        }
+
     </style>
 </head>
 
@@ -930,6 +966,21 @@
             <div class="split-layout">
                 <!-- Left Panel: Employees -->
                 <div class="split-panel">
+            <!-- Pagination Controls (Top) -->
+            <div id="paginationControlsTop" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem; padding: 0.375rem 0; flex-wrap: wrap; gap: 0.375rem;">
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <label style="font-size: 0.6094rem; color: #374151; font-weight: 500;">Items per page:</label>
+                    <select id="itemsPerPageSelect" class="filter-select" onchange="changeItemsPerPage(parseInt(this.value))" style="width: auto; min-width: 4rem; padding: 0.1875rem 0.375rem;">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div id="paginationInfoTop" style="font-size: 0.6094rem; color: #6b7280;"></div>
+                <div id="paginationButtonsTop" style="display: flex; gap: 0.1875rem; align-items: center;"></div>
+            </div>
+
             <!-- Grouped Employees -->
             <div id="groupedEmployeesContainer">
                 <!-- Groups will be populated here -->
@@ -944,7 +995,22 @@
                 </svg>
                 <p style="font-size: 0.75rem; font-weight: 600; margin: 0 0 0.375rem 0;">No employees found</p>
                 <p style="font-size: 0.6562rem; margin: 0;">Try adjusting your filters or selecting a different scorecard</p>
-                    </div>
+            </div>
+
+            <!-- Pagination Controls (Bottom) -->
+            <div id="paginationControlsBottom" style="display: none; justify-content: space-between; align-items: center; margin-top: 0.5625rem; padding: 0.375rem 0; flex-wrap: wrap; gap: 0.375rem;">
+                <div style="display: flex; align-items: center; gap: 0.375rem;">
+                    <label style="font-size: 0.6094rem; color: #374151; font-weight: 500;">Items per page:</label>
+                    <select id="itemsPerPageSelectBottom" class="filter-select" onchange="changeItemsPerPage(parseInt(this.value))" style="width: auto; min-width: 4rem; padding: 0.1875rem 0.375rem;">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div id="paginationInfoBottom" style="font-size: 0.6094rem; color: #6b7280;"></div>
+                <div id="paginationButtonsBottom" style="display: flex; gap: 0.1875rem; align-items: center;"></div>
+            </div>
             </div>
             
                 <!-- Right Panel: Quality Analyst Selection -->
@@ -967,6 +1033,10 @@
                                     <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.max(0, bulkAuditCount - 1))">−</button>
                                     <input type="number" id="bulkAuditCountRight" min="0" max="10" value="0" class="audit-count-input" onchange="updateBulkAuditCount(parseInt(this.value) || 0)" oninput="updateBulkAuditCount(parseInt(this.value) || 0)" style="width: 3rem;">
                                     <button type="button" class="counter-btn" onclick="updateBulkAuditCount(Math.min(10, bulkAuditCount + 1))">+</button>
+                                </div>
+                                <div id="totalAuditsDisplay" style="text-align: center; padding: 0.375rem 0; margin-top: 0.1875rem;">
+                                    <div style="font-size: 0.5156rem; color: #6b7280; margin-bottom: 0.1875rem;">Total audits:</div>
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: #1A733E;" id="totalAuditsCount">0</div>
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.375rem; flex: 1; min-height: 0;">
@@ -1176,6 +1246,9 @@ let columnFilters = {
     scorecard: [],
     status: []
 };
+// Pagination state
+let currentPage = 1;
+let itemsPerPage = 20;
 
 // ============================================================================
 // Initialize Page
@@ -2338,6 +2411,9 @@ function applyFiltersAndGroup() {
         return matchesChannel && matchesTeam && matchesDepartment && matchesCountry && matchesQS && matchesTS && matchesSearch;
     });
     
+    // Reset to page 1 when filters change
+    currentPage = 1;
+    
     // Initialize error state for audit count input if value is 0
     const auditCountInputRight = document.getElementById('bulkAuditCountRight');
     if (auditCountInputRight && bulkAuditCount === 0) {
@@ -2384,6 +2460,7 @@ function renderFlatList(employees) {
     if (employees.length === 0) {
         container.innerHTML = '';
         emptyState.style.display = 'block';
+        hidePagination();
         return;
     }
     
@@ -2401,12 +2478,29 @@ function renderFlatList(employees) {
         return (a.name || '').localeCompare(b.name || '');
     });
     
+    // Calculate pagination
+    const totalItems = sortedEmployees.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    // Ensure currentPage is valid
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+    
+    // Get items for current page
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedEmployees = sortedEmployees.slice(startIndex, endIndex);
+    
     // Create a simple container for flat list - ensure vertical layout
     const flatListContainer = document.createElement('div');
     flatListContainer.style.cssText = 'display: flex; flex-direction: column; width: 100%; gap: 0;';
     
     // Render each employee as a flat list item
-    sortedEmployees.forEach(emp => {
+    paginatedEmployees.forEach(emp => {
         const employeeElement = createEmployeeElement(emp);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = employeeElement;
@@ -2415,6 +2509,9 @@ function renderFlatList(employees) {
     });
     
     container.appendChild(flatListContainer);
+    
+    // Update pagination controls
+    updatePagination(totalItems, totalPages);
 }
 
 function renderGroups(groups, groupBy, expandedGroups = new Set()) {
@@ -2424,6 +2521,7 @@ function renderGroups(groups, groupBy, expandedGroups = new Set()) {
     if (groups.size === 0 || filteredEmployees.length === 0) {
         container.innerHTML = '';
         emptyState.style.display = 'block';
+        hidePagination();
         return;
     }
 
@@ -2435,6 +2533,8 @@ function renderGroups(groups, groupBy, expandedGroups = new Set()) {
         a[0].localeCompare(b[0])
     );
     
+    // Flatten all employees from all groups for pagination
+    const allGroupedEmployees = [];
     sortedGroups.forEach(([groupName, employees]) => {
         // Sort employees within each group by assigned audit count (ascending)
         const sortedEmployees = [...employees].sort((a, b) => {
@@ -2446,8 +2546,38 @@ function renderGroups(groups, groupBy, expandedGroups = new Set()) {
             }
             return (a.name || '').localeCompare(b.name || '');
         });
-        
-        const groupDiv = createGroupElement(groupName, sortedEmployees, groupBy);
+        allGroupedEmployees.push(...sortedEmployees.map(emp => ({ emp, groupName })));
+    });
+    
+    // Calculate pagination
+    const totalItems = allGroupedEmployees.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    // Ensure currentPage is valid
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+    
+    // Get items for current page
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedItems = allGroupedEmployees.slice(startIndex, endIndex);
+    
+    // Group paginated items back by group name
+    const paginatedGroups = new Map();
+    paginatedItems.forEach(({ emp, groupName }) => {
+        if (!paginatedGroups.has(groupName)) {
+            paginatedGroups.set(groupName, []);
+        }
+        paginatedGroups.get(groupName).push(emp);
+    });
+    
+    // Render paginated groups
+    Array.from(paginatedGroups.entries()).forEach(([groupName, employees]) => {
+        const groupDiv = createGroupElement(groupName, employees, groupBy);
         container.appendChild(groupDiv);
         
         // Restore expanded state if this group was previously expanded
@@ -2461,6 +2591,9 @@ function renderGroups(groups, groupBy, expandedGroups = new Set()) {
             }
         }
     });
+    
+    // Update pagination controls
+    updatePagination(totalItems, totalPages);
 }
 
 function createGroupElement(groupName, employees, groupBy) {
@@ -2596,11 +2729,10 @@ function toggleEmployeeSelection(email, selected) {
     }
     buttons.forEach(btn => btn.disabled = !selected);
     
-    // Re-render to update the UI
-    applyFiltersAndGroup();
-    // Update auditors list to refresh audit count badges
+    // Update auditors list to refresh audit count badges (no need to re-render full list for selection change)
     populateQADropdown();
     updateAssignButton();
+    updateTotalAuditsDisplay(); // Update total audits display
 }
 
 function updateAuditCount(email, count) {
@@ -2630,6 +2762,30 @@ function updateAssignButton() {
     updateRightPanel();
 }
 
+// ============================================================================
+// Update Total Audits Display
+// ============================================================================
+function updateTotalAuditsDisplay() {
+    const totalAuditsElement = document.getElementById('totalAuditsCount');
+    if (!totalAuditsElement) return;
+    
+    // Calculate total: audits per employee × number of selected employees
+    const selectedCount = selectedEmployees.size;
+    const totalAudits = bulkAuditCount * selectedCount;
+    
+    totalAuditsElement.textContent = totalAudits.toLocaleString();
+    
+    // Update the display container visibility/style
+    const displayContainer = document.getElementById('totalAuditsDisplay');
+    if (displayContainer) {
+        if (selectedCount > 0 && bulkAuditCount > 0) {
+            displayContainer.style.display = 'block';
+        } else {
+            displayContainer.style.display = 'block'; // Always show, even if 0
+        }
+    }
+}
+
 function updateRightPanel() {
     const rightPanelContent = document.getElementById('rightPanelContent');
     const rightPanelEmpty = document.getElementById('rightPanelEmpty');
@@ -2637,6 +2793,8 @@ function updateRightPanel() {
     if (selectedEmployees.size > 0) {
         if (rightPanelContent) rightPanelContent.style.display = 'block';
         if (rightPanelEmpty) rightPanelEmpty.style.display = 'none';
+        // Update total audits when panel is shown
+        updateTotalAuditsDisplay();
     } else {
         if (rightPanelContent) rightPanelContent.style.display = 'none';
         if (rightPanelEmpty) rightPanelEmpty.style.display = 'flex';
@@ -2689,16 +2847,22 @@ function deselectAllQAs() {
 // Quick Actions
 // ============================================================================
 function selectAllVisible() {
-    filteredEmployees.forEach(emp => {
-        if (!selectedEmployees.has(emp.email)) {
+    // Get currently visible employees (on current page)
+    const visibleCheckboxes = document.querySelectorAll('.employee-checkbox:not(:checked)');
+    visibleCheckboxes.forEach(checkbox => {
+        const email = checkbox.dataset.email;
+        const employee = filteredEmployees.find(e => e.email === email);
+        if (employee && !selectedEmployees.has(email)) {
             // Use bulkAuditCount if > 0, otherwise default to 1
             const auditCount = bulkAuditCount > 0 ? bulkAuditCount : 1;
-            selectedEmployees.set(emp.email, { employee: emp, auditCount });
+            selectedEmployees.set(email, { employee, auditCount });
+            checkbox.checked = true;
         }
     });
-    applyFiltersAndGroup();
     // Update auditors list to refresh audit count badges
     populateQADropdown();
+    updateAssignButton();
+    updateTotalAuditsDisplay(); // Update total audits display
 }
 
 function deselectAll() {
@@ -2706,6 +2870,7 @@ function deselectAll() {
     applyFiltersAndGroup();
     // Update auditors list to refresh audit count badges
     populateQADropdown();
+    updateTotalAuditsDisplay(); // Update total audits display
 }
 
 function updateBulkAuditCount(count) {
@@ -2737,6 +2902,7 @@ function updateBulkAuditCount(count) {
     // Re-render auditors list to update disabled state and audit count badges
     populateQADropdown();
     updateAssignButton();
+    updateTotalAuditsDisplay(); // Update total audits display
     applyFiltersAndGroup();
 }
 
@@ -3547,6 +3713,166 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ============================================================================
+// Pagination Functions
+// ============================================================================
+function updatePagination(totalItems, totalPages) {
+    if (totalPages <= 1) {
+        hidePagination();
+        return;
+    }
+    
+    showPagination();
+    
+    // Calculate display range
+    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+    const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+    
+    // Update pagination info
+    const infoText = `Showing ${startIndex}-${endIndex} of ${totalItems}`;
+    document.getElementById('paginationInfoTop').textContent = infoText;
+    document.getElementById('paginationInfoBottom').textContent = infoText;
+    
+    // Update items per page selects
+    document.getElementById('itemsPerPageSelect').value = itemsPerPage;
+    document.getElementById('itemsPerPageSelectBottom').value = itemsPerPage;
+    
+    // Render pagination buttons
+    renderPaginationButtons('paginationButtonsTop', totalPages);
+    renderPaginationButtons('paginationButtonsBottom', totalPages);
+}
+
+function renderPaginationButtons(containerId, totalPages) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Previous button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'pagination-btn';
+    prevBtn.textContent = '‹';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => goToPage(currentPage - 1);
+    prevBtn.title = 'Previous page';
+    container.appendChild(prevBtn);
+    
+    // Page number buttons
+    const maxVisiblePages = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    // First page
+    if (startPage > 1) {
+        const firstBtn = document.createElement('button');
+        firstBtn.className = 'pagination-btn';
+        firstBtn.textContent = '1';
+        firstBtn.onclick = () => goToPage(1);
+        container.appendChild(firstBtn);
+        
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.style.cssText = 'padding: 0 0.375rem; color: #6b7280; font-size: 0.6094rem;';
+            container.appendChild(ellipsis);
+        }
+    }
+    
+    // Page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'pagination-btn';
+        if (i === currentPage) {
+            pageBtn.classList.add('active');
+        }
+        pageBtn.textContent = i.toString();
+        pageBtn.onclick = () => goToPage(i);
+        container.appendChild(pageBtn);
+    }
+    
+    // Last page
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.style.cssText = 'padding: 0 0.375rem; color: #6b7280; font-size: 0.6094rem;';
+            container.appendChild(ellipsis);
+        }
+        
+        const lastBtn = document.createElement('button');
+        lastBtn.className = 'pagination-btn';
+        lastBtn.textContent = totalPages.toString();
+        lastBtn.onclick = () => goToPage(totalPages);
+        container.appendChild(lastBtn);
+    }
+    
+    // Next button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'pagination-btn';
+    nextBtn.textContent = '›';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.onclick = () => goToPage(currentPage + 1);
+    nextBtn.title = 'Next page';
+    container.appendChild(nextBtn);
+}
+
+function goToPage(page) {
+    const groupBy = document.getElementById('groupBySelect').value;
+    const totalItems = filteredEmployees.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    
+    // Re-render with new page
+    if (groupBy === 'none') {
+        renderFlatList(filteredEmployees);
+    } else {
+        const expandedGroups = new Set();
+        document.querySelectorAll('.group-content.expanded').forEach(content => {
+            const groupId = content.id.replace('content-', '');
+            if (groupId) {
+                expandedGroups.add(groupId);
+            }
+        });
+        renderGroups(groupEmployees(filteredEmployees, groupBy), groupBy, expandedGroups);
+    }
+    
+    // Scroll to top of employee list
+    const container = document.getElementById('groupedEmployeesContainer');
+    if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function changeItemsPerPage(newItemsPerPage) {
+    itemsPerPage = newItemsPerPage;
+    currentPage = 1; // Reset to first page
+    
+    // Update both selects
+    document.getElementById('itemsPerPageSelect').value = itemsPerPage;
+    document.getElementById('itemsPerPageSelectBottom').value = itemsPerPage;
+    
+    // Re-render
+    applyFiltersAndGroup();
+}
+
+function showPagination() {
+    document.getElementById('paginationControlsTop').style.display = 'flex';
+    document.getElementById('paginationControlsBottom').style.display = 'flex';
+}
+
+function hidePagination() {
+    document.getElementById('paginationControlsTop').style.display = 'none';
+    document.getElementById('paginationControlsBottom').style.display = 'none';
 }
 
 </script>
