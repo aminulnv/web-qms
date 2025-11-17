@@ -7633,18 +7633,53 @@ function updateFeedbackBoxesForParameter(fieldId, fieldType, paramType) {
     const feedbackCount = errorCount === 0 ? 1 : Math.min(errorCount, 10);
     const isRequired = errorCount > 0;
     
-    // Get existing feedback values (if loading from saved audit)
+    // ========== CRITICAL: Get existing feedback values BEFORE clearing ==========
     const existingFeedbacks = [];
-    const existingTextareas = feedbackContainer.querySelectorAll(`textarea[id^="feedback_${fieldId}_"]`);
-    existingTextareas.forEach(textarea => {
-        const index = parseInt(textarea.id.split('_').pop()) || 0;
-        existingFeedbacks[index] = textarea.value;
-    });
+    
+    // ========== PRIORITY 1: Check for AI feedback if loading from assignment (prioritize AI data) ==========
+    if (window.pendingAIData && window.pendingAIData.ai_scorecard_data && window.isLoadingFromAssignment) {
+        const aiData = window.pendingAIData.ai_scorecard_data;
+        let aiFeedback = aiData[`feedback_${fieldId}`];
+        
+        // Try generic format if not found
+        if (!aiFeedback && currentParameters) {
+            const sortedParams = [...currentParameters].sort((a, b) => {
+                const orderA = a.display_order || 999;
+                const orderB = b.display_order || 999;
+                return orderA - orderB;
+            });
+            const paramIndex = sortedParams.findIndex(p => p.field_id === fieldId);
+            if (paramIndex !== -1) {
+                const fieldNumber = paramIndex + 1;
+                const genericFeedbackKey = `feedback_field_${fieldNumber}`;
+                aiFeedback = aiData[genericFeedbackKey];
+            }
+        }
+        
+        if (aiFeedback && Array.isArray(aiFeedback)) {
+            aiFeedback.forEach((text, index) => {
+                if (text && text.trim()) {
+                    existingFeedbacks[index] = text;
+                }
+            });
+        }
+    }
+    
+    // ========== PRIORITY 2: If no AI feedback, check existing textarea values (preserve user edits) ==========
+    if (existingFeedbacks.length === 0) {
+        const existingTextareas = feedbackContainer.querySelectorAll(`textarea[id^="feedback_${fieldId}_"]`);
+        existingTextareas.forEach(textarea => {
+            const index = parseInt(textarea.id.split('_').pop()) || 0;
+            if (textarea.value && textarea.value.trim()) {
+                existingFeedbacks[index] = textarea.value;
+            }
+        });
+    }
     
     // Clear container
     feedbackContainer.innerHTML = '';
     
-    // Create feedback boxes
+    // Create feedback boxes with preserved values
     for (let i = 0; i < feedbackCount; i++) {
         const feedbackDiv = document.createElement('div');
         const feedbackId = `feedback_${fieldId}_${i}`;
@@ -7656,6 +7691,9 @@ function updateFeedbackBoxesForParameter(fieldId, fieldType, paramType) {
                 ? 'Enter feedback (required)...' 
                 : `Feedback ${i + 1} of ${feedbackCount} (required)...`);
         
+        // Use preserved feedback value if available
+        const preservedValue = existingFeedbacks[i] || '';
+        
         feedbackDiv.innerHTML = `
             <textarea 
                 id="${feedbackId}" 
@@ -7665,7 +7703,7 @@ function updateFeedbackBoxesForParameter(fieldId, fieldType, paramType) {
                 rows="1" 
                 class="w-full px-2 py-1 bg-white text-sm focus:outline-none resize-none" 
                 style="font-family: 'Poppins', sans-serif; font-size: 0.5659rem; line-height: 1.2; min-height: 1rem; max-height: 50rem; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; border: 0.0625rem solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.3234rem;"
-            >${existingFeedbacks[i] || ''}</textarea>
+            >${preservedValue}</textarea>
         `;
         feedbackContainer.appendChild(feedbackDiv);
         
@@ -7673,6 +7711,14 @@ function updateFeedbackBoxesForParameter(fieldId, fieldType, paramType) {
         const textarea = feedbackDiv.querySelector('textarea');
         if (textarea) {
             setupFeedbackTextareaAutoExpand(feedbackId, textarea);
+            // Auto-expand if has value
+            if (preservedValue) {
+                setTimeout(() => {
+                    textarea.style.height = 'auto';
+                    const scrollHeightRem = textarea.scrollHeight / 16;
+                    textarea.style.height = Math.min(scrollHeightRem, 50.0) + 'rem';
+                }, 50);
+            }
         }
     }
 }
@@ -7877,6 +7923,12 @@ function renderErrorParameters() {
 
 // Clear error parameters
 function clearErrorParameters() {
+    // Don't clear if loading from assignment
+    if (window.isLoadingFromAssignment) {
+        console.log('🚩 [clearErrorParameters] Skipping clear - isLoadingFromAssignment is true');
+        return;
+    }
+    
     const container = document.getElementById('errorParametersContainer');
     container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 1.2937rem; color: #6b7280; font-size: 0.5659rem;"><p>Please select a scorecard above to load error parameters.</p></div>';
 }
@@ -8618,6 +8670,90 @@ async function loadAuditForEditing() {
 // ============================================================================
 // Populate Form with Audit Data
 // ============================================================================
+// ============================================================================
+// Helper Functions for AI Data Loading
+// ============================================================================
+
+// Show/hide AI loading indicator on error parameters section
+function showAILoadingIndicator(show = true) {
+    const container = document.getElementById('errorParametersContainer');
+    if (!container) return;
+    
+    if (show) {
+        // Remove existing indicator if any
+        const existing = container.querySelector('.ai-loading-indicator');
+        if (existing) existing.remove();
+        
+        // Create loading indicator badge at the top
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'ai-loading-indicator';
+        loadingIndicator.style.cssText = `
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%);
+            color: white;
+            padding: 0.6469rem 0.9704rem;
+            margin: -0.6469rem -0.6469rem 0.6469rem -0.6469rem;
+            border-radius: 0.3234rem 0.3234rem 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4852rem;
+            font-size: 0.5659rem;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 0.1213rem 0.2425rem rgba(0, 0, 0, 0.1);
+        `;
+        loadingIndicator.innerHTML = `
+            <div style="
+                display: inline-block;
+                width: 0.9704rem;
+                height: 0.9704rem;
+                border: 0.1213rem solid rgba(255, 255, 255, 0.3);
+                border-top-color: white;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+            <span>🤖 AI Analyzed Data Loading...</span>
+        `;
+        
+        // Insert at the top of the container
+        container.insertBefore(loadingIndicator, container.firstChild);
+    } else {
+        // Remove loading indicator with fade out
+        const loadingIndicator = container.querySelector('.ai-loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.transition = 'opacity 0.3s ease';
+            loadingIndicator.style.opacity = '0';
+            setTimeout(() => {
+                if (loadingIndicator.parentNode) {
+                    loadingIndicator.remove();
+                }
+            }, 300);
+        }
+    }
+}
+
+// Populate form with AI data smoothly using requestAnimationFrame to prevent glitching
+async function populateFormWithAuditDataSmoothly(audit) {
+    return new Promise((resolve) => {
+        // Use requestAnimationFrame to ensure smooth rendering
+        requestAnimationFrame(async () => {
+            try {
+                await populateFormWithAuditData(audit);
+                
+                // Wait for one more frame to ensure all DOM updates are complete
+                requestAnimationFrame(() => {
+                    resolve();
+                });
+            } catch (error) {
+                console.error('Error populating AI data smoothly:', error);
+                resolve(); // Resolve anyway to continue
+            }
+        });
+    });
+}
+
 async function populateFormWithAuditData(audit) {
     try {
         // Populate employee information
@@ -8666,7 +8802,27 @@ async function populateFormWithAuditData(audit) {
         const channel = document.getElementById('channel');
         const clientEmail = document.getElementById('clientEmail');
         
-        if (interactionId) interactionId.value = audit.interaction_id || '';
+        // Use conversation_id if interaction_id is not available (for AI audits)
+        const conversationIdValue = audit.interaction_id || audit.conversation_id || '';
+        if (interactionId) {
+            // CRITICAL: Preserve conversation ID if it's already set (from Step 5)
+            const existingValue = interactionId.value || interactionId.getAttribute('data-conversation-id') || '';
+            
+            // Only set if:
+            // 1. Field is empty AND we have a value to set, OR
+            // 2. We have a valid conversation_id that's different from existing (but not if existing is from Step 5)
+            if ((!existingValue || existingValue.trim() === '') && conversationIdValue) {
+                interactionId.value = conversationIdValue;
+                console.log('✅ [populateFormWithAuditData] Set conversation ID:', conversationIdValue);
+            } else if (conversationIdValue && conversationIdValue !== existingValue && !interactionId.getAttribute('data-conversation-id')) {
+                // Only update if we don't have a data-conversation-id attribute (meaning Step 5 hasn't run yet)
+                interactionId.value = conversationIdValue;
+                console.log('✅ [populateFormWithAuditData] Updated conversation ID:', conversationIdValue);
+            } else if (existingValue && existingValue.trim() !== '') {
+                // Preserve existing value
+                console.log('🔒 [populateFormWithAuditData] Preserving existing conversation ID:', existingValue);
+            }
+        }
         if (interactionDate) interactionDate.value = audit.interaction_date || '';
         if (channel) channel.value = audit.channel || '';
         if (clientEmail) clientEmail.value = audit.client_email || '';
@@ -8696,27 +8852,161 @@ async function populateFormWithAuditData(audit) {
             console.warn('Timeout waiting for scorecard parameters to load');
         }
         
-        // Populate error parameters
+        // Check if this is an AI pre-filled audit
+        const isAIPrefilled = audit.source_type === 'ai_generated' && audit.ai_processed && audit.ai_scorecard_data;
+        
+        // ========== LOGGING: AI Data Detection ==========
+        console.log('🔍 [AI Pre-fill] Checking for AI data...', {
+            source_type: audit.source_type,
+            ai_processed: audit.ai_processed,
+            has_ai_scorecard_data: !!audit.ai_scorecard_data,
+            isAIPrefilled: isAIPrefilled
+        });
+        
+        if (isAIPrefilled) {
+            console.log('✅ [AI Pre-fill] AI data detected!', {
+                ai_scorecard_data_keys: Object.keys(audit.ai_scorecard_data || {}),
+                ai_scorecard_data_full: JSON.stringify(audit.ai_scorecard_data, null, 2)
+            });
+            
+            // Show AI indicator
+            const formHeader = document.getElementById('auditFormHeader');
+            if (formHeader) {
+                const existingBadge = formHeader.querySelector('.ai-prefilled-badge');
+                if (!existingBadge) {
+                    const badge = document.createElement('div');
+                    badge.className = 'ai-prefilled-badge';
+                    badge.style.cssText = 'display: inline-flex; align-items: center; gap: 0.3234rem; background: #dbeafe; color: #1e40af; padding: 0.2425rem 0.4852rem; border-radius: 0.3234rem; font-size: 0.6469rem; font-weight: 600; margin-left: 0.6469rem;';
+                    badge.innerHTML = '🤖 AI Pre-filled';
+                    formHeader.appendChild(badge);
+                }
+            }
+        } else {
+            console.log('❌ [AI Pre-fill] No AI data detected - using regular audit data');
+        }
+        
+        // Populate error parameters - use AI data if available, otherwise use regular audit data
+        const dataSource = isAIPrefilled && audit.ai_scorecard_data ? audit.ai_scorecard_data : audit;
+        
+        console.log('📊 [AI Pre-fill] Data source:', {
+            isAIPrefilled: isAIPrefilled,
+            dataSource_type: isAIPrefilled ? 'ai_scorecard_data' : 'regular_audit',
+            dataSource_keys: Object.keys(dataSource || {}),
+            total_parameters: currentParameters?.length || 0
+        });
+        
+        // Create mapping from field_1, field_2, etc. to actual field_id based on display_order
+        // This handles the case where AI sends generic field_1, field_2 instead of actual field_ids
+        const fieldNumberToFieldIdMap = {};
+        if (isAIPrefilled && currentParameters && currentParameters.length > 0) {
+            // Sort parameters by display_order to match AI's field_1, field_2, etc.
+            const sortedParams = [...currentParameters].sort((a, b) => {
+                const orderA = a.display_order || 999;
+                const orderB = b.display_order || 999;
+                return orderA - orderB;
+            });
+            
+            sortedParams.forEach((param, index) => {
+                const fieldNumber = index + 1;
+                fieldNumberToFieldIdMap[`field_${fieldNumber}`] = param.field_id;
+                fieldNumberToFieldIdMap[`feedback_field_${fieldNumber}`] = `feedback_${param.field_id}`;
+            });
+            
+            console.log('🗺️ [AI Pre-fill] Created field mapping:', fieldNumberToFieldIdMap);
+        }
+        
         if (currentParameters && currentParameters.length > 0) {
-            currentParameters.forEach(param => {
-                const fieldValue = audit[param.field_id];
+            console.log('📋 [AI Pre-fill] Processing parameters:', currentParameters.map(p => ({
+                field_id: p.field_id,
+                error_name: p.error_name,
+                field_type: p.field_type,
+                display_order: p.display_order
+            })));
+            
+            currentParameters.forEach((param, index) => {
+                // ========== LOGGING: Parameter Processing ==========
+                console.log(`\n🔹 [AI Pre-fill] Processing parameter ${index + 1}/${currentParameters.length}:`, {
+                    field_id: param.field_id,
+                    error_name: param.error_name,
+                    field_type: param.field_type,
+                    display_order: param.display_order
+                });
+                
+                // Get value from AI data or regular audit data
+                let fieldValue = dataSource[param.field_id];
+                
+                // If AI data uses field_1, field_2 format, map it to actual field_id
+                if (isAIPrefilled && audit.ai_scorecard_data) {
+                    // First try direct field_id lookup
+                    if (audit.ai_scorecard_data[param.field_id] !== undefined) {
+                        fieldValue = audit.ai_scorecard_data[param.field_id];
+                        console.log(`  ✅ [AI Pre-fill] Found value using direct field_id "${param.field_id}":`, fieldValue);
+                    } else {
+                        // Try mapping from field_1, field_2, etc. based on display_order
+                        const sortedParams = [...currentParameters].sort((a, b) => {
+                            const orderA = a.display_order || 999;
+                            const orderB = b.display_order || 999;
+                            return orderA - orderB;
+                        });
+                        const paramIndex = sortedParams.findIndex(p => p.field_id === param.field_id);
+                        if (paramIndex !== -1) {
+                            const fieldNumber = paramIndex + 1;
+                            const genericFieldKey = `field_${fieldNumber}`;
+                            if (audit.ai_scorecard_data[genericFieldKey] !== undefined) {
+                                fieldValue = audit.ai_scorecard_data[genericFieldKey];
+                                console.log(`  ✅ [AI Pre-fill] Found value using mapped key "${genericFieldKey}" -> "${param.field_id}":`, fieldValue);
+                            } else {
+                                console.log(`  ❌ [AI Pre-fill] NO VALUE FOUND for field_id: "${param.field_id}" (tried direct and mapped key "${genericFieldKey}")`);
+                                console.log(`  🔍 [AI Pre-fill] Available keys in ai_scorecard_data:`, Object.keys(audit.ai_scorecard_data || {}));
+                            }
+                        } else {
+                            console.log(`  ❌ [AI Pre-fill] Parameter not found in sorted list for mapping`);
+                        }
+                    }
+                } else {
+                    // Regular audit data
+                    if (dataSource[param.field_id] !== undefined) {
+                        fieldValue = dataSource[param.field_id];
+                        console.log(`  ✅ [AI Pre-fill] Found value in regular audit data for ${param.field_id}:`, fieldValue);
+                    } else {
+                        console.log(`  ❌ [AI Pre-fill] NO VALUE FOUND for field_id: "${param.field_id}"`);
+                    }
+                }
                 
                 if (param.field_type === 'radio') {
                     // Set radio button selection
                     const radioYes = document.getElementById(`${param.field_id}_yes`);
                     const radioNo = document.getElementById(`${param.field_id}_no`);
                     
+                    console.log(`  📻 [AI Pre-fill] Setting radio for ${param.field_id}:`, {
+                        fieldValue: fieldValue,
+                        radioYes_exists: !!radioYes,
+                        radioNo_exists: !!radioNo
+                    });
+                    
                     if (fieldValue === 1 || fieldValue === true || fieldValue === 'true' || fieldValue === '1') {
                         if (radioYes) radioYes.checked = true;
+                        console.log(`  ✅ [AI Pre-fill] Radio YES selected for ${param.field_id}`);
                     } else {
                         if (radioNo) radioNo.checked = true;
+                        console.log(`  ✅ [AI Pre-fill] Radio NO selected for ${param.field_id}`);
                     }
                 } else {
                     // Set counter value
                     const field = document.getElementById(param.field_id);
                     const counterValue = fieldValue || 0;
+                    
+                    console.log(`  🔢 [AI Pre-fill] Setting counter for ${param.field_id}:`, {
+                        fieldValue: fieldValue,
+                        counterValue: counterValue,
+                        field_exists: !!field
+                    });
+                    
                     if (field) {
                         field.value = counterValue;
+                        console.log(`  ✅ [AI Pre-fill] Counter field ${param.field_id} set to: ${counterValue}`);
+                    } else {
+                        console.log(`  ❌ [AI Pre-fill] Counter field element not found: ${param.field_id}`);
                     }
                     
                     // Update plain text display
@@ -8731,11 +9021,50 @@ async function populateFormWithAuditData(audit) {
                             displayElement.style.color = '#1f2937';
                             displayElement.style.fontWeight = '700';
                         }
+                        console.log(`  ✅ [AI Pre-fill] Display element ${param.field_id}_display updated to: ${counterValue}`);
+                    } else {
+                        console.log(`  ❌ [AI Pre-fill] Display element not found: ${param.field_id}_display`);
                     }
                 }
                 
                 // Populate feedback - handle both old format (string) and new format (JSON array)
-                const feedbackData = audit[`feedback_${param.field_id}`];
+                // Check AI data first, then regular audit data
+                let feedbackData = null;
+                const feedbackKey = `feedback_${param.field_id}`;
+                
+                if (isAIPrefilled && audit.ai_scorecard_data) {
+                    // First try direct feedback_field_id lookup
+                    if (audit.ai_scorecard_data[feedbackKey]) {
+                        feedbackData = audit.ai_scorecard_data[feedbackKey];
+                        console.log(`  💬 [AI Pre-fill] Found feedback using direct key "${feedbackKey}":`, feedbackData);
+                    } else {
+                        // Try mapping from feedback_field_1, feedback_field_2, etc.
+                        const sortedParams = [...currentParameters].sort((a, b) => {
+                            const orderA = a.display_order || 999;
+                            const orderB = b.display_order || 999;
+                            return orderA - orderB;
+                        });
+                        const paramIndex = sortedParams.findIndex(p => p.field_id === param.field_id);
+                        if (paramIndex !== -1) {
+                            const fieldNumber = paramIndex + 1;
+                            const genericFeedbackKey = `feedback_field_${fieldNumber}`;
+                            if (audit.ai_scorecard_data[genericFeedbackKey]) {
+                                feedbackData = audit.ai_scorecard_data[genericFeedbackKey];
+                                console.log(`  💬 [AI Pre-fill] Found feedback using mapped key "${genericFeedbackKey}" -> "${feedbackKey}":`, feedbackData);
+                            } else {
+                                console.log(`  ❌ [AI Pre-fill] No feedback found for ${feedbackKey} (tried direct and mapped key "${genericFeedbackKey}")`);
+                            }
+                        }
+                    }
+                } else {
+                    feedbackData = audit[feedbackKey];
+                    if (feedbackData) {
+                        console.log(`  💬 [AI Pre-fill] Found feedback in regular audit data for ${feedbackKey}:`, feedbackData);
+                    } else {
+                        console.log(`  ❌ [AI Pre-fill] No feedback found for ${feedbackKey}`);
+                    }
+                }
+                
                 let feedbackArray = [];
                 
                 if (feedbackData) {
@@ -8744,14 +9073,18 @@ async function populateFormWithAuditData(audit) {
                         try {
                             const parsed = JSON.parse(feedbackData);
                             feedbackArray = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+                            console.log(`  ✅ [AI Pre-fill] Parsed feedback string to array:`, feedbackArray);
                         } catch (e) {
                             // If not valid JSON, treat as single string (backward compatibility)
                             feedbackArray = feedbackData.trim() ? [feedbackData] : [];
+                            console.log(`  ⚠️ [AI Pre-fill] Feedback was not valid JSON, treating as single string:`, feedbackArray);
                         }
                     } else if (Array.isArray(feedbackData)) {
                         feedbackArray = feedbackData;
+                        console.log(`  ✅ [AI Pre-fill] Feedback is already an array:`, feedbackArray);
                     } else {
                         feedbackArray = feedbackData ? [feedbackData] : [];
+                        console.log(`  ⚠️ [AI Pre-fill] Feedback converted to array:`, feedbackArray);
                     }
                 }
                 
@@ -8761,6 +9094,7 @@ async function populateFormWithAuditData(audit) {
                 
                 // Populate feedback values into the boxes
                 if (feedbackArray.length > 0) {
+                    console.log(`  ✅ [AI Pre-fill] Populating ${feedbackArray.length} feedback items for ${param.field_id}`);
                     const feedbackContainer = document.getElementById(`feedback_container_${param.field_id}`);
                     if (feedbackContainer) {
                         feedbackArray.forEach((feedbackText, index) => {
@@ -8768,17 +9102,28 @@ async function populateFormWithAuditData(audit) {
                             const textarea = document.getElementById(feedbackId);
                             if (textarea && feedbackText) {
                                 textarea.value = feedbackText;
+                                console.log(`  ✅ [AI Pre-fill] Populated feedback ${index + 1} for ${param.field_id}`);
                                 // Trigger auto-expand
                                 setTimeout(() => {
                                     textarea.style.height = 'auto';
                                     const scrollHeightRem = textarea.scrollHeight / 16;
                                     textarea.style.height = Math.min(scrollHeightRem, 50.0) + 'rem';
                                 }, 100);
+                            } else {
+                                console.log(`  ❌ [AI Pre-fill] Feedback textarea not found: ${feedbackId}`);
                             }
                         });
+                    } else {
+                        console.log(`  ❌ [AI Pre-fill] Feedback container not found: feedback_container_${param.field_id}`);
                     }
+                } else {
+                    console.log(`  ℹ️ [AI Pre-fill] No feedback to populate for ${param.field_id}`);
                 }
             });
+            
+            console.log('\n✅ [AI Pre-fill] Finished processing all parameters');
+        } else {
+            console.log('❌ [AI Pre-fill] No parameters found to process');
         }
         
         // Recalculate scores
@@ -9513,9 +9858,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const scorecardSelect = document.getElementById('scorecardSelect');
         if (scorecardSelect) {
             scorecardSelect.addEventListener('change', async function() {
-                // Don't clear form if we're in edit mode
-                if (isEditingExistingAudit) {
-                    return; // Let the edit mode handler manage the scorecard selection
+                // Don't clear form if we're in edit mode or loading from assignment
+                if (isEditingExistingAudit || window.isLoadingFromAssignment) {
+                    console.log('🚩 [scorecardSelect change] Skipping clear - isEditingExistingAudit:', isEditingExistingAudit, 'isLoadingFromAssignment:', window.isLoadingFromAssignment);
+                    return; // Let the assignment/edit mode handler manage the scorecard selection
                 }
                 
                 const selectedValue = this.value;
@@ -9542,6 +9888,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const channelSelect = document.getElementById('channel');
         if (channelSelect) {
             channelSelect.addEventListener('change', async function() {
+                // ========== CRITICAL: Don't reload scorecards if loading from assignment ==========
+                if (window.isLoadingFromAssignment) {
+                    console.log('🚩 [channelSelect change] Skipping scorecard reload - isLoadingFromAssignment is true');
+                    return; // Exit early to prevent scorecard reload
+                }
+                
                 const selectedChannel = this.value;
                 await autoSelectScorecardByChannel(selectedChannel);
             });
@@ -9564,6 +9916,40 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Handle employee selection change
         employeeSelect.addEventListener('change', function() {
+            // ========== CRITICAL: Don't trigger channel change if loading from assignment ==========
+            if (window.isLoadingFromAssignment) {
+                console.log('🚩 [employeeSelect change] Skipping channel change - isLoadingFromAssignment is true');
+                // Still populate employee fields, but don't trigger channel change
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    const email = selectedOption.dataset.email || selectedOption.value;
+                    if (employeeEmail) employeeEmail.value = email;
+                    
+                    const designation = selectedOption.dataset.designation || '';
+                    if (employeeType && designation) employeeType.value = designation;
+                    
+                    const department = selectedOption.dataset.department || '';
+                    const employeeDepartment = document.getElementById('employeeDepartment');
+                    if (employeeDepartment) employeeDepartment.value = department;
+                    
+                    const country = selectedOption.dataset.country || '';
+                    if (countryOfEmployee && country) countryOfEmployee.value = country;
+                    
+                    // Set channel value but DON'T trigger change event
+                    const channel = selectedOption.dataset.channel || '';
+                    const channelSelect = document.getElementById('channel');
+                    if (channelSelect && channel) {
+                        const channelExists = Array.from(channelSelect.options).some(
+                            opt => opt.value === channel
+                        );
+                        if (channelExists) {
+                            channelSelect.value = channel; // Set value but don't trigger change
+                        }
+                    }
+                }
+                return; // Exit early to prevent channel change
+            }
+            
             const selectedOption = this.options[this.selectedIndex];
             
             if (selectedOption && selectedOption.value) {
@@ -10578,6 +10964,109 @@ async function loadAssignmentFromURL(assignmentId) {
             return;
         }
         
+        // If assignment is AI-generated but doesn't have ai_scorecard_data, try to load from ai_audit_results
+        let aiScorecardData = assignment.ai_scorecard_data;
+        let auditDate = null;
+        
+        // Fetch AI result data if this is an AI-generated audit
+        if ((assignment.source_type === 'ai_generated' || assignment.ai_processed) && assignment.conversation_id) {
+            console.log('🔍 [loadAssignmentFromURL] Fetching AI result data from ai_audit_results...');
+            const { data: aiResult } = await window.supabaseClient
+                .from('ai_audit_results')
+                .select('ai_scorecard_data, ai_processed, audit_date')
+                .eq('conversation_id', assignment.conversation_id)
+                .eq('scorecard_id', scorecardId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+            
+            if (aiResult) {
+                if (aiResult.ai_scorecard_data && !aiScorecardData) {
+                    aiScorecardData = aiResult.ai_scorecard_data;
+                    console.log('✅ [loadAssignmentFromURL] Found AI scorecard data in ai_audit_results');
+                }
+                if (aiResult.audit_date) {
+                    auditDate = aiResult.audit_date;
+                    console.log('✅ [loadAssignmentFromURL] Found audit_date from ai_audit_results:', auditDate);
+                }
+            }
+        }
+        
+        // Fetch employee's country from users table
+        let countryOfEmployee = null;
+        if (assignment.employee_email) {
+            const { data: employee, error: employeeError } = await window.supabaseClient
+                .from('users')
+                .select('country')
+                .eq('email', assignment.employee_email)
+                .eq('is_active', true)
+                .single();
+            
+            if (!employeeError && employee && employee.country) {
+                countryOfEmployee = employee.country;
+                console.log('✅ [loadAssignmentFromURL] Found employee country:', countryOfEmployee);
+            }
+        }
+        
+        // Fetch conversation from Intercom to get client email and interaction date
+        let clientEmail = null;
+        let interactionDate = auditDate || null; // Use audit_date as fallback
+        
+        if (assignment.conversation_id && (assignment.source_type === 'ai_generated' || !assignment.client_email)) {
+            try {
+                console.log('🔍 [loadAssignmentFromURL] Fetching conversation from Intercom for client email...');
+                const SUPABASE_URL = window.SUPABASE_URL || (window.supabaseClient?.supabaseUrl);
+                const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || (window.supabaseClient?.supabaseKey);
+                
+                if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+                    const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/intercom-proxy?conversation_id=${encodeURIComponent(assignment.conversation_id)}&display_as=plaintext`;
+                    
+                    const response = await fetch(edgeFunctionUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const conversation = await response.json();
+                        
+                        // Extract client email using extractClientEmail function if available, otherwise try direct access
+                        if (typeof extractClientEmail === 'function') {
+                            clientEmail = extractClientEmail(conversation);
+                        } else if (typeof window.extractClientEmail === 'function') {
+                            clientEmail = window.extractClientEmail(conversation);
+                        } else if (conversation.source?.author?.email) {
+                            clientEmail = conversation.source.author.email;
+                        } else if (conversation.contacts?.contacts && conversation.contacts.contacts.length > 0) {
+                            const contact = conversation.contacts.contacts[0];
+                            if (contact.email) {
+                                clientEmail = contact.email;
+                            }
+                        }
+                        
+                        if (clientEmail) {
+                            console.log('✅ [loadAssignmentFromURL] Found client email from conversation:', clientEmail);
+                        }
+                        
+                        // Extract interaction date from conversation created_at if not already set
+                        if (!interactionDate && conversation.created_at) {
+                            const conversationDate = new Date(conversation.created_at * 1000);
+                            interactionDate = conversationDate.toISOString().split('T')[0];
+                            console.log('✅ [loadAssignmentFromURL] Found interaction date from conversation:', interactionDate);
+                        }
+                    } else {
+                        console.warn('⚠️ [loadAssignmentFromURL] Failed to fetch conversation from Intercom:', response.status);
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ [loadAssignmentFromURL] Error fetching conversation from Intercom:', error);
+                // Don't throw - continue without client email
+            }
+        }
+        
         // Map assignment to expected format
         const mappedAssignment = {
             id: assignment.id,
@@ -10587,11 +11076,24 @@ async function loadAssignmentFromURL(assignmentId) {
             scorecard_id: scorecardId,
             status: assignment.status || assignment.audit_status,
             conversation_id: assignment.conversation_id || null,
+            interaction_id: assignment.conversation_id || assignment.interaction_id || null, // Map conversation_id to interaction_id for populateFormWithAuditData
+            interaction_date: interactionDate || assignment.interaction_date || null, // Include interaction_date from audit_date or conversation
+            country_of_employee: countryOfEmployee || assignment.country_of_employee || null, // Include country
+            client_email: clientEmail || assignment.client_email || null, // Include client email
             scorecards: {
                 id: scorecardId,
                 table_name: assignmentTable
-            }
+            },
+            // Include AI data if available
+            ai_scorecard_data: aiScorecardData,
+            ai_processed: assignment.ai_processed || !!aiScorecardData,
+            source_type: assignment.source_type
         };
+        
+        // Show AI indicator if this is an AI-generated audit
+        if (assignment.source_type === 'ai_generated' && (assignment.ai_processed || aiScorecardData)) {
+            console.log('🤖 Loading AI pre-filled audit');
+        }
         
         // Update assignment status to 'in_progress' (only if it's pending)
         if (mappedAssignment.status === 'pending') {
@@ -10612,25 +11114,55 @@ async function loadAssignmentFromURL(assignmentId) {
         isEditingExistingAudit = false;
         currentEditingTableName = null;
         
+        // ========== CRITICAL: Set flag to prevent form clearing during assignment load ==========
+        window.isLoadingFromAssignment = true;
+        console.log('🚩 [loadAssignmentFromURL] Set isLoadingFromAssignment flag to prevent form clearing');
+        
         // Store conversation ID for later use
         if (mappedAssignment.conversation_id) {
             pendingConversationId = mappedAssignment.conversation_id;
         }
         
-        // Auto-select the scorecard from assignment
+        // ========== CRITICAL: Store AI data globally BEFORE any rendering ==========
+        if (mappedAssignment.ai_scorecard_data || mappedAssignment.source_type === 'ai_generated') {
+            window.pendingAIData = {
+                ai_scorecard_data: mappedAssignment.ai_scorecard_data,
+                source_type: mappedAssignment.source_type,
+                ai_processed: mappedAssignment.ai_processed,
+                fullAssignment: mappedAssignment
+            };
+            console.log('💾 [loadAssignmentFromURL] Stored AI data globally for later population:', {
+                has_ai_scorecard_data: !!mappedAssignment.ai_scorecard_data,
+                keys: mappedAssignment.ai_scorecard_data ? Object.keys(mappedAssignment.ai_scorecard_data) : []
+            });
+        }
+        
+        // ========== STEP 1: Load scorecard and parameters FIRST ==========
         const scorecardSelect = document.getElementById('scorecardSelect');
         if (scorecardSelect && mappedAssignment.scorecard_id) {
+            console.log('📋 [loadAssignmentFromURL] Step 1: Loading scorecard and parameters...');
             // First, ensure scorecards are loaded
             await loadScorecards();
-            // Then select the assigned scorecard
+            // Then select the assigned scorecard (this will trigger change event, but flag prevents clearing)
             scorecardSelect.value = mappedAssignment.scorecard_id;
-            // Load the scorecard parameters
+            // Load the scorecard parameters (this will call renderErrorParameters which clears and rebuilds)
             await loadScorecardParameters(mappedAssignment.scorecard_id);
+            
+            // Wait for parameters to load
+            let paramAttempts = 0;
+            while ((!currentParameters || currentParameters.length === 0) && paramAttempts < 30) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                paramAttempts++;
+            }
+            
+            // Wait for DOM to be fully rendered (all fields created)
+            await new Promise(resolve => setTimeout(resolve, 800));
+            console.log('✅ [loadAssignmentFromURL] Step 1 complete: Scorecard and parameters loaded');
         } else if (scorecardSelect) {
-            // If no scorecard ID provided, auto-select first available
             await loadScorecards();
         }
         
+<<<<<<< Updated upstream
         // Show the full screen audit form modal
         const auditFormModal = document.getElementById('auditFormModal');
         if (auditFormModal) {
@@ -10646,72 +11178,72 @@ async function loadAssignmentFromURL(assignmentId) {
         // Ensure employees are loaded before trying to select
         await loadEmployees();
         
-        // Pre-fill employee information
+        // ========== STEP 2: Load employee information (manually, no events) ==========
+        console.log('👤 [loadAssignmentFromURL] Step 2: Loading employee information...');
         const employeeSelect = document.getElementById('employeeName');
-        let employeeFound = false;
-        
-        // Find and select the employee in dropdown
         if (employeeSelect && mappedAssignment.employee_email) {
             const normalizedEmail = mappedAssignment.employee_email.toLowerCase().trim();
             for (let i = 0; i < employeeSelect.options.length; i++) {
                 const optionEmail = (employeeSelect.options[i].dataset.email || '').toLowerCase().trim();
                 if (optionEmail === normalizedEmail) {
                     employeeSelect.selectedIndex = i;
-                    // Trigger change event to populate other fields
-                    employeeSelect.dispatchEvent(new Event('change'));
-                    employeeFound = true;
-                    console.log('✅ Employee found and selected:', mappedAssignment.employee_email);
+                    // Manually populate employee fields WITHOUT triggering change event
+                    const selectedOption = employeeSelect.options[i];
+                    const employeeEmail = document.getElementById('employeeEmail');
+                    const employeeType = document.getElementById('employeeType');
+                    const employeeDepartment = document.getElementById('employeeDepartment');
+                    const countryOfEmployee = document.getElementById('countryOfEmployee');
+                    const channelSelect = document.getElementById('channel');
+                    
+                    if (employeeEmail) employeeEmail.value = selectedOption.dataset.email || '';
+                    if (employeeType && selectedOption.dataset.designation) employeeType.value = selectedOption.dataset.designation;
+                    if (employeeDepartment && selectedOption.dataset.department) employeeDepartment.value = selectedOption.dataset.department;
+                    // Use country from mappedAssignment if available, otherwise use from selectedOption
+                    if (countryOfEmployee) {
+                        countryOfEmployee.value = mappedAssignment.country_of_employee || selectedOption.dataset.country || '';
+                    }
+                    
+                    // Set channel value but DON'T trigger change event
+                    if (channelSelect && selectedOption.dataset.channel) {
+                        const channelExists = Array.from(channelSelect.options).some(
+                            opt => opt.value === selectedOption.dataset.channel
+                        );
+                        if (channelExists) {
+                            channelSelect.value = selectedOption.dataset.channel;
+                        }
+                    }
+                    console.log('✅ [loadAssignmentFromURL] Step 2 complete: Employee info populated');
                     break;
+                }
+            }
+            
+            // If employee not found in dropdown, still populate fields from mappedAssignment
+            if (mappedAssignment.employee_email) {
+                const employeeEmail = document.getElementById('employeeEmail');
+                const employeeType = document.getElementById('employeeType');
+                const employeeDepartment = document.getElementById('employeeDepartment');
+                const countryOfEmployee = document.getElementById('countryOfEmployee');
+                
+                if (employeeEmail) employeeEmail.value = mappedAssignment.employee_email || '';
+                if (employeeType && mappedAssignment.employee_type) employeeType.value = mappedAssignment.employee_type;
+                if (employeeDepartment && mappedAssignment.employee_department) employeeDepartment.value = mappedAssignment.employee_department;
+                if (countryOfEmployee && mappedAssignment.country_of_employee) {
+                    countryOfEmployee.value = mappedAssignment.country_of_employee;
+                    console.log('✅ [loadAssignmentFromURL] Set country from mappedAssignment:', mappedAssignment.country_of_employee);
                 }
             }
         }
         
-        if (!employeeFound && mappedAssignment.employee_email) {
-            console.warn('⚠️ Employee not found in dropdown for email:', mappedAssignment.employee_email);
-        }
-        
-        // Pre-fill channel if available in assignment
-        const channelField = document.getElementById('channel');
-        if (channelField && assignment.channel) {
-            channelField.value = assignment.channel;
-            console.log('✅ Channel pre-filled:', assignment.channel);
-        }
-        
-        // Pre-fill interaction date if available
-        const interactionDateField = document.getElementById('interactionDate');
-        if (interactionDateField && assignment.interaction_date) {
-            interactionDateField.value = assignment.interaction_date;
-            console.log('✅ Interaction date pre-filled:', assignment.interaction_date);
-        } else if (interactionDateField && assignment.created_at) {
-            // Use assignment creation date as fallback
-            const assignmentDate = new Date(assignment.created_at);
-            const dateStr = assignmentDate.toISOString().split('T')[0];
-            interactionDateField.value = dateStr;
-            console.log('✅ Interaction date pre-filled from assignment date:', dateStr);
-        }
-        
-        // Pre-fill client information if available
-        const clientNameField = document.getElementById('clientName');
-        const clientEmailField = document.getElementById('clientEmail');
-        if (clientNameField && assignment.client_name) {
-            clientNameField.value = assignment.client_name;
-            console.log('✅ Client name pre-filled:', assignment.client_name);
-        }
-        if (clientEmailField && assignment.client_email) {
-            clientEmailField.value = assignment.client_email;
-            console.log('✅ Client email pre-filled:', assignment.client_email);
-        }
-        
-        // If assignment has a conversation_id, load that conversation
+        // ========== STEP 3: Load conversation FIRST (before AI data) ==========
         if (mappedAssignment.conversation_id) {
-            console.log('📌 Loading linked conversation:', mappedAssignment.conversation_id);
-            
-            // Set the interaction ID field
+            console.log('💬 [loadAssignmentFromURL] Step 3: Loading conversation...');
             const interactionIdField = document.getElementById('interactionId');
             if (interactionIdField) {
+                // Set conversation ID
                 interactionIdField.value = mappedAssignment.conversation_id;
+                interactionIdField.setAttribute('data-conversation-id', mappedAssignment.conversation_id);
+                console.log('✅ Conversation ID set:', mappedAssignment.conversation_id);
                 
-                // Ensure chat view is shown
                 const transcriptChatView = document.getElementById('transcriptChatView');
                 const transcriptTextView = document.getElementById('transcriptTextView');
                 if (transcriptChatView && transcriptTextView) {
@@ -10719,39 +11251,66 @@ async function loadAssignmentFromURL(assignmentId) {
                     transcriptTextView.style.display = 'none';
                 }
                 
-                // Load the conversation after a short delay to ensure form is ready
-                setTimeout(async () => {
-                    if (window.loadConversationFromIntercom && typeof window.loadConversationFromIntercom === 'function') {
-                        await window.loadConversationFromIntercom(mappedAssignment.conversation_id);
-                    } else {
-                        // Retry if function not ready
-                        setTimeout(async () => {
-                            if (window.loadConversationFromIntercom && typeof window.loadConversationFromIntercom === 'function') {
-                                await window.loadConversationFromIntercom(mappedAssignment.conversation_id);
-                            }
-                        }, 500);
-                    }
-                }, 300);
+                // Load conversation from Intercom
+                if (window.loadConversationFromIntercom && typeof window.loadConversationFromIntercom === 'function') {
+                    console.log('📌 Loading conversation from Intercom...');
+                    await window.loadConversationFromIntercom(mappedAssignment.conversation_id);
+                }
+                
+                // Explicitly set interaction date and client email from mappedAssignment if available
+                const interactionDateField = document.getElementById('interactionDate');
+                if (interactionDateField && mappedAssignment.interaction_date) {
+                    interactionDateField.value = mappedAssignment.interaction_date;
+                    console.log('✅ [loadAssignmentFromURL] Set interaction date:', mappedAssignment.interaction_date);
+                }
+                
+                const clientEmailField = document.getElementById('clientEmail');
+                if (clientEmailField && mappedAssignment.client_email) {
+                    clientEmailField.value = mappedAssignment.client_email;
+                    console.log('✅ [loadAssignmentFromURL] Set client email:', mappedAssignment.client_email);
+                }
             }
+            console.log('✅ [loadAssignmentFromURL] Step 3 complete: Conversation loaded');
         }
         
-        // Show and start the timer
-        const auditTimer = document.getElementById('auditTimer');
-        if (auditTimer) {
-            auditTimer.style.display = 'flex';
-            // Attach event listeners when timer is shown
-            if (window.attachTimerEventListeners) {
-                window.attachTimerEventListeners();
-            }
+        // ========== STEP 4: Wait for everything to settle ==========
+        console.log('⏳ [loadAssignmentFromURL] Step 4: Waiting for all loading to complete...');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Shorter wait since conversation is loaded
+        console.log('✅ [loadAssignmentFromURL] Step 4 complete: All events settled');
+        
+        // ========== STEP 5: Show loading indicator and populate AI data smoothly ==========
+        if (mappedAssignment.ai_scorecard_data || mappedAssignment.source_type === 'ai_generated') {
+            console.log('🤖 [loadAssignmentFromURL] Step 5: Populating AI data...');
+            console.log('🔍 [loadAssignmentFromURL] AI data keys:', mappedAssignment.ai_scorecard_data ? Object.keys(mappedAssignment.ai_scorecard_data) : []);
+            
+            // Show loading indicator
+            showAILoadingIndicator(true);
+            
+            // Wait a bit for UI to settle
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Populate AI data smoothly using requestAnimationFrame to prevent glitching
+            await populateFormWithAuditDataSmoothly(mappedAssignment);
+            
+            // Wait a bit more to ensure all updates are complete
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Hide loading indicator
+            showAILoadingIndicator(false);
+            
+            console.log('✅ [loadAssignmentFromURL] Step 5 complete: AI data populated');
+        } else {
+            console.log('ℹ️ [loadAssignmentFromURL] Step 5: No AI data to populate');
         }
         
-        // Reset and start the timer
-        if (window.resetTimer && window.startTimer) {
-            window.resetTimer();
-            window.startTimer();
-        }
+        // ========== STEP 6: Clear flags after everything is done ==========
+        setTimeout(() => {
+            window.isLoadingFromAssignment = false;
+            window.pendingAIData = null;
+            console.log('🚩 [loadAssignmentFromURL] Step 6: All done - cleared flags');
+        }, 2500);
         
-        // Scroll to top to show form
+        // Scroll to top to show scorecard selector
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
     } catch (error) {
