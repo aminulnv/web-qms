@@ -12,6 +12,8 @@
 class AccessControl {
   constructor() {
     this.STORAGE_KEY = "userInfo"
+    this.rulesLoaded = false
+    this.rulesLoadPromise = null
     
     // Define role hierarchy (higher number = higher access level)
     this.ROLE_HIERARCHY = {
@@ -23,12 +25,12 @@ class AccessControl {
       'General User': 0
     }
 
-    // Define page access rules
+    // Define default page access rules (fallback if database not available)
     // Each page can specify:
     // - allowedRoles: Array of roles that can access
     // - minRoleLevel: Minimum role level required (uses hierarchy)
     // - customCheck: Function for custom access logic
-    this.PAGE_ACCESS_RULES = {
+    this.DEFAULT_PAGE_ACCESS_RULES = {
       'home.html': {
         allowedRoles: ['*'] // All authenticated users
       },
@@ -126,12 +128,15 @@ class AccessControl {
       },
       'improvement-corner.html': {
         minRoleLevel: 2 // Quality Analyst and above
+      },
+      'access-control.html': {
+        allowedRoles: ['Super Admin'] // Only Super Admins
       }
     }
 
-    // Define feature permissions
+    // Define default feature permissions (fallback if database not available)
     // Features that can be checked independently
-    this.FEATURE_PERMISSIONS = {
+    this.DEFAULT_FEATURE_PERMISSIONS = {
       'create_audit': {
         minRoleLevel: 2
       },
@@ -163,6 +168,142 @@ class AccessControl {
         allowedRoles: ['*'] // All users can view their own audits
       }
     }
+
+    // Initialize with default rules (will be overridden by database rules if available)
+    this.PAGE_ACCESS_RULES = { ...this.DEFAULT_PAGE_ACCESS_RULES }
+    this.FEATURE_PERMISSIONS = { ...this.DEFAULT_FEATURE_PERMISSIONS }
+    
+    // Load rules from database (async, non-blocking)
+    this.loadRulesFromDatabase()
+  }
+
+  /**
+   * Load access control rules from database
+   * Falls back to default rules if database is unavailable
+   */
+  async loadRulesFromDatabase() {
+    // Prevent multiple simultaneous loads
+    if (this.rulesLoadPromise) {
+      return this.rulesLoadPromise
+    }
+
+    this.rulesLoadPromise = (async () => {
+      try {
+        // Wait for Supabase to be available
+        if (!window.supabaseClient) {
+          // Supabase not ready yet, use defaults
+          this.rulesLoaded = true
+          return
+        }
+
+        // Load page rules
+        const { data: pageRules, error: pageError } = await window.supabaseClient
+          .from('access_control_rules')
+          .select('*')
+          .eq('rule_type', 'page')
+          .eq('is_active', true)
+
+        if (!pageError && pageRules) {
+          // Convert database rules to internal format
+          const dbPageRules = {}
+          pageRules.forEach(rule => {
+            dbPageRules[rule.resource_name] = {}
+            if (rule.allowed_roles) {
+              dbPageRules[rule.resource_name].allowedRoles = rule.allowed_roles
+            }
+            if (rule.min_role_level !== null && rule.min_role_level !== undefined) {
+              dbPageRules[rule.resource_name].minRoleLevel = rule.min_role_level
+            }
+            // Note: customCheck functions cannot be stored in database, use defaults for those
+          })
+
+          // Merge database rules with defaults (database takes precedence, but keep customCheck from defaults)
+          Object.keys(this.DEFAULT_PAGE_ACCESS_RULES).forEach(pageName => {
+            const defaultRule = this.DEFAULT_PAGE_ACCESS_RULES[pageName]
+            const dbRule = dbPageRules[pageName]
+            
+            if (dbRule) {
+              // Use database rule but preserve customCheck from default if it exists
+              this.PAGE_ACCESS_RULES[pageName] = {
+                ...dbRule,
+                customCheck: defaultRule.customCheck // Preserve custom check functions
+              }
+            } else {
+              // Use default rule
+              this.PAGE_ACCESS_RULES[pageName] = { ...defaultRule }
+            }
+          })
+
+          // Add any new rules from database that aren't in defaults
+          Object.keys(dbPageRules).forEach(pageName => {
+            if (!this.PAGE_ACCESS_RULES[pageName]) {
+              this.PAGE_ACCESS_RULES[pageName] = dbPageRules[pageName]
+            }
+          })
+        }
+
+        // Load feature rules
+        const { data: featureRules, error: featureError } = await window.supabaseClient
+          .from('access_control_rules')
+          .select('*')
+          .eq('rule_type', 'feature')
+          .eq('is_active', true)
+
+        if (!featureError && featureRules) {
+          // Convert database rules to internal format
+          const dbFeatureRules = {}
+          featureRules.forEach(rule => {
+            dbFeatureRules[rule.resource_name] = {}
+            if (rule.allowed_roles) {
+              dbFeatureRules[rule.resource_name].allowedRoles = rule.allowed_roles
+            }
+            if (rule.min_role_level !== null && rule.min_role_level !== undefined) {
+              dbFeatureRules[rule.resource_name].minRoleLevel = rule.min_role_level
+            }
+          })
+
+          // Merge database rules with defaults
+          Object.keys(this.DEFAULT_FEATURE_PERMISSIONS).forEach(featureName => {
+            const defaultRule = this.DEFAULT_FEATURE_PERMISSIONS[featureName]
+            const dbRule = dbFeatureRules[featureName]
+            
+            if (dbRule) {
+              this.FEATURE_PERMISSIONS[featureName] = dbRule
+            } else {
+              this.FEATURE_PERMISSIONS[featureName] = { ...defaultRule }
+            }
+          })
+
+          // Add any new rules from database
+          Object.keys(dbFeatureRules).forEach(featureName => {
+            if (!this.FEATURE_PERMISSIONS[featureName]) {
+              this.FEATURE_PERMISSIONS[featureName] = dbFeatureRules[featureName]
+            }
+          })
+        }
+
+        this.rulesLoaded = true
+      } catch (error) {
+        console.warn('Error loading access control rules from database, using defaults:', error)
+        // Use default rules on error
+        this.PAGE_ACCESS_RULES = { ...this.DEFAULT_PAGE_ACCESS_RULES }
+        this.FEATURE_PERMISSIONS = { ...this.DEFAULT_FEATURE_PERMISSIONS }
+        this.rulesLoaded = true
+      } finally {
+        this.rulesLoadPromise = null
+      }
+    })()
+
+    return this.rulesLoadPromise
+  }
+
+  /**
+   * Refresh rules from database (useful after admin updates)
+   */
+  async refreshRules() {
+    this.rulesLoaded = false
+    this.rulesLoadPromise = null
+    return this.loadRulesFromDatabase()
   }
 
   /**
@@ -224,12 +365,48 @@ class AccessControl {
   }
 
   /**
+   * Check user-specific access rules from database
+   * @param {string} userEmail - User email
+   * @param {string} resourceName - Resource name (page or feature)
+   * @param {string} resourceType - 'page' or 'feature'
+   * @returns {Object|null} { access_type: 'allow'|'deny', is_active: boolean } or null if no rule
+   */
+  async checkUserSpecificRule(userEmail, resourceName, resourceType) {
+    try {
+      if (!window.supabaseClient) {
+        return null
+      }
+
+      const { data, error } = await window.supabaseClient
+        .from('user_access_rules')
+        .select('access_type, is_active')
+        .eq('user_email', userEmail)
+        .eq('rule_type', resourceType)
+        .eq('resource_name', resourceName)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.warn('Error checking user-specific rule:', error)
+        return null
+      }
+
+      return data || null
+    } catch (error) {
+      console.warn('Exception checking user-specific rule:', error)
+      return null
+    }
+  }
+
+  /**
    * Check if user can access a page
    * @param {string} pageName - Name of the page (e.g., 'audit-distribution.html')
    * @param {Object} context - Optional context object for custom checks (e.g., { assignment: {...} })
    * @returns {Object} { allowed: boolean, reason?: string }
    */
-  canAccessPage(pageName, context = null) {
+  async canAccessPage(pageName, context = null) {
     const user = this.getCurrentUser()
     
     if (!user) {
@@ -247,6 +424,18 @@ class AccessControl {
       }
     }
 
+    // First check user-specific rules (highest priority)
+    const userRule = await this.checkUserSpecificRule(user.email, pageName, 'page')
+    if (userRule) {
+      return {
+        allowed: userRule.access_type === 'allow',
+        reason: userRule.access_type === 'allow' 
+          ? 'Access granted via user-specific rule' 
+          : 'Access denied via user-specific rule'
+      }
+    }
+
+    // No user-specific rule, check role-based rules
     // Get access rule for this page
     const rule = this.PAGE_ACCESS_RULES[pageName]
     
@@ -311,7 +500,7 @@ class AccessControl {
    * @param {string} featureName - Name of the feature
    * @returns {Object} { allowed: boolean, reason?: string }
    */
-  canAccessFeature(featureName) {
+  async canAccessFeature(featureName) {
     const user = this.getCurrentUser()
     
     if (!user) {
@@ -328,6 +517,18 @@ class AccessControl {
       }
     }
 
+    // First check user-specific rules (highest priority)
+    const userRule = await this.checkUserSpecificRule(user.email, featureName, 'feature')
+    if (userRule) {
+      return {
+        allowed: userRule.access_type === 'allow',
+        reason: userRule.access_type === 'allow' 
+          ? 'Access granted via user-specific rule' 
+          : 'Access denied via user-specific rule'
+      }
+    }
+
+    // No user-specific rule, check role-based rules
     const permission = this.FEATURE_PERMISSIONS[featureName]
     
     if (!permission) {
@@ -445,8 +646,8 @@ class AccessControl {
    * @param {string} redirectTo - Page to redirect to if access denied (default: 'home.html')
    * @returns {boolean} True if access allowed, false if denied (and redirected)
    */
-  enforcePageAccess(pageName, context = null, redirectTo = 'home.html') {
-    const accessCheck = this.canAccessPage(pageName, context)
+  async enforcePageAccess(pageName, context = null, redirectTo = 'home.html') {
+    const accessCheck = await this.canAccessPage(pageName, context)
     
     if (!accessCheck.allowed) {
       // Show user-friendly message

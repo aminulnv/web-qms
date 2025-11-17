@@ -15,6 +15,7 @@
     <script src="supabase-config.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -1098,6 +1099,11 @@ const availableDepartments = [
 
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Check page access using centralized access control
+    if (!window.accessControl || !window.accessControl.enforcePageAccess('user-management.html')) {
+        return; // Access denied, user will be redirected
+    }
+    
     // Wait for Supabase to be initialized
     waitForSupabaseAndLoadUsers();
     loadChannels();

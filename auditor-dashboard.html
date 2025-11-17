@@ -15,6 +15,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -343,6 +344,11 @@ let heartbeatInterval = null;
 // Initialize Page
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async function() {
+    // Check page access using centralized access control
+    if (!window.accessControl || !window.accessControl.enforcePageAccess('auditor-dashboard.html')) {
+        return; // Access denied, user will be redirected
+    }
+    
     await initializeDashboard();
     initializeSlider();
 });

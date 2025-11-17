@@ -201,6 +201,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -9757,19 +9758,9 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     console.log('DOMContentLoaded fired');
     
-    // Check if user is an Employee - Employees should not be able to access create-audit page
-    try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const userRole = userInfo.role || '';
-        
-        if (userRole === 'Employee') {
-            // Redirect Employee users to home page
-            alert('You do not have permission to access this page.');
-            window.location.href = 'home.html';
-            return;
-        }
-    } catch (error) {
-        console.error('Error checking user role:', error);
+    // Check page access using centralized access control
+    if (!window.accessControl || !window.accessControl.enforcePageAccess('create-audit.html')) {
+        return; // Access denied, user will be redirected
     }
     
     // Initialize form immediately - the submit handler will wait for Supabase

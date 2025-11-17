@@ -20,6 +20,7 @@
     <script src="supabase-config.js"></script>
     <script src="intercom-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -534,6 +535,12 @@ async function handleCloseAuditView() {
 // Load audit on page load
 document.addEventListener('DOMContentLoaded', async function() {
     try {
+        // Check page access using centralized access control (basic check)
+        // Resource-level check will be done after loading audit data
+        if (!window.accessControl || !window.accessControl.enforcePageAccess('edit-audit.html')) {
+            return; // Access denied, user will be redirected
+        }
+        
         // Check if user is an agent/employee - redirect to view page if so
         if (isCurrentUserAgent()) {
             // Get URL parameters to redirect to view page

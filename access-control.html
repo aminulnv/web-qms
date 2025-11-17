@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Access Control | QMS</title>
+<meta name="description" content="Quality Management System - Access Control Management">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="env-config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+    <style>
+        .access-control-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.125rem;
+            padding: 0;
+            width: 100%;
+            margin: 0 auto;
+            max-width: 100%;
+            overflow-x: hidden;
+            box-sizing: border-box;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.125rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5625rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.4688rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.6562rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-family);
+            border: 0.0469rem solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-color-dark);
+            border-color: var(--primary-color-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--background-white);
+            color: var(--text-color);
+            border-color: var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-50);
+            border-color: var(--primary-color);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.375rem;
+            border-bottom: 0.0469rem solid var(--border-light);
+            margin-bottom: 1.125rem;
+        }
+
+        .tab {
+            padding: 0.5625rem 0.75rem;
+            font-size: 0.6562rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 0.1875rem solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab:hover {
+            color: var(--primary-color);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .rules-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            box-shadow: 0 0.0469rem 0.1406rem rgba(0, 0, 0, 0.1);
+        }
+
+        .rules-table thead {
+            background-color: var(--gray-50);
+        }
+
+        .rules-table th {
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.6562rem;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 0.0469rem solid var(--border-light);
+        }
+
+        .rules-table td {
+            padding: 0.75rem;
+            font-size: 0.6562rem;
+            color: var(--text-color);
+            border-bottom: 0.0469rem solid var(--border-light);
+        }
+
+        .rules-table tbody tr:hover {
+            background-color: var(--gray-50);
+        }
+
+        .rules-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.1875rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.5625rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-page {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-feature {
+            background-color: #fce7f3;
+            color: #9f1239;
+        }
+
+        .badge-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .role-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .role-tag {
+            padding: 0.1875rem 0.375rem;
+            background-color: var(--gray-100);
+            border-radius: 0.25rem;
+            font-size: 0.5625rem;
+            color: var(--text-color);
+        }
+
+        .role-tag.all {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-buttons-cell {
+            display: flex;
+            gap: 0.375rem;
+        }
+
+        .btn-icon {
+            padding: 0.25rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            color: var(--primary-color);
+        }
+
+        .btn-icon.delete:hover {
+            color: #ef4444;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            max-width: 37.5rem;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.125rem;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 1.875rem;
+            height: 1.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.125rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.6562rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.375rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.4688rem 0.75rem;
+            border: 0.0469rem solid var(--border-light);
+            border-radius: 0.375rem;
+            font-size: 0.6562rem;
+            font-family: var(--font-family);
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.375rem;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .form-checkbox label {
+            font-size: 0.6562rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5625rem;
+            margin-top: 1.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 0.5625rem;
+            margin-bottom: 1.125rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 12.5rem;
+        }
+
+        .filter-select {
+            min-width: 9.375rem;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <div class="access-control-container">
+            <div class="header-section">
+                <h1 class="page-title">Access Control Management</h1>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openAddRuleModal()">
+                        <svg width="0.75rem" height="0.75rem" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                        Add Rule
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshRules()">
+                        <svg width="0.75rem" height="0.75rem" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('pages')">Pages</div>
+                <div class="tab" onclick="switchTab('features')">Features</div>
+                <div class="tab" onclick="switchTab('users')">User-Specific Access</div>
+            </div>
+
+            <div class="search-filter">
+                <input type="text" id="searchInput" class="form-input search-input" placeholder="Search rules..." onkeyup="filterRules()">
+                <select id="statusFilter" class="form-select filter-select" onchange="filterRules()">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <div id="pagesTab" class="tab-content active">
+                <div id="pagesLoading" class="loading" style="display: none;">Loading pages...</div>
+                <div id="pagesEmpty" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📄</div>
+                    <p>No page rules found</p>
+                </div>
+                <table class="rules-table" id="pagesTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Page</th>
+                            <th>Allowed Roles</th>
+                            <th>Min Role Level</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagesTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="featuresTab" class="tab-content">
+                <div id="featuresLoading" class="loading" style="display: none;">Loading features...</div>
+                <div id="featuresEmpty" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">⚙️</div>
+                    <p>No feature rules found</p>
+                </div>
+                <table class="rules-table" id="featuresTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Allowed Roles</th>
+                            <th>Min Role Level</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="featuresTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="usersTab" class="tab-content">
+                <div class="user-access-section">
+                    <!-- Users with custom permissions summary -->
+                    <div class="section-header" style="margin-bottom: 1.125rem;">
+                        <h3>Users with Custom Permissions</h3>
+                        <button class="btn btn-primary" onclick="openAddUserAccessModal()">
+                            <svg width="0.75rem" height="0.75rem" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            Grant Custom Access
+                        </button>
+                    </div>
+
+                    <div id="usersLoading" class="loading" style="display: none;">Loading users...</div>
+                    <div id="usersEmpty" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">👤</div>
+                        <p>No users with custom permissions found</p>
+                    </div>
+                    <table class="rules-table" id="usersTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Custom Rules</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                        </tbody>
+                    </table>
+
+                    <!-- Selected user's permissions -->
+                    <div id="userPermissionsSection" style="display: none; margin-top: 2rem;">
+                        <div class="section-header" style="margin-bottom: 1.125rem;">
+                            <h3>Custom Permissions for: <span id="selectedUserName"></span></h3>
+                            <button class="btn btn-secondary" onclick="clearUserSelection()">Clear Selection</button>
+                        </div>
+                        <div class="access-summary" style="display: flex; gap: 1.5rem; margin-bottom: 1.125rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.375rem;">
+                            <div class="summary-item">
+                                <strong>Role:</strong> <span id="userRole"></span>
+                            </div>
+                            <div class="summary-item">
+                                <strong>Custom Rules:</strong> <span id="customRulesCount">0</span>
+                            </div>
+                        </div>
+                        <div id="userPermissionsLoading" class="loading" style="display: none;">Loading permissions...</div>
+                        <table class="rules-table" id="userPermissionsTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Resource</th>
+                                    <th>Access</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userPermissionsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit User Access Modal -->
+    <div id="userAccessModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="userAccessModalTitle">Grant Custom Access</h2>
+                <button class="modal-close" onclick="closeUserAccessModal()">&times;</button>
+            </div>
+            <form id="userAccessForm" onsubmit="saveUserAccess(event)">
+                <input type="hidden" id="userAccessRuleId" value="">
+                
+                <div class="form-group">
+                    <label class="form-label" for="userEmailSelect">User *</label>
+                    <select id="userEmailSelect" class="form-select" required>
+                        <option value="">-- Select a user --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="userAccessRuleType">Rule Type *</label>
+                    <select id="userAccessRuleType" class="form-select" required>
+                        <option value="page">Page</option>
+                        <option value="feature">Feature</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="userAccessResourceName">Resource Name *</label>
+                    <input type="text" id="userAccessResourceName" class="form-input" required placeholder="e.g., home.html or create_audit">
+                    <small style="color: var(--text-secondary); font-size: 0.5625rem;">Enter the page name (e.g., home.html) or feature name (e.g., create_audit)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="userAccessType">Access Type *</label>
+                    <select id="userAccessType" class="form-select" required>
+                        <option value="allow">Allow Access</option>
+                        <option value="deny">Deny Access</option>
+                    </select>
+                    <small style="color: var(--text-secondary); font-size: 0.5625rem;">Allow: Grants access even if role doesn't permit. Deny: Blocks access even if role permits.</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="userAccessActive" checked>
+                        <label for="userAccessActive">Active</label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserAccessModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Rule Modal -->
+    <div id="ruleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add Access Control Rule</h2>
+                <button class="modal-close" onclick="closeRuleModal()">&times;</button>
+            </div>
+            <form id="ruleForm" onsubmit="saveRule(event)">
+                <input type="hidden" id="ruleId" value="">
+                <input type="hidden" id="ruleType" value="page">
+                
+                <div class="form-group">
+                    <label class="form-label" for="resourceName">Resource Name *</label>
+                    <input type="text" id="resourceName" class="form-input" required placeholder="e.g., home.html or create_audit">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Access Control Method</label>
+                    <div class="form-checkbox-group">
+                        <div class="form-checkbox">
+                            <input type="radio" id="methodRoles" name="accessMethod" value="roles" checked onchange="toggleAccessMethod()">
+                            <label for="methodRoles">Allowed Roles</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="radio" id="methodLevel" name="accessMethod" value="level" onchange="toggleAccessMethod()">
+                            <label for="methodLevel">Minimum Role Level</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="rolesGroup">
+                    <label class="form-label">Allowed Roles</label>
+                    <div class="form-checkbox-group">
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleAll" value="*" onchange="toggleAllRoles()">
+                            <label for="roleAll">All Users (*)</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleSuperAdmin" value="Super Admin">
+                            <label for="roleSuperAdmin">Super Admin</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleAdmin" value="Admin">
+                            <label for="roleAdmin">Admin</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleQualitySupervisor" value="Quality Supervisor">
+                            <label for="roleQualitySupervisor">Quality Supervisor</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleQualityAnalyst" value="Quality Analyst">
+                            <label for="roleQualityAnalyst">Quality Analyst</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleEmployee" value="Employee">
+                            <label for="roleEmployee">Employee</label>
+                        </div>
+                        <div class="form-checkbox">
+                            <input type="checkbox" id="roleGeneralUser" value="General User">
+                            <label for="roleGeneralUser">General User</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="levelGroup" style="display: none;">
+                    <label class="form-label" for="minRoleLevel">Minimum Role Level</label>
+                    <select id="minRoleLevel" class="form-select">
+                        <option value="">Select level...</option>
+                        <option value="0">0 - General User</option>
+                        <option value="1">1 - Employee</option>
+                        <option value="2">2 - Quality Analyst</option>
+                        <option value="3">3 - Quality Supervisor</option>
+                        <option value="4">4 - Admin</option>
+                        <option value="5">5 - Super Admin</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="ruleActive" checked>
+                        <label for="ruleActive">Active</label>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRuleModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allRules = { pages: [], features: [] };
+        let filteredRules = { pages: [], features: [] };
+        let currentTab = 'pages';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Wait for access control to be ready
+            let attempts = 0;
+            while ((!window.accessControl || !window.supabaseClient) && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+
+            // Check page access - only Super Admins can access
+            if (!window.accessControl) {
+                showError('Access control system not available');
+                return;
+            }
+
+            // Use enforcePageAccess for proper access control
+            const accessAllowed = await window.accessControl.enforcePageAccess('access-control.html');
+            if (!accessAllowed) {
+                return; // User will be redirected
+            }
+
+            // Load rules after access check passes
+            await loadRules();
+            
+            // Load users for user-specific access tab
+            await loadAllUsers();
+        });
+
+        let allUsers = [];
+        let selectedUserEmail = null;
+        let userAccessRules = [];
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'pages') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('pagesTab').classList.add('active');
+            } else if (tab === 'features') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('featuresTab').classList.add('active');
+            } else if (tab === 'users') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('usersTab').classList.add('active');
+                loadUsersWithCustomAccess();
+            }
+            
+            if (tab !== 'users') {
+                filterRules();
+            }
+        }
+
+        async function loadRules() {
+            try {
+                if (!window.supabaseClient) {
+                    showError('Database connection not available. Please refresh the page.');
+                    return;
+                }
+
+                // Show loading for both tabs initially
+                document.getElementById('pagesLoading').style.display = 'block';
+                document.getElementById('featuresLoading').style.display = 'block';
+                document.getElementById('pagesTable').style.display = 'none';
+                document.getElementById('featuresTable').style.display = 'none';
+                document.getElementById('pagesEmpty').style.display = 'none';
+                document.getElementById('featuresEmpty').style.display = 'none';
+
+                // Load page rules
+                const { data: pageRules, error: pageError } = await window.supabaseClient
+                    .from('access_control_rules')
+                    .select('*')
+                    .eq('rule_type', 'page')
+                    .order('resource_name');
+
+                if (pageError) {
+                    console.error('Error loading page rules:', pageError);
+                    throw new Error('Failed to load page rules: ' + pageError.message);
+                }
+
+                // Load feature rules
+                const { data: featureRules, error: featureError } = await window.supabaseClient
+                    .from('access_control_rules')
+                    .select('*')
+                    .eq('rule_type', 'feature')
+                    .order('resource_name');
+
+                if (featureError) {
+                    console.error('Error loading feature rules:', featureError);
+                    throw new Error('Failed to load feature rules: ' + featureError.message);
+                }
+
+                allRules.pages = pageRules || [];
+                allRules.features = featureRules || [];
+
+                console.log('Loaded rules:', { pages: allRules.pages.length, features: allRules.features.length });
+                
+                // If no rules loaded, show empty state
+                if (allRules.pages.length === 0 && allRules.features.length === 0) {
+                    console.warn('No rules found in database');
+                }
+
+                renderRules();
+            } catch (error) {
+                console.error('Error loading rules:', error);
+                showError('Failed to load access control rules: ' + error.message);
+            } finally {
+                document.getElementById('pagesLoading').style.display = 'none';
+                document.getElementById('featuresLoading').style.display = 'none';
+            }
+        }
+
+        function renderRules() {
+            filterRules();
+        }
+
+        function filterRules() {
+            const searchTerm = (document.getElementById('searchInput').value || '').toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredRules[currentTab] = allRules[currentTab].filter(rule => {
+                const matchesSearch = !searchTerm || rule.resource_name.toLowerCase().includes(searchTerm);
+                const matchesStatus = statusFilter === 'all' || 
+                    (statusFilter === 'active' && rule.is_active) ||
+                    (statusFilter === 'inactive' && !rule.is_active);
+                return matchesSearch && matchesStatus;
+            });
+
+            const tableBody = document.getElementById(`${currentTab}TableBody`);
+            const table = document.getElementById(`${currentTab}Table`);
+            const empty = document.getElementById(`${currentTab}Empty`);
+
+            tableBody.innerHTML = '';
+
+            if (filteredRules[currentTab].length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            empty.style.display = 'none';
+
+            filteredRules[currentTab].forEach(rule => {
+                const row = document.createElement('tr');
+                
+                const allowedRoles = rule.allowed_roles || [];
+                const rolesDisplay = allowedRoles.includes('*') ? 
+                    '<span class="role-tag all">All Users</span>' :
+                    allowedRoles.map(role => `<span class="role-tag">${role}</span>`).join('') || '<span style="color: #9ca3af;">None</span>';
+
+                row.innerHTML = `
+                    <td>
+                        <span class="badge badge-${currentTab === 'pages' ? 'page' : 'feature'}">${rule.resource_name}</span>
+                    </td>
+                    <td>
+                        <div class="role-list">${rolesDisplay}</div>
+                    </td>
+                    <td>${rule.min_role_level !== null && rule.min_role_level !== undefined ? rule.min_role_level : '<span style="color: #9ca3af;">N/A</span>'}</td>
+                    <td>
+                        <span class="badge ${rule.is_active ? 'badge-active' : 'badge-inactive'}">
+                            ${rule.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons-cell">
+                            <button class="btn-icon" onclick="editRule('${rule.id}')" title="Edit">
+                                <svg width="1rem" height="1rem" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon delete" onclick="deleteRule('${rule.id}')" title="Delete">
+                                <svg width="1rem" height="1rem" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function openAddRuleModal() {
+            document.getElementById('ruleForm').reset();
+            document.getElementById('ruleId').value = '';
+            document.getElementById('ruleType').value = currentTab === 'pages' ? 'page' : 'feature';
+            document.getElementById('modalTitle').textContent = `Add ${currentTab === 'pages' ? 'Page' : 'Feature'} Rule`;
+            document.getElementById('methodRoles').checked = true;
+            toggleAccessMethod();
+            document.getElementById('ruleModal').classList.add('active');
+        }
+
+        function editRule(ruleId) {
+            const rule = allRules[currentTab].find(r => r.id === ruleId);
+            if (!rule) return;
+
+            document.getElementById('ruleId').value = rule.id;
+            document.getElementById('ruleType').value = rule.rule_type;
+            document.getElementById('resourceName').value = rule.resource_name;
+            document.getElementById('ruleActive').checked = rule.is_active;
+
+            // Set access method
+            if (rule.allowed_roles && rule.allowed_roles.length > 0) {
+                document.getElementById('methodRoles').checked = true;
+                toggleAccessMethod();
+                
+                // Set role checkboxes
+                document.getElementById('roleAll').checked = rule.allowed_roles.includes('*');
+                document.getElementById('roleSuperAdmin').checked = rule.allowed_roles.includes('Super Admin');
+                document.getElementById('roleAdmin').checked = rule.allowed_roles.includes('Admin');
+                document.getElementById('roleQualitySupervisor').checked = rule.allowed_roles.includes('Quality Supervisor');
+                document.getElementById('roleQualityAnalyst').checked = rule.allowed_roles.includes('Quality Analyst');
+                document.getElementById('roleEmployee').checked = rule.allowed_roles.includes('Employee');
+                document.getElementById('roleGeneralUser').checked = rule.allowed_roles.includes('General User');
+            } else if (rule.min_role_level !== null && rule.min_role_level !== undefined) {
+                document.getElementById('methodLevel').checked = true;
+                toggleAccessMethod();
+                document.getElementById('minRoleLevel').value = rule.min_role_level;
+            }
+
+            document.getElementById('modalTitle').textContent = `Edit ${rule.rule_type === 'page' ? 'Page' : 'Feature'} Rule`;
+            document.getElementById('ruleModal').classList.add('active');
+        }
+
+        function closeRuleModal() {
+            document.getElementById('ruleModal').classList.remove('active');
+            document.getElementById('ruleForm').reset();
+        }
+
+        function toggleAccessMethod() {
+            const method = document.querySelector('input[name="accessMethod"]:checked').value;
+            document.getElementById('rolesGroup').style.display = method === 'roles' ? 'block' : 'none';
+            document.getElementById('levelGroup').style.display = method === 'level' ? 'block' : 'none';
+        }
+
+        function toggleAllRoles() {
+            const allChecked = document.getElementById('roleAll').checked;
+            ['roleSuperAdmin', 'roleAdmin', 'roleQualitySupervisor', 'roleQualityAnalyst', 'roleEmployee', 'roleGeneralUser'].forEach(id => {
+                document.getElementById(id).checked = false;
+                document.getElementById(id).disabled = allChecked;
+            });
+        }
+
+        async function saveRule(event) {
+            event.preventDefault();
+
+            try {
+                if (!window.supabaseClient) {
+                    showError('Database connection not available');
+                    return;
+                }
+
+                // Verify user is Super Admin
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                if (!userInfo.role || userInfo.role !== 'Super Admin') {
+                    showError('Only Super Admins can modify access control rules');
+                    return;
+                }
+
+                const ruleId = document.getElementById('ruleId').value;
+                const ruleType = document.getElementById('ruleType').value;
+                const resourceName = document.getElementById('resourceName').value.trim();
+                const isActive = document.getElementById('ruleActive').checked;
+                const accessMethod = document.querySelector('input[name="accessMethod"]:checked').value;
+
+                let allowedRoles = null;
+                let minRoleLevel = null;
+
+                if (accessMethod === 'roles') {
+                    const selectedRoles = [];
+                    if (document.getElementById('roleAll').checked) {
+                        selectedRoles.push('*');
+                    } else {
+                        ['roleSuperAdmin', 'roleAdmin', 'roleQualitySupervisor', 'roleQualityAnalyst', 'roleEmployee', 'roleGeneralUser'].forEach(id => {
+                            if (document.getElementById(id).checked) {
+                                selectedRoles.push(document.getElementById(id).value);
+                            }
+                        });
+                    }
+                    allowedRoles = selectedRoles.length > 0 ? selectedRoles : null;
+                } else {
+                    const level = document.getElementById('minRoleLevel').value;
+                    minRoleLevel = level ? parseInt(level, 10) : null;
+                }
+
+                const ruleData = {
+                    rule_type: ruleType,
+                    resource_name: resourceName,
+                    allowed_roles: allowedRoles,
+                    min_role_level: minRoleLevel,
+                    is_active: isActive,
+                    updated_by: userInfo.email
+                };
+
+                if (ruleId) {
+                    // Update existing rule
+                    const { error } = await window.supabaseClient
+                        .from('access_control_rules')
+                        .update(ruleData)
+                        .eq('id', ruleId);
+
+                    if (error) throw error;
+                } else {
+                    // Insert new rule
+                    ruleData.created_by = userInfo.email;
+                    const { error } = await window.supabaseClient
+                        .from('access_control_rules')
+                        .insert(ruleData);
+
+                    if (error) throw error;
+                }
+
+                // Refresh rules and access control
+                await loadRules();
+                if (window.accessControl) {
+                    await window.accessControl.refreshRules();
+                }
+
+                closeRuleModal();
+                showSuccess(ruleId ? 'Rule updated successfully' : 'Rule created successfully');
+            } catch (error) {
+                console.error('Error saving rule:', error);
+                showError('Failed to save rule: ' + error.message);
+            }
+        }
+
+        async function deleteRule(ruleId) {
+            // Verify user is Super Admin
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            if (!userInfo.role || userInfo.role !== 'Super Admin') {
+                showError('Only Super Admins can delete access control rules');
+                return;
+            }
+
+            if (!window.confirmationDialog) {
+                if (!confirm('Are you sure you want to delete this rule?')) return;
+            } else {
+                const confirmed = await window.confirmationDialog.show({
+                    title: 'Delete Rule',
+                    message: 'Are you sure you want to delete this access control rule? This action cannot be undone.',
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel',
+                    type: 'error'
+                });
+                if (!confirmed) return;
+            }
+
+            try {
+                if (!window.supabaseClient) {
+                    showError('Database connection not available');
+                    return;
+                }
+
+                const { error } = await window.supabaseClient
+                    .from('access_control_rules')
+                    .delete()
+                    .eq('id', ruleId);
+
+                if (error) throw error;
+
+                await loadRules();
+                if (window.accessControl) {
+                    await window.accessControl.refreshRules();
+                }
+
+                showSuccess('Rule deleted successfully');
+            } catch (error) {
+                console.error('Error deleting rule:', error);
+                showError('Failed to delete rule: ' + error.message);
+            }
+        }
+
+        async function refreshRules() {
+            await loadRules();
+            if (window.accessControl) {
+                await window.accessControl.refreshRules();
+            }
+            showSuccess('Rules refreshed successfully');
+        }
+
+        function showSuccess(message) {
+            // Simple notification - you can enhance this with a toast library
+            if (window.confirmationDialog) {
+                window.confirmationDialog.show({
+                    title: 'Success',
+                    message: message,
+                    confirmText: 'OK',
+                    type: 'success'
+                });
+            } else {
+                alert(message);
+            }
+        }
+
+        function showError(message) {
+            console.error('Access Control Error:', message);
+            if (window.confirmationDialog) {
+                window.confirmationDialog.show({
+                    title: 'Error',
+                    message: message,
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+            } else {
+                alert('Error: ' + message);
+            }
+            
+            // Show empty state if there's an error
+            document.getElementById('pagesTable').style.display = 'none';
+            document.getElementById('featuresTable').style.display = 'none';
+            document.getElementById('pagesEmpty').style.display = 'block';
+            document.getElementById('featuresEmpty').style.display = 'block';
+        }
+
+        // Close modal on outside click
+        document.getElementById('ruleModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRuleModal();
+            }
+        });
+
+        document.getElementById('userAccessModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUserAccessModal();
+            }
+        });
+
+        // ========== User-Specific Access Functions ==========
+
+        async function loadAllUsers() {
+            try {
+                if (!window.supabaseClient) return;
+
+                const { data, error } = await window.supabaseClient
+                    .from('users')
+                    .select('email, name, role, is_active')
+                    .eq('is_active', true)
+                    .order('name');
+
+                if (error) throw error;
+                allUsers = data || [];
+
+                // Populate user selector in modal
+                const userSelect = document.getElementById('userEmailSelect');
+                userSelect.innerHTML = '<option value="">-- Select a user --</option>';
+                allUsers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.email;
+                    option.textContent = `${user.name} (${user.email}) - ${user.role}`;
+                    userSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function loadUsersWithCustomAccess() {
+            try {
+                if (!window.supabaseClient) {
+                    showError('Database connection not available');
+                    return;
+                }
+
+                document.getElementById('usersLoading').style.display = 'block';
+                document.getElementById('usersTable').style.display = 'none';
+                document.getElementById('usersEmpty').style.display = 'none';
+
+                // Get all users with custom access rules
+                const { data: rules, error } = await window.supabaseClient
+                    .from('user_access_rules')
+                    .select('user_email')
+                    .eq('is_active', true);
+
+                if (error) throw error;
+
+                // Get unique user emails
+                const userEmails = [...new Set((rules || []).map(r => r.user_email))];
+
+                if (userEmails.length === 0) {
+                    document.getElementById('usersLoading').style.display = 'none';
+                    document.getElementById('usersTable').style.display = 'none';
+                    document.getElementById('usersEmpty').style.display = 'block';
+                    return;
+                }
+
+                // Load user details
+                const { data: users, error: usersError } = await window.supabaseClient
+                    .from('users')
+                    .select('email, name, role')
+                    .in('email', userEmails);
+
+                if (usersError) throw usersError;
+
+                // Count rules per user
+                const ruleCounts = {};
+                (rules || []).forEach(rule => {
+                    ruleCounts[rule.user_email] = (ruleCounts[rule.user_email] || 0) + 1;
+                });
+
+                // Render users table
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.name || 'N/A'}</td>
+                        <td>${user.email}</td>
+                        <td><span class="badge badge-page">${user.role}</span></td>
+                        <td><strong>${ruleCounts[user.email] || 0}</strong> custom rule(s)</td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick="viewUserPermissions('${user.email}')">View Permissions</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('usersLoading').style.display = 'none';
+                document.getElementById('usersTable').style.display = 'table';
+                document.getElementById('usersEmpty').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading users with custom access:', error);
+                showError('Failed to load users: ' + error.message);
+                document.getElementById('usersLoading').style.display = 'none';
+            }
+        }
+
+        async function viewUserPermissions(userEmail) {
+            selectedUserEmail = userEmail;
+            const user = allUsers.find(u => u.email === userEmail);
+            
+            if (!user) {
+                showError('User not found');
+                return;
+            }
+
+            document.getElementById('selectedUserName').textContent = `${user.name} (${user.email})`;
+            document.getElementById('userRole').textContent = user.role;
+            document.getElementById('userPermissionsSection').style.display = 'block';
+
+            await loadUserPermissions(userEmail);
+        }
+
+        async function loadUserPermissions(userEmail) {
+            try {
+                if (!window.supabaseClient) return;
+
+                document.getElementById('userPermissionsLoading').style.display = 'block';
+                document.getElementById('userPermissionsTable').style.display = 'none';
+
+                const { data, error } = await window.supabaseClient
+                    .from('user_access_rules')
+                    .select('*')
+                    .eq('user_email', userEmail)
+                    .order('rule_type')
+                    .order('resource_name');
+
+                if (error) throw error;
+
+                userAccessRules = data || [];
+                document.getElementById('customRulesCount').textContent = userAccessRules.length;
+
+                const tbody = document.getElementById('userPermissionsTableBody');
+                tbody.innerHTML = '';
+
+                if (userAccessRules.length === 0) {
+                    document.getElementById('userPermissionsLoading').style.display = 'none';
+                    document.getElementById('userPermissionsTable').style.display = 'none';
+                    return;
+                }
+
+                userAccessRules.forEach(rule => {
+                    const row = document.createElement('tr');
+                    const accessBadge = rule.access_type === 'allow' 
+                        ? '<span class="badge badge-active">Allow</span>'
+                        : '<span class="badge badge-inactive">Deny</span>';
+                    const statusBadge = rule.is_active
+                        ? '<span class="badge badge-active">Active</span>'
+                        : '<span class="badge badge-inactive">Inactive</span>';
+                    
+                    row.innerHTML = `
+                        <td><span class="badge badge-${rule.rule_type === 'page' ? 'page' : 'feature'}">${rule.rule_type}</span></td>
+                        <td>${rule.resource_name}</td>
+                        <td>${accessBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn-icon" onclick="editUserAccess('${rule.id}')" title="Edit">
+                                <svg width="1rem" height="1rem" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon delete" onclick="deleteUserAccess('${rule.id}')" title="Delete">
+                                <svg width="1rem" height="1rem" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                document.getElementById('userPermissionsLoading').style.display = 'none';
+                document.getElementById('userPermissionsTable').style.display = 'table';
+            } catch (error) {
+                console.error('Error loading user permissions:', error);
+                showError('Failed to load permissions: ' + error.message);
+                document.getElementById('userPermissionsLoading').style.display = 'none';
+            }
+        }
+
+        function clearUserSelection() {
+            selectedUserEmail = null;
+            document.getElementById('userPermissionsSection').style.display = 'none';
+        }
+
+        function openAddUserAccessModal() {
+            document.getElementById('userAccessForm').reset();
+            document.getElementById('userAccessRuleId').value = '';
+            document.getElementById('userAccessModalTitle').textContent = 'Grant Custom Access';
+            document.getElementById('userAccessActive').checked = true;
+            document.getElementById('userEmailSelect').disabled = false;
+            document.getElementById('userAccessModal').classList.add('active');
+        }
+
+        function closeUserAccessModal() {
+            document.getElementById('userAccessModal').classList.remove('active');
+            document.getElementById('userAccessForm').reset();
+        }
+
+        function editUserAccess(ruleId) {
+            const rule = userAccessRules.find(r => r.id === ruleId);
+            if (!rule) return;
+
+            document.getElementById('userAccessRuleId').value = rule.id;
+            document.getElementById('userEmailSelect').value = rule.user_email;
+            document.getElementById('userEmailSelect').disabled = true;
+            document.getElementById('userAccessRuleType').value = rule.rule_type;
+            document.getElementById('userAccessResourceName').value = rule.resource_name;
+            document.getElementById('userAccessType').value = rule.access_type;
+            document.getElementById('userAccessActive').checked = rule.is_active;
+            document.getElementById('userAccessModalTitle').textContent = 'Edit Custom Access';
+            document.getElementById('userAccessModal').classList.add('active');
+        }
+
+        async function saveUserAccess(event) {
+            event.preventDefault();
+
+            try {
+                if (!window.supabaseClient) {
+                    showError('Database connection not available');
+                    return;
+                }
+
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                if (!userInfo.role || userInfo.role !== 'Super Admin') {
+                    showError('Only Super Admins can modify user access rules');
+                    return;
+                }
+
+                const ruleId = document.getElementById('userAccessRuleId').value;
+                const userEmail = document.getElementById('userEmailSelect').value;
+                const ruleType = document.getElementById('userAccessRuleType').value;
+                const resourceName = document.getElementById('userAccessResourceName').value.trim();
+                const accessType = document.getElementById('userAccessType').value;
+                const isActive = document.getElementById('userAccessActive').checked;
+
+                const ruleData = {
+                    user_email: userEmail,
+                    rule_type: ruleType,
+                    resource_name: resourceName,
+                    access_type: accessType,
+                    is_active: isActive,
+                    updated_by: userInfo.email
+                };
+
+                if (ruleId) {
+                    // Update existing rule
+                    const { error } = await window.supabaseClient
+                        .from('user_access_rules')
+                        .update(ruleData)
+                        .eq('id', ruleId);
+
+                    if (error) throw error;
+                    showSuccess('User access rule updated successfully');
+                } else {
+                    // Insert new rule
+                    ruleData.created_by = userInfo.email;
+                    const { error } = await window.supabaseClient
+                        .from('user_access_rules')
+                        .insert(ruleData);
+
+                    if (error) throw error;
+                    showSuccess('User access rule created successfully');
+                }
+
+                closeUserAccessModal();
+                
+                // Refresh data
+                if (selectedUserEmail === userEmail) {
+                    await loadUserPermissions(userEmail);
+                }
+                await loadUsersWithCustomAccess();
+                
+                // Refresh access control rules
+                if (window.accessControl) {
+                    await window.accessControl.refreshRules();
+                }
+            } catch (error) {
+                console.error('Error saving user access rule:', error);
+                showError('Failed to save rule: ' + error.message);
+            }
+        }
+
+        async function deleteUserAccess(ruleId) {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            if (!userInfo.role || userInfo.role !== 'Super Admin') {
+                showError('Only Super Admins can delete user access rules');
+                return;
+            }
+
+            if (!window.confirmationDialog) {
+                if (!confirm('Are you sure you want to delete this user access rule?')) return;
+            } else {
+                const confirmed = await window.confirmationDialog.show({
+                    title: 'Delete User Access Rule',
+                    message: 'Are you sure you want to delete this user access rule? This action cannot be undone.',
+                    confirmText: 'Delete',
+                    cancelText: 'Cancel',
+                    type: 'error'
+                });
+                if (!confirmed) return;
+            }
+
+            try {
+                if (!window.supabaseClient) {
+                    showError('Database connection not available');
+                    return;
+                }
+
+                const { error } = await window.supabaseClient
+                    .from('user_access_rules')
+                    .delete()
+                    .eq('id', ruleId);
+
+                if (error) throw error;
+
+                showSuccess('User access rule deleted successfully');
+
+                // Refresh data
+                if (selectedUserEmail) {
+                    await loadUserPermissions(selectedUserEmail);
+                }
+                await loadUsersWithCustomAccess();
+                
+                // Refresh access control rules
+                if (window.accessControl) {
+                    await window.accessControl.refreshRules();
+                }
+            } catch (error) {
+                console.error('Error deleting user access rule:', error);
+                showError('Failed to delete rule: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+

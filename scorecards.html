@@ -15,6 +15,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <style>
@@ -807,6 +808,11 @@ async function loadAvailableChannels() {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async function() {
+    // Check page access using centralized access control
+    if (!window.accessControl || !window.accessControl.enforcePageAccess('scorecards.html')) {
+        return; // Access denied, user will be redirected
+    }
+    
     await loadAvailableChannels();
     await loadScorecards();
     initializeEventListeners();

@@ -120,6 +120,9 @@ class SidebarLoader {
       // Hide menu items for employees
       this.hideEmployeeMenuItems()
       
+      // Show/hide Access Control menu item based on role
+      this.updateAccessControlMenuItem()
+      
       // Load notification counts from cache first (fast), then update from database
       this.loadNotificationCountsFromCache()
       
@@ -283,6 +286,11 @@ class SidebarLoader {
                 <li role="none">
                     <a class="submenu-item" href="user-management.html" role="menuitem" tabindex="-1">
                         <span>User Management</span>
+                    </a>
+                </li>
+                <li role="none" id="accessControlMenuItem" style="display: none;">
+                    <a class="submenu-item" href="access-control.html" role="menuitem" tabindex="-1">
+                        <span>Access Control</span>
                     </a>
                 </li>
                 <li role="none">
@@ -1298,6 +1306,28 @@ class SidebarLoader {
       }
     } catch (error) {
       console.error('Error hiding employee menu items:', error)
+    }
+
+    // Show Access Control menu item only for Super Admins
+    this.updateAccessControlMenuItem()
+  }
+
+  /**
+   * Update Access Control menu item visibility based on user role
+   */
+  updateAccessControlMenuItem() {
+    try {
+      const accessControlMenuItem = document.getElementById('accessControlMenuItem')
+      if (accessControlMenuItem) {
+        const userInfo = this.getUserInfo()
+        if (userInfo && userInfo.role === 'Super Admin') {
+          accessControlMenuItem.style.display = 'block'
+        } else {
+          accessControlMenuItem.style.display = 'none'
+        }
+      }
+    } catch (error) {
+      console.error('Error updating access control menu item:', error)
     }
   }
 }

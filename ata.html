@@ -15,6 +15,7 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script src="auth-check.js"></script>
+    <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
@@ -308,15 +309,9 @@
 // ATA Management Functionality
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        // Check if user is supervisor or above
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        const userRole = userInfo.role || '';
-        const allowedRoles = ['Supervisor', 'Quality Supervisor', 'Quality Analyst', 'Admin', 'Super Admin'];
-        
-        if (!allowedRoles.includes(userRole)) {
-            alert('Access Denied: You do not have permission to access this page. Only Supervisors, Quality Analysts, and above can access ATA.');
-            window.location.href = 'home.html';
-            return;
+        // Check page access using centralized access control
+        if (!window.accessControl || !window.accessControl.enforcePageAccess('ata.html')) {
+            return; // Access denied, user will be redirected
         }
 
         const auditList = document.getElementById('auditList');
