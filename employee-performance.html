@@ -970,7 +970,7 @@ function clearCache() {
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForSupabase();
-    initializeWeekFilter();
+    initializeMonthFilter();
     await loadAllData();
     setupEventListeners();
 });
@@ -997,6 +997,16 @@ function setupEventListeners() {
     document.getElementById('nextWeekBtn').addEventListener('click', () => {
         navigateWeek(1);
     });
+    
+    // Make week display clickable to switch to week view when in month view
+    const weekDisplay = document.getElementById('weekDisplay');
+    if (weekDisplay) {
+        weekDisplay.addEventListener('click', function() {
+            if (!useWeekFilter) {
+                switchToWeekView();
+            }
+        });
+    }
 
     // Date button
     document.getElementById('dateBtn').addEventListener('click', (e) => {
@@ -1376,32 +1386,28 @@ function applyDateFilter() {
     if (startDate) dateFilter.start = startDate;
     if (endDate) dateFilter.end = endDate;
 
-    // Update button text
+    const dateBtnTextEl = document.getElementById('dateBtnText');
     if (startDate || endDate) {
         const start = startDate ? new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
         const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
-        document.getElementById('dateBtnText').textContent = `${start} - ${end}`;
-        useWeekFilter = false; // Date range overrides week filter
+        if (dateBtnTextEl) dateBtnTextEl.textContent = `${start} - ${end}`;
+        useWeekFilter = false;
         updateWeekDisplay(); // Update week display to show "-"
     } else {
-        document.getElementById('dateBtnText').textContent = 'Date Range';
-        useWeekFilter = true; // Clear date range, go back to week filter
-        updateWeekDisplay(); // Update week display to show week number
+        // If both dates are cleared, reset to current month view
+        initializeMonthFilter();
     }
 
-    document.getElementById('dateDropdown').classList.remove('active');
+    const dateDropdown = document.getElementById('dateDropdown');
+    if (dateDropdown) dateDropdown.classList.remove('active');
     applyAllFilters();
 }
 
 function clearDateFilter() {
-    dateFilter.start = null;
-    dateFilter.end = null;
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('dateBtnText').textContent = 'Date Range';
-    document.getElementById('dateDropdown').classList.remove('active');
-    useWeekFilter = true; // Go back to week filter
-    updateWeekDisplay(); // Update week display to show week number
+    // Reset to current month view instead of week view
+    initializeMonthFilter();
+    const dateDropdown = document.getElementById('dateDropdown');
+    if (dateDropdown) dateDropdown.classList.remove('active');
     applyAllFilters();
 }
 
@@ -2446,7 +2452,7 @@ function refreshData() {
 // ============================================================================
 let currentWeek = null; // Current week number (1-52)
 let currentWeekYear = null; // Year for the current week
-let useWeekFilter = true; // Whether to use week filter (default) or date range filter
+let useWeekFilter = false; // Default to month view instead of week view
 
 function getWeekNumber(date = new Date()) {
     // Get the first day of the year
@@ -2509,43 +2515,75 @@ function initializeWeekFilter() {
     updateWeekDisplay();
 }
 
+function initializeMonthFilter() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    
+    // Get first day of current month
+    const firstDay = new Date(year, month, 1);
+    const firstDayStr = firstDay.toISOString().split('T')[0];
+    
+    // Get last day of current month
+    const lastDay = new Date(year, month + 1, 0);
+    const lastDayStr = lastDay.toISOString().split('T')[0];
+    
+    // Set date filter to current month
+    dateFilter.start = firstDayStr;
+    dateFilter.end = lastDayStr;
+    useWeekFilter = false;
+    
+    // Update date input fields
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    
+    if (startDateEl) startDateEl.value = firstDayStr;
+    if (endDateEl) endDateEl.value = lastDayStr;
+    
+    // Update date button text to show current month
+    if (dateBtnTextEl) {
+        const start = firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const end = lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dateBtnTextEl.textContent = `${start} - ${end}`;
+    }
+    
+    // Update week display to show it's disabled
+    updateWeekDisplay();
+}
+
 function updateWeekDisplay() {
     const weekTextEl = document.getElementById('weekText');
     const prevWeekBtn = document.getElementById('prevWeekBtn');
     const nextWeekBtn = document.getElementById('nextWeekBtn');
     const weekDisplay = document.getElementById('weekDisplay');
     
+    // Initialize current week if not set
+    if (currentWeek === null) {
+        const today = new Date();
+        currentWeek = getWeekNumber(today);
+        currentWeekYear = today.getFullYear();
+    }
+    
     if (weekTextEl) {
         if (useWeekFilter && currentWeek !== null) {
             weekTextEl.textContent = `Week ${currentWeek}`;
         } else {
-            weekTextEl.textContent = '-';
+            weekTextEl.textContent = `Week ${currentWeek || '-'}`;
         }
     }
     
-    // Disable/enable week navigation buttons based on date range filter
+    // Always enable week navigation buttons - they can switch to week view when clicked
     if (prevWeekBtn) {
-        if (useWeekFilter) {
-            prevWeekBtn.disabled = false;
-            prevWeekBtn.style.opacity = '1';
-            prevWeekBtn.style.cursor = 'pointer';
-        } else {
-            prevWeekBtn.disabled = true;
-            prevWeekBtn.style.opacity = '0.5';
-            prevWeekBtn.style.cursor = 'not-allowed';
-        }
+        prevWeekBtn.disabled = false;
+        prevWeekBtn.style.opacity = '1';
+        prevWeekBtn.style.cursor = 'pointer';
     }
     
     if (nextWeekBtn) {
-        if (useWeekFilter) {
-            nextWeekBtn.disabled = false;
-            nextWeekBtn.style.opacity = '1';
-            nextWeekBtn.style.cursor = 'pointer';
-        } else {
-            nextWeekBtn.disabled = true;
-            nextWeekBtn.style.opacity = '0.5';
-            nextWeekBtn.style.cursor = 'not-allowed';
-        }
+        nextWeekBtn.disabled = false;
+        nextWeekBtn.style.opacity = '1';
+        nextWeekBtn.style.cursor = 'pointer';
     }
     
     // Update week display styling
@@ -2554,15 +2592,24 @@ function updateWeekDisplay() {
             weekDisplay.style.backgroundColor = 'var(--primary-color)';
             weekDisplay.style.color = 'var(--white)';
             weekDisplay.style.borderColor = 'var(--primary-color)';
+            weekDisplay.style.cursor = 'default';
         } else {
             weekDisplay.style.backgroundColor = '#f3f4f6';
             weekDisplay.style.color = '#6b7280';
             weekDisplay.style.borderColor = '#e5e7eb';
+            weekDisplay.style.cursor = 'pointer';
         }
     }
 }
 
 function navigateWeek(direction) {
+    // Initialize current week if not set
+    if (currentWeek === null) {
+        const today = new Date();
+        currentWeek = getWeekNumber(today);
+        currentWeekYear = today.getFullYear();
+    }
+    
     currentWeek += direction;
     
     // Handle week overflow/underflow
@@ -2574,13 +2621,41 @@ function navigateWeek(direction) {
         currentWeekYear -= 1;
     }
     
-    updateWeekDisplay();
-    useWeekFilter = true; // Ensure week filter is active
+    // Switch to week view when navigating
+    useWeekFilter = true;
     dateFilter.start = null;
     dateFilter.end = null;
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('dateBtnText').textContent = 'Date Range';
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    if (startDateEl) startDateEl.value = '';
+    if (endDateEl) endDateEl.value = '';
+    if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+    
+    updateWeekDisplay();
+    applyAllFilters();
+}
+
+// Function to switch to week view when week display is clicked
+function switchToWeekView() {
+    // Initialize current week if not set
+    if (currentWeek === null) {
+        const today = new Date();
+        currentWeek = getWeekNumber(today);
+        currentWeekYear = today.getFullYear();
+    }
+    
+    useWeekFilter = true;
+    dateFilter.start = null;
+    dateFilter.end = null;
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    if (startDateEl) startDateEl.value = '';
+    if (endDateEl) endDateEl.value = '';
+    if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+    
+    updateWeekDisplay();
     applyAllFilters();
 }
 

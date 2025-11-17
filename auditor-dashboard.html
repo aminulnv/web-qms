@@ -330,10 +330,11 @@ let currentFilters = {
     scorecard: ''
 };
 let allScorecards = [];
+let cachedScorecardTables = []; // Cache scorecard table names to avoid repeated queries
 let currentWeek = null;
 let currentWeekYear = null;
 let dateFilter = { start: null, end: null };
-let useWeekFilter = true;
+let useWeekFilter = false; // Default to month view instead of week view
 let presenceChannel = null;
 let onlineAuditors = new Set(); // Track online auditor emails
 let heartbeatInterval = null;
@@ -369,18 +370,16 @@ async function initializeDashboard() {
             return;
         }
 
-        // Initialize week filter
-        initializeWeekFilter();
+        // Initialize month filter (default view)
+        initializeMonthFilter();
         setupEventListeners();
 
-        // Load all users for lookups
-        await loadAllUsers();
-        
-        // Load scorecards for filter
-        await loadScorecards();
-        
-        // Load assignments and update dashboard
-        await loadAssignments();
+        // Load all data in parallel for faster initialization
+        await Promise.all([
+            loadAllUsers(),
+            loadScorecards(),
+            loadAssignments()
+        ]);
         
         // Setup presence tracking after everything is loaded
         await setupPresenceTracking();
@@ -507,18 +506,84 @@ function invalidateAuditorDashboardCache(userEmail = null) {
 function getCurrentPeriodDates() {
     if (dateFilter.start || dateFilter.end) {
         // Using date range filter
+        // dateFilter.start and dateFilter.end are stored as date strings (YYYY-MM-DD format)
         return {
-            start: dateFilter.start ? new Date(dateFilter.start) : new Date(0),
-            end: dateFilter.end ? new Date(dateFilter.end) : new Date()
+            start: dateFilter.start ? new Date(dateFilter.start + 'T00:00:00') : new Date(0),
+            end: dateFilter.end ? new Date(dateFilter.end + 'T23:59:59.999') : new Date()
         };
     } else if (useWeekFilter && currentWeek !== null) {
         // Using week filter
         return getWeekDates(currentWeek, currentWeekYear);
     } else {
-        // Default to current week
+        // Default to current month (matching expert-audits.html)
         const today = new Date();
-        return getWeekDates(getWeekNumber(today), today.getFullYear());
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        lastDay.setHours(23, 59, 59, 999);
+        return {
+            start: firstDay,
+            end: lastDay
+        };
     }
+}
+
+// ============================================================================
+// Helper Functions for Parallelized Queries
+// ============================================================================
+// Helper to convert audit duration to minutes
+function convertDurationToMinutes(duration) {
+    if (!duration) return 0;
+    
+    let durationInMinutes = 0;
+    if (typeof duration === 'number') {
+        // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
+        // Otherwise, assume it's already in minutes (legacy format)
+        if (duration >= 1440) {
+            durationInMinutes = duration / 60; // Convert seconds to minutes
+        } else {
+            durationInMinutes = duration; // Already in minutes
+        }
+    } else if (typeof duration === 'string') {
+        const asInt = parseInt(duration);
+        if (!isNaN(asInt)) {
+            if (asInt >= 1440) {
+                durationInMinutes = asInt / 60; // Convert seconds to minutes
+            } else {
+                durationInMinutes = asInt; // Already in minutes
+            }
+        }
+    }
+    return durationInMinutes;
+}
+
+// Helper to format duration text
+function formatDurationText(avgDurationMinutes) {
+    if (avgDurationMinutes <= 0) return '-';
+    
+    if (avgDurationMinutes >= 60) {
+        const hours = Math.floor(avgDurationMinutes / 60);
+        const minutes = Math.round(avgDurationMinutes % 60);
+        return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+    } else {
+        return `${Math.round(avgDurationMinutes)}m`;
+    }
+}
+
+// Helper to add date filter to query
+function addDateFilter(query, period) {
+    if (!period || (!period.start && !period.end)) return query;
+    
+    if (period.start && period.end) {
+        return query.gte('submitted_at', period.start.toISOString())
+                    .lte('submitted_at', period.end.toISOString());
+    } else if (period.start) {
+        return query.gte('submitted_at', period.start.toISOString());
+    } else if (period.end) {
+        return query.lte('submitted_at', period.end.toISOString());
+    }
+    return query;
 }
 
 // ============================================================================
@@ -565,19 +630,21 @@ async function loadScorecards() {
         if (cachedScorecards) {
             console.log('Rendering cached scorecards immediately');
             allScorecards = cachedScorecards;
+            cachedScorecardTables = allScorecards.map(s => s.table_name).filter(Boolean);
             populateScorecardFilter();
         }
         
         // Always fetch fresh data in background
         const { data, error } = await window.supabaseClient
             .from('scorecards')
-            .select('id, name')
+            .select('id, name, table_name')
             .eq('is_active', true)
             .order('name', { ascending: true });
         
         if (error) throw error;
         
         allScorecards = data || [];
+        cachedScorecardTables = allScorecards.map(s => s.table_name).filter(Boolean);
         
         // Cache the fresh data
         setCachedData(cacheKey, allScorecards);
@@ -589,6 +656,7 @@ async function loadScorecards() {
     } catch (error) {
         console.error('Error loading scorecards:', error);
         allScorecards = [];
+        cachedScorecardTables = [];
     }
 }
 
@@ -625,11 +693,42 @@ async function loadAssignments() {
 
 async function fetchAndCacheAssignments(cacheKey, period) {
     try {
-        const { data, error } = await window.supabaseClient
+        let assignmentsQuery = window.supabaseClient
             .from('audit_assignments')
             .select('*')
             .eq('auditor_email', currentUserEmail)
             .order('created_at', { ascending: false });
+        
+        // Apply date filters server-side if possible
+        if (period && period.start) {
+            assignmentsQuery = assignmentsQuery.gte('created_at', period.start.toISOString());
+        }
+        if (period && period.end) {
+            assignmentsQuery = assignmentsQuery.lte('created_at', period.end.toISOString());
+        }
+        
+        let { data, error } = await assignmentsQuery;
+        
+        // If server-side date filter fails, try without date filter and filter client-side
+        if (error && period && (period.start || period.end)) {
+            console.warn('Server-side date filter failed, falling back to client-side filtering:', error);
+            const retryResult = await window.supabaseClient
+                .from('audit_assignments')
+                .select('*')
+                .eq('auditor_email', currentUserEmail)
+                .order('created_at', { ascending: false });
+            
+            if (retryResult.data && period && period.start) {
+                retryResult.data = retryResult.data.filter(assignment => {
+                    if (!assignment.created_at) return false;
+                    const assignmentDate = new Date(assignment.created_at);
+                    return (!period.start || assignmentDate >= period.start) && 
+                           (!period.end || assignmentDate <= period.end);
+                });
+            }
+            data = retryResult.data;
+            error = retryResult.error;
+        }
         
         if (error) throw error;
         
@@ -720,17 +819,49 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         return;
     }
     
-    // Load all assignments for all Quality Analysts
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('audit_assignments')
-            .select('*')
-            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        const teamAssignments = data || [];
+        // Load all assignments for all Quality Analysts with date filtering
+        // Note: period is already passed as a parameter to this function
+        try {
+            let assignmentsQuery = window.supabaseClient
+                .from('audit_assignments')
+                .select('*')
+                .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                .order('created_at', { ascending: false });
+            
+            // Apply date filters server-side if possible
+            if (period.start) {
+                assignmentsQuery = assignmentsQuery.gte('created_at', period.start.toISOString());
+            }
+            if (period.end) {
+                assignmentsQuery = assignmentsQuery.lte('created_at', period.end.toISOString());
+            }
+            
+            let { data, error } = await assignmentsQuery;
+            
+            // If server-side date filter fails, try without date filter and filter client-side
+            if (error && period && (period.start || period.end)) {
+                console.warn('Server-side date filter failed, falling back to client-side filtering:', error);
+                const retryResult = await window.supabaseClient
+                    .from('audit_assignments')
+                    .select('*')
+                    .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                    .order('created_at', { ascending: false });
+                
+                if (retryResult.data && period.start) {
+                    retryResult.data = retryResult.data.filter(assignment => {
+                        if (!assignment.created_at) return false;
+                        const assignmentDate = new Date(assignment.created_at);
+                        return (!period.start || assignmentDate >= period.start) && 
+                               (!period.end || assignmentDate <= period.end);
+                    });
+                }
+                data = retryResult.data;
+                error = retryResult.error;
+            }
+            
+            if (error) throw error;
+            
+            const teamAssignments = data || [];
         
         // Calculate overall team stats
         const totalAssigned = teamAssignments.length;
@@ -740,117 +871,159 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         const remaining = pending + inProgress;
         const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
-        // Calculate team average audit duration
-        let avgDuration = 0;
+        // Calculate team average audit duration and reversal count in parallel
         let avgDurationText = '-';
         let avgDurationSubtitle = 'per audit';
+        let teamReversalCount = 0;
         
         try {
-            // Get all scorecards to query audit tables
-            const { data: scorecards, error: scError } = await window.supabaseClient
-                .from('scorecards')
-                .select('table_name')
-                .eq('is_active', true);
+            // Use cached scorecard tables if available, otherwise fetch
+            const scorecardTables = cachedScorecardTables.length > 0 
+                ? cachedScorecardTables 
+                : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
             
-            if (!scError && scorecards) {
-                let totalDuration = 0; // Total in minutes
-                let auditCount = 0;
+            if (scorecardTables.length > 0) {
+                const auditorEmails = qualityAnalysts.map(qa => qa.email);
                 
-                // Query each scorecard table for audits by team members
-                for (const scorecard of scorecards) {
+                // Parallelize all scorecard queries
+                const queryPromises = scorecardTables.map(async (tableName) => {
                     try {
-                        const { data: audits, error } = await window.supabaseClient
-                            .from(scorecard.table_name)
-                            .select('audit_duration')
-                            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                        // Build queries with date filters
+                        let durationQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('audit_duration, submitted_at')
+                            .in('auditor_email', auditorEmails)
                             .not('audit_duration', 'is', null);
                         
-                        if (!error && audits) {
-                            audits.forEach(audit => {
-                                // Handle duration conversion (new format: seconds, legacy format: minutes)
-                                let durationInMinutes = 0;
-                                if (typeof audit.audit_duration === 'number') {
-                                    const value = audit.audit_duration;
-                                    // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
-                                    // Otherwise, assume it's already in minutes (legacy format)
-                                    if (value >= 1440) {
-                                        durationInMinutes = value / 60; // Convert seconds to minutes
-                                    } else {
-                                        durationInMinutes = value; // Already in minutes
-                                    }
-                                } else if (typeof audit.audit_duration === 'string') {
-                                    const asInt = parseInt(audit.audit_duration);
-                                    if (!isNaN(asInt)) {
-                                        if (asInt >= 1440) {
-                                            durationInMinutes = asInt / 60; // Convert seconds to minutes
-                                        } else {
-                                            durationInMinutes = asInt; // Already in minutes
-                                        }
-                                    }
-                                }
-                                
-                                if (durationInMinutes > 0) {
-                                    totalDuration += durationInMinutes;
-                                    auditCount++;
-                                }
-                            });
-                        }
-                    } catch (err) {
-                        console.warn(`Error getting duration from ${scorecard.table_name}:`, err);
-                    }
-                }
-                
-                if (auditCount > 0) {
-                    avgDuration = totalDuration / auditCount; // Average in minutes
-                    
-                    // Format duration (avgDuration is in minutes)
-                    if (avgDuration >= 60) {
-                        const hours = Math.floor(avgDuration / 60);
-                        const minutes = Math.round(avgDuration % 60);
-                        avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                    } else {
-                        avgDurationText = `${Math.round(avgDuration)}m`;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error calculating team average duration:', error);
-        }
-        
-        // Calculate reversal count for team
-        let teamReversalCount = 0;
-        try {
-            const { data: scorecards, error: scError } = await window.supabaseClient
-                .from('scorecards')
-                .select('table_name')
-                .eq('is_active', true);
-            
-            if (!scError && scorecards) {
-                for (const scorecard of scorecards) {
-                    try {
-                        const { data, error } = await window.supabaseClient
-                            .from(scorecard.table_name)
-                            .select('id')
-                            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                        let reversalQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('id, submitted_at')
+                            .in('auditor_email', auditorEmails)
                             .not('reversal_requested_at', 'is', null);
                         
-                        if (!error && data) {
-                            teamReversalCount += data.length;
+                        // Apply date filters server-side if possible
+                        if (period.start) {
+                            durationQuery = durationQuery.gte('submitted_at', period.start.toISOString());
+                            reversalQuery = reversalQuery.gte('submitted_at', period.start.toISOString());
                         }
+                        if (period.end) {
+                            durationQuery = durationQuery.lte('submitted_at', period.end.toISOString());
+                            reversalQuery = reversalQuery.lte('submitted_at', period.end.toISOString());
+                        }
+                        
+                        // Query for duration and reversals in parallel for each table
+                        const [durationResult, reversalResult] = await Promise.all([
+                            (async () => {
+                                try {
+                                    let result = await durationQuery;
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false; // Exclude if no date when filtering
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('audit_duration, submitted_at')
+                                        .in('auditor_email', auditorEmails)
+                                        .not('audit_duration', 'is', null);
+                                    
+                                    if (retryResult.data && period.start) {
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return retryResult;
+                                }
+                            })(),
+                            (async () => {
+                                try {
+                                    let result = await reversalQuery;
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('id, submitted_at')
+                                        .in('auditor_email', auditorEmails)
+                                        .not('reversal_requested_at', 'is', null);
+                                    
+                                    if (retryResult.data && period.start) {
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return retryResult;
+                                }
+                            })()
+                        ]);
+                        
+                        return {
+                            durations: durationResult.data || [],
+                            reversals: reversalResult.data || []
+                        };
                     } catch (err) {
-                        console.warn(`Error counting team reversals in ${scorecard.table_name}:`, err);
+                        console.warn(`Error querying ${tableName}:`, err);
+                        return { durations: [], reversals: [] };
                     }
+                });
+                
+                const results = await Promise.all(queryPromises);
+                
+                // Aggregate results
+                let totalDuration = 0;
+                let auditCount = 0;
+                
+                results.forEach(result => {
+                    result.durations.forEach(audit => {
+                        const durationInMinutes = convertDurationToMinutes(audit.audit_duration);
+                        if (durationInMinutes > 0) {
+                            totalDuration += durationInMinutes;
+                            auditCount++;
+                        }
+                    });
+                    teamReversalCount += result.reversals.length;
+                });
+                
+                if (auditCount > 0) {
+                    const avgDuration = totalDuration / auditCount;
+                    avgDurationText = formatDurationText(avgDuration);
                 }
             }
         } catch (error) {
-            console.error('Error calculating team reversal count:', error);
+            console.error('Error calculating team stats:', error);
         }
         
         console.log('Team Stats - Reversal count:', teamReversalCount);
         
-        // Calculate stats for each Quality Analyst
-        const auditorStats = [];
-        for (const qa of qualityAnalysts) {
+        // Calculate stats for each Quality Analyst - parallelize duration queries
+        const scorecardTables = cachedScorecardTables.length > 0 
+            ? cachedScorecardTables 
+            : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+        
+        // Parallelize all auditor duration queries
+        const auditorDurationPromises = qualityAnalysts.map(async (qa) => {
             const qaAssignments = teamAssignments.filter(a => a.auditor_email === qa.email);
             const qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
             const qaInProgress = qaAssignments.filter(a => a.status === 'in_progress').length;
@@ -858,80 +1031,93 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
             const qaRemaining = qaPending + qaInProgress;
             const qaPercentage = qaAssignments.length > 0 ? Math.round((qaCompleted / qaAssignments.length) * 100) : 0;
             
-            // Calculate average duration for this auditor
+            // Calculate average duration for this auditor - parallelize queries
             let avgDurationText = '-';
             try {
-                const { data: scorecards, error: scError } = await window.supabaseClient
-                    .from('scorecards')
-                    .select('table_name')
-                    .eq('is_active', true);
-                
-                if (!scError && scorecards) {
-                    let totalDuration = 0; // Total in minutes
-                    let auditCount = 0;
-                    
-                    // Query each scorecard table for audits by this auditor
-                    for (const scorecard of scorecards) {
+                if (scorecardTables.length > 0) {
+                    const durationPromises = scorecardTables.map(async (tableName) => {
                         try {
-                            const { data: audits, error } = await window.supabaseClient
-                                .from(scorecard.table_name)
-                                .select('audit_duration')
+                            // Build query with date filters
+                            let query = window.supabaseClient
+                                .from(tableName)
+                                .select('audit_duration, submitted_at')
                                 .eq('auditor_email', qa.email)
                                 .not('audit_duration', 'is', null);
                             
-                            if (!error && audits) {
-                                audits.forEach(audit => {
-                                    // Handle duration conversion (new format: seconds, legacy format: minutes)
-                                    let durationInMinutes = 0;
-                                    if (typeof audit.audit_duration === 'number') {
-                                        const value = audit.audit_duration;
-                                        // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
-                                        // Otherwise, assume it's already in minutes (legacy format)
-                                        if (value >= 1440) {
-                                            durationInMinutes = value / 60; // Convert seconds to minutes
-                                        } else {
-                                            durationInMinutes = value; // Already in minutes
-                                        }
-                                    } else if (typeof audit.audit_duration === 'string') {
-                                        const asInt = parseInt(audit.audit_duration);
-                                        if (!isNaN(asInt)) {
-                                            if (asInt >= 1440) {
-                                                durationInMinutes = asInt / 60; // Convert seconds to minutes
-                                            } else {
-                                                durationInMinutes = asInt; // Already in minutes
-                                            }
-                                        }
-                                    }
-                                    
-                                    if (durationInMinutes > 0) {
-                                        totalDuration += durationInMinutes;
-                                        auditCount++;
-                                    }
+                            // Apply date filters server-side if possible
+                            if (period.start) {
+                                query = query.gte('submitted_at', period.start.toISOString());
+                            }
+                            if (period.end) {
+                                query = query.lte('submitted_at', period.end.toISOString());
+                            }
+                            
+                            let { data: audits, error } = await query;
+                            
+                            // If server-side date filter fails, try without date filter and filter client-side
+                            if (error && period && (period.start || period.end)) {
+                                const retryQuery = window.supabaseClient
+                                    .from(tableName)
+                                    .select('audit_duration, submitted_at')
+                                    .eq('auditor_email', qa.email)
+                                    .not('audit_duration', 'is', null);
+                                
+                                const retryResult = await retryQuery;
+                                if (retryResult.data && period.start) {
+                                    retryResult.data = retryResult.data.filter(audit => {
+                                        if (!audit.submitted_at) return false;
+                                        const auditDate = new Date(audit.submitted_at);
+                                        return (!period.start || auditDate >= period.start) && 
+                                               (!period.end || auditDate <= period.end);
+                                    });
+                                }
+                                audits = retryResult.data;
+                                error = retryResult.error;
+                            }
+                            
+                            if (error) return [];
+                            
+                            // Fallback client-side filtering if needed
+                            if (audits && period.start) {
+                                return audits.filter(audit => {
+                                    if (!audit.submitted_at) return false;
+                                    const auditDate = new Date(audit.submitted_at);
+                                    return (!period.start || auditDate >= period.start) && 
+                                           (!period.end || auditDate <= period.end);
                                 });
                             }
+                            
+                            return audits || [];
                         } catch (err) {
-                            console.warn(`Error getting duration from ${scorecard.table_name} for ${qa.email}:`, err);
+                            console.warn(`Error getting duration from ${tableName} for ${qa.email}:`, err);
+                            return [];
                         }
-                    }
+                    });
+                    
+                    const allAudits = await Promise.all(durationPromises);
+                    const flatAudits = allAudits.flat();
+                    
+                    let totalDuration = 0;
+                    let auditCount = 0;
+                    
+                    flatAudits.forEach(audit => {
+                        const durationInMinutes = convertDurationToMinutes(audit.audit_duration);
+                        if (durationInMinutes > 0) {
+                            totalDuration += durationInMinutes;
+                            auditCount++;
+                        }
+                    });
                     
                     if (auditCount > 0) {
-                        const avgDuration = totalDuration / auditCount; // Average in minutes
-                        
-                        // Format duration (avgDuration is in minutes)
-                        if (avgDuration >= 60) {
-                            const hours = Math.floor(avgDuration / 60);
-                            const minutes = Math.round(avgDuration % 60);
-                            avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                        } else {
-                            avgDurationText = `${Math.round(avgDuration)}m`;
-                        }
+                        const avgDuration = totalDuration / auditCount;
+                        avgDurationText = formatDurationText(avgDuration);
                     }
                 }
             } catch (error) {
                 console.error(`Error calculating average duration for ${qa.email}:`, error);
             }
             
-            auditorStats.push({
+            return {
                 name: qa.name || qa.email,
                 email: qa.email,
                 assigned: qaAssignments.length,
@@ -940,8 +1126,10 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                 percentage: qaPercentage,
                 avgDuration: avgDurationText,
                 isCurrentUser: qa.email === currentUserEmail
-            });
-        }
+            };
+        });
+        
+        const auditorStats = await Promise.all(auditorDurationPromises);
         
         // Sort by assigned count (descending) and then by name
         auditorStats.sort((a, b) => {
@@ -1298,11 +1486,42 @@ async function fetchAndCacheStandupView(cacheKey) {
     }
     
     try {
-        // Load all audit assignments (same as Team Stats)
-        const { data, error } = await window.supabaseClient
+        // Load all audit assignments with date filtering
+        const period = getCurrentPeriodDates();
+        let assignmentsQuery = window.supabaseClient
             .from('audit_assignments')
             .select('*')
             .order('created_at', { ascending: false });
+        
+        // Apply date filters server-side if possible
+        if (period.start) {
+            assignmentsQuery = assignmentsQuery.gte('created_at', period.start.toISOString());
+        }
+        if (period.end) {
+            assignmentsQuery = assignmentsQuery.lte('created_at', period.end.toISOString());
+        }
+        
+        let { data, error } = await assignmentsQuery;
+        
+        // If server-side date filter fails, try without date filter and filter client-side
+        if (error && period && (period.start || period.end)) {
+            console.warn('Server-side date filter failed, falling back to client-side filtering:', error);
+            const retryResult = await window.supabaseClient
+                .from('audit_assignments')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (retryResult.data && period.start) {
+                retryResult.data = retryResult.data.filter(assignment => {
+                    if (!assignment.created_at) return false;
+                    const assignmentDate = new Date(assignment.created_at);
+                    return (!period.start || assignmentDate >= period.start) && 
+                           (!period.end || assignmentDate <= period.end);
+                });
+            }
+            data = retryResult.data;
+            error = retryResult.error;
+        }
         
         if (error) throw error;
         
@@ -1316,155 +1535,185 @@ async function fetchAndCacheStandupView(cacheKey) {
         const remaining = pending + inProgress;
         const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
-        // Calculate average audit duration from completed audits
-        let avgDuration = 0;
-        let avgDurationText = '-';
-        let avgDurationSubtitle = 'per audit';
-        
-        try {
-            // Get all scorecards to query audit tables
-            const { data: scorecards, error: scError } = await window.supabaseClient
-                .from('scorecards')
-                .select('table_name')
-                .eq('is_active', true);
-            
-            if (!scError && scorecards) {
-                let totalDuration = 0; // Total in minutes
-                let auditCount = 0;
-                
-                // Query each scorecard table for all audits
-                for (const scorecard of scorecards) {
-                    try {
-                        const { data: audits, error } = await window.supabaseClient
-                            .from(scorecard.table_name)
-                            .select('audit_duration')
-                            .not('audit_duration', 'is', null);
-                        
-                        if (!error && audits) {
-                            audits.forEach(audit => {
-                                // Handle duration conversion (new format: seconds, legacy format: minutes)
-                                let durationInMinutes = 0;
-                                if (typeof audit.audit_duration === 'number') {
-                                    const value = audit.audit_duration;
-                                    // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
-                                    // Otherwise, assume it's already in minutes (legacy format)
-                                    if (value >= 1440) {
-                                        durationInMinutes = value / 60; // Convert seconds to minutes
-                                    } else {
-                                        durationInMinutes = value; // Already in minutes
-                                    }
-                                } else if (typeof audit.audit_duration === 'string') {
-                                    const asInt = parseInt(audit.audit_duration);
-                                    if (!isNaN(asInt)) {
-                                        if (asInt >= 1440) {
-                                            durationInMinutes = asInt / 60; // Convert seconds to minutes
-                                        } else {
-                                            durationInMinutes = asInt; // Already in minutes
-                                        }
-                                    }
-                                }
-                                
-                                if (durationInMinutes > 0) {
-                                    totalDuration += durationInMinutes;
-                                    auditCount++;
-                                }
-                            });
-                        }
-                    } catch (err) {
-                        console.warn(`Error getting duration from ${scorecard.table_name}:`, err);
-                    }
-                }
-                
-                if (auditCount > 0) {
-                    avgDuration = totalDuration / auditCount; // Average in minutes
-                    
-                    // Format duration (avgDuration is in minutes)
-                    if (avgDuration >= 60) {
-                        const hours = Math.floor(avgDuration / 60);
-                        const minutes = Math.round(avgDuration % 60);
-                        avgDurationText = minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-                    } else {
-                        avgDurationText = `${Math.round(avgDuration)}m`;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error calculating average duration:', error);
-        }
-        
         // Calculate coverage percentage
         const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
-        // Calculate passing rate from all audits (matching expert-audits.html logic)
+        // Calculate passing rate, reversal count, and duration in parallel
         let passingRate = 0;
-        let totalAudits = 0;
-        let passedAudits = 0;
+        let standupReversalCount = 0;
         
         try {
-            // Get all scorecard tables
-            const { data: scorecards, error: scError } = await window.supabaseClient
-                .from('scorecards')
-                .select('table_name')
-                .eq('is_active', true);
+            // Use cached scorecard tables if available
+            const scorecardTables = cachedScorecardTables.length > 0 
+                ? cachedScorecardTables 
+                : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
             
-            if (!scError && scorecards && scorecards.length > 0) {
-                // Query all scorecard tables for audits
-                for (const scorecard of scorecards) {
+            if (scorecardTables.length > 0) {
+                // Parallelize all queries for each table
+                const queryPromises = scorecardTables.map(async (tableName) => {
                     try {
-                        const { data: audits, error: auditError } = await window.supabaseClient
-                            .from(scorecard.table_name)
-                            .select('passing_status');
+                        // Build queries with date filters
+                        let passingQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('passing_status, submitted_at');
                         
-                        if (!auditError && audits && audits.length > 0) {
-                            audits.forEach(audit => {
-                                totalAudits++;
-                                const passingStatus = audit.passing_status || audit.passingStatus;
-                                const normalizedStatus = normalizePassingStatus(passingStatus);
-                                if (normalizedStatus === 'Passed') {
-                                    passedAudits++;
-                                }
-                            });
+                        let reversalQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('id, submitted_at')
+                            .not('reversal_requested_at', 'is', null);
+                        
+                        let durationQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('audit_duration, submitted_at')
+                            .not('audit_duration', 'is', null);
+                        
+                        // Apply date filters server-side if possible
+                        if (period.start) {
+                            passingQuery = passingQuery.gte('submitted_at', period.start.toISOString());
+                            reversalQuery = reversalQuery.gte('submitted_at', period.start.toISOString());
+                            durationQuery = durationQuery.gte('submitted_at', period.start.toISOString());
                         }
+                        if (period.end) {
+                            passingQuery = passingQuery.lte('submitted_at', period.end.toISOString());
+                            reversalQuery = reversalQuery.lte('submitted_at', period.end.toISOString());
+                            durationQuery = durationQuery.lte('submitted_at', period.end.toISOString());
+                        }
+                        
+                        // Query for passing status, reversals, and duration in parallel
+                        const [passingResult, reversalResult, durationResult] = await Promise.all([
+                            (async () => {
+                                try {
+                                    let result = await passingQuery;
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('passing_status, submitted_at');
+                                    
+                                    if (retryResult.data && period.start) {
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return retryResult;
+                                }
+                            })(),
+                            (async () => {
+                                try {
+                                    let result = await reversalQuery;
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('id, submitted_at')
+                                        .not('reversal_requested_at', 'is', null);
+                                    
+                                    if (retryResult.data && period.start) {
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return retryResult;
+                                }
+                            })(),
+                            (async () => {
+                                try {
+                                    let result = await durationQuery;
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('audit_duration, submitted_at')
+                                        .not('audit_duration', 'is', null);
+                                    
+                                    if (retryResult.data && period.start) {
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = new Date(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return retryResult;
+                                }
+                            })()
+                        ]);
+                        
+                        return {
+                            passing: passingResult.data || [],
+                            reversals: reversalResult.data || [],
+                            durations: durationResult.data || []
+                        };
                     } catch (err) {
-                        console.warn(`Error loading audits from ${scorecard.table_name}:`, err);
+                        console.warn(`Error querying ${tableName}:`, err);
+                        return { passing: [], reversals: [], durations: [] };
                     }
-                }
+                });
                 
-                // Calculate pass rate (matching expert-audits.html: passed / total * 100)
+                const results = await Promise.all(queryPromises);
+                
+                // Aggregate results
+                let totalAudits = 0;
+                let passedAudits = 0;
+                
+                results.forEach(result => {
+                    // Count passing rate
+                    result.passing.forEach(audit => {
+                        totalAudits++;
+                        const passingStatus = audit.passing_status || audit.passingStatus;
+                        const normalizedStatus = normalizePassingStatus(passingStatus);
+                        if (normalizedStatus === 'Passed') {
+                            passedAudits++;
+                        }
+                    });
+                    
+                    // Count reversals
+                    standupReversalCount += result.reversals.length;
+                });
+                
+                // Calculate pass rate
                 if (totalAudits > 0) {
                     passingRate = Math.round((passedAudits / totalAudits) * 100);
                 }
             }
         } catch (error) {
-            console.error('Error calculating passing rate:', error);
-        }
-        
-        // Calculate reversal count for all audits
-        let standupReversalCount = 0;
-        try {
-            const { data: scorecards, error: scError } = await window.supabaseClient
-                .from('scorecards')
-                .select('table_name')
-                .eq('is_active', true);
-            
-            if (!scError && scorecards) {
-                for (const scorecard of scorecards) {
-                    try {
-                        const { data, error } = await window.supabaseClient
-                            .from(scorecard.table_name)
-                            .select('id')
-                            .not('reversal_requested_at', 'is', null);
-                        
-                        if (!error && data) {
-                            standupReversalCount += data.length;
-                        }
-                    } catch (err) {
-                        console.warn(`Error counting reversals in ${scorecard.table_name}:`, err);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error calculating reversal count:', error);
+            console.error('Error calculating standup stats:', error);
         }
         
         console.log('Standup View - Reversal count:', standupReversalCount);
@@ -1695,8 +1944,14 @@ async function applyFilters() {
     currentFilters.employee = employeeEl ? employeeEl.value : '';
     currentFilters.scorecard = scorecardEl ? scorecardEl.value : '';
     
-    // Start with unfiltered assignments
-    allAssignments = [...unfilteredAssignments];
+    // Start with unfiltered assignments (these are already filtered by date/week period from database)
+    // unfilteredAssignments contains assignments for the current period only
+    if (!unfilteredAssignments || unfilteredAssignments.length === 0) {
+        console.warn('No unfiltered assignments available. Data may still be loading.');
+        allAssignments = [];
+    } else {
+        allAssignments = [...unfilteredAssignments];
+    }
     
     // Apply status filter
     if (currentFilters.status) {
@@ -1726,21 +1981,9 @@ async function applyFilters() {
         allAssignments = allAssignments.filter(a => a.scorecard_id === currentFilters.scorecard);
     }
     
-    // Apply week/date range filter (from week navigation or date range picker)
-    if (useWeekFilter && currentWeek !== null) {
-        // Filter by week
-        const weekDates = getWeekDates(currentWeek, currentWeekYear);
-        allAssignments = allAssignments.filter(a => {
-            if (!a.created_at) return false;
-            return isDateInRange(a.created_at, weekDates.start, weekDates.end);
-        });
-    } else if (dateFilter.start || dateFilter.end) {
-        // Filter by date range
-        allAssignments = allAssignments.filter(a => {
-            if (!a.created_at) return false;
-            return isDateInRange(a.created_at, dateFilter.start, dateFilter.end);
-        });
-    }
+    // Note: Date/week filtering is already applied when loading assignments from the database
+    // in fetchAndCacheAssignments() and fetchAndCacheTeamStats(), so we don't need to filter again here
+    // The unfilteredAssignments are already filtered by the current period (month/week/date range)
     
     console.log(`Filtered to ${allAssignments.length} assignments`);
     
@@ -1826,43 +2069,76 @@ function initializeWeekFilter() {
     updateWeekDisplay();
 }
 
+function initializeMonthFilter() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    
+    // Get first day of current month
+    const firstDay = new Date(year, month, 1);
+    const firstDayStr = firstDay.toISOString().split('T')[0];
+    
+    // Get last day of current month
+    const lastDay = new Date(year, month + 1, 0);
+    const lastDayStr = lastDay.toISOString().split('T')[0];
+    
+    // Set date filter to current month
+    dateFilter.start = firstDayStr;
+    dateFilter.end = lastDayStr;
+    useWeekFilter = false;
+    
+    // Update date input fields
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    
+    if (startDateEl) startDateEl.value = firstDayStr;
+    if (endDateEl) endDateEl.value = lastDayStr;
+    
+    // Update date button text to show current month
+    if (dateBtnTextEl) {
+        const start = firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const end = lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dateBtnTextEl.textContent = `${start} - ${end}`;
+    }
+    
+    // Update week display to show it's disabled
+    updateWeekDisplay();
+}
+
 function updateWeekDisplay() {
     const weekTextEl = document.getElementById('weekText');
     const prevWeekBtn = document.getElementById('prevWeekBtn');
     const nextWeekBtn = document.getElementById('nextWeekBtn');
     const weekDisplay = document.getElementById('weekDisplay');
     
+    // Initialize current week if not set
+    if (currentWeek === null) {
+        const today = new Date();
+        currentWeek = getWeekNumber(today);
+        currentWeekYear = today.getFullYear();
+    }
+    
     if (weekTextEl) {
         if (useWeekFilter && currentWeek !== null) {
             weekTextEl.textContent = `Week ${currentWeek}`;
         } else {
-            weekTextEl.textContent = '-';
+            weekTextEl.textContent = `Week ${currentWeek || '-'}`;
         }
     }
     
-    // Disable/enable week navigation buttons based on date range filter
+    // Always enable week navigation buttons - they can switch to week view when clicked
+    // Matching employee-performance.html and expert-audits.html UX
     if (prevWeekBtn) {
-        if (useWeekFilter) {
-            prevWeekBtn.disabled = false;
-            prevWeekBtn.style.opacity = '1';
-            prevWeekBtn.style.cursor = 'pointer';
-        } else {
-            prevWeekBtn.disabled = true;
-            prevWeekBtn.style.opacity = '0.5';
-            prevWeekBtn.style.cursor = 'not-allowed';
-        }
+        prevWeekBtn.disabled = false;
+        prevWeekBtn.style.opacity = '1';
+        prevWeekBtn.style.cursor = 'pointer';
     }
     
     if (nextWeekBtn) {
-        if (useWeekFilter) {
-            nextWeekBtn.disabled = false;
-            nextWeekBtn.style.opacity = '1';
-            nextWeekBtn.style.cursor = 'pointer';
-        } else {
-            nextWeekBtn.disabled = true;
-            nextWeekBtn.style.opacity = '0.5';
-            nextWeekBtn.style.cursor = 'not-allowed';
-        }
+        nextWeekBtn.disabled = false;
+        nextWeekBtn.style.opacity = '1';
+        nextWeekBtn.style.cursor = 'pointer';
     }
     
     // Update week display styling
@@ -1871,15 +2147,37 @@ function updateWeekDisplay() {
             weekDisplay.style.backgroundColor = 'var(--primary-color)';
             weekDisplay.style.color = 'var(--white)';
             weekDisplay.style.borderColor = 'var(--primary-color)';
+            weekDisplay.style.cursor = 'default';
         } else {
             weekDisplay.style.backgroundColor = '#f3f4f6';
             weekDisplay.style.color = '#6b7280';
             weekDisplay.style.borderColor = '#e5e7eb';
+            weekDisplay.style.cursor = 'pointer';
         }
     }
 }
 
 function navigateWeek(direction) {
+    // Initialize current week if not set
+    if (currentWeek === null) {
+        const today = new Date();
+        currentWeek = getWeekNumber(today);
+        currentWeekYear = today.getFullYear();
+    }
+    
+    // Switch to week view when navigating (if not already in week view)
+    if (!useWeekFilter) {
+        useWeekFilter = true;
+        dateFilter.start = null;
+        dateFilter.end = null;
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const dateBtnTextEl = document.getElementById('dateBtnText');
+        if (startDateEl) startDateEl.value = '';
+        if (endDateEl) endDateEl.value = '';
+        if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+    }
+    
     currentWeek += direction;
     
     if (currentWeek > 52) {
@@ -1891,6 +2189,18 @@ function navigateWeek(direction) {
     }
     
     updateWeekDisplay();
+    applyFilters();
+}
+
+// Function to switch to week view when week display is clicked
+function switchToWeekView() {
+    // Initialize current week if not set
+    if (currentWeek === null) {
+        const today = new Date();
+        currentWeek = getWeekNumber(today);
+        currentWeekYear = today.getFullYear();
+    }
+    
     useWeekFilter = true;
     dateFilter.start = null;
     dateFilter.end = null;
@@ -1900,6 +2210,8 @@ function navigateWeek(direction) {
     if (startDateEl) startDateEl.value = '';
     if (endDateEl) endDateEl.value = '';
     if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+    
+    updateWeekDisplay();
     applyFilters();
 }
 
@@ -1907,11 +2219,36 @@ function setupEventListeners() {
     // Week navigation buttons
     const prevWeekBtn = document.getElementById('prevWeekBtn');
     const nextWeekBtn = document.getElementById('nextWeekBtn');
+    const weekDisplay = document.getElementById('weekDisplay');
+    
     if (prevWeekBtn) {
-        prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
+        prevWeekBtn.addEventListener('click', () => {
+            // If in month view, switch to week view first
+            if (!useWeekFilter) {
+                switchToWeekView();
+            }
+            // Navigate (will work whether we just switched or were already in week view)
+            navigateWeek(-1);
+        });
     }
     if (nextWeekBtn) {
-        nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+        nextWeekBtn.addEventListener('click', () => {
+            // If in month view, switch to week view first
+            if (!useWeekFilter) {
+                switchToWeekView();
+            }
+            // Navigate (will work whether we just switched or were already in week view)
+            navigateWeek(1);
+        });
+    }
+    
+    // Make week display clickable to switch to week view when in month view
+    if (weekDisplay) {
+        weekDisplay.addEventListener('click', function() {
+            if (!useWeekFilter) {
+                switchToWeekView();
+            }
+        });
     }
 
     // Date button
@@ -1962,18 +2299,15 @@ window.applyDateFilter = function() {
     const startDate = startDateEl?.value || '';
     const endDate = endDateEl?.value || '';
     
+    // Store as date strings to match initializeMonthFilter() and employee-performance.html
     if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        dateFilter.start = start;
+        dateFilter.start = startDate;
     } else {
         dateFilter.start = null;
     }
     
     if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        dateFilter.end = end;
+        dateFilter.end = endDate;
     } else {
         dateFilter.end = null;
     }
@@ -1986,9 +2320,8 @@ window.applyDateFilter = function() {
         useWeekFilter = false;
         updateWeekDisplay(); // Update week display to show "-"
     } else {
-        if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
-        useWeekFilter = true;
-        updateWeekDisplay(); // Update week display to show week number
+        // If both dates are cleared, reset to current month view (matching expert-audits.html)
+        initializeMonthFilter();
     }
 
     const dateDropdown = document.getElementById('dateDropdown');
@@ -1997,18 +2330,11 @@ window.applyDateFilter = function() {
 };
 
 window.clearDateFilter = function() {
-    dateFilter.start = null;
-    dateFilter.end = null;
-    const startDateEl = document.getElementById('startDate');
-    const endDateEl = document.getElementById('endDate');
-    const dateBtnTextEl = document.getElementById('dateBtnText');
+    // Reset to current month view instead of week view (matching expert-audits.html)
+    initializeMonthFilter();
     const dateDropdown = document.getElementById('dateDropdown');
-    if (startDateEl) startDateEl.value = '';
-    if (endDateEl) endDateEl.value = '';
-    if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
     if (dateDropdown) dateDropdown.classList.remove('active');
-    useWeekFilter = true;
-    updateWeekDisplay(); // Update week display to show week number
+    updateWeekDisplay(); // Update week display
     applyFilters();
 };
 
@@ -2037,28 +2363,40 @@ function normalizePassingStatus(status) {
 // Helper function to check if date is within filter range
 function isDateInRange(date, filterStart, filterEnd) {
     if (!filterStart && !filterEnd) {
-        // If no date filter, check against current week
+        // If no date filter, check against current week or month
         if (useWeekFilter && currentWeek !== null) {
             const weekDates = getWeekDates(currentWeek, currentWeekYear);
             filterStart = weekDates.start;
             filterEnd = weekDates.end;
         } else {
-            return true; // No filters, show all
+            // Default to current month (matching getCurrentPeriodDates)
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            lastDay.setHours(23, 59, 59, 999);
+            filterStart = firstDay;
+            filterEnd = lastDay;
         }
     }
     
     if (!filterStart && !filterEnd) return true;
+    
     const checkDate = new Date(date);
+    if (isNaN(checkDate.getTime())) return false; // Invalid date
     checkDate.setHours(0, 0, 0, 0);
     
     if (filterStart) {
-        const start = new Date(filterStart);
+        const start = filterStart instanceof Date ? filterStart : new Date(filterStart);
+        if (isNaN(start.getTime())) return false; // Invalid date
         start.setHours(0, 0, 0, 0);
         if (checkDate < start) return false;
     }
     
     if (filterEnd) {
-        const end = new Date(filterEnd);
+        const end = filterEnd instanceof Date ? filterEnd : new Date(filterEnd);
+        if (isNaN(end.getTime())) return false; // Invalid date
         end.setHours(23, 59, 59, 999);
         if (checkDate > end) return false;
     }
