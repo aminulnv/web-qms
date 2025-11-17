@@ -1167,6 +1167,7 @@ let channels = [];
 let allAssignments = []; // Store all assignments for filtering
 let bulkAuditCount = 0; // Global bulk audit count (default 0, mandatory)
 let selectedQualityAnalysts = new Set(); // Set of selected QA emails
+let completedAuditsCache = new Map(); // Cache for completed audit counts (email -> count)
 let columnFilters = {
     week: [],
     employee: [],
@@ -1215,6 +1216,11 @@ async function initializePage() {
         
         // Then load assignments (depends on allUsers being loaded)
         await loadAssignedAudits();
+        await loadCompletedAuditsCache(); // Load completed audits cache for employee stats
+        
+        // Now render the employee list with audit stats
+        applyFiltersAndGroup();
+        
         await loadAgentWiseSummary();
         
     } catch (error) {
@@ -1319,7 +1325,8 @@ async function loadEmployees() {
         
         // No filtering by scorecard - load ALL employees
         populateFilters();
-        applyFiltersAndGroup();
+        // Don't call applyFiltersAndGroup() here - wait for assignments and cache to load
+        // It will be called after loadAssignedAudits() and loadCompletedAuditsCache()
         
     } catch (error) {
         console.error('Error loading employees:', error);
@@ -1441,8 +1448,10 @@ async function loadAssignedAudits() {
                            allUsers.find(u => u.email === assignment.employee_email);
             const applicableScorecards = employee ? getApplicableScorecardsForEmployee(employee) : [];
             
-            // Disable edit/delete for completed/in_progress audits
+            // Allow editing (week, auditor, scorecard) only for pending audits
             const isEditable = assignment.status === 'pending';
+            // Allow deletion for both pending and in_progress audits
+            const isDeletable = assignment.status === 'pending' || assignment.status === 'in_progress';
             
             // Build auditor options
             let auditorOptions = '';
@@ -1493,7 +1502,7 @@ async function loadAssignedAudits() {
                     </td>
                     <td style="padding: 0.2812rem; color: #6b7280; font-size: 0.5156rem;">${formattedDate}</td>
                     <td style="padding: 0.2812rem; text-align: center;">
-                            ${isEditable ? `
+                            ${isDeletable ? `
                                 <div style="display: flex; gap: 0.1875rem; justify-content: center;">
                                     <button onclick="deleteAssignment('${assignment.id}')" 
                                         class="btn-action btn-action-danger"
@@ -1523,7 +1532,10 @@ async function loadAssignedAudits() {
 
 async function refreshAssignedAudits() {
     await loadAssignedAudits();
+    await loadCompletedAuditsCache(); // Refresh completed audits cache
     await loadAgentWiseSummary();
+    // Refresh employee list to update stats
+    applyFiltersAndGroup();
 }
 
 // ============================================================================
@@ -1628,85 +1640,10 @@ async function loadAgentWiseSummary() {
             stats.auditorBreakdown.get(assignment.auditor_email).count++;
         });
         
-        // Load completed audits from all scorecard tables
-        const completedAuditsCount = new Map(); // employee_email -> count
-        
-        try {
-            // Get all audit tables (similar to expert-audits.html)
-            let tablesToQuery = [];
-            
-            // Try to get tables via RPC first
-            try {
-                const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
-                
-                if (!tablesError && allTables && allTables.length > 0) {
-                    tablesToQuery = allTables.map(t => t.table_name);
-                } else if (allScorecards && allScorecards.length > 0) {
-                    // Fallback to scorecards
-                    tablesToQuery = allScorecards.map(s => s.table_name).filter(Boolean);
-                }
-            } catch (rpcError) {
-                console.warn('RPC call failed, using scorecard-based loading:', rpcError);
-                if (allScorecards && allScorecards.length > 0) {
-                    tablesToQuery = allScorecards.map(s => s.table_name).filter(Boolean);
-                }
-            }
-            
-            // Query each table for completed audits
-            for (const tableName of tablesToQuery) {
-                try {
-                    let query = window.supabaseClient
-                        .from(tableName)
-                        .select('employee_email, audit_status');
-                    
-                    const { data, error } = await query;
-                    
-                    if (error) {
-                        // Some tables may not have audit_status column, try without filter
-                        const retryQuery = window.supabaseClient
-                            .from(tableName)
-                            .select('employee_email');
-                        
-                        const retryResult = await retryQuery;
-                        if (retryResult.error) {
-                            console.warn(`Error loading from ${tableName}:`, retryResult.error);
-                            continue;
-                        }
-                        
-                        // If no audit_status column, assume all are completed (legacy audits)
-                        if (retryResult.data) {
-                            retryResult.data.forEach(audit => {
-                                if (audit.employee_email) {
-                                    const email = (audit.employee_email || '').toLowerCase().trim();
-                                    completedAuditsCount.set(email, (completedAuditsCount.get(email) || 0) + 1);
-                                }
-                            });
-                        }
-                    } else if (data) {
-                        // Filter for completed audits
-                        data.forEach(audit => {
-                            const auditStatus = audit.audit_status;
-                            // Only include completed audits or audits without audit_status (legacy completed audits)
-                            const isComplete = !auditStatus || auditStatus === 'completed';
-                            if (isComplete && audit.employee_email) {
-                                const email = (audit.employee_email || '').toLowerCase().trim();
-                                completedAuditsCount.set(email, (completedAuditsCount.get(email) || 0) + 1);
-                            }
-                        });
-                    }
-                } catch (err) {
-                    console.warn(`Exception loading from ${tableName}:`, err);
-                    continue;
-                }
-            }
-        } catch (error) {
-            console.error('Error loading completed audits:', error);
-        }
-        
-        // Update agent stats with completed audit counts
+        // Update agent stats with completed audit counts from cache
         agentStats.forEach((stats, email) => {
             const normalizedEmail = (email || '').toLowerCase().trim();
-            stats.completedAudits = completedAuditsCount.get(normalizedEmail) || 0;
+            stats.completedAudits = completedAuditsCache.get(normalizedEmail) || 0;
         });
         
         // Convert to array and sort by name
@@ -2027,8 +1964,9 @@ async function deleteAssignment(assignmentId) {
             type: 'success'
         });
         
-        // Refresh the table
+        // Refresh the table and employee list to show updated stats
         await loadAssignedAudits();
+        applyFiltersAndGroup(); // Refresh employee list to update audit counts
         await loadAgentWiseSummary();
         
     } catch (error) {
@@ -2257,6 +2195,111 @@ function populateFilters() {
 }
 
 // ============================================================================
+// Get Audit Stats for Employee
+// ============================================================================
+function getEmployeeAuditStats(employeeEmail) {
+    if (!employeeEmail) {
+        return { assigned: 0, completed: 0 };
+    }
+    
+    // Normalize email for comparison
+    const normalizedEmail = (employeeEmail || '').toLowerCase().trim();
+    
+    // Count assigned audits (all statuses except cancelled)
+    // Normalize both sides for comparison
+    const assignedCount = allAssignments.filter(a => {
+        if (!a.employee_email || a.status === 'cancelled') return false;
+        const assignmentEmail = (a.employee_email || '').toLowerCase().trim();
+        return assignmentEmail === normalizedEmail;
+    }).length;
+    
+    // Get completed count from cache
+    const completedCount = completedAuditsCache.get(normalizedEmail) || 0;
+    
+    return {
+        assigned: assignedCount,
+        completed: completedCount
+    };
+}
+
+// ============================================================================
+// Load Completed Audits Cache
+// ============================================================================
+async function loadCompletedAuditsCache() {
+    try {
+        completedAuditsCache.clear();
+        
+        // Get all audit tables
+        let tablesToQuery = [];
+        
+        try {
+            const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
+            
+            if (!tablesError && allTables && allTables.length > 0) {
+                tablesToQuery = allTables.map(t => t.table_name);
+            } else if (allScorecards && allScorecards.length > 0) {
+                tablesToQuery = allScorecards.map(s => s.table_name).filter(Boolean);
+            }
+        } catch (rpcError) {
+            console.warn('RPC call failed, using scorecard-based loading:', rpcError);
+            if (allScorecards && allScorecards.length > 0) {
+                tablesToQuery = allScorecards.map(s => s.table_name).filter(Boolean);
+            }
+        }
+        
+        // Query each table for completed audits
+        for (const tableName of tablesToQuery) {
+            try {
+                let query = window.supabaseClient
+                    .from(tableName)
+                    .select('employee_email, audit_status');
+                
+                const { data, error } = await query;
+                
+                if (error) {
+                    // Some tables may not have audit_status column, try without filter
+                    const retryQuery = window.supabaseClient
+                        .from(tableName)
+                        .select('employee_email');
+                    
+                    const retryResult = await retryQuery;
+                    if (retryResult.error) {
+                        console.warn(`Error loading from ${tableName}:`, retryResult.error);
+                        continue;
+                    }
+                    
+                    // If no audit_status column, assume all are completed (legacy audits)
+                    if (retryResult.data) {
+                        retryResult.data.forEach(audit => {
+                            if (audit.employee_email) {
+                                const email = (audit.employee_email || '').toLowerCase().trim();
+                                completedAuditsCache.set(email, (completedAuditsCache.get(email) || 0) + 1);
+                            }
+                        });
+                    }
+                } else if (data) {
+                    // Filter for completed audits
+                    data.forEach(audit => {
+                        const auditStatus = audit.audit_status;
+                        // Only include completed audits or audits without audit_status (legacy completed audits)
+                        const isComplete = !auditStatus || auditStatus === 'completed';
+                        if (isComplete && audit.employee_email) {
+                            const email = (audit.employee_email || '').toLowerCase().trim();
+                            completedAuditsCache.set(email, (completedAuditsCache.get(email) || 0) + 1);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn(`Exception loading from ${tableName}:`, err);
+                continue;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading completed audits cache:', error);
+    }
+}
+
+// ============================================================================
 // Filter & Group Employees
 // ============================================================================
 function applyFiltersAndGroup() {
@@ -2347,12 +2390,23 @@ function renderFlatList(employees) {
     emptyState.style.display = 'none';
     container.innerHTML = '';
     
+    // Sort employees by assigned audit count (ascending) - fewer audits first
+    const sortedEmployees = [...employees].sort((a, b) => {
+        const statsA = getEmployeeAuditStats(a.email);
+        const statsB = getEmployeeAuditStats(b.email);
+        // Sort by assigned count ascending, then by name
+        if (statsA.assigned !== statsB.assigned) {
+            return statsA.assigned - statsB.assigned;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+    });
+    
     // Create a simple container for flat list - ensure vertical layout
     const flatListContainer = document.createElement('div');
     flatListContainer.style.cssText = 'display: flex; flex-direction: column; width: 100%; gap: 0;';
     
     // Render each employee as a flat list item
-    employees.forEach(emp => {
+    sortedEmployees.forEach(emp => {
         const employeeElement = createEmployeeElement(emp);
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = employeeElement;
@@ -2382,7 +2436,18 @@ function renderGroups(groups, groupBy, expandedGroups = new Set()) {
     );
     
     sortedGroups.forEach(([groupName, employees]) => {
-        const groupDiv = createGroupElement(groupName, employees, groupBy);
+        // Sort employees within each group by assigned audit count (ascending)
+        const sortedEmployees = [...employees].sort((a, b) => {
+            const statsA = getEmployeeAuditStats(a.email);
+            const statsB = getEmployeeAuditStats(b.email);
+            // Sort by assigned count ascending, then by name
+            if (statsA.assigned !== statsB.assigned) {
+                return statsA.assigned - statsB.assigned;
+            }
+            return (a.name || '').localeCompare(b.name || '');
+        });
+        
+        const groupDiv = createGroupElement(groupName, sortedEmployees, groupBy);
         container.appendChild(groupDiv);
         
         // Restore expanded state if this group was previously expanded
@@ -2430,6 +2495,7 @@ function createGroupElement(groupName, employees, groupBy) {
 function createEmployeeElement(employee) {
     const initials = employee.name ? employee.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
     const isSelected = selectedEmployees.has(employee.email);
+    const auditStats = getEmployeeAuditStats(employee.email);
     
     return `
         <div class="employee-item" onclick="handleEmployeeRowClick(event, '${employee.email}')">
@@ -2445,6 +2511,18 @@ function createEmployeeElement(employee) {
                     <p class="employee-meta">
                         ${employee.channel || '-'} • ${employee.team || '-'} • ${employee.designation || '-'}
                     </p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5625rem; flex-shrink: 0;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.0938rem;">
+                    <div style="display: flex; align-items: center; gap: 0.1875rem;">
+                        <span style="font-size: 0.5156rem; color: #6b7280;">Assigned:</span>
+                        <span style="font-size: 0.5625rem; font-weight: 600; color: #1A733E;">${auditStats.assigned}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.1875rem;">
+                        <span style="font-size: 0.5156rem; color: #6b7280;">Completed:</span>
+                        <span style="font-size: 0.5625rem; font-weight: 600; color: #065f46;">${auditStats.completed}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2794,12 +2872,13 @@ async function autoAssignBySupervisor() {
             type: 'success'
         });
         
-        // Clear selections if any
+        // Refresh assigned audits view first to update allAssignments
+        await loadAssignedAudits();
+        
+        // Clear selections if any and refresh employee list to show updated stats
         selectedEmployees.clear();
         applyFiltersAndGroup();
         
-        // Refresh assigned audits view
-        await loadAssignedAudits();
         await loadAgentWiseSummary();
         
     } catch (error) {
@@ -2889,12 +2968,13 @@ async function performBulkAssignment() {
             type: 'success'
         });
         
-        // Clear selections
+        // Refresh assigned audits view first to update allAssignments
+        await loadAssignedAudits();
+        
+        // Clear selections and refresh employee list to show updated stats
         selectedEmployees.clear();
         applyFiltersAndGroup();
         
-        // Refresh assigned audits view
-        await loadAssignedAudits();
         await loadAgentWiseSummary();
         
     } catch (error) {
@@ -3106,6 +3186,7 @@ async function applyBulkEdit() {
         document.getElementById('bulkEditAuditor').value = '';
         document.getElementById('bulkEditScorecard').value = '';
         await loadAssignedAudits();
+        applyFiltersAndGroup(); // Refresh employee list to update audit counts
         await loadAgentWiseSummary();
         
     } catch (error) {
@@ -3158,8 +3239,9 @@ async function bulkDeleteAssignments() {
             type: 'success'
         });
         
-        // Reload assignments
+        // Reload assignments and refresh employee list
         await loadAssignedAudits();
+        applyFiltersAndGroup(); // Refresh employee list to update audit counts
         await loadAgentWiseSummary();
         
     } catch (error) {
