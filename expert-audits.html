@@ -574,6 +574,16 @@
             </select>
         </div>
         
+        <!-- Acknowledgement Status -->
+        <div>
+            <label for="acknowledgementStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Acknowledgement</label>
+            <select id="acknowledgementStatusFilter" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
+                <option value="">All Status</option>
+                <option value="Acknowledged">Acknowledged</option>
+                <option value="Pending">Pending</option>
+            </select>
+        </div>
+        
         <!-- Employee Pre Status -->
         <div>
             <label for="agentPreStatusFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Pre Status</label>
@@ -2565,6 +2575,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const interactionIdFilter = (document.getElementById('interactionIdFilter')?.value || '').toLowerCase();
             const weekFilter = document.getElementById('weekFilter')?.value || '';
             const validationFilter = document.getElementById('validationStatusFilter')?.value || '';
+            const acknowledgementFilter = document.getElementById('acknowledgementStatusFilter')?.value || '';
             const preStatusFilter = document.getElementById('agentPreStatusFilter')?.value || '';
             const postStatusFilter = document.getElementById('agentPostStatusFilter')?.value || '';
             
@@ -2578,6 +2589,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchesInteractionId = !interactionIdFilter || (audit.interactionId && audit.interactionId.toLowerCase().includes(interactionIdFilter));
             const matchesWeek = !weekFilter || audit.week === weekFilter;
             const matchesValidation = !validationFilter || audit.validationStatus === validationFilter;
+            const matchesAcknowledgement = !acknowledgementFilter || (() => {
+                const status = audit.acknowledgementStatus || audit.acknowledgement_status || '';
+                if (acknowledgementFilter === 'Acknowledged') {
+                    return status && (status.toLowerCase().includes('acknowledged') || status === 'Acknowledged');
+                } else if (acknowledgementFilter === 'Pending') {
+                    return !status || status.trim() === '' || status.toLowerCase() === 'pending' || status === 'Pending';
+                }
+                return true;
+            })();
             const matchesPreStatus = !preStatusFilter || audit.agentPreStatus === preStatusFilter;
             const matchesPostStatus = !postStatusFilter || audit.agentPostStatus === postStatusFilter;
             
@@ -2656,7 +2676,7 @@ document.addEventListener('DOMContentLoaded', function() {
                    matchesAuditor && matchesEmployee && matchesAuditType &&
                    matchesChannel && matchesEmployeeType && matchesCountry &&
                    matchesInteractionId && matchesWeek && matchesValidation &&
-                   matchesPreStatus && matchesPostStatus && matchesMinScore &&
+                   matchesAcknowledgement && matchesPreStatus && matchesPostStatus && matchesMinScore &&
                    matchesMaxScore && matchesMinErrors && matchesMaxErrors &&
                    matchesDateRange && matchesKpiFilter;
         });
@@ -2845,7 +2865,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'interactionIdFilter', 'weekFilter', 'minScoreFilter', 
         'maxScoreFilter', 'minErrorsFilter', 'maxErrorsFilter', 
         'dateFromFilter', 'dateToFilter', 'validationStatusFilter', 
-        'agentPreStatusFilter', 'agentPostStatusFilter'
+        'acknowledgementStatusFilter', 'agentPreStatusFilter', 'agentPostStatusFilter'
     ];
     
     additionalFilters.forEach(filterId => {
