@@ -886,14 +886,33 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         let completed = 0; // Will be calculated from scorecard tables
         
         try {
-            // Use cached scorecard tables if available, otherwise fetch
-            const scorecardTables = cachedScorecardTables.length > 0 
+            // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
+            let tablesToQuery = [];
+            try {
+                const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
+                
+                if (!tablesError && allTables && allTables.length > 0) {
+                    // Filter out ai_analysis_results and map to table names
+                    tablesToQuery = allTables
+                        .filter(t => t.table_name !== 'ai_analysis_results')
+                        .map(t => t.table_name);
+                } else {
+                    // Fallback: use scorecard tables
+                    tablesToQuery = cachedScorecardTables.length > 0 
                 ? cachedScorecardTables 
                 : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+                }
+            } catch (rpcError) {
+                console.warn('RPC get_audit_tables failed, using scorecard-based loading:', rpcError);
+                // Fallback: use scorecard tables
+                tablesToQuery = cachedScorecardTables.length > 0 
+                    ? cachedScorecardTables 
+                    : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+            }
             
-            if (scorecardTables.length > 0) {
-                // Parallelize all scorecard queries
-                const queryPromises = scorecardTables.map(async (tableName) => {
+            if (tablesToQuery.length > 0) {
+                // Parallelize all audit table queries
+                const queryPromises = tablesToQuery.map(async (tableName) => {
                     try {
                         // Build queries with date filters (count all audits, not just Quality Analysts)
                         let durationQuery = window.supabaseClient
@@ -998,20 +1017,24 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                         const errorMessage = result.error.message || JSON.stringify(result.error);
                                         if (errorMessage.includes('audit_status') || result.error.code === 'PGRST116' || result.error.code === '42703') {
                                             // Retry without audit_status column (legacy tables)
+                                            // Don't apply server-side date filters - fetch all and filter client-side for accuracy
                                             const retryQuery = window.supabaseClient
                                                 .from(tableName)
                                                 .select('id, submitted_at')
                                                 .not('submitted_at', 'is', null);
                                             
-                                            if (period.start) {
-                                                retryQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
-                                            }
-                                            if (period.end) {
-                                                retryQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
-                                            }
-                                            
                                             const retryResult = await retryQuery;
                                             if (retryResult.data) {
+                                                // Always apply client-side date filtering for legacy tables to ensure accuracy
+                                                // period.start and period.end are already Date objects from getCurrentPeriodDates()
+                                                if (period && (period.start || period.end)) {
+                                                    retryResult.data = retryResult.data.filter(audit => {
+                                                        if (!audit.submitted_at) return false;
+                                                        const auditDate = toDhakaTime(audit.submitted_at);
+                                                        return (!period.start || auditDate >= period.start) && 
+                                                               (!period.end || auditDate <= period.end);
+                                                    });
+                                                }
                                                 // For legacy tables without audit_status, all audits with submitted_at are considered completed
                                                 return retryResult;
                                             }
@@ -1097,24 +1120,41 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                     const avgDuration = totalDuration / auditCount;
                     avgDurationText = formatDurationText(avgDuration);
                 }
-            } else {
-                // Fallback to assignment-based count if no scorecards
-                completed = teamAssignments.filter(a => a.status === 'completed').length;
             }
+            // Note: completed count is always from scorecard tables, not assignments
+            // If no scorecards exist, completed will remain 0
         } catch (error) {
             console.error('Error calculating team stats:', error);
-            // Fallback to assignment-based count on error
-            completed = teamAssignments.filter(a => a.status === 'completed').length;
+            // completed count remains 0 if there's an error (always use scorecard tables)
         }
         
         const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         console.log('Team Stats - Reversal count:', teamReversalCount);
         console.log('Team Stats - Completed count:', completed);
         
-        // Calculate stats for each Quality Analyst - parallelize duration queries
-        const scorecardTables = cachedScorecardTables.length > 0 
+        // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
+        let auditorTablesToQuery = [];
+        try {
+            const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
+            
+            if (!tablesError && allTables && allTables.length > 0) {
+                // Filter out ai_analysis_results and map to table names
+                auditorTablesToQuery = allTables
+                    .filter(t => t.table_name !== 'ai_analysis_results')
+                    .map(t => t.table_name);
+            } else {
+                // Fallback: use scorecard tables
+                auditorTablesToQuery = cachedScorecardTables.length > 0 
             ? cachedScorecardTables 
             : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+            }
+        } catch (rpcError) {
+            console.warn('RPC get_audit_tables failed, using scorecard-based loading:', rpcError);
+            // Fallback: use scorecard tables
+            auditorTablesToQuery = cachedScorecardTables.length > 0 
+                ? cachedScorecardTables 
+                : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+        }
         
         // Parallelize all auditor duration queries
         const auditorDurationPromises = qualityAnalysts.map(async (qa) => {
@@ -1127,8 +1167,8 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
             let qaCompleted = 0;
             let avgDurationText = '-';
             try {
-                if (scorecardTables.length > 0) {
-                    const durationPromises = scorecardTables.map(async (tableName) => {
+                if (auditorTablesToQuery.length > 0) {
+                    const durationPromises = auditorTablesToQuery.map(async (tableName) => {
                         try {
                             // Build query with date filters for duration
                             let query = window.supabaseClient
@@ -1164,35 +1204,97 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                             let audits = durationResult.data;
                             let error = durationResult.error;
                             let completedAudits = completedResult.data || [];
+                            let isLegacyTable = false;
                             
                             // If completed query failed because audit_status column doesn't exist, retry without it
                             if (completedResult.error) {
                                 const errorMessage = completedResult.error.message || JSON.stringify(completedResult.error);
+                                // Check if error is about audit_status column not existing
                                 if (errorMessage.includes('audit_status') || completedResult.error.code === 'PGRST116' || completedResult.error.code === '42703') {
+                                    isLegacyTable = true;
                                     // Retry without audit_status column (legacy tables)
+                                    // Don't apply server-side date filters - fetch all and filter client-side for accuracy
                                     let retryCompletedQuery = window.supabaseClient
                                         .from(tableName)
                                         .select('id, submitted_at')
                                         .eq('auditor_email', qa.email)
                                         .not('submitted_at', 'is', null);
                                     
-                                    if (period.start) {
-                                        retryCompletedQuery = retryCompletedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
-                                    }
-                                    if (period.end) {
-                                        retryCompletedQuery = retryCompletedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
-                                    }
-                                    
                                     const retryResult = await retryCompletedQuery;
-                                    if (retryResult.data) {
+                                    if (retryResult.error) {
+                                        console.warn(`Retry query failed for ${tableName}:`, retryResult.error);
+                                        // If retry also fails, try without any filters at all
+                                        const fallbackQuery = window.supabaseClient
+                                            .from(tableName)
+                                            .select('id, submitted_at')
+                                            .eq('auditor_email', qa.email)
+                                            .not('submitted_at', 'is', null);
+                                        
+                                        const fallbackResult = await fallbackQuery;
+                                        if (fallbackResult.data) {
+                                            // Apply client-side date filtering
+                                            if (period && (period.start || period.end)) {
+                                                fallbackResult.data = fallbackResult.data.filter(audit => {
+                                                    if (!audit.submitted_at) return false;
+                                                    const auditDate = toDhakaTime(audit.submitted_at);
+                                                    return (!period.start || auditDate >= period.start) && 
+                                                           (!period.end || auditDate <= period.end);
+                                                });
+                                            }
+                                            completedAudits = fallbackResult.data;
+                                        }
+                                    } else if (retryResult.data) {
+                                        // Always apply client-side date filtering for legacy tables to ensure accuracy
+                                        // period.start and period.end are already Date objects from getCurrentPeriodDates()
+                                        if (period && (period.start || period.end)) {
+                                            retryResult.data = retryResult.data.filter(audit => {
+                                                if (!audit.submitted_at) return false;
+                                                const auditDate = toDhakaTime(audit.submitted_at);
+                                                return (!period.start || auditDate >= period.start) && 
+                                                       (!period.end || auditDate <= period.end);
+                                            });
+                                        }
                                         // For legacy tables without audit_status, all audits with submitted_at are considered completed
                                         completedAudits = retryResult.data;
                                     }
                                 }
                             }
                             
+                            // If completed query succeeded but returned data, still need to check if it's a legacy table
+                            // by checking if audit_status field exists in the data
+                            // If it's a legacy table, re-query without server-side date filters to get ALL audits
+                            if (!isLegacyTable && completedAudits.length > 0) {
+                                // Check if audit_status field exists in any of the returned audits
+                                const hasAuditStatus = completedAudits.some(audit => audit.hasOwnProperty('audit_status'));
+                                if (!hasAuditStatus) {
+                                    isLegacyTable = true;
+                                    // Re-query without server-side date filters to ensure we get all audits
+                                    // Then filter client-side for accuracy
+                                    let legacyRetryQuery = window.supabaseClient
+                                        .from(tableName)
+                                        .select('id, submitted_at')
+                                        .eq('auditor_email', qa.email)
+                                        .not('submitted_at', 'is', null);
+                                    
+                                    const legacyRetryResult = await legacyRetryQuery;
+                                    if (legacyRetryResult.data) {
+                                        // Apply client-side date filtering for accuracy
+                                        if (period && (period.start || period.end)) {
+                                            legacyRetryResult.data = legacyRetryResult.data.filter(audit => {
+                                                if (!audit.submitted_at) return false;
+                                                const auditDate = toDhakaTime(audit.submitted_at);
+                                                return (!period.start || auditDate >= period.start) && 
+                                                       (!period.end || auditDate <= period.end);
+                                            });
+                                        }
+                                        completedAudits = legacyRetryResult.data;
+                                    }
+                                }
+                            }
+                            
                             // If server-side date filter fails, try without date filter and filter client-side
-                            if (error && period && (period.start || period.end)) {
+                            // Only retry if we haven't already handled legacy tables and if there's an error
+                            if (error && !isLegacyTable && period && (period.start || period.end)) {
                                 const retryQuery = window.supabaseClient
                                     .from(tableName)
                                     .select('audit_duration, submitted_at')
@@ -1201,7 +1303,7 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                 
                                 const retryCompletedQuery = window.supabaseClient
                                     .from(tableName)
-                                    .select('id, submitted_at')
+                                    .select('id, submitted_at, audit_status')
                                     .eq('auditor_email', qa.email)
                                     .not('submitted_at', 'is', null);
                                 
@@ -1220,6 +1322,9 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                 }
                                 
                                 if (retryCompletedResult.data) {
+                                    // Check if this is a legacy table (no audit_status in result)
+                                    const isRetryLegacyTable = retryCompletedResult.data.length > 0 && !retryCompletedResult.data[0].hasOwnProperty('audit_status');
+                                    
                                     if (period.start) {
                                         retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
@@ -1228,13 +1333,16 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                                    (!period.end || auditDate <= period.end);
                                         });
                                     }
-                                    // Filter by audit_status (matching expert-audits.html logic exactly)
-                                    // Only include completed audits or audits without audit_status (legacy completed audits)
+                                    
+                                    // Filter by audit_status only if not a legacy table
+                                    if (!isRetryLegacyTable) {
                                     retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
                                         const auditStatus = audit.audit_status;
-                                        const isComplete = !auditStatus || auditStatus === 'completed';
-                                        return isComplete;
+                                            const isComplete = !auditStatus || auditStatus === 'completed';
+                                            return isComplete;
                                     });
+                                    }
+                                    // For legacy tables, all audits with submitted_at are considered completed
                                 }
                                 
                                 audits = retryResult.data;
@@ -1257,11 +1365,15 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                 return { audits: [], completed: 0 };
                             }
                             
-                            // Fallback client-side filtering if needed
+                            // Fallback client-side filtering if needed (only if not already filtered for legacy tables)
                             let filteredAudits = audits || [];
                             let filteredCompleted = completedAudits || [];
                             
-                            if (period.start) {
+                            // Apply client-side date filtering if not already done (for legacy tables) or if period exists
+                            // period.start and period.end are already Date objects from getCurrentPeriodDates()
+                            if (period && (period.start || period.end)) {
+                                // Only filter if not already filtered (legacy tables are already filtered)
+                                if (!isLegacyTable) {
                                 filteredAudits = filteredAudits.filter(audit => {
                                     if (!audit.submitted_at) return false;
                                     const auditDate = toDhakaTime(audit.submitted_at);
@@ -1275,15 +1387,20 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                     return (!period.start || auditDate >= period.start) && 
                                            (!period.end || auditDate <= period.end);
                                 });
+                                }
                             }
                             
                             // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
                             // Only include completed audits or audits without audit_status (legacy completed audits)
+                            // For legacy tables, all audits with submitted_at are already considered completed
+                            if (!isLegacyTable) {
                             filteredCompleted = filteredCompleted.filter(audit => {
                                 const auditStatus = audit.audit_status;
-                                const isComplete = !auditStatus || auditStatus === 'completed';
-                                return isComplete;
+                                    const isComplete = !auditStatus || auditStatus === 'completed';
+                                    return isComplete;
                             });
+                            }
+                            // For legacy tables, filteredCompleted already contains only completed audits (all with submitted_at)
                             
                             return { audits: filteredAudits, completed: filteredCompleted.length };
                         } catch (err) {
@@ -1314,14 +1431,12 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                         const avgDuration = totalDuration / auditCount;
                         avgDurationText = formatDurationText(avgDuration);
                     }
-                } else {
-                    // Fallback to assignment-based count if no scorecards
-                    qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
                 }
+                // Note: qaCompleted count is always from scorecard tables, not assignments
+                // If no scorecards exist, qaCompleted will remain 0
             } catch (error) {
                 console.error(`Error calculating stats for ${qa.email}:`, error);
-                // Fallback to assignment-based count on error
-                qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
+                // qaCompleted count remains 0 if there's an error (always use scorecard tables)
             }
             
             const qaPercentage = qaAssignments.length > 0 ? Math.round((qaCompleted / qaAssignments.length) * 100) : 0;
@@ -1738,28 +1853,45 @@ async function fetchAndCacheStandupView(cacheKey) {
         
         // Calculate overall stats
         const totalAssigned = allAuditAssignments.length;
-        const completed = allAuditAssignments.filter(a => a.status === 'completed').length;
         const inProgress = allAuditAssignments.filter(a => a.status === 'in_progress').length;
         const pending = allAuditAssignments.filter(a => a.status === 'pending').length;
         const remaining = pending + inProgress;
-        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
-        // Calculate coverage percentage
-        const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
-        
-        // Calculate passing rate, reversal count, and duration in parallel
+        // Calculate passing rate, reversal count, completed count, and duration in parallel
         let passingRate = 0;
         let standupReversalCount = 0;
+        let completed = 0; // Will be calculated from scorecard tables
+        // Store completed audits by channel for channel stats
+        let completedAuditsByChannel = {};
         
         try {
-            // Use cached scorecard tables if available
-            const scorecardTables = cachedScorecardTables.length > 0 
+            // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
+            let standupTablesToQuery = [];
+            try {
+                const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
+                
+                if (!tablesError && allTables && allTables.length > 0) {
+                    // Filter out ai_analysis_results and map to table names
+                    standupTablesToQuery = allTables
+                        .filter(t => t.table_name !== 'ai_analysis_results')
+                        .map(t => t.table_name);
+                } else {
+                    // Fallback: use scorecard tables
+                    standupTablesToQuery = cachedScorecardTables.length > 0 
                 ? cachedScorecardTables 
                 : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+                }
+            } catch (rpcError) {
+                console.warn('RPC get_audit_tables failed, using scorecard-based loading:', rpcError);
+                // Fallback: use scorecard tables
+                standupTablesToQuery = cachedScorecardTables.length > 0 
+                    ? cachedScorecardTables 
+                    : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
+            }
             
-            if (scorecardTables.length > 0) {
+            if (standupTablesToQuery.length > 0) {
                 // Parallelize all queries for each table
-                const queryPromises = scorecardTables.map(async (tableName) => {
+                const queryPromises = standupTablesToQuery.map(async (tableName) => {
                     try {
                         // Build queries with date filters
                         let passingQuery = window.supabaseClient
@@ -1776,20 +1908,29 @@ async function fetchAndCacheStandupView(cacheKey) {
                             .select('audit_duration, submitted_at')
                             .not('audit_duration', 'is', null);
                         
+                        // Query to count completed audits (submitted in the period) - all audits regardless of auditor
+                        // Need to select audit_status to filter client-side (some tables may not have this column)
+                        let completedQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('id, submitted_at, audit_status, employee_email')
+                            .not('submitted_at', 'is', null);
+                        
                         // Apply date filters server-side if possible (convert Dhaka to UTC)
                         if (period.start) {
                             passingQuery = passingQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                             reversalQuery = reversalQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                             durationQuery = durationQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                            completedQuery = completedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                         }
                         if (period.end) {
                             passingQuery = passingQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                             reversalQuery = reversalQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                             durationQuery = durationQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                            completedQuery = completedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                         }
                         
-                        // Query for passing status, reversals, and duration in parallel
-                        const [passingResult, reversalResult, durationResult] = await Promise.all([
+                        // Query for passing status, reversals, completed audits, and duration in parallel
+                        const [passingResult, reversalResult, durationResult, completedResult] = await Promise.all([
                             (async () => {
                                 try {
                                     let result = await passingQuery;
@@ -1881,17 +2022,97 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     }
                                     return retryResult;
                                 }
+                            })(),
+                            (async () => {
+                                try {
+                                    let result = await completedQuery;
+                                    
+                                    // If query failed because audit_status column doesn't exist, retry without it
+                                    if (result.error) {
+                                        const errorMessage = result.error.message || JSON.stringify(result.error);
+                                        if (errorMessage.includes('audit_status') || result.error.code === 'PGRST116' || result.error.code === '42703') {
+                                            // Retry without audit_status column (legacy tables)
+                                            const retryQuery = window.supabaseClient
+                                                .from(tableName)
+                                                .select('id, submitted_at, employee_email')
+                                                .not('submitted_at', 'is', null);
+                                            
+                                            if (period.start) {
+                                                retryQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                                            }
+                                            if (period.end) {
+                                                retryQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                                            }
+                                            
+                                            const retryResult = await retryQuery;
+                                            if (retryResult.data) {
+                                                // Apply client-side date filtering as fallback
+                                                if (period.start) {
+                                                    retryResult.data = retryResult.data.filter(audit => {
+                                                        if (!audit.submitted_at) return false;
+                                                        const auditDate = toDhakaTime(audit.submitted_at);
+                                                        return (!period.start || auditDate >= period.start) && 
+                                                               (!period.end || auditDate <= period.end);
+                                                    });
+                                                }
+                                                // For legacy tables without audit_status, all audits with submitted_at are considered completed
+                                                return retryResult;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = toDhakaTime(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('id, submitted_at, audit_status, employee_email')
+                                        .not('submitted_at', 'is', null);
+                                    
+                                    if (retryResult.data) {
+                                        if (period.start) {
+                                            retryResult.data = retryResult.data.filter(audit => {
+                                                if (!audit.submitted_at) return false;
+                                                const auditDate = toDhakaTime(audit.submitted_at);
+                                                return (!period.start || auditDate >= period.start) && 
+                                                       (!period.end || auditDate <= period.end);
+                                            });
+                                        }
+                                        // Filter by audit_status (matching expert-audits.html logic exactly)
+                                        // If audit_status field doesn't exist in the result (legacy tables), include all audits
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            if (!('audit_status' in audit)) {
+                                                // Legacy table without audit_status column - all audits with submitted_at are completed
+                                                return true;
+                                            }
+                                            const auditStatus = audit.audit_status;
+                                            const isComplete = !auditStatus || auditStatus === 'completed';
+                                            return isComplete;
+                                        });
+                                    }
+                                    return retryResult;
+                                }
                             })()
                         ]);
                         
                         return {
                             passing: passingResult.data || [],
                             reversals: reversalResult.data || [],
-                            durations: durationResult.data || []
+                            durations: durationResult.data || [],
+                            completed: completedResult.data || []
                         };
                     } catch (err) {
                         console.warn(`Error querying ${tableName}:`, err);
-                        return { passing: [], reversals: [], durations: [] };
+                        return { passing: [], reversals: [], durations: [], completed: [] };
                     }
                 });
                 
@@ -1914,6 +2135,28 @@ async function fetchAndCacheStandupView(cacheKey) {
                     
                     // Count reversals
                     standupReversalCount += result.reversals.length;
+                    
+                    // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
+                    // Only include completed audits or audits without audit_status (legacy completed audits)
+                    const completedAudits = result.completed.filter(audit => {
+                        const auditStatus = audit.audit_status;
+                        const isComplete = !auditStatus || auditStatus === 'completed';
+                        return isComplete;
+                    });
+                    
+                    // Count completed audits and group by channel
+                    completedAudits.forEach(audit => {
+                        completed++;
+                        // Group by channel for channel stats
+                        if (audit.employee_email) {
+                            const emp = allUsers.find(u => u.email === audit.employee_email);
+                            const channel = emp?.channel || 'Unknown';
+                            if (!completedAuditsByChannel[channel]) {
+                                completedAuditsByChannel[channel] = 0;
+                            }
+                            completedAuditsByChannel[channel]++;
+                        }
+                    });
                 });
                 
                 // Calculate pass rate
@@ -1926,8 +2169,13 @@ async function fetchAndCacheStandupView(cacheKey) {
         }
         
         console.log('Standup View - Reversal count:', standupReversalCount);
+        console.log('Standup View - Completed count:', completed);
         
-        // Group assignments by channel
+        // Calculate percentage and coverage (completed count is from scorecard tables)
+        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        
+        // Group assignments by channel (for assigned, inProgress, pending counts)
         const channelStats = {};
         
         allAuditAssignments.forEach(assignment => {
@@ -1938,7 +2186,7 @@ async function fetchAndCacheStandupView(cacheKey) {
             if (!channelStats[channel]) {
                 channelStats[channel] = {
                     assigned: 0,
-                    completed: 0,
+                    completed: 0, // Will be set from scorecard tables
                     inProgress: 0,
                     pending: 0,
                     remaining: 0,
@@ -1948,13 +2196,28 @@ async function fetchAndCacheStandupView(cacheKey) {
             
             channelStats[channel].assigned++;
             
-            if (assignment.status === 'completed') {
-                channelStats[channel].completed++;
-            } else if (assignment.status === 'in_progress') {
+            if (assignment.status === 'in_progress') {
                 channelStats[channel].inProgress++;
             } else if (assignment.status === 'pending') {
                 channelStats[channel].pending++;
             }
+            // Note: completed count comes from scorecard tables, not assignment status
+        });
+        
+        // Update completed counts from scorecard tables (completedAuditsByChannel)
+        // This was populated in the results.forEach loop above
+        Object.keys(completedAuditsByChannel || {}).forEach(channel => {
+            if (!channelStats[channel]) {
+                channelStats[channel] = {
+                    assigned: 0,
+                    completed: 0,
+                    inProgress: 0,
+                    pending: 0,
+                    remaining: 0,
+                    percentage: 0
+                };
+            }
+            channelStats[channel].completed = completedAuditsByChannel[channel];
         });
         
         // Calculate remaining and percentage for each channel
