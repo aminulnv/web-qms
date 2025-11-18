@@ -2257,7 +2257,7 @@ function renderAssignedAudits() {
       }
       
       const requestDate = formatTimestamp(audit.created_at);
-      const buttonText = audit.status === 'in_progress' ? 'Continue' : 'Start';
+      const buttonText = 'Get Started';
 
       return `
         <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAudit('${audit.id}')">
@@ -3238,7 +3238,7 @@ function renderStatsFromData(stats) {
 }
 
 function viewAudit(assignmentId) {
-  window.location.href = `create-audit.html?assignment=${assignmentId}`;
+  window.location.href = `create-audit.html`;
 }
 
 function viewAuditDetails(auditId, scorecardId, tableName) {
