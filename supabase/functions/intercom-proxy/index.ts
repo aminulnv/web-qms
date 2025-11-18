@@ -182,29 +182,18 @@ serve(async (req) => {
       }
 
       // Step 1: Search for conversation IDs using /conversations/search
-      // Intercom Search API expects teammate_ids as a string (not number)
+      // Intercom Search API: teammate_ids can be a string or array, using string format
       const adminIdStr = String(adminId)
       
+      // Try simpler query first - just search by updated_at with teammate_ids
+      // Using >= and <= for inclusive date ranges
       const searchQuery: any = {
         query: {
-          operator: "OR",
+          operator: "AND",
           value: [
-            {
-              operator: "AND",
-              value: [
-                { field: "teammate_ids", operator: "=", value: adminIdStr },
-                { field: "created_at", operator: ">", value: since },
-                { field: "created_at", operator: "<", value: before }
-              ]
-            },
-            {
-              operator: "AND",
-              value: [
-                { field: "teammate_ids", operator: "=", value: adminIdStr },
-                { field: "updated_at", operator: ">", value: since },
-                { field: "updated_at", operator: "<", value: before }
-              ]
-            }
+            { field: "teammate_ids", operator: "=", value: adminIdStr },
+            { field: "updated_at", operator: ">=", value: since },
+            { field: "updated_at", operator: "<=", value: before }
           ]
         },
         pagination: {
@@ -221,21 +210,56 @@ serve(async (req) => {
       console.log(`🔍 Searching conversations with query...`)
       console.log(`   Query:`, JSON.stringify(searchQuery, null, 2))
 
-      const searchResponse = await fetch(searchUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${INTERCOM_ACCESS_TOKEN}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Intercom-Version': '2.14',
-        },
-        body: JSON.stringify(searchQuery),
-      })
+      // Retry logic for 500 errors (up to 3 attempts)
+      let searchResponse: Response | null = null
+      let lastError: Error | null = null
+      const maxRetries = 3
+      const retryDelay = 1000 // 1 second
 
-      if (!searchResponse.ok) {
-        const errorText = await searchResponse.text()
-        console.error(`❌ Search API error response:`, errorText)
-        throw new Error(`Intercom Search API error (${searchResponse.status}): ${errorText}`)
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          searchResponse = await fetch(searchUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${INTERCOM_ACCESS_TOKEN}`,
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Intercom-Version': '2.14',
+            },
+            body: JSON.stringify(searchQuery),
+          })
+
+          if (searchResponse.ok) {
+            break // Success, exit retry loop
+          }
+
+          // If it's a 500 error and we have retries left, wait and retry
+          if (searchResponse.status === 500 && attempt < maxRetries) {
+            const errorText = await searchResponse.text()
+            console.warn(`⚠️  Search API returned 500 (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`)
+            console.warn(`   Error: ${errorText}`)
+            await new Promise(resolve => setTimeout(resolve, retryDelay * attempt)) // Exponential backoff
+            continue
+          }
+
+          // Non-500 error or last attempt - throw error
+          const errorText = await searchResponse.text()
+          console.error(`❌ Search API error response:`, errorText)
+          throw new Error(`Intercom Search API error (${searchResponse.status}): ${errorText}`)
+        } catch (error) {
+          lastError = error
+          // If it's the last attempt, throw the error
+          if (attempt === maxRetries) {
+            throw error
+          }
+          // Otherwise, wait and retry
+          console.warn(`⚠️  Search API request failed (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+        }
+      }
+
+      if (!searchResponse || !searchResponse.ok) {
+        throw lastError || new Error('Failed to fetch conversations after retries')
       }
 
       const searchData = await searchResponse.json()

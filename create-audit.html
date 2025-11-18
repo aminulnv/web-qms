@@ -854,6 +854,86 @@
         </div>
     </div>
 
+    <!-- Admin Search Modal (for when admin ID is not found) -->
+    <div id="adminSearchModal" onclick="if(event.target === this) closeAdminSearchModal();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10001; align-items: center; justify-content: center; padding: 1.2937rem;">
+        <div onclick="event.stopPropagation();" style="background: white; border-radius: 0.6469rem; max-width: 40rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.8086rem 2.4258rem rgba(0, 0, 0, 0.15);">
+            <div style="position: sticky; top: 0; background: white; border-bottom: 0.0625rem solid #e5e7eb; padding: 1.2937rem; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
+                <h2 style="font-size: 0.8086rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif;">Admin Not Found - Search & Link</h2>
+                <button onclick="closeAdminSearchModal()" style="background: #f3f4f6; border: none; border-radius: 50%; width: 1.9406rem; height: 1.9406rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6b7280; font-size: 1.2937rem; line-height: 1; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">×</button>
+            </div>
+            <div style="padding: 1.2937rem;">
+                <div style="background: #eff6ff; border: 0.0304rem solid #bfdbfe; border-radius: 0.3234rem; padding: 0.8086rem; margin-bottom: 1.2937rem;">
+                    <p style="font-size: 0.4852rem; color: #1e40af; margin: 0 0 0.3234rem 0; font-weight: 600;">Employee Information:</p>
+                    <p style="font-size: 0.4852rem; color: #374151; margin: 0;"><strong>Email:</strong> <span id="adminSearchEmployeeEmail"></span></p>
+                    <p style="font-size: 0.4852rem; color: #374151; margin: 0.1617rem 0 0 0;"><strong>Name:</strong> <span id="adminSearchEmployeeName"></span></p>
+                </div>
+                
+                <div style="margin-bottom: 1.2937rem;">
+                    <label for="adminSearchInput" style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">Search by Admin Name or Alias:</label>
+                    <div style="display: flex; gap: 0.3234rem;">
+                        <input 
+                            type="text" 
+                            id="adminSearchInput" 
+                            placeholder="Enter admin name or alias (e.g., 'John Ferguson', 'Selena Mercer')..." 
+                            style="flex: 1; padding: 0.4852rem 0.6469rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151;"
+                            onkeypress="if(event.key === 'Enter') { event.preventDefault(); searchIntercomAdmins(); }"
+                        >
+                        <button 
+                            onclick="searchIntercomAdmins()" 
+                            id="adminSearchButton"
+                            style="padding: 0.4852rem 0.9704rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                            onmouseover="this.style.backgroundColor='#15582E'"
+                            onmouseout="this.style.backgroundColor='#1A733E'"
+                        >
+                            Search
+                        </button>
+                    </div>
+                    <p style="font-size: 0.4043rem; color: #6b7280; margin: 0.3234rem 0 0 0;">Search for the Intercom admin that corresponds to this employee</p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="adminSearchLoading" style="display: none; text-align: center; padding: 1.2937rem; color: #6b7280;">
+                    <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.2021rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <p style="font-size: 0.4852rem; margin: 0.6469rem 0 0 0;">Searching Intercom admins...</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="adminSearchError" style="display: none; background: #fee2e2; color: #991b1b; padding: 0.6469rem; border-radius: 0.3234rem; margin-bottom: 1.2937rem; font-size: 0.4852rem;">
+                    <strong>Error:</strong> <span id="adminSearchErrorMessage"></span>
+                </div>
+
+                <!-- Results -->
+                <div id="adminSearchResults" style="display: none;">
+                    <h3 style="font-size: 0.6064rem; font-weight: 600; color: #374151; margin: 0 0 0.6469rem 0; font-family: 'Poppins', sans-serif;">Select Admin:</h3>
+                    <div id="adminResultsList" style="max-height: 20rem; overflow-y: auto; border: 0.0304rem solid #e5e7eb; border-radius: 0.3234rem;">
+                        <!-- Admin results will appear here -->
+                    </div>
+                    <p id="adminSearchNoResults" style="display: none; text-align: center; padding: 1.2937rem; color: #6b7280; font-size: 0.4852rem; margin: 0;">No admins found. Try a different search term.</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 0.6469rem; justify-content: flex-end; margin-top: 1.2937rem; padding-top: 1.2937rem; border-top: 0.0304rem solid #e5e7eb;">
+                    <button 
+                        onclick="skipAdminSearch()" 
+                        style="padding: 0.4852rem 0.9704rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.3234rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#e5e7eb'"
+                        onmouseout="this.style.backgroundColor='#f3f4f6'"
+                    >
+                        Skip (Continue without admin)
+                    </button>
+                    <button 
+                        onclick="closeAdminSearchModal()" 
+                        style="padding: 0.4852rem 0.9704rem; background: #6b7280; color: white; border: none; border-radius: 0.3234rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#4b5563'"
+                        onmouseout="this.style.backgroundColor='#6b7280'"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Conversations Section (Hidden by default, shown when View conversations is clicked) -->
     <div id="conversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem;">
@@ -2051,17 +2131,44 @@ let selectedAuditId = null;
  * Group audits by employee email
  * Returns an object with employee_email as key and grouped data as value
  */
-function groupAuditsByEmployee(audits) {
+async function groupAuditsByEmployee(audits) {
     const grouped = {};
+    
+    // First, collect all unique employee emails
+    const employeeEmails = [...new Set(audits.map(audit => audit.employee_email).filter(Boolean))];
+    
+    // Fetch intercom_admin_alias for all employees in one query
+    let aliasMap = {};
+    if (employeeEmails.length > 0 && window.supabaseClient) {
+        try {
+            const { data: users, error } = await window.supabaseClient
+                .from('users')
+                .select('email, intercom_admin_alias')
+                .in('email', employeeEmails.map(e => e.toLowerCase().trim()));
+            
+            if (!error && users) {
+                users.forEach(user => {
+                    const normalizedEmail = (user.email || '').toLowerCase().trim();
+                    if (user.intercom_admin_alias) {
+                        aliasMap[normalizedEmail] = user.intercom_admin_alias;
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching admin aliases:', error);
+        }
+    }
     
     audits.forEach(audit => {
         // Use employee_email as the grouping key
         const key = (audit.employee_email || 'unknown').toLowerCase().trim();
         
         if (!grouped[key]) {
+            const normalizedEmail = (audit.employee_email || '').toLowerCase().trim();
             grouped[key] = {
                 employee_email: audit.employee_email,
                 employee_name: audit.employee_name || audit.employee_email?.split('@')[0] || 'Unknown',
+                intercom_admin_alias: aliasMap[normalizedEmail] || null,
                 assignments: [],
                 pending: 0,
                 in_progress: 0,
@@ -2330,7 +2437,7 @@ async function loadPendingAudits() {
 }
 
 // Display pending audits in the UI
-function displayPendingAudits() {
+async function displayPendingAudits() {
     const section = document.getElementById('pendingAuditsSection');
     const list = document.getElementById('pendingAuditsList');
     const countBadge = document.getElementById('pendingCount');
@@ -2379,7 +2486,7 @@ function displayPendingAudits() {
     // Check if we should group by employee
     if (ASSIGNED_AUDITS_CONFIG.groupByEmployee) {
         // GROUPED VIEW
-        const grouped = groupAuditsByEmployee(pendingAudits);
+        const grouped = await groupAuditsByEmployee(pendingAudits);
         const groupedArray = Object.values(grouped);
         
         // Calculate pagination for groups
@@ -2438,9 +2545,35 @@ function displayPendingAudits() {
     const endIndex = startIndex + pendingItemsPerPage;
     const paginatedAudits = pendingAudits.slice(startIndex, endIndex);
     
+    // Fetch admin aliases for individual cards
+    const employeeEmails = [...new Set(paginatedAudits.map(audit => audit.employee_email).filter(Boolean))];
+    let aliasMap = {};
+    if (employeeEmails.length > 0 && window.supabaseClient) {
+        try {
+            const { data: users, error } = await window.supabaseClient
+                .from('users')
+                .select('email, intercom_admin_alias')
+                .in('email', employeeEmails.map(e => e.toLowerCase().trim()));
+            
+            if (!error && users) {
+                users.forEach(user => {
+                    const normalizedEmail = (user.email || '').toLowerCase().trim();
+                    if (user.intercom_admin_alias) {
+                        aliasMap[normalizedEmail] = user.intercom_admin_alias;
+                    }
+                });
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching admin aliases for individual cards:', error);
+        }
+    }
+    
     list.innerHTML = '';
     
         paginatedAudits.forEach(audit => {
+            // Add alias to audit object for display
+            const normalizedEmail = (audit.employee_email || '').toLowerCase().trim();
+            audit.intercom_admin_alias = aliasMap[normalizedEmail] || null;
             const auditCard = createIndividualAuditCard(audit, isAgent);
             
             // Add hover effects
@@ -2488,6 +2621,7 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
     const card = document.createElement('div');
     const displayName = group.employee_name || 'Unknown Employee';
     const displayEmail = group.employee_email || 'No email';
+    const adminAlias = group.intercom_admin_alias || null;
     
     // Count badge HTML
     const countBadgeHTML = ASSIGNED_AUDITS_CONFIG.showCountBadge 
@@ -2520,10 +2654,11 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
                         ${getInitials(displayName)}
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                        <div style="display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
                             <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
                                 ${escapeHtml(displayName)}
                             </h4>
+                            ${adminAlias ? `<span style="font-size: 0.4852rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0808rem 0.2425rem; border-radius: 0.1617rem; border: 0.0304rem solid #86efac; white-space: nowrap;" title="Intercom Admin Alias">${escapeHtml(adminAlias)}</span>` : ''}
                             ${countBadgeHTML}
                             ${statusBreakdownHTML}
                         </div>
@@ -2575,6 +2710,10 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     const userRole = userInfo.role || '';
     const isAgent = userRole === 'Employee';
+                    // Add alias to audit object for nested cards
+                    if (!isAgent && adminAlias && !audit.intercom_admin_alias) {
+                        audit.intercom_admin_alias = adminAlias;
+                    }
                     return createIndividualAuditCardHTML(audit, isAgent, true); // true = is nested
                 }).join('')}
             </div>
@@ -2602,6 +2741,7 @@ function createIndividualAuditCard(audit, isAgent) {
 function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         const displayName = isAgent ? (audit.auditor_email || 'Unknown Auditor') : (audit.employee_name || 'Unknown Employee');
         const displayEmail = isAgent ? (audit.auditor_email || 'No email') : (audit.employee_email || 'No email');
+        const adminAlias = isAgent ? null : (audit.intercom_admin_alias || null);
         
     // Status badge - larger for nested cards for better visibility
         let statusBadge = '';
@@ -2756,6 +2896,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                     `}
                     <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
                     <span style="font-size: 0.5252rem; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 7rem;">${escapeHtml(employeeName)}</span>
+                    ${adminAlias ? `<span style="font-size: 0.4447rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0404rem 0.1213rem; border-radius: 0.0808rem; border: 0.0202rem solid #86efac; white-space: nowrap; margin: 0 0.1617rem;" title="Intercom Admin Alias">${escapeHtml(adminAlias)}</span>` : ''}
                     <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
                     <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap;">${dateFormatted}</span>
                 </div>
@@ -2794,6 +2935,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                         <h4 style="margin: 0; font-size: 0.5659rem; font-weight: 600; color: #1f2937;">
                             ${escapeHtml(displayName)}
                         </h4>
+                        ${adminAlias ? `<span style="font-size: 0.4447rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0808rem 0.2021rem; border-radius: 0.1213rem; border: 0.0304rem solid #86efac; white-space: nowrap;" title="Intercom Admin Alias">${escapeHtml(adminAlias)}</span>` : ''}
                         ${statusBadge}
                         ${conversationLinkHTML}
                     </div>
@@ -3672,12 +3814,12 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
         pullConversationsAdminName = employeeName || null;
         pullConversationsAdminEmail = employeeEmail || null;
         
-        // Find admin ID for the employee email (look in Supabase cache first)
+        // Find admin ID for the employee email (optimized lookup: users table → cache → API → search modal)
         console.log('🔍 Looking up admin ID for email:', employeeEmail);
-        await findAdminIdForEmployee(employeeEmail);
+        const adminFound = await findAdminIdForEmployee(employeeEmail);
         
         // If admin ID found, load conversations
-        if (pullConversationsAdminId) {
+        if (adminFound && pullConversationsAdminId) {
             let selectedDate;
             if (dateInput && dateInput.value) {
                 selectedDate = dateInput.value;
@@ -3691,7 +3833,7 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
         } else {
             console.error('❌ Admin ID not found for email:', employeeEmail);
             if (loadingDiv) loadingDiv.style.display = 'none';
-            showPullConversationsError(`Admin ID not found for email: ${employeeEmail}. Please ensure the admin exists in Intercom.`);
+            // Error message will be shown by findAdminIdForEmployee or modal
         }
         
     } catch (error) {
@@ -3781,14 +3923,49 @@ async function findAdminIdForEmployee(employeeEmail) {
     
     if (!supabaseUrl || !supabaseAnonKey) {
         showPullConversationsError('Configuration error: Supabase credentials not found.');
-        return;
+        return false;
     }
     
-    // First, try to find admin in Supabase cache
     const supabaseClient = window.SupabaseConfig?.getClient?.();
-    if (supabaseClient) {
+    if (!supabaseClient) {
+        showPullConversationsError('Supabase client not available.');
+        return false;
+    }
+    
+    // ============================================
+    // OPTIMIZATION: Check users table FIRST (fastest lookup)
+    // ============================================
+    try {
+        console.log('🔍 Looking up admin ID in users table for email:', normalizedEmail);
+        const { data: user, error: userError } = await supabaseClient
+            .from('users')
+            .select('intercom_admin_id, intercom_admin_alias, email')
+            .eq('email', normalizedEmail)
+            .limit(1)
+            .maybeSingle();
+        
+        if (!userError && user && user.intercom_admin_id) {
+            adminId = user.intercom_admin_id;
+            adminFound = true;
+            console.log('✅ Admin ID found in users table:', adminId);
+            
+            // Store admin alias from users table if available
+            if (user.intercom_admin_alias && !pullConversationsAdminName) {
+                pullConversationsAdminName = user.intercom_admin_alias;
+            }
+        } else if (userError) {
+            console.warn('⚠️ Error querying users table:', userError);
+        }
+    } catch (userTableError) {
+        console.warn('⚠️ Error accessing users table:', userTableError);
+    }
+    
+    // ============================================
+    // FALLBACK 1: Check intercom_admin_cache
+    // ============================================
+    if (!adminFound) {
         try {
-            console.log('🔍 Looking up admin in Supabase cache for email:', normalizedEmail);
+            console.log('🔍 Looking up admin in intercom_admin_cache for email:', normalizedEmail);
             const { data: cachedAdmins, error: queryError } = await supabaseClient
                 .from('intercom_admin_cache')
                 .select('id, email, name, admin_data')
@@ -3799,7 +3976,7 @@ async function findAdminIdForEmployee(employeeEmail) {
                 const cachedAdmin = cachedAdmins[0];
                 adminId = cachedAdmin.id || cachedAdmin.admin_data?.id;
                 if (adminId) {
-                    console.log('✅ Admin found in Supabase cache:', adminId);
+                    console.log('✅ Admin found in intercom_admin_cache:', adminId);
                     adminFound = true;
                     // Store admin name from cache if available
                     if (cachedAdmin.name && !pullConversationsAdminName) {
@@ -3810,13 +3987,15 @@ async function findAdminIdForEmployee(employeeEmail) {
                 console.warn('⚠️ Error querying admin cache:', queryError);
             }
         } catch (cacheError) {
-            console.warn('⚠️ Error accessing Supabase cache:', cacheError);
+            console.warn('⚠️ Error accessing intercom_admin_cache:', cacheError);
         }
     }
     
-    // Fallback: If not found in cache, fetch from Intercom API
+    // ============================================
+    // FALLBACK 2: Fetch from Intercom API (exact email match)
+    // ============================================
     if (!adminFound) {
-        console.log('🔄 Admin not in cache, fetching from Intercom API...');
+        console.log('🔄 Admin not in database, fetching from Intercom API...');
         try {
             const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=admins`;
             
@@ -3840,39 +4019,444 @@ async function findAdminIdForEmployee(employeeEmail) {
             // Find admin with matching email (case-insensitive)
             const admin = admins.find(a => a.email && a.email.toLowerCase() === normalizedEmail);
             
-            if (!admin || !admin.id) {
-                showPullConversationsError(`Admin not found for email: ${employeeEmail}`);
-                return;
-            }
-            
-            adminId = admin.id;
-            console.log('✅ Admin found via Intercom API fallback:', adminId);
-            
-            // Store admin name from API if available
-            if (admin.name && !pullConversationsAdminName) {
-                pullConversationsAdminName = admin.name;
-            }
-            
-            // Cache this admin for future use (async, don't wait)
-            if (supabaseClient && admin) {
-                cacheAdminAsync(supabaseClient, admin).catch(err => {
-                    console.warn('⚠️ Failed to cache admin (non-critical):', err);
-                });
+            if (admin && admin.id) {
+                adminId = admin.id;
+                console.log('✅ Admin found via Intercom API:', adminId);
+                
+                // Store admin name from API if available
+                if (admin.name && !pullConversationsAdminName) {
+                    pullConversationsAdminName = admin.name;
+                }
+                
+                // Cache this admin for future use (async, don't wait)
+                if (supabaseClient && admin) {
+                    cacheAdminAsync(supabaseClient, admin).catch(err => {
+                        console.warn('⚠️ Failed to cache admin (non-critical):', err);
+                    });
+                }
+                
+                adminFound = true;
             }
             
         } catch (error) {
             console.error('❌ Error fetching admin from Intercom API:', error);
-            showPullConversationsError(`Failed to find admin: ${error.message}`);
-            return;
+            // Don't show error here - we'll show the search modal instead
+        }
+    }
+    
+    // ============================================
+    // FALLBACK 3: Show admin search modal if still not found
+    // ============================================
+    if (!adminFound || !adminId) {
+        console.log('⚠️ Admin ID not found, showing search modal');
+        // Show modal and wait for user to search/select
+        const selectedAdmin = await showAdminSearchModal(employeeEmail, pullConversationsAdminName || null);
+        
+        if (selectedAdmin && selectedAdmin.id) {
+            adminId = selectedAdmin.id;
+            if (selectedAdmin.name && !pullConversationsAdminName) {
+                pullConversationsAdminName = selectedAdmin.name;
+            }
+            console.log('✅ Admin selected from search modal:', adminId);
+        } else {
+            // User cancelled or skipped
+            console.log('⚠️ Admin search cancelled or skipped');
+            return false;
         }
     }
     
     if (!adminId) {
-        showPullConversationsError(`Admin ID not found for email: ${employeeEmail}`);
-        return;
+        return false;
     }
     
     pullConversationsAdminId = adminId;
+    return true;
+}
+
+// ============================================================================
+// Admin Search Modal Functions (Production-Ready)
+// ============================================================================
+
+// Global variables for admin search modal
+let adminSearchModalPromise = null;
+let adminSearchModalResolve = null;
+let adminSearchCurrentEmployeeEmail = null;
+let adminSearchCurrentEmployeeName = null;
+
+/**
+ * Show admin search modal and return a promise that resolves when admin is selected
+ * @param {string} employeeEmail - Employee email
+ * @param {string} employeeName - Employee name (optional)
+ * @returns {Promise<Object|null>} - Promise that resolves with selected admin {id, name, email} or null if cancelled/skipped
+ */
+async function showAdminSearchModal(employeeEmail, employeeName = null) {
+    adminSearchCurrentEmployeeEmail = employeeEmail;
+    adminSearchCurrentEmployeeName = employeeName;
+    
+    // Reset modal state
+    const modal = document.getElementById('adminSearchModal');
+    const searchInput = document.getElementById('adminSearchInput');
+    const employeeEmailSpan = document.getElementById('adminSearchEmployeeEmail');
+    const employeeNameSpan = document.getElementById('adminSearchEmployeeName');
+    const loadingDiv = document.getElementById('adminSearchLoading');
+    const errorDiv = document.getElementById('adminSearchError');
+    const resultsDiv = document.getElementById('adminSearchResults');
+    const resultsList = document.getElementById('adminResultsList');
+    const noResultsMsg = document.getElementById('adminSearchNoResults');
+    
+    if (!modal || !searchInput || !employeeEmailSpan) {
+        console.error('❌ Admin search modal elements not found');
+        return null;
+    }
+    
+    // Set employee info
+    employeeEmailSpan.textContent = employeeEmail;
+    employeeNameSpan.textContent = employeeName || 'N/A';
+    
+    // Reset UI
+    searchInput.value = '';
+    loadingDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    resultsDiv.style.display = 'none';
+    resultsList.innerHTML = '';
+    noResultsMsg.style.display = 'none';
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Focus search input after a short delay
+    setTimeout(() => {
+        searchInput.focus();
+    }, 100);
+    
+    // Return promise that resolves when admin is selected or modal is closed
+    return new Promise((resolve) => {
+        adminSearchModalResolve = resolve;
+    });
+}
+
+/**
+ * Close admin search modal
+ */
+function closeAdminSearchModal() {
+    const modal = document.getElementById('adminSearchModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    // Resolve promise with null (cancelled)
+    if (adminSearchModalResolve) {
+        adminSearchModalResolve(null);
+        adminSearchModalResolve = null;
+    }
+    
+    adminSearchCurrentEmployeeEmail = null;
+    adminSearchCurrentEmployeeName = null;
+}
+
+/**
+ * Skip admin search and continue without admin
+ */
+async function skipAdminSearch() {
+    console.log('⚠️ User skipped admin search');
+    closeAdminSearchModal();
+    
+    // Resolve with null to indicate skip
+    if (adminSearchModalResolve) {
+        adminSearchModalResolve(null);
+        adminSearchModalResolve = null;
+    }
+}
+
+/**
+ * Search Intercom admins by name/alias
+ */
+window.searchIntercomAdmins = async function() {
+    const searchInput = document.getElementById('adminSearchInput');
+    const searchButton = document.getElementById('adminSearchButton');
+    const loadingDiv = document.getElementById('adminSearchLoading');
+    const errorDiv = document.getElementById('adminSearchError');
+    const resultsDiv = document.getElementById('adminSearchResults');
+    const resultsList = document.getElementById('adminResultsList');
+    const noResultsMsg = document.getElementById('adminSearchNoResults');
+    
+    if (!searchInput || !loadingDiv || !resultsDiv || !resultsList) {
+        console.error('❌ Admin search elements not found');
+        return;
+    }
+    
+    const searchTerm = (searchInput.value || '').trim();
+    
+    // Validate input
+    if (!searchTerm || searchTerm.length < 2) {
+        errorDiv.style.display = 'block';
+        document.getElementById('adminSearchErrorMessage').textContent = 'Please enter at least 2 characters to search.';
+        resultsDiv.style.display = 'none';
+        return;
+    }
+    
+    // Get Supabase configuration
+    const supabaseUrl = window.SupabaseConfig?.url || '';
+    const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        errorDiv.style.display = 'block';
+        document.getElementById('adminSearchErrorMessage').textContent = 'Configuration error: Supabase credentials not found.';
+        return;
+    }
+    
+    // Show loading, hide error and results
+    loadingDiv.style.display = 'block';
+    errorDiv.style.display = 'none';
+    resultsDiv.style.display = 'none';
+    resultsList.innerHTML = '';
+    noResultsMsg.style.display = 'none';
+    
+    // Disable search button
+    if (searchButton) {
+        searchButton.disabled = true;
+        searchButton.style.opacity = '0.6';
+        searchButton.style.cursor = 'not-allowed';
+    }
+    
+    try {
+        console.log('🔍 Searching Intercom admins for:', searchTerm);
+        
+        // Fetch all admins from Intercom API
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=admins`;
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const allAdmins = data.admins || data || [];
+        
+        // Filter admins by search term (case-insensitive, matches name or email)
+        const searchLower = searchTerm.toLowerCase();
+        const matchingAdmins = allAdmins.filter(admin => {
+            if (!admin) return false;
+            const name = (admin.name || '').toLowerCase();
+            const email = (admin.email || '').toLowerCase();
+            return name.includes(searchLower) || email.includes(searchLower);
+        });
+        
+        // Hide loading
+        loadingDiv.style.display = 'none';
+        
+        // Show results
+        if (matchingAdmins.length === 0) {
+            noResultsMsg.style.display = 'block';
+            resultsDiv.style.display = 'block';
+        } else {
+            noResultsMsg.style.display = 'none';
+            resultsDiv.style.display = 'block';
+            
+            // Display results
+            resultsList.innerHTML = '';
+            matchingAdmins.forEach((admin, index) => {
+                const adminItem = document.createElement('div');
+                adminItem.style.cssText = 'padding: 0.8086rem; border-bottom: 0.0304rem solid #e5e7eb; cursor: pointer; transition: background 0.2s;';
+                adminItem.style.borderBottom = index === matchingAdmins.length - 1 ? 'none' : '0.0304rem solid #e5e7eb';
+                
+                adminItem.onmouseover = function() {
+                    this.style.backgroundColor = '#f9fafb';
+                };
+                adminItem.onmouseout = function() {
+                    this.style.backgroundColor = 'white';
+                };
+                
+                adminItem.onclick = function() {
+                    selectAdminFromSearch(admin);
+                };
+                
+                const adminName = admin.name || 'Unknown';
+                const adminEmail = admin.email || 'No email';
+                const adminId = admin.id || 'N/A';
+                
+                adminItem.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.4852rem; font-weight: 600; color: #374151; margin-bottom: 0.1617rem;">${escapeHtml(adminName)}</div>
+                            <div style="font-size: 0.4043rem; color: #6b7280;">${escapeHtml(adminEmail)}</div>
+                            <div style="font-size: 0.4043rem; color: #9ca3af; margin-top: 0.1617rem;">ID: ${adminId}</div>
+                        </div>
+                        <div style="color: #1A733E; font-size: 0.4043rem; font-weight: 500;">Select →</div>
+                    </div>
+                `;
+                
+                resultsList.appendChild(adminItem);
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Error searching Intercom admins:', error);
+        loadingDiv.style.display = 'none';
+        errorDiv.style.display = 'block';
+        document.getElementById('adminSearchErrorMessage').textContent = `Failed to search admins: ${error.message}`;
+    } finally {
+        // Re-enable search button
+        if (searchButton) {
+            searchButton.disabled = false;
+            searchButton.style.opacity = '1';
+            searchButton.style.cursor = 'pointer';
+        }
+    }
+};
+
+/**
+ * Select admin from search results and update users table
+ * @param {Object} admin - Admin object from Intercom API
+ */
+async function selectAdminFromSearch(admin) {
+    if (!admin || !admin.id) {
+        console.error('❌ Invalid admin object');
+        return;
+    }
+    
+    const adminId = admin.id;
+    const adminName = admin.name || '';
+    const adminEmail = admin.email || '';
+    const employeeEmail = adminSearchCurrentEmployeeEmail;
+    
+    if (!employeeEmail) {
+        console.error('❌ Employee email not found');
+        showAdminSearchError('Employee email not found. Please try again.');
+        return;
+    }
+    
+    // Get Supabase client
+    const supabaseClient = window.SupabaseConfig?.getClient?.();
+    if (!supabaseClient) {
+        showAdminSearchError('Supabase client not available.');
+        return;
+    }
+    
+    // Show updating state
+    const searchButton = document.getElementById('adminSearchButton');
+    const originalButtonText = searchButton ? searchButton.textContent : 'Search';
+    if (searchButton) {
+        searchButton.disabled = true;
+        searchButton.textContent = 'Updating...';
+        searchButton.style.opacity = '0.6';
+    }
+    
+    try {
+        console.log('💾 Updating users table with admin info:', { employeeEmail, adminId, adminName });
+        
+        // Update users table
+        const { data: updatedUser, error: updateError } = await supabaseClient
+            .from('users')
+            .update({
+                intercom_admin_id: String(adminId),
+                intercom_admin_alias: adminName || null
+            })
+            .eq('email', employeeEmail.toLowerCase().trim())
+            .select('email, intercom_admin_id, intercom_admin_alias')
+            .maybeSingle();
+        
+        if (updateError) {
+            console.error('❌ Error updating users table:', updateError);
+            throw new Error(`Failed to update user: ${updateError.message}`);
+        }
+        
+        if (!updatedUser) {
+            throw new Error('User not found in database');
+        }
+        
+        console.log('✅ Successfully updated users table:', updatedUser);
+        
+        // Also cache the admin in intercom_admin_cache (async, don't wait)
+        if (admin) {
+            cacheAdminAsync(supabaseClient, admin).catch(err => {
+                console.warn('⚠️ Failed to cache admin (non-critical):', err);
+            });
+        }
+        
+        // Set global admin variables
+        pullConversationsAdminId = String(adminId);
+        if (adminName && !pullConversationsAdminName) {
+            pullConversationsAdminName = adminName;
+        }
+        
+        // Close modal and resolve promise
+        closeAdminSearchModal();
+        
+        // Resolve with selected admin
+        if (adminSearchModalResolve) {
+            adminSearchModalResolve({
+                id: String(adminId),
+                name: adminName,
+                email: adminEmail
+            });
+            adminSearchModalResolve = null;
+        }
+        
+        // Show success message and continue with conversation fetch
+        const loadingDiv = document.getElementById('pullConversationsLoading');
+        const statusElement = document.getElementById('pullConversationsStatus');
+        if (statusElement) {
+            statusElement.textContent = `✅ Admin linked successfully! Loading conversations...`;
+        }
+        if (loadingDiv) {
+            loadingDiv.style.display = 'block';
+        }
+        
+        // Continue with conversation fetch
+        const dateInput = document.getElementById('pullConversationsDate');
+        let selectedDate;
+        if (dateInput && dateInput.value) {
+            selectedDate = dateInput.value;
+        } else {
+            // Fallback to yesterday
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            selectedDate = yesterday.toISOString().split('T')[0];
+        }
+        
+        // Fetch conversations for the selected admin
+        setTimeout(async () => {
+            try {
+                await fetchConversationsForCurrentUser(selectedDate);
+            } catch (error) {
+                console.error('❌ Error fetching conversations after admin selection:', error);
+                showPullConversationsError(`Failed to fetch conversations: ${error.message}`);
+            }
+        }, 500); // Small delay to ensure UI updates
+        
+    } catch (error) {
+        console.error('❌ Error selecting admin:', error);
+        showAdminSearchError(`Failed to update user: ${error.message}`);
+        
+        // Re-enable button
+        if (searchButton) {
+            searchButton.disabled = false;
+            searchButton.textContent = originalButtonText;
+            searchButton.style.opacity = '1';
+        }
+    }
+}
+
+/**
+ * Show error in admin search modal
+ */
+function showAdminSearchError(message) {
+    const errorDiv = document.getElementById('adminSearchError');
+    const errorMessage = document.getElementById('adminSearchErrorMessage');
+    if (errorDiv && errorMessage) {
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+    }
 }
 
 // Find admin ID for current user
@@ -4562,14 +5146,35 @@ async function fetchConversationsForCurrentUser(selectedDate) {
         // Update progress: Searching
         updateProgressIndicator(20, 'Searching conversations in Intercom...');
         
-        const response = await fetch(edgeFunctionUrl, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${supabaseAnonKey}`,
-                'apikey': supabaseAnonKey,
-                'Accept': 'application/json'
+        // Create AbortController for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds timeout
+        
+        let response;
+        try {
+            response = await fetch(edgeFunctionUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${supabaseAnonKey}`,
+                    'apikey': supabaseAnonKey,
+                    'Accept': 'application/json'
+                },
+                signal: controller.signal
+            });
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            
+            // Handle timeout and network errors
+            if (fetchError.name === 'AbortError') {
+                throw new Error('Request timed out. The Intercom API is taking too long to respond. Please try again or check your internet connection.');
+            } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('ERR_CONNECTION')) {
+                throw new Error('Connection failed. Please check your internet connection and try again. If the problem persists, the Intercom service may be temporarily unavailable.');
+            } else {
+                throw new Error(`Network error: ${fetchError.message}`);
             }
-        });
+        }
+        
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -4641,8 +5246,24 @@ async function fetchConversationsForCurrentUser(selectedDate) {
         
     } catch (error) {
         console.error('❌ Error fetching conversations:', error);
-        showPullConversationsError(`Failed to fetch conversations: ${error.message}`);
+        
+        // Provide more helpful error messages
+        let errorMessage = error.message || 'An unknown error occurred';
+        
+        // Check for specific error types
+        if (error.message.includes('timed out') || error.message.includes('timeout')) {
+            errorMessage = 'Request timed out. The Intercom API is taking longer than expected. This might happen if there are many conversations to process. Please try again in a moment.';
+        } else if (error.message.includes('Connection failed') || error.message.includes('ERR_CONNECTION')) {
+            errorMessage = 'Connection failed. Please check your internet connection. If the problem persists, the service may be temporarily unavailable.';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Unable to reach the server. Please check your internet connection and try again.';
+        }
+        
+        showPullConversationsError(`Failed to fetch conversations: ${errorMessage}`);
         if (loadingDiv) loadingDiv.style.display = 'none';
+        
+        // Update progress indicator to show error state
+        updateProgressIndicator(0, 'Error occurred. Please try again.');
     }
 }
 
