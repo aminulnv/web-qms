@@ -2257,10 +2257,9 @@ function renderAssignedAudits() {
       }
       
       const requestDate = formatTimestamp(audit.created_at);
-      const buttonText = audit.status === 'in_progress' ? 'Continue' : 'Start';
 
       return `
-        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAudit('${audit.id}')">
+        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="window.location.href='create-audit.html'">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
               <div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
@@ -2283,8 +2282,8 @@ function renderAssignedAudits() {
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               ${statusBadge}
-              <button onclick="event.stopPropagation(); viewAudit('${audit.id}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
-                ${buttonText}
+              <button onclick="event.stopPropagation(); window.location.href='create-audit.html'" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
+                Get Started
               </button>
             </div>
           </div>
