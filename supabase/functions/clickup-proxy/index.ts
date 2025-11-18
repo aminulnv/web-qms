@@ -4,22 +4,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const CLICKUP_API_BASE = 'https://api.clickup.com/api/v2'
+const CLICKUP_API_TOKEN = Deno.env.get('CLICKUP_API_TOKEN')
+if (!CLICKUP_API_TOKEN) {
+  throw new Error('CLICKUP_API_TOKEN environment variable is required')
+}
 
 serve(async (req) => {
-  // Check for API token inside the handler so we can return a proper error
-  const CLICKUP_API_TOKEN = Deno.env.get('CLICKUP_API_TOKEN')
-  if (!CLICKUP_API_TOKEN) {
-    return new Response(
-      JSON.stringify({ error: 'CLICKUP_API_TOKEN environment variable is not set. Please configure it in Supabase Dashboard.' }),
-      { 
-        status: 500, 
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        } 
-      }
-    )
-  }
   // CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, {
