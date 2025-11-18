@@ -20,6 +20,7 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <script src="timezone-utils.js"></script>
     <style>
         .header-actions {
             display: flex;
@@ -514,26 +515,23 @@ function invalidateAuditorDashboardCache(userEmail = null) {
     }
 }
 
-// Get current period dates (week or date range)
+// Get current period dates (week or date range) in Dhaka timezone
 function getCurrentPeriodDates() {
     if (dateFilter.start || dateFilter.end) {
         // Using date range filter
         // dateFilter.start and dateFilter.end are stored as date strings (YYYY-MM-DD format)
         return {
-            start: dateFilter.start ? new Date(dateFilter.start + 'T00:00:00') : new Date(0),
-            end: dateFilter.end ? new Date(dateFilter.end + 'T23:59:59.999') : new Date()
+            start: dateFilter.start ? getDhakaStartOfDay(parseDhakaDate(dateFilter.start)) : new Date(0),
+            end: dateFilter.end ? getDhakaEndOfDay(parseDhakaDate(dateFilter.end)) : getDhakaNow()
         };
     } else if (useWeekFilter && currentWeek !== null) {
         // Using week filter
-        return getWeekDates(currentWeek, currentWeekYear);
+        return getDhakaWeekDates(currentWeek, currentWeekYear);
     } else {
-        // Default to current month (matching expert-audits.html)
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        lastDay.setHours(23, 59, 59, 999);
+        // Default to current month in Dhaka timezone
+        const today = getDhakaNow();
+        const firstDay = getDhakaFirstDayOfMonth(today);
+        const lastDay = getDhakaLastDayOfMonth(today);
         return {
             start: firstDay,
             end: lastDay
@@ -583,17 +581,17 @@ function formatDurationText(avgDurationMinutes) {
     }
 }
 
-// Helper to add date filter to query
+// Helper to add date filter to query (converts Dhaka dates to UTC for database)
 function addDateFilter(query, period) {
     if (!period || (!period.start && !period.end)) return query;
     
     if (period.start && period.end) {
-        return query.gte('submitted_at', period.start.toISOString())
-                    .lte('submitted_at', period.end.toISOString());
+        return query.gte('submitted_at', dhakaDateToUTCISO(period.start))
+                    .lte('submitted_at', dhakaDateToUTCISO(period.end));
     } else if (period.start) {
-        return query.gte('submitted_at', period.start.toISOString());
+        return query.gte('submitted_at', dhakaDateToUTCISO(period.start));
     } else if (period.end) {
-        return query.lte('submitted_at', period.end.toISOString());
+        return query.lte('submitted_at', dhakaDateToUTCISO(period.end));
     }
     return query;
 }
@@ -711,12 +709,12 @@ async function fetchAndCacheAssignments(cacheKey, period) {
             .eq('auditor_email', currentUserEmail)
             .order('created_at', { ascending: false });
         
-        // Apply date filters server-side if possible
+        // Apply date filters server-side if possible (convert Dhaka to UTC)
         if (period && period.start) {
-            assignmentsQuery = assignmentsQuery.gte('created_at', period.start.toISOString());
+            assignmentsQuery = assignmentsQuery.gte('created_at', dhakaDateToUTCISO(period.start));
         }
         if (period && period.end) {
-            assignmentsQuery = assignmentsQuery.lte('created_at', period.end.toISOString());
+            assignmentsQuery = assignmentsQuery.lte('created_at', dhakaDateToUTCISO(period.end));
         }
         
         let { data, error } = await assignmentsQuery;
@@ -733,7 +731,7 @@ async function fetchAndCacheAssignments(cacheKey, period) {
             if (retryResult.data && period && period.start) {
                 retryResult.data = retryResult.data.filter(assignment => {
                     if (!assignment.created_at) return false;
-                    const assignmentDate = new Date(assignment.created_at);
+                        const assignmentDate = toDhakaTime(assignment.created_at);
                     return (!period.start || assignmentDate >= period.start) && 
                            (!period.end || assignmentDate <= period.end);
                 });
@@ -840,12 +838,12 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                 .in('auditor_email', qualityAnalysts.map(qa => qa.email))
                 .order('created_at', { ascending: false });
             
-            // Apply date filters server-side if possible
+            // Apply date filters server-side if possible (convert Dhaka to UTC)
             if (period.start) {
-                assignmentsQuery = assignmentsQuery.gte('created_at', period.start.toISOString());
+                assignmentsQuery = assignmentsQuery.gte('created_at', dhakaDateToUTCISO(period.start));
             }
             if (period.end) {
-                assignmentsQuery = assignmentsQuery.lte('created_at', period.end.toISOString());
+                assignmentsQuery = assignmentsQuery.lte('created_at', dhakaDateToUTCISO(period.end));
             }
             
             let { data, error } = await assignmentsQuery;
@@ -862,7 +860,7 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                 if (retryResult.data && period.start) {
                     retryResult.data = retryResult.data.filter(assignment => {
                         if (!assignment.created_at) return false;
-                        const assignmentDate = new Date(assignment.created_at);
+                        const assignmentDate = toDhakaTime(assignment.created_at);
                         return (!period.start || assignmentDate >= period.start) && 
                                (!period.end || assignmentDate <= period.end);
                     });
@@ -877,16 +875,15 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         
         // Calculate overall team stats
         const totalAssigned = teamAssignments.length;
-        const completed = teamAssignments.filter(a => a.status === 'completed').length;
         const inProgress = teamAssignments.filter(a => a.status === 'in_progress').length;
         const pending = teamAssignments.filter(a => a.status === 'pending').length;
         const remaining = pending + inProgress;
-        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         
         // Calculate team average audit duration and reversal count in parallel
         let avgDurationText = '-';
         let avgDurationSubtitle = 'per audit';
         let teamReversalCount = 0;
+        let completed = 0; // Will be calculated from scorecard tables
         
         try {
             // Use cached scorecard tables if available, otherwise fetch
@@ -895,36 +892,41 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                 : (await window.supabaseClient.from('scorecards').select('table_name').eq('is_active', true)).data?.map(s => s.table_name) || [];
             
             if (scorecardTables.length > 0) {
-                const auditorEmails = qualityAnalysts.map(qa => qa.email);
-                
                 // Parallelize all scorecard queries
                 const queryPromises = scorecardTables.map(async (tableName) => {
                     try {
-                        // Build queries with date filters
+                        // Build queries with date filters (count all audits, not just Quality Analysts)
                         let durationQuery = window.supabaseClient
                             .from(tableName)
                             .select('audit_duration, submitted_at')
-                            .in('auditor_email', auditorEmails)
                             .not('audit_duration', 'is', null);
                         
                         let reversalQuery = window.supabaseClient
                             .from(tableName)
                             .select('id, submitted_at')
-                            .in('auditor_email', auditorEmails)
                             .not('reversal_requested_at', 'is', null);
                         
-                        // Apply date filters server-side if possible
+                        // Query to count completed audits (submitted in the period) - all audits regardless of auditor
+                        // Need to select audit_status to filter client-side (some tables may not have this column)
+                        let completedQuery = window.supabaseClient
+                            .from(tableName)
+                            .select('id, submitted_at, audit_status')
+                            .not('submitted_at', 'is', null);
+                        
+                        // Apply date filters server-side if possible (convert Dhaka to UTC)
                         if (period.start) {
-                            durationQuery = durationQuery.gte('submitted_at', period.start.toISOString());
-                            reversalQuery = reversalQuery.gte('submitted_at', period.start.toISOString());
+                            durationQuery = durationQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                            reversalQuery = reversalQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                            completedQuery = completedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                         }
                         if (period.end) {
-                            durationQuery = durationQuery.lte('submitted_at', period.end.toISOString());
-                            reversalQuery = reversalQuery.lte('submitted_at', period.end.toISOString());
+                            durationQuery = durationQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                            reversalQuery = reversalQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                            completedQuery = completedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                         }
                         
-                        // Query for duration and reversals in parallel for each table
-                        const [durationResult, reversalResult] = await Promise.all([
+                        // Query for duration, reversals, and completed audits in parallel for each table
+                        const [durationResult, reversalResult, completedResult] = await Promise.all([
                             (async () => {
                                 try {
                                     let result = await durationQuery;
@@ -932,7 +934,7 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
                                             if (!audit.submitted_at) return false; // Exclude if no date when filtering
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -943,13 +945,12 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                     const retryResult = await window.supabaseClient
                                         .from(tableName)
                                         .select('audit_duration, submitted_at')
-                                        .in('auditor_email', auditorEmails)
                                         .not('audit_duration', 'is', null);
                                     
                                     if (retryResult.data && period.start) {
                                         retryResult.data = retryResult.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -964,7 +965,7 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -975,15 +976,80 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                     const retryResult = await window.supabaseClient
                                         .from(tableName)
                                         .select('id, submitted_at')
-                                        .in('auditor_email', auditorEmails)
                                         .not('reversal_requested_at', 'is', null);
                                     
                                     if (retryResult.data && period.start) {
                                         retryResult.data = retryResult.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return retryResult;
+                                }
+                            })(),
+                            (async () => {
+                                try {
+                                    let result = await completedQuery;
+                                    
+                                    // If query failed because audit_status column doesn't exist, retry without it
+                                    if (result.error) {
+                                        const errorMessage = result.error.message || JSON.stringify(result.error);
+                                        if (errorMessage.includes('audit_status') || result.error.code === 'PGRST116' || result.error.code === '42703') {
+                                            // Retry without audit_status column (legacy tables)
+                                            const retryQuery = window.supabaseClient
+                                                .from(tableName)
+                                                .select('id, submitted_at')
+                                                .not('submitted_at', 'is', null);
+                                            
+                                            if (period.start) {
+                                                retryQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                                            }
+                                            if (period.end) {
+                                                retryQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                                            }
+                                            
+                                            const retryResult = await retryQuery;
+                                            if (retryResult.data) {
+                                                // For legacy tables without audit_status, all audits with submitted_at are considered completed
+                                                return retryResult;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Fallback client-side filtering if server-side filter fails or data has no date
+                                    if (result.data && period.start) {
+                                        result.data = result.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = toDhakaTime(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    return result;
+                                } catch (err) {
+                                    // If server-side date filter fails, try without date filter and filter client-side
+                                    const retryResult = await window.supabaseClient
+                                        .from(tableName)
+                                        .select('id, submitted_at, audit_status')
+                                        .not('submitted_at', 'is', null);
+                                    
+                                    if (retryResult.data) {
+                                        if (period.start) {
+                                            retryResult.data = retryResult.data.filter(audit => {
+                                                if (!audit.submitted_at) return false;
+                                                const auditDate = toDhakaTime(audit.submitted_at);
+                                                return (!period.start || auditDate >= period.start) && 
+                                                       (!period.end || auditDate <= period.end);
+                                            });
+                                        }
+                                        // Filter by audit_status (matching expert-audits.html logic exactly)
+                                        // Only include completed audits or audits without audit_status (legacy completed audits)
+                                        retryResult.data = retryResult.data.filter(audit => {
+                                            const auditStatus = audit.audit_status;
+                                            const isComplete = !auditStatus || auditStatus === 'completed';
+                                            return isComplete;
                                         });
                                     }
                                     return retryResult;
@@ -993,11 +1059,12 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                         
                         return {
                             durations: durationResult.data || [],
-                            reversals: reversalResult.data || []
+                            reversals: reversalResult.data || [],
+                            completed: completedResult.data || []
                         };
                     } catch (err) {
                         console.warn(`Error querying ${tableName}:`, err);
-                        return { durations: [], reversals: [] };
+                        return { durations: [], reversals: [], completed: [] };
                     }
                 });
                 
@@ -1016,18 +1083,33 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                         }
                     });
                     teamReversalCount += result.reversals.length;
+                    // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
+                    // Only include completed audits or audits without audit_status (legacy completed audits)
+                    const completedAudits = result.completed.filter(audit => {
+                        const auditStatus = audit.audit_status;
+                        const isComplete = !auditStatus || auditStatus === 'completed';
+                        return isComplete;
+                    });
+                    completed += completedAudits.length;
                 });
                 
                 if (auditCount > 0) {
                     const avgDuration = totalDuration / auditCount;
                     avgDurationText = formatDurationText(avgDuration);
                 }
+            } else {
+                // Fallback to assignment-based count if no scorecards
+                completed = teamAssignments.filter(a => a.status === 'completed').length;
             }
         } catch (error) {
             console.error('Error calculating team stats:', error);
+            // Fallback to assignment-based count on error
+            completed = teamAssignments.filter(a => a.status === 'completed').length;
         }
         
+        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
         console.log('Team Stats - Reversal count:', teamReversalCount);
+        console.log('Team Stats - Completed count:', completed);
         
         // Calculate stats for each Quality Analyst - parallelize duration queries
         const scorecardTables = cachedScorecardTables.length > 0 
@@ -1037,34 +1119,77 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         // Parallelize all auditor duration queries
         const auditorDurationPromises = qualityAnalysts.map(async (qa) => {
             const qaAssignments = teamAssignments.filter(a => a.auditor_email === qa.email);
-            const qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
             const qaInProgress = qaAssignments.filter(a => a.status === 'in_progress').length;
             const qaPending = qaAssignments.filter(a => a.status === 'pending').length;
             const qaRemaining = qaPending + qaInProgress;
-            const qaPercentage = qaAssignments.length > 0 ? Math.round((qaCompleted / qaAssignments.length) * 100) : 0;
             
-            // Calculate average duration for this auditor - parallelize queries
+            // Calculate completed audits by querying scorecard tables (based on submitted_at, not created_at)
+            let qaCompleted = 0;
             let avgDurationText = '-';
             try {
                 if (scorecardTables.length > 0) {
                     const durationPromises = scorecardTables.map(async (tableName) => {
                         try {
-                            // Build query with date filters
+                            // Build query with date filters for duration
                             let query = window.supabaseClient
                                 .from(tableName)
                                 .select('audit_duration, submitted_at')
                                 .eq('auditor_email', qa.email)
                                 .not('audit_duration', 'is', null);
                             
-                            // Apply date filters server-side if possible
+                            // Build query for completed audits count
+                            // Need to select audit_status to filter client-side (matching expert-audits.html logic)
+                            let completedQuery = window.supabaseClient
+                                .from(tableName)
+                                .select('id, submitted_at, audit_status')
+                                .eq('auditor_email', qa.email)
+                                .not('submitted_at', 'is', null);
+                            
+                            // Apply date filters server-side if possible (convert Dhaka to UTC)
                             if (period.start) {
-                                query = query.gte('submitted_at', period.start.toISOString());
+                                query = query.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                                completedQuery = completedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                             }
                             if (period.end) {
-                                query = query.lte('submitted_at', period.end.toISOString());
+                                query = query.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                                completedQuery = completedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                             }
                             
-                            let { data: audits, error } = await query;
+                            // Query both duration and completed audits in parallel
+                            const [durationResult, completedResult] = await Promise.all([
+                                query,
+                                completedQuery
+                            ]);
+                            
+                            let audits = durationResult.data;
+                            let error = durationResult.error;
+                            let completedAudits = completedResult.data || [];
+                            
+                            // If completed query failed because audit_status column doesn't exist, retry without it
+                            if (completedResult.error) {
+                                const errorMessage = completedResult.error.message || JSON.stringify(completedResult.error);
+                                if (errorMessage.includes('audit_status') || completedResult.error.code === 'PGRST116' || completedResult.error.code === '42703') {
+                                    // Retry without audit_status column (legacy tables)
+                                    let retryCompletedQuery = window.supabaseClient
+                                        .from(tableName)
+                                        .select('id, submitted_at')
+                                        .eq('auditor_email', qa.email)
+                                        .not('submitted_at', 'is', null);
+                                    
+                                    if (period.start) {
+                                        retryCompletedQuery = retryCompletedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                                    }
+                                    if (period.end) {
+                                        retryCompletedQuery = retryCompletedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                                    }
+                                    
+                                    const retryResult = await retryCompletedQuery;
+                                    if (retryResult.data) {
+                                        // For legacy tables without audit_status, all audits with submitted_at are considered completed
+                                        completedAudits = retryResult.data;
+                                    }
+                                }
+                            }
                             
                             // If server-side date filter fails, try without date filter and filter client-side
                             if (error && period && (period.start || period.end)) {
@@ -1074,40 +1199,105 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                                     .eq('auditor_email', qa.email)
                                     .not('audit_duration', 'is', null);
                                 
-                                const retryResult = await retryQuery;
+                                const retryCompletedQuery = window.supabaseClient
+                                    .from(tableName)
+                                    .select('id, submitted_at')
+                                    .eq('auditor_email', qa.email)
+                                    .not('submitted_at', 'is', null);
+                                
+                                const [retryResult, retryCompletedResult] = await Promise.all([
+                                    retryQuery,
+                                    retryCompletedQuery
+                                ]);
+                                
                                 if (retryResult.data && period.start) {
                                     retryResult.data = retryResult.data.filter(audit => {
                                         if (!audit.submitted_at) return false;
-                                        const auditDate = new Date(audit.submitted_at);
+                                        const auditDate = toDhakaTime(audit.submitted_at);
                                         return (!period.start || auditDate >= period.start) && 
                                                (!period.end || auditDate <= period.end);
                                     });
                                 }
+                                
+                                if (retryCompletedResult.data) {
+                                    if (period.start) {
+                                        retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
+                                            if (!audit.submitted_at) return false;
+                                            const auditDate = toDhakaTime(audit.submitted_at);
+                                            return (!period.start || auditDate >= period.start) && 
+                                                   (!period.end || auditDate <= period.end);
+                                        });
+                                    }
+                                    // Filter by audit_status (matching expert-audits.html logic exactly)
+                                    // Only include completed audits or audits without audit_status (legacy completed audits)
+                                    retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
+                                        const auditStatus = audit.audit_status;
+                                        const isComplete = !auditStatus || auditStatus === 'completed';
+                                        return isComplete;
+                                    });
+                                }
+                                
                                 audits = retryResult.data;
                                 error = retryResult.error;
+                                completedAudits = retryCompletedResult.data || [];
                             }
                             
-                            if (error) return [];
+                            if (error) {
+                                // If duration query failed, still try to get completed count
+                                if (completedResult.data) {
+                                    // Filter by audit_status (matching expert-audits.html logic exactly)
+                                    // Only include completed audits or audits without audit_status (legacy completed audits)
+                                    const filteredCompleted = completedResult.data.filter(audit => {
+                                        const auditStatus = audit.audit_status;
+                                        const isComplete = !auditStatus || auditStatus === 'completed';
+                                        return isComplete;
+                                    });
+                                    return { audits: [], completed: filteredCompleted.length };
+                                }
+                                return { audits: [], completed: 0 };
+                            }
                             
                             // Fallback client-side filtering if needed
-                            if (audits && period.start) {
-                                return audits.filter(audit => {
+                            let filteredAudits = audits || [];
+                            let filteredCompleted = completedAudits || [];
+                            
+                            if (period.start) {
+                                filteredAudits = filteredAudits.filter(audit => {
                                     if (!audit.submitted_at) return false;
-                                    const auditDate = new Date(audit.submitted_at);
+                                    const auditDate = toDhakaTime(audit.submitted_at);
+                                    return (!period.start || auditDate >= period.start) && 
+                                           (!period.end || auditDate <= period.end);
+                                });
+                                
+                                filteredCompleted = filteredCompleted.filter(audit => {
+                                    if (!audit.submitted_at) return false;
+                                    const auditDate = toDhakaTime(audit.submitted_at);
                                     return (!period.start || auditDate >= period.start) && 
                                            (!period.end || auditDate <= period.end);
                                 });
                             }
                             
-                            return audits || [];
+                            // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
+                            // Only include completed audits or audits without audit_status (legacy completed audits)
+                            filteredCompleted = filteredCompleted.filter(audit => {
+                                const auditStatus = audit.audit_status;
+                                const isComplete = !auditStatus || auditStatus === 'completed';
+                                return isComplete;
+                            });
+                            
+                            return { audits: filteredAudits, completed: filteredCompleted.length };
                         } catch (err) {
                             console.warn(`Error getting duration from ${tableName} for ${qa.email}:`, err);
-                            return [];
+                            return { audits: [], completed: 0 };
                         }
                     });
                     
-                    const allAudits = await Promise.all(durationPromises);
-                    const flatAudits = allAudits.flat();
+                    const allResults = await Promise.all(durationPromises);
+                    const flatAudits = allResults.flatMap(r => r.audits);
+                    const completedCounts = allResults.map(r => r.completed);
+                    
+                    // Sum up completed audits from all scorecard tables
+                    qaCompleted = completedCounts.reduce((sum, count) => sum + count, 0);
                     
                     let totalDuration = 0;
                     let auditCount = 0;
@@ -1124,10 +1314,17 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
                         const avgDuration = totalDuration / auditCount;
                         avgDurationText = formatDurationText(avgDuration);
                     }
+                } else {
+                    // Fallback to assignment-based count if no scorecards
+                    qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
                 }
             } catch (error) {
-                console.error(`Error calculating average duration for ${qa.email}:`, error);
+                console.error(`Error calculating stats for ${qa.email}:`, error);
+                // Fallback to assignment-based count on error
+                qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
             }
+            
+            const qaPercentage = qaAssignments.length > 0 ? Math.round((qaCompleted / qaAssignments.length) * 100) : 0;
             
             return {
                 name: qa.name || qa.email,
@@ -1505,12 +1702,12 @@ async function fetchAndCacheStandupView(cacheKey) {
             .select('*')
             .order('created_at', { ascending: false });
         
-        // Apply date filters server-side if possible
+        // Apply date filters server-side if possible (convert Dhaka to UTC)
         if (period.start) {
-            assignmentsQuery = assignmentsQuery.gte('created_at', period.start.toISOString());
+            assignmentsQuery = assignmentsQuery.gte('created_at', dhakaDateToUTCISO(period.start));
         }
         if (period.end) {
-            assignmentsQuery = assignmentsQuery.lte('created_at', period.end.toISOString());
+            assignmentsQuery = assignmentsQuery.lte('created_at', dhakaDateToUTCISO(period.end));
         }
         
         let { data, error } = await assignmentsQuery;
@@ -1526,7 +1723,7 @@ async function fetchAndCacheStandupView(cacheKey) {
             if (retryResult.data && period.start) {
                 retryResult.data = retryResult.data.filter(assignment => {
                     if (!assignment.created_at) return false;
-                    const assignmentDate = new Date(assignment.created_at);
+                    const assignmentDate = toDhakaTime(assignment.created_at);
                     return (!period.start || assignmentDate >= period.start) && 
                            (!period.end || assignmentDate <= period.end);
                 });
@@ -1579,16 +1776,16 @@ async function fetchAndCacheStandupView(cacheKey) {
                             .select('audit_duration, submitted_at')
                             .not('audit_duration', 'is', null);
                         
-                        // Apply date filters server-side if possible
+                        // Apply date filters server-side if possible (convert Dhaka to UTC)
                         if (period.start) {
-                            passingQuery = passingQuery.gte('submitted_at', period.start.toISOString());
-                            reversalQuery = reversalQuery.gte('submitted_at', period.start.toISOString());
-                            durationQuery = durationQuery.gte('submitted_at', period.start.toISOString());
+                            passingQuery = passingQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                            reversalQuery = reversalQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                            durationQuery = durationQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                         }
                         if (period.end) {
-                            passingQuery = passingQuery.lte('submitted_at', period.end.toISOString());
-                            reversalQuery = reversalQuery.lte('submitted_at', period.end.toISOString());
-                            durationQuery = durationQuery.lte('submitted_at', period.end.toISOString());
+                            passingQuery = passingQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                            reversalQuery = reversalQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                            durationQuery = durationQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                         }
                         
                         // Query for passing status, reversals, and duration in parallel
@@ -1600,7 +1797,7 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -1615,7 +1812,7 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     if (retryResult.data && period.start) {
                                         retryResult.data = retryResult.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -1630,7 +1827,7 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -1646,7 +1843,7 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     if (retryResult.data && period.start) {
                                         retryResult.data = retryResult.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -1661,7 +1858,7 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -1677,7 +1874,7 @@ async function fetchAndCacheStandupView(cacheKey) {
                                     if (retryResult.data && period.start) {
                                         retryResult.data = retryResult.data.filter(audit => {
                                             if (!audit.submitted_at) return false;
-                                            const auditDate = new Date(audit.submitted_at);
+                                            const auditDate = toDhakaTime(audit.submitted_at);
                                             return (!period.start || auditDate >= period.start) && 
                                                    (!period.end || auditDate <= period.end);
                                         });
@@ -2036,63 +2233,28 @@ async function clearFilters() {
 // ============================================================================
 // Week and Date Filter Functions
 // ============================================================================
-function getWeekNumber(date = new Date()) {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const dayOfWeek = startOfYear.getDay();
-    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const mondayOfWeek1 = new Date(startOfYear);
-    mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
-    mondayOfWeek1.setHours(0, 0, 0, 0);
-    
-    const dateDay = date.getDay();
-    const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
-    const mondayOfDateWeek = new Date(date);
-    mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
-    mondayOfDateWeek.setHours(0, 0, 0, 0);
-    
-    const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
-    
-    return weekNumber;
+function getWeekNumber(date = null) {
+    if (!date) date = getDhakaNow();
+    return getDhakaWeekNumber(date);
 }
 
 function getWeekDates(weekNumber, year) {
-    const startOfYear = new Date(year, 0, 1);
-    const dayOfWeek = startOfYear.getDay();
-    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const mondayOfWeek1 = new Date(startOfYear);
-    mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
-    
-    const weekStart = new Date(mondayOfWeek1);
-    weekStart.setDate(mondayOfWeek1.getDate() + (weekNumber - 1) * 7);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    weekEnd.setHours(23, 59, 59, 999);
-    
-    return { start: weekStart, end: weekEnd };
+    return getDhakaWeekDates(weekNumber, year);
 }
 
 function initializeWeekFilter() {
-    const today = new Date();
-    currentWeek = getWeekNumber(today);
+    const today = getDhakaNow();
+    currentWeek = getDhakaWeekNumber(today);
     currentWeekYear = today.getFullYear();
     updateWeekDisplay();
 }
 
 function initializeMonthFilter() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    
-    // Get first day of current month
-    const firstDay = new Date(year, month, 1);
-    const firstDayStr = firstDay.toISOString().split('T')[0];
-    
-    // Get last day of current month
-    const lastDay = new Date(year, month + 1, 0);
-    const lastDayStr = lastDay.toISOString().split('T')[0];
+    const today = getDhakaNow();
+    const firstDay = getDhakaFirstDayOfMonth(today);
+    const lastDay = getDhakaLastDayOfMonth(today);
+    const firstDayStr = formatDhakaDateForInput(firstDay);
+    const lastDayStr = formatDhakaDateForInput(lastDay);
     
     // Set date filter to current month
     dateFilter.start = firstDayStr;
@@ -2109,8 +2271,8 @@ function initializeMonthFilter() {
     
     // Update date button text to show current month
     if (dateBtnTextEl) {
-        const start = firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const end = lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const start = formatDhakaDate(firstDay, { month: 'short', day: 'numeric' });
+        const end = formatDhakaDate(lastDay, { month: 'short', day: 'numeric' });
         dateBtnTextEl.textContent = `${start} - ${end}`;
     }
     
@@ -2134,8 +2296,8 @@ function updateWeekDisplay() {
     
     // Initialize current week if not set
     if (currentWeek === null) {
-        const today = new Date();
-        currentWeek = getWeekNumber(today);
+        const today = getDhakaNow();
+        currentWeek = getDhakaWeekNumber(today);
         currentWeekYear = today.getFullYear();
     }
     
@@ -2180,8 +2342,8 @@ function updateWeekDisplay() {
 function navigateWeek(direction) {
     // Initialize current week if not set
     if (currentWeek === null) {
-        const today = new Date();
-        currentWeek = getWeekNumber(today);
+        const today = getDhakaNow();
+        currentWeek = getDhakaWeekNumber(today);
         currentWeekYear = today.getFullYear();
     }
     
@@ -2220,8 +2382,8 @@ function navigateWeek(direction) {
 function switchToWeekView() {
     // Initialize current week if not set
     if (currentWeek === null) {
-        const today = new Date();
-        currentWeek = getWeekNumber(today);
+        const today = getDhakaNow();
+        currentWeek = getDhakaWeekNumber(today);
         currentWeekYear = today.getFullYear();
     }
     
@@ -2342,8 +2504,8 @@ window.applyDateFilter = function() {
 
     const dateBtnTextEl = document.getElementById('dateBtnText');
     if (startDate || endDate) {
-        const start = startDate ? new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
-        const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
+        const start = startDate ? formatDhakaDate(parseDhakaDate(startDate), { month: 'short', day: 'numeric' }) : 'Start';
+        const end = endDate ? formatDhakaDate(parseDhakaDate(endDate), { month: 'short', day: 'numeric' }) : 'End';
         if (dateBtnTextEl) dateBtnTextEl.textContent = `${start} - ${end}`;
         useWeekFilter = false;
         
@@ -2372,38 +2534,32 @@ window.clearDateFilter = function() {
 };
 
 window.applyQuickDateFilter = function(period) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getDhakaStartOfDay();
     
     let startDate, endDate;
     
     switch(period) {
         case 'today':
-            startDate = new Date(today);
-            endDate = new Date(today);
-            endDate.setHours(23, 59, 59, 999);
+            startDate = getDhakaStartOfDay();
+            endDate = getDhakaEndOfDay();
             break;
         case 'yesterday':
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
-            startDate = new Date(yesterday);
-            endDate = new Date(yesterday);
-            endDate.setHours(23, 59, 59, 999);
+            startDate = getDhakaStartOfDay(yesterday);
+            endDate = getDhakaEndOfDay(yesterday);
             break;
         case 'thisMonth':
-            const year = today.getFullYear();
-            const month = today.getMonth();
-            startDate = new Date(year, month, 1);
-            endDate = new Date(year, month + 1, 0);
-            endDate.setHours(23, 59, 59, 999);
+            startDate = getDhakaFirstDayOfMonth(today);
+            endDate = getDhakaLastDayOfMonth(today);
             break;
         default:
             return;
     }
     
     // Convert to date strings (YYYY-MM-DD format)
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
+    const startDateStr = formatDhakaDateForInput(startDate);
+    const endDateStr = formatDhakaDateForInput(endDate);
     
     // Update date filter
     dateFilter.start = startDateStr;
@@ -2420,8 +2576,8 @@ window.applyQuickDateFilter = function(period) {
     
     // Update date button text
     if (dateBtnTextEl) {
-        const start = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const end = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const start = formatDhakaDate(startDate, { month: 'short', day: 'numeric' });
+        const end = formatDhakaDate(endDate, { month: 'short', day: 'numeric' });
         dateBtnTextEl.textContent = `${start} - ${end}`;
     }
     
@@ -2468,43 +2624,18 @@ function isDateInRange(date, filterStart, filterEnd) {
     if (!filterStart && !filterEnd) {
         // If no date filter, check against current week or month
         if (useWeekFilter && currentWeek !== null) {
-            const weekDates = getWeekDates(currentWeek, currentWeekYear);
+            const weekDates = getDhakaWeekDates(currentWeek, currentWeekYear);
             filterStart = weekDates.start;
             filterEnd = weekDates.end;
         } else {
             // Default to current month (matching getCurrentPeriodDates)
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            lastDay.setHours(23, 59, 59, 999);
-            filterStart = firstDay;
-            filterEnd = lastDay;
+            const today = getDhakaNow();
+            filterStart = getDhakaFirstDayOfMonth(today);
+            filterEnd = getDhakaLastDayOfMonth(today);
         }
     }
     
-    if (!filterStart && !filterEnd) return true;
-    
-    const checkDate = new Date(date);
-    if (isNaN(checkDate.getTime())) return false; // Invalid date
-    checkDate.setHours(0, 0, 0, 0);
-    
-    if (filterStart) {
-        const start = filterStart instanceof Date ? filterStart : new Date(filterStart);
-        if (isNaN(start.getTime())) return false; // Invalid date
-        start.setHours(0, 0, 0, 0);
-        if (checkDate < start) return false;
-    }
-    
-    if (filterEnd) {
-        const end = filterEnd instanceof Date ? filterEnd : new Date(filterEnd);
-        if (isNaN(end.getTime())) return false; // Invalid date
-        end.setHours(23, 59, 59, 999);
-        if (checkDate > end) return false;
-    }
-    
-    return true;
+    return isDhakaDateInRange(date, filterStart, filterEnd);
 }
 
 // ============================================================================
@@ -2579,7 +2710,7 @@ async function trackPresence() {
             email: currentUserEmail,
             name: userInfo.name || currentUserEmail,
             role: userRole,
-            online_at: new Date().toISOString(),
+            online_at: dhakaDateToUTCISO(getDhakaNow()),
             page: 'auditor-dashboard'
         });
     } catch (error) {
