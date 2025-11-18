@@ -21,6 +21,8 @@
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
     <script src="keyboard-shortcuts.js"></script>
+    <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
     <style>
         /* Reversal Management Specific Styles */
         .stats-grid {
@@ -549,74 +551,15 @@ document.addEventListener('DOMContentLoaded', function() {
             filterReversals();
         };
 
+        // Use shared date filter utility - wrap to provide page-specific callbacks
+        const originalApplyQuickDateFilter = window.applyQuickDateFilter;
         window.applyQuickDateFilter = function(period) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            let startDate, endDate;
-            
-            switch(period) {
-                case 'today':
-                    startDate = new Date(today);
-                    endDate = new Date(today);
-                    endDate.setHours(23, 59, 59, 999);
-                    break;
-                case 'yesterday':
-                    const yesterday = new Date(today);
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    startDate = new Date(yesterday);
-                    endDate = new Date(yesterday);
-                    endDate.setHours(23, 59, 59, 999);
-                    break;
-                case 'thisMonth':
-                    const year = today.getFullYear();
-                    const month = today.getMonth();
-                    startDate = new Date(year, month, 1);
-                    endDate = new Date(year, month + 1, 0);
-                    endDate.setHours(23, 59, 59, 999);
-                    break;
-                default:
-                    return;
-            }
-            
-            // Convert to date strings (YYYY-MM-DD format)
-            const startDateStr = startDate.toISOString().split('T')[0];
-            const endDateStr = endDate.toISOString().split('T')[0];
-            
-            // Update date filter
-            dateFilter.start = startDateStr;
-            dateFilter.end = endDateStr;
-            useWeekFilter = false;
-            
-            // Update date input fields
-            const startDateEl = document.getElementById('startDate');
-            const endDateEl = document.getElementById('endDate');
-            const dateBtnTextEl = document.getElementById('dateBtnText');
-            
-            if (startDateEl) startDateEl.value = startDateStr;
-            if (endDateEl) endDateEl.value = endDateStr;
-            
-            // Update date button text
-            if (dateBtnTextEl) {
-                const start = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const end = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                dateBtnTextEl.textContent = `${start} - ${end}`;
-            }
-            
-            // Update active state of quick filter buttons
-            const quickDateButtons = document.querySelectorAll('.quick-date-btn');
-            quickDateButtons.forEach(btn => btn.classList.remove('active'));
-            
-            const activeButton = document.getElementById(period + 'Btn');
-            if (activeButton) {
-                activeButton.classList.add('active');
-            }
-            
-            // Update week display
-            updateWeekDisplay();
-            
-            // Apply filters to refresh data
-            filterReversals();
+            originalApplyQuickDateFilter(period, {
+                dateFilter: dateFilter,
+                setUseWeekFilter: () => { useWeekFilter = false; },
+                onUpdate: updateWeekDisplay,
+                onRefresh: filterReversals
+            });
         };
         
         // Load reversals from all audit tables

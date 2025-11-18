@@ -42,6 +42,7 @@
     <script src="form-validation.js" defer></script>
     <script src="keyboard-shortcuts.js" defer></script>
     <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
 <style>
   .main-content {
     background-color: #f8f7f2;
@@ -821,75 +822,25 @@ function applyDateFilter() {
   ]);
 }
 
+// Use shared date filter utility - wrap to provide page-specific callbacks
+// Note: home.html uses Date objects instead of date strings
+const originalApplyQuickDateFilter = window.applyQuickDateFilter;
 function applyQuickDateFilter(period) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  let startDate, endDate;
-  
-  switch(period) {
-    case 'today':
-      startDate = new Date(today);
-      endDate = new Date(today);
-      endDate.setHours(23, 59, 59, 999);
-      break;
-    case 'yesterday':
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      startDate = new Date(yesterday);
-      endDate = new Date(yesterday);
-      endDate.setHours(23, 59, 59, 999);
-      break;
-    case 'thisMonth':
-      const year = today.getFullYear();
-      const month = today.getMonth();
-      startDate = new Date(year, month, 1);
-      endDate = new Date(year, month + 1, 0);
-      endDate.setHours(23, 59, 59, 999);
-      break;
-    default:
-      return;
-  }
-  
-  // Update date filter (home.html uses Date objects)
-  dateFilter.start = startDate;
-  dateFilter.end = endDate;
-  useWeekFilter = false;
-  
-  // Update date input fields
-  const startDateInput = document.getElementById('startDate');
-  const endDateInput = document.getElementById('endDate');
-  const dateBtnText = document.getElementById('dateBtnText');
-  
-  if (startDateInput) startDateInput.value = formatDateForInput(startDate);
-  if (endDateInput) endDateInput.value = formatDateForInput(endDate);
-  
-  // Update date button text
-  if (dateBtnText) {
-    const start = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const end = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    dateBtnText.textContent = `${start} - ${end}`;
-  }
-  
-  // Update active state of quick filter buttons
-  const quickDateButtons = document.querySelectorAll('.quick-date-btn');
-  quickDateButtons.forEach(btn => btn.classList.remove('active'));
-  
-  const activeButton = document.getElementById(period + 'Btn');
-  if (activeButton) {
-    activeButton.classList.add('active');
-  }
-  
-  // Update week display
-  updateWeekDisplay();
-  
-  // Reload data with filters
-  Promise.all([
-    loadRecentUpdates(),
-    updateYourStats(),
-    loadAssignedAudits(),
-    loadNotifications()
-  ]);
+  originalApplyQuickDateFilter(period, {
+    dateFilter: dateFilter,
+    setUseWeekFilter: () => { useWeekFilter = false; },
+    useDateObjects: true,
+    formatDateForInput: formatDateForInput,
+    onUpdate: updateWeekDisplay,
+    onRefresh: () => {
+      Promise.all([
+        loadRecentUpdates(),
+        updateYourStats(),
+        loadAssignedAudits(),
+        loadNotifications()
+      ]);
+    }
+  });
 }
 
 // Clear date filter

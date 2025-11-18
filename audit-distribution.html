@@ -21,6 +21,7 @@
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
     <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
     <style>
         .distribution-container {
             display: flex;
@@ -2344,52 +2345,19 @@ function initializeDateFilter() {
     }
 }
 
+// Use shared date filter utility - wrap to provide page-specific callbacks
+const originalApplyQuickDateFilter = window.applyQuickDateFilter;
 window.applyQuickDateFilter = function(period) {
-    const today = getDhakaStartOfDay();
-    
-    let startDate, endDate;
-    
-    switch(period) {
-        case 'today':
-            startDate = getDhakaStartOfDay();
-            endDate = getDhakaEndOfDay();
-            break;
-        case 'yesterday':
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            startDate = getDhakaStartOfDay(yesterday);
-            endDate = getDhakaEndOfDay(yesterday);
-            break;
-        case 'thisMonth':
-            startDate = getDhakaFirstDayOfMonth(today);
-            endDate = getDhakaLastDayOfMonth(today);
-            break;
-        default:
-            return;
-    }
-    
-    // Convert to date strings (YYYY-MM-DD format)
-    const startDateStr = formatDhakaDateForInput(startDate);
-    const endDateStr = formatDhakaDateForInput(endDate);
-    
-    // Update date filter
-    dateFilter.start = startDateStr;
-    dateFilter.end = endDateStr;
-    
-    // Update active state of quick filter buttons
-    const quickDateButtons = document.querySelectorAll('.quick-date-btn');
-    quickDateButtons.forEach(btn => btn.classList.remove('active'));
-    
-    const activeButton = document.getElementById(period + 'Btn');
-    if (activeButton) {
-        activeButton.classList.add('active');
-    }
-    
-    // Reload completed audits cache with new date filter
-    loadCompletedAuditsCache().then(() => {
-        // Refresh the summary and employee list
-        loadAgentWiseSummary();
-        applyFiltersAndGroup();
+    originalApplyQuickDateFilter(period, {
+        dateFilter: dateFilter,
+        onRefresh: () => {
+            // Reload completed audits cache with new date filter
+            loadCompletedAuditsCache().then(() => {
+                // Refresh the summary and employee list
+                loadAgentWiseSummary();
+                applyFiltersAndGroup();
+            });
+        }
     });
 };
 

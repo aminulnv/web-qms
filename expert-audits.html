@@ -42,6 +42,7 @@
     <script src="form-validation.js"></script>
     <script src="keyboard-shortcuts.js"></script>
     <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
     <style>
         /* Audit Reports Specific Styles */
         .expert-audits-container {
@@ -2491,69 +2492,18 @@ document.addEventListener('DOMContentLoaded', function() {
         filterAudits();
     };
 
+    // Use shared date filter utility - wrap to provide page-specific callbacks
+    const originalApplyQuickDateFilter = window.applyQuickDateFilter;
     window.applyQuickDateFilter = function(period) {
-        const today = getDhakaStartOfDay();
-        
-        let startDate, endDate;
-        
-        switch(period) {
-            case 'today':
-                startDate = getDhakaStartOfDay();
-                endDate = getDhakaEndOfDay();
-                break;
-            case 'yesterday':
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                startDate = getDhakaStartOfDay(yesterday);
-                endDate = getDhakaEndOfDay(yesterday);
-                break;
-            case 'thisMonth':
-                startDate = getDhakaFirstDayOfMonth(today);
-                endDate = getDhakaLastDayOfMonth(today);
-                break;
-            default:
-                return;
-        }
-        
-        // Convert to date strings (YYYY-MM-DD format)
-        const startDateStr = formatDhakaDateForInput(startDate);
-        const endDateStr = formatDhakaDateForInput(endDate);
-        
-        // Update date filter
-        dateFilter.start = startDateStr;
-        dateFilter.end = endDateStr;
-        useWeekFilter = false;
-        
-        // Update date input fields
-        const startDateEl = document.getElementById('startDate');
-        const endDateEl = document.getElementById('endDate');
-        const dateBtnTextEl = document.getElementById('dateBtnText');
-        
-        if (startDateEl) startDateEl.value = startDateStr;
-        if (endDateEl) endDateEl.value = endDateStr;
-        
-        // Update date button text
-        if (dateBtnTextEl) {
-            const start = formatDhakaDate(startDate, { month: 'short', day: 'numeric' });
-            const end = formatDhakaDate(endDate, { month: 'short', day: 'numeric' });
-            dateBtnTextEl.textContent = `${start} - ${end}`;
-        }
-        
-        // Update active state of quick filter buttons
-        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
-        quickDateButtons.forEach(btn => btn.classList.remove('active'));
-        
-        const activeButton = document.getElementById(period + 'Btn');
-        if (activeButton) {
-            activeButton.classList.add('active');
-        }
-        
-        // Update week display
-        updateWeekDisplay();
-        
-        // Apply filters to refresh data
-        updateClearAllButtonVisibility();
-        filterAudits();
+        originalApplyQuickDateFilter(period, {
+            dateFilter: dateFilter,
+            setUseWeekFilter: () => { useWeekFilter = false; },
+            onUpdate: updateWeekDisplay,
+            onRefresh: () => {
+                updateClearAllButtonVisibility();
+                filterAudits();
+            }
+        });
     };
     
     // Toggle filter panel
