@@ -385,6 +385,12 @@
                 </div>
             </div>
         </div>
+        <!-- Quick Date Filters -->
+        <div style="display: flex; align-items: center; gap: 0.375rem;">
+            <button class="action-btn quick-date-btn" id="todayBtn" onclick="applyQuickDateFilter('today')">Today</button>
+            <button class="action-btn quick-date-btn" id="yesterdayBtn" onclick="applyQuickDateFilter('yesterday')">Yesterday</button>
+            <button class="action-btn quick-date-btn active" id="thisMonthBtn" onclick="applyQuickDateFilter('thisMonth')">This Month</button>
+        </div>
         <button class="action-btn" id="exportBtn">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -2349,6 +2355,14 @@ document.addEventListener('DOMContentLoaded', function() {
             dateBtnTextEl.textContent = `${start} - ${end}`;
         }
         
+        // Activate "This Month" button
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        const thisMonthBtn = document.getElementById('thisMonthBtn');
+        if (thisMonthBtn) {
+            thisMonthBtn.classList.add('active');
+        }
+        
         // Update week display to show it's disabled
         updateWeekDisplay();
     }
@@ -2432,6 +2446,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (endDateEl) endDateEl.value = '';
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         
+        // Clear active state of quick filter buttons when switching to week view
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        
         updateWeekDisplay();
         updateClearAllButtonVisibility();
         filterAudits();
@@ -2456,6 +2474,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (endDateEl) endDateEl.value = '';
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         
+        // Clear active state of quick filter buttons when switching to week view
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        
         updateWeekDisplay();
         updateClearAllButtonVisibility();
         filterAudits();
@@ -2476,6 +2498,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
             if (dateBtnTextEl) dateBtnTextEl.textContent = `${start} - ${end}`;
             useWeekFilter = false;
+            
+            // Clear active state of quick filter buttons when using custom date range
+            const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+            quickDateButtons.forEach(btn => btn.classList.remove('active'));
+            
             updateWeekDisplay(); // Update week display to show "-"
         } else {
             // If both dates are cleared, reset to current month view
@@ -2493,6 +2520,77 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeMonthFilter();
         const dateDropdown = document.getElementById('dateDropdown');
         if (dateDropdown) dateDropdown.classList.remove('active');
+        updateClearAllButtonVisibility();
+        filterAudits();
+    };
+
+    window.applyQuickDateFilter = function(period) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let startDate, endDate;
+        
+        switch(period) {
+            case 'today':
+                startDate = new Date(today);
+                endDate = new Date(today);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            case 'yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                startDate = new Date(yesterday);
+                endDate = new Date(yesterday);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            case 'thisMonth':
+                const year = today.getFullYear();
+                const month = today.getMonth();
+                startDate = new Date(year, month, 1);
+                endDate = new Date(year, month + 1, 0);
+                endDate.setHours(23, 59, 59, 999);
+                break;
+            default:
+                return;
+        }
+        
+        // Convert to date strings (YYYY-MM-DD format)
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
+        // Update date filter
+        dateFilter.start = startDateStr;
+        dateFilter.end = endDateStr;
+        useWeekFilter = false;
+        
+        // Update date input fields
+        const startDateEl = document.getElementById('startDate');
+        const endDateEl = document.getElementById('endDate');
+        const dateBtnTextEl = document.getElementById('dateBtnText');
+        
+        if (startDateEl) startDateEl.value = startDateStr;
+        if (endDateEl) endDateEl.value = endDateStr;
+        
+        // Update date button text
+        if (dateBtnTextEl) {
+            const start = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const end = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            dateBtnTextEl.textContent = `${start} - ${end}`;
+        }
+        
+        // Update active state of quick filter buttons
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        
+        const activeButton = document.getElementById(period + 'Btn');
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+        
+        // Update week display
+        updateWeekDisplay();
+        
+        // Apply filters to refresh data
         updateClearAllButtonVisibility();
         filterAudits();
     };
