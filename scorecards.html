@@ -359,7 +359,7 @@
 
         .parameter-row {
             display: grid;
-            grid-template-columns: 2fr 0.8fr 1.2fr 1fr 1fr 1.2fr 2fr 0.6fr 0.4fr;
+            grid-template-columns: 2fr 0.8fr 1.2fr 1fr 1fr 1.2fr 2fr 0.6fr 0.6fr 0.4fr;
             gap: 0.2812rem;
             align-items: start;
             padding: 0.2812rem;
@@ -367,6 +367,14 @@
             border: 0.0469rem solid #e5e7eb;
             border-radius: 0.1875rem;
             margin-bottom: 0.2812rem;
+        }
+        
+        .parameter-row.with-ai-prompt {
+            grid-template-columns: 2fr 0.8fr 1.2fr 1fr 1fr 1.2fr 2fr 0.6fr 2fr 0.6fr 0.4fr;
+        }
+        
+        .parameter-headers.with-ai-prompt {
+            grid-template-columns: 2fr 0.8fr 1.2fr 1fr 1fr 1.2fr 2fr 0.6fr 2fr 0.6fr 0.4fr !important;
         }
 
         .parameter-row:hover {
@@ -516,7 +524,7 @@
 
 <!-- Create/Edit Scorecard Modal -->
 <div id="scorecardModal" class="modal">
-    <div class="modal-content" style="max-width: 80vw; width: 80vw;">
+    <div class="modal-content" style="max-width: 95vw; width: 95vw;">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.375rem 0.5625rem; border-bottom: 0.0469rem solid #e5e7eb; background: #f9fafb;">
             <h2 id="modalTitle" style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0;">Create New Scorecard</h2>
             <button onclick="closeScorecardModal()" style="background: none; border: none; font-size: 0.9375rem; cursor: pointer; color: #6b7280; padding: 0; width: 1.125rem; height: 1.125rem; display: flex; align-items: center; justify-content: center;">&times;</button>
@@ -635,7 +643,7 @@
                     </div>
                     
                     <!-- Parameter Headers -->
-                    <div style="display: grid; grid-template-columns: 2fr 0.8fr 1.2fr 1fr 1fr 1.2fr 2fr 0.6fr 0.4fr; gap: 0.2812rem; padding: 0.1875rem 0.2812rem; margin-bottom: 0.1875rem; font-size: 0.4688rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.025em;">
+                    <div class="parameter-headers" style="display: grid; grid-template-columns: 2fr 0.8fr 1.2fr 1fr 1fr 1.2fr 2fr 0.6fr 0.6fr 0.4fr; gap: 0.2812rem; padding: 0.1875rem 0.2812rem; margin-bottom: 0.1875rem; font-size: 0.4688rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.025em;">
                         <div>Name</div>
                         <div>Points</div>
                         <div>Type</div>
@@ -643,6 +651,8 @@
                         <div>Field Type</div>
                         <div>Field ID</div>
                         <div>Description</div>
+                        <div style="text-align: center;">AI Audit</div>
+                        <div id="aiPromptHeader" style="display: none;">AI Prompt</div>
                         <div style="text-align: center;">Fatal Error</div>
                         <div></div>
                     </div>
@@ -705,7 +715,7 @@
                 <ul style="font-size: 0.5625rem; color: #1e3a8a; margin: 0; padding-left: 0.9375rem; line-height: 1.6;">
                     <li><strong>Option 1:</strong> Download the CSV template, fill it out, and upload it</li>
                     <li><strong>Option 2:</strong> Copy data from Excel/Google Sheets and paste it below</li>
-                    <li><strong>Format:</strong> Parameter Name, Points, Type, Category, Field Type, Field ID, Description, Auto-Fail (one per line)</li>
+                    <li><strong>Format:</strong> Parameter Name, Points, Type, Category, Field Type, Field ID, Description, Prompt, Enable AI Audit, Auto-Fail (one per line)</li>
                 </ul>
             </div>
 
@@ -739,9 +749,9 @@
                 <label style="font-size: 0.5625rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.1875rem;">Paste Data from Excel/CSV</label>
                 <textarea id="bulkPasteArea" placeholder="Paste your data here... (Tab or comma separated)
 Example:
-Loss of Business	50	error	Critical Fail Error	counter	error_loss_business	Error that directly results in customer leaving	true
-Incorrect Information	10	error	Critical Error	counter	incorrect_info	Providing wrong information to customer	false
-Good Empathy	5	achievement	Major	radio	good_empathy	Demonstrating understanding and care	false" style="width: 100%; min-height: 7.0312rem; padding: 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Courier New', monospace; resize: vertical;"></textarea>
+Loss of Business	50	error	Critical Fail Error	counter	error_loss_business	Error that directly results in customer leaving	Check if conversation resulted in cancellation	true	true
+Incorrect Information	10	error	Critical Error	counter	incorrect_info	Providing wrong information to customer	Detect instances of incorrect information	true	false
+Good Empathy	5	achievement	Major	radio	good_empathy	Demonstrating understanding and care	Assess if agent showed empathy and understanding	false	false" style="width: 100%; min-height: 7.0312rem; padding: 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Courier New', monospace; resize: vertical;"></textarea>
                 <small style="font-size: 0.4688rem; color: #6b7280; display: block; margin-top: 0.1875rem;">
                     💡 Tip: Copy directly from Excel/Google Sheets - it works with tabs or commas
                 </small>
@@ -1210,11 +1220,18 @@ async function viewScorecard(scorecardId) {
                         <span style="background: #1A733E; color: white; padding: 0.0938rem 0.375rem; border-radius: 0.1875rem; font-size: 0.5156rem; font-weight: 600;">-${param.penalty_points} pts</span>
                     </div>
                     ${param.description ? `<div style="font-size: 0.5625rem; color: #374151; margin-bottom: 0.1875rem; font-style: italic; white-space: pre-wrap;">${escapeHtml(param.description)}</div>` : ''}
-                    <div style="font-size: 0.5156rem; color: #6b7280; display: flex; gap: 0.375rem; align-items: center;">
+                    <div style="font-size: 0.5156rem; color: #6b7280; display: flex; gap: 0.375rem; align-items: center; margin-bottom: ${(param.enable_ai_audit && param.prompt) ? '0.375rem' : '0'};">
                         <span>${param.error_category}</span>
                         <span>•</span>
                         <code style="background: #f3f4f6; padding: 0.0938rem 0.2812rem; border-radius: 0.1875rem; font-size: 0.4688rem;">${param.field_id}</code>
+                        ${param.enable_ai_audit ? `<span style="background: #1A733E; color: white; padding: 0.0938rem 0.2812rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 500;">AI Audit</span>` : ''}
                     </div>
+                    ${param.enable_ai_audit && param.prompt ? `
+                    <div style="padding: 0.375rem; background: #f0fdf4; border: 0.0352rem solid #86efac; border-radius: 0.1875rem; margin-top: 0.375rem;">
+                        <div style="font-size: 0.4688rem; color: #166534; font-weight: 600; margin-bottom: 0.1875rem;">AI Prompt:</div>
+                        <div style="font-size: 0.5156rem; color: #166534; white-space: pre-wrap; line-height: 1.4;">${escapeHtml(param.prompt)}</div>
+                    </div>
+                    ` : ''}
                 </div>
             `;
         });
@@ -1545,6 +1562,11 @@ async function loadScorecardParameters(scorecardId) {
         } else {
             addParameterRow();
         }
+        
+        // Update layout after loading parameters
+        setTimeout(() => {
+            updateAllParameterRowsLayout();
+        }, 100);
     } catch (error) {
         console.error('Error loading parameters:', error);
     }
@@ -1600,7 +1622,11 @@ function addParameterRow(param = null) {
             <option value="radio" ${defaultFieldType === 'radio' ? 'selected' : ''}>Yes/No</option>
         </select>
         <input type="text" class="param-field-id-input" placeholder="field_id" value="${param ? escapeHtml(param.field_id) : ''}" required style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
-        <textarea class="param-description-input" placeholder="Description (optional)" rows="2" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; resize: vertical; min-height: 2rem;">${param && param.description ? escapeHtml(param.description) : ''}</textarea>
+        <input type="text" class="param-description-input" placeholder="Description (optional)" value="${param && param.description ? escapeHtml(param.description) : ''}" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif;">
+        <label style="display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Enable AI Audit for this parameter">
+            <input type="checkbox" class="param-enable-ai-audit-checkbox" ${param && param.enable_ai_audit ? 'checked' : ''} style="width: 0.75rem; height: 0.75rem; cursor: pointer; accent-color: #1A733E;">
+        </label>
+        <input type="text" class="param-prompt-input" placeholder="AI Prompt (optional)" value="${param && param.prompt ? escapeHtml(param.prompt) : ''}" style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; display: ${param && param.enable_ai_audit ? 'block' : 'none'};" title="AI prompt for this parameter when AI audit is enabled" disabled="${param && param.enable_ai_audit ? '' : 'disabled'}">
         <label style="display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Causes automatic fail regardless of score">
             <input type="checkbox" class="is-fail-all-checkbox" ${isFailAll ? 'checked' : ''} style="width: 0.75rem; height: 0.75rem; cursor: pointer; accent-color: #ef4444;">
         </label>
@@ -1611,7 +1637,76 @@ function addParameterRow(param = null) {
     
     // Apply restrictions after adding to DOM
     updateParameterRowRestrictions(row);
+    
+    // Set up AI audit checkbox toggle for this parameter
+    const enableAiAuditCheckbox = row.querySelector('.param-enable-ai-audit-checkbox');
+    const promptInput = row.querySelector('.param-prompt-input');
+    
+    if (enableAiAuditCheckbox && promptInput) {
+        // Set initial state
+        const isEnabled = enableAiAuditCheckbox.checked;
+        promptInput.style.display = isEnabled ? 'block' : 'none';
+        promptInput.disabled = !isEnabled;
+        
+        // Add event listener to toggle prompt field
+        enableAiAuditCheckbox.addEventListener('change', function() {
+            const enabled = this.checked;
+            promptInput.style.display = enabled ? 'block' : 'none';
+            promptInput.disabled = !enabled;
+            if (!enabled) {
+                promptInput.value = ''; // Clear prompt when disabled
+            }
+            
+            // Update grid layout
+            updateParameterRowLayout(row);
+        });
+        
+        // Update grid layout initially
+        updateParameterRowLayout(row);
+    }
 }
+
+// Update parameter row grid layout based on AI audit state
+function updateParameterRowLayout(row) {
+    const enableAiAuditCheckbox = row.querySelector('.param-enable-ai-audit-checkbox');
+    const promptInput = row.querySelector('.param-prompt-input');
+    
+    if (enableAiAuditCheckbox && promptInput) {
+        const isEnabled = enableAiAuditCheckbox.checked;
+        if (isEnabled && promptInput.value.trim()) {
+            row.classList.add('with-ai-prompt');
+        } else {
+            row.classList.remove('with-ai-prompt');
+        }
+    }
+}
+
+// Update all parameter rows layout
+function updateAllParameterRowsLayout() {
+    const parameterRows = document.querySelectorAll('.parameter-row');
+    parameterRows.forEach(row => updateParameterRowLayout(row));
+    
+    // Update header row
+    const headerRow = document.querySelector('.parameter-headers');
+    const hasAnyEnabled = Array.from(parameterRows).some(row => {
+        const checkbox = row.querySelector('.param-enable-ai-audit-checkbox');
+        const promptInput = row.querySelector('.param-prompt-input');
+        return checkbox && checkbox.checked && promptInput && promptInput.value.trim();
+    });
+    
+    if (headerRow) {
+        const aiPromptHeader = document.getElementById('aiPromptHeader');
+        if (aiPromptHeader) {
+            aiPromptHeader.style.display = hasAnyEnabled ? 'block' : 'none';
+        }
+        if (hasAnyEnabled) {
+            headerRow.classList.add('with-ai-prompt');
+        } else {
+            headerRow.classList.remove('with-ai-prompt');
+        }
+    }
+}
+
 
 // Validate that parameter types are compatible with scoring type
 function validateParameterTypes(scoringType, parameters) {
@@ -1684,6 +1779,8 @@ function normalizeParameter(param) {
         field_type: param.field_type?.toLowerCase(),
         field_id: param.field_id?.toLowerCase(),
         description: param.description?.trim() || null,
+        enable_ai_audit: !!param.enable_ai_audit,
+        prompt: param.prompt?.trim() || null,
         is_fail_all: !!param.is_fail_all
     };
 }
@@ -1803,6 +1900,8 @@ async function handleScorecardSubmit(e) {
         const fieldTypeSelect = row.querySelector('.field-type-select');
         const fieldIdInput = row.querySelector('.param-field-id-input');
         const descriptionInput = row.querySelector('.param-description-input');
+        const promptInput = row.querySelector('.param-prompt-input');
+        const enableAiAuditCheckbox = row.querySelector('.param-enable-ai-audit-checkbox');
         const isFailAllCheckbox = row.querySelector('.is-fail-all-checkbox');
         
         // Validate that all required fields are present
@@ -1818,6 +1917,8 @@ async function handleScorecardSubmit(e) {
         const fieldType = fieldTypeSelect.value;
         const fieldId = fieldIdInput.value.replace(/[^a-zA-Z0-9_]/g, '');
         const description = descriptionInput ? descriptionInput.value.trim() : '';
+        const enableAiAudit = enableAiAuditCheckbox ? enableAiAuditCheckbox.checked : false;
+        const prompt = (enableAiAudit && promptInput) ? promptInput.value.trim() : null;
         
         // Skip empty rows
         if (!errorName || isNaN(points) || !paramType || !category || !fieldType || !fieldId) {
@@ -1833,6 +1934,8 @@ async function handleScorecardSubmit(e) {
             field_type: fieldType,
             field_id: fieldId,
             description: description || null,
+            enable_ai_audit: enableAiAudit,
+            prompt: prompt,
             points_direction: (paramType === 'error') ? 'subtract' : 'add',
             requires_feedback: true,
             display_order: index + 1,
@@ -2109,25 +2212,45 @@ async function handleScorecardSubmit(e) {
                     }
                 }
                 
-                // Update parameter descriptions if they changed (without creating new version)
+                // Update parameter descriptions and prompts if they changed (without creating new version)
                 // Since we're not creating a new version, parameters structure hasn't changed,
-                // so we can safely update descriptions
+                // so we can safely update descriptions and prompts
                 for (const newParam of parameters) {
                     const oldParam = originalParameters.find(p => 
                         p.field_id?.toLowerCase() === newParam.field_id?.toLowerCase()
                     );
                     
-                    if (oldParam && (oldParam.description || '') !== (newParam.description || '')) {
-                        // Update description for this parameter
-                        const { error: paramUpdateError } = await window.supabaseClient
-                            .from('scorecard_parameters')
-                            .update({ description: newParam.description || null })
-                            .eq('scorecard_id', scorecardId)
-                            .eq('field_id', newParam.field_id);
+                    if (oldParam) {
+                        const updates = {};
+                        let needsUpdate = false;
                         
-                        if (paramUpdateError) {
-                            console.warn('Error updating parameter description:', paramUpdateError);
-                            // Don't throw - description updates are non-critical
+                        if ((oldParam.description || '') !== (newParam.description || '')) {
+                            updates.description = newParam.description || null;
+                            needsUpdate = true;
+                        }
+                        
+                        if ((oldParam.enable_ai_audit || false) !== (newParam.enable_ai_audit || false)) {
+                            updates.enable_ai_audit = newParam.enable_ai_audit || false;
+                            needsUpdate = true;
+                        }
+                        
+                        if ((oldParam.prompt || '') !== (newParam.prompt || '')) {
+                            updates.prompt = newParam.prompt || null;
+                            needsUpdate = true;
+                        }
+                        
+                        if (needsUpdate) {
+                            // Update description and/or prompt for this parameter
+                            const { error: paramUpdateError } = await window.supabaseClient
+                                .from('scorecard_parameters')
+                                .update(updates)
+                                .eq('scorecard_id', scorecardId)
+                                .eq('field_id', newParam.field_id);
+                            
+                            if (paramUpdateError) {
+                                console.warn('Error updating parameter description/prompt:', paramUpdateError);
+                                // Don't throw - description/prompt updates are non-critical
+                            }
                         }
                     }
                 }
@@ -2630,24 +2753,24 @@ function downloadCSVTemplate() {
     const scoringType = document.getElementById('scoringType').value;
     
     // Create CSV content with example based on scoring type
-    let csvContent = 'Parameter Name,Points,Type,Category,Field Type,Field ID,Description,Auto-Fail\n';
+    let csvContent = 'Parameter Name,Points,Type,Category,Field Type,Field ID,Description,Prompt,Enable AI Audit,Auto-Fail\n';
     
     if (scoringType === 'deductive') {
-        csvContent += 'Loss of Business,50,error,Critical Fail Error,counter,error_loss_business,"Error that directly results in customer leaving",true\n';
-        csvContent += 'Zero Tolerance,50,error,Critical Fail Error,counter,zero_tolerance,"Violation of zero tolerance policy",true\n';
-        csvContent += 'Incorrect Information,10,error,Critical Error,counter,incorrect_info,"Providing wrong information to customer",false\n';
-        csvContent += 'Lack of Professionalism,10,error,Critical Error,counter,lack_professionalism,"Unprofessional behavior or language",false\n';
-        csvContent += 'Grammatical Errors,5,error,Major Error,counter,grammatical_errors,"Spelling or grammar mistakes in communication",false\n';
+        csvContent += 'Loss of Business,50,error,Critical Fail Error,counter,error_loss_business,"Error that directly results in customer leaving","Check if the conversation resulted in customer cancellation or service termination",true,true\n';
+        csvContent += 'Zero Tolerance,50,error,Critical Fail Error,counter,zero_tolerance,"Violation of zero tolerance policy","Identify any violations of company zero tolerance policies",true,true\n';
+        csvContent += 'Incorrect Information,10,error,Critical Error,counter,incorrect_info,"Providing wrong information to customer","Detect instances where incorrect information was provided",true,false\n';
+        csvContent += 'Lack of Professionalism,10,error,Critical Error,counter,lack_professionalism,"Unprofessional behavior or language","Identify unprofessional language or behavior",true,false\n';
+        csvContent += 'Grammatical Errors,5,error,Major Error,counter,grammatical_errors,"Spelling or grammar mistakes in communication","Find spelling or grammar errors in the conversation",false,false\n';
     } else if (scoringType === 'additive') {
-        csvContent += 'Excellent Empathy,10,achievement,Critical,radio,excellent_empathy,"Demonstrating exceptional understanding and care",false\n';
-        csvContent += 'Proactive Solution,10,achievement,Critical,radio,proactive_solution,"Offering solutions before customer asks",false\n';
-        csvContent += 'Clear Communication,5,achievement,Major,radio,clear_communication,"Clear and concise explanations",false\n';
-        csvContent += 'Good Engagement,5,achievement,Major,radio,good_engagement,"Active listening and appropriate engagement",false\n';
+        csvContent += 'Excellent Empathy,10,achievement,Critical,radio,excellent_empathy,"Demonstrating exceptional understanding and care","Assess if the agent showed exceptional empathy and understanding",true,false\n';
+        csvContent += 'Proactive Solution,10,achievement,Critical,radio,proactive_solution,"Offering solutions before customer asks","Check if solutions were offered proactively",true,false\n';
+        csvContent += 'Clear Communication,5,achievement,Major,radio,clear_communication,"Clear and concise explanations","Evaluate if communication was clear and concise",false,false\n';
+        csvContent += 'Good Engagement,5,achievement,Major,radio,good_engagement,"Active listening and appropriate engagement","Assess level of engagement and active listening",false,false\n';
     } else {
-        csvContent += 'Loss of Business,50,error,Critical Fail Error,counter,error_loss_business,"Error that directly results in customer leaving",true\n';
-        csvContent += 'Incorrect Information,10,error,Critical Error,counter,incorrect_info,"Providing wrong information to customer",false\n';
-        csvContent += 'Excellent Empathy,10,achievement,Critical,radio,excellent_empathy,"Demonstrating exceptional understanding and care",false\n';
-        csvContent += 'Exceptional Service,15,bonus,Major,radio,exceptional_service,"Going above and beyond expectations",false\n';
+        csvContent += 'Loss of Business,50,error,Critical Fail Error,counter,error_loss_business,"Error that directly results in customer leaving","Check if the conversation resulted in customer cancellation",true,true\n';
+        csvContent += 'Incorrect Information,10,error,Critical Error,counter,incorrect_info,"Providing wrong information to customer","Detect instances where incorrect information was provided",true,false\n';
+        csvContent += 'Excellent Empathy,10,achievement,Critical,radio,excellent_empathy,"Demonstrating exceptional understanding and care","Assess if the agent showed exceptional empathy",true,false\n';
+        csvContent += 'Exceptional Service,15,bonus,Major,radio,exceptional_service,"Going above and beyond expectations","Evaluate if service exceeded expectations",false,false\n';
     }
     
     // Create blob and download
@@ -2734,11 +2857,47 @@ function parseBulkData() {
             return;
         }
         
-        // Handle both old format (6 columns) and new format (7 columns with description)
+        // Handle format: Parameter Name, Points, Type, Category, Field Type, Field ID, Description, Prompt, Enable AI Audit, Auto-Fail
+        // Support old formats for backward compatibility
         const hasDescription = parts.length >= 7;
-        const [name, points, type, category, fieldType, fieldId, description, isFailAll] = hasDescription 
-            ? parts 
-            : [...parts.slice(0, 6), '', parts[6] || ''];
+        const hasPrompt = parts.length >= 8;
+        const hasEnableAiAudit = parts.length >= 9;
+        const hasAutoFail = parts.length >= 10;
+        
+        // New format (10 columns): name, points, type, category, fieldType, fieldId, description, prompt, enableAiAudit, isFailAll
+        // Old format (9 columns): name, points, type, category, fieldType, fieldId, description, prompt, isFailAll
+        // Older format (8 columns): name, points, type, category, fieldType, fieldId, description, prompt
+        // Oldest format (7 columns): name, points, type, category, fieldType, fieldId, description
+        // Very old format (6 columns): name, points, type, category, fieldType, fieldId
+        
+        let name, points, type, category, fieldType, fieldId, description, prompt, enableAiAudit, isFailAll;
+        
+        if (parts.length >= 10) {
+            // New format with Enable AI Audit column
+            [name, points, type, category, fieldType, fieldId, description, prompt, enableAiAudit, isFailAll] = parts;
+        } else if (parts.length >= 9) {
+            // Old format without Enable AI Audit column
+            [name, points, type, category, fieldType, fieldId, description, prompt, isFailAll] = parts;
+            enableAiAudit = ''; // Will be set based on prompt presence
+        } else if (parts.length >= 8) {
+            // Older format without Auto-Fail
+            [name, points, type, category, fieldType, fieldId, description, prompt] = parts;
+            enableAiAudit = '';
+            isFailAll = '';
+        } else if (parts.length >= 7) {
+            // Oldest format without prompt
+            [name, points, type, category, fieldType, fieldId, description] = parts;
+            prompt = '';
+            enableAiAudit = '';
+            isFailAll = '';
+        } else {
+            // Very old format
+            [name, points, type, category, fieldType, fieldId] = parts;
+            description = '';
+            prompt = '';
+            enableAiAudit = '';
+            isFailAll = '';
+        }
         
         // Validate fields
         if (!name) {
@@ -2776,12 +2935,20 @@ function parseBulkData() {
             return;
         }
         
+        // Parse enable_ai_audit (optional, defaults to false)
+        let enableAiAuditBool = false;
+        if (enableAiAudit !== undefined && enableAiAudit !== '') {
+            const aiAuditLower = enableAiAudit.toLowerCase().trim();
+            enableAiAuditBool = aiAuditLower === 'true' || aiAuditLower === '1' || aiAuditLower === 'yes';
+        } else if (prompt && prompt.trim()) {
+            // If prompt is provided but enable_ai_audit is not specified, default to true
+            enableAiAuditBool = true;
+        }
+        
         // Parse is_fail_all (optional, defaults to false)
-        // If description exists, isFailAll is at index 7, otherwise at index 6
-        const isFailAllValue = hasDescription ? isFailAll : (parts[6] || '');
         let isFailAllBool = false;
-        if (isFailAllValue !== undefined && isFailAllValue !== '') {
-            const failAllLower = isFailAllValue.toLowerCase().trim();
+        if (isFailAll !== undefined && isFailAll !== '') {
+            const failAllLower = isFailAll.toLowerCase().trim();
             isFailAllBool = failAllLower === 'true' || failAllLower === '1' || failAllLower === 'yes';
         }
         
@@ -2794,6 +2961,8 @@ function parseBulkData() {
             field_type: fieldType.toLowerCase(),
             field_id: fieldId.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
             description: (description && description.trim()) || null,
+            enable_ai_audit: enableAiAuditBool,
+            prompt: (prompt && prompt.trim()) || null,
             points_direction: type.toLowerCase() === 'error' ? 'subtract' : 'add',
             requires_feedback: true,
             is_active: true,
@@ -2869,6 +3038,8 @@ function displayImportPreview() {
                     <th style="padding: 0.375rem; text-align: left; font-weight: 600; color: #374151;">Field Type</th>
                     <th style="padding: 0.375rem; text-align: left; font-weight: 600; color: #374151;">Field ID</th>
                     <th style="padding: 0.375rem; text-align: left; font-weight: 600; color: #374151;">Description</th>
+                    <th style="padding: 0.375rem; text-align: left; font-weight: 600; color: #374151;">Prompt</th>
+                    <th style="padding: 0.375rem; text-align: center; font-weight: 600; color: #374151;">AI Audit</th>
                     <th style="padding: 0.375rem; text-align: center; font-weight: 600; color: #374151;">Auto-Fail</th>
                 </tr>
             </thead>
@@ -2878,6 +3049,7 @@ function displayImportPreview() {
     parsedImportData.forEach((param, index) => {
         const typeColor = param.parameter_type === 'error' ? '#ef4444' : (param.parameter_type === 'achievement' ? '#10b981' : '#3b82f6');
         const failAllBadge = param.is_fail_all ? '<span style="background: #ef4444; color: white; padding: 0.0938rem 0.2812rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600;">✓</span>' : '<span style="color: #9ca3af;">-</span>';
+        const aiAuditBadge = param.enable_ai_audit ? '<span style="background: #1A733E; color: white; padding: 0.0938rem 0.2812rem; border-radius: 0.1875rem; font-size: 0.4688rem; font-weight: 600;">✓</span>' : '<span style="color: #9ca3af;">-</span>';
         tableHTML += `
             <tr style="border-bottom: 0.0469rem solid #e5e7eb; ${index % 2 === 0 ? 'background: white;' : 'background: #f9fafb;'}">
                 <td style="padding: 0.375rem;">${escapeHtml(param.error_name)}</td>
@@ -2893,6 +3065,8 @@ function displayImportPreview() {
                     <code style="background: #f3f4f6; padding: 0.0938rem 0.2812rem; border-radius: 0.1875rem; font-size: 0.4688rem;">${param.field_id}</code>
                 </td>
                 <td style="padding: 0.375rem; font-size: 0.4688rem; color: #6b7280; max-width: 7.0312rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(param.description || '')}">${escapeHtml(param.description || '-')}</td>
+                <td style="padding: 0.375rem; font-size: 0.4688rem; color: #6b7280; max-width: 7.0312rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(param.prompt || '')}">${escapeHtml(param.prompt || '-')}</td>
+                <td style="padding: 0.375rem; text-align: center;">${aiAuditBadge}</td>
                 <td style="padding: 0.375rem; text-align: center;">${failAllBadge}</td>
             </tr>
         `;

@@ -204,9 +204,9 @@
         </div>
         <!-- Quick Date Filters -->
         <div style="display: flex; align-items: center; gap: 0.375rem;">
-            <button class="action-btn quick-date-btn" id="todayBtn" onclick="applyQuickDateFilter('today')">Today</button>
+            <button class="action-btn quick-date-btn active" id="todayBtn" onclick="applyQuickDateFilter('today')">Today</button>
             <button class="action-btn quick-date-btn" id="yesterdayBtn" onclick="applyQuickDateFilter('yesterday')">Yesterday</button>
-            <button class="action-btn quick-date-btn active" id="thisMonthBtn" onclick="applyQuickDateFilter('thisMonth')">This Month</button>
+            <button class="action-btn quick-date-btn" id="thisMonthBtn" onclick="applyQuickDateFilter('thisMonth')">This Month</button>
         </div>
         <div class="filter-dropdown">
             <button class="action-btn" id="filterBtn">
@@ -384,8 +384,8 @@ async function initializeDashboard() {
             return;
         }
 
-        // Initialize month filter (default view)
-        initializeMonthFilter();
+        // Initialize today filter (default view)
+        initializeTodayFilter();
         setupEventListeners();
 
         // Load all data in parallel for faster initialization
@@ -529,13 +529,11 @@ function getCurrentPeriodDates() {
         // Using week filter
         return getDhakaWeekDates(currentWeek, currentWeekYear);
     } else {
-        // Default to current month in Dhaka timezone
+        // Default to today in Dhaka timezone
         const today = getDhakaNow();
-        const firstDay = getDhakaFirstDayOfMonth(today);
-        const lastDay = getDhakaLastDayOfMonth(today);
         return {
-            start: firstDay,
-            end: lastDay
+            start: getDhakaStartOfDay(today),
+            end: getDhakaEndOfDay(today)
         };
     }
 }
@@ -2513,6 +2511,45 @@ function initializeWeekFilter() {
     updateWeekDisplay();
 }
 
+function initializeTodayFilter() {
+    const today = getDhakaNow();
+    const startOfDay = getDhakaStartOfDay(today);
+    const endOfDay = getDhakaEndOfDay(today);
+    const startOfDayStr = formatDhakaDateForInput(startOfDay);
+    const endOfDayStr = formatDhakaDateForInput(endOfDay);
+    
+    // Set date filter to today
+    dateFilter.start = startOfDayStr;
+    dateFilter.end = endOfDayStr;
+    useWeekFilter = false;
+    
+    // Update date input fields
+    const startDateEl = document.getElementById('startDate');
+    const endDateEl = document.getElementById('endDate');
+    const dateBtnTextEl = document.getElementById('dateBtnText');
+    
+    if (startDateEl) startDateEl.value = startOfDayStr;
+    if (endDateEl) endDateEl.value = endOfDayStr;
+    
+    // Update date button text to show today
+    if (dateBtnTextEl) {
+        const start = formatDhakaDate(startOfDay, { month: 'short', day: 'numeric' });
+        const end = formatDhakaDate(endOfDay, { month: 'short', day: 'numeric' });
+        dateBtnTextEl.textContent = `${start} - ${end}`;
+    }
+    
+    // Activate "Today" button
+    const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+    quickDateButtons.forEach(btn => btn.classList.remove('active'));
+    const todayBtn = document.getElementById('todayBtn');
+    if (todayBtn) {
+        todayBtn.classList.add('active');
+    }
+    
+    // Update week display to show it's disabled
+    updateWeekDisplay();
+}
+
 function initializeMonthFilter() {
     const today = getDhakaNow();
     const firstDay = getDhakaFirstDayOfMonth(today);
@@ -2779,8 +2816,8 @@ window.applyDateFilter = function() {
         
         updateWeekDisplay(); // Update week display to show "-"
     } else {
-        // If both dates are cleared, reset to current month view (matching expert-audits.html)
-        initializeMonthFilter();
+        // If both dates are cleared, reset to today view
+        initializeTodayFilter();
     }
 
     const dateDropdown = document.getElementById('dateDropdown');
@@ -2789,8 +2826,8 @@ window.applyDateFilter = function() {
 };
 
 window.clearDateFilter = function() {
-    // Reset to current month view instead of week view (matching expert-audits.html)
-    initializeMonthFilter();
+    // Reset to today view
+    initializeTodayFilter();
     const dateDropdown = document.getElementById('dateDropdown');
     if (dateDropdown) dateDropdown.classList.remove('active');
     updateWeekDisplay(); // Update week display
@@ -2833,16 +2870,16 @@ function normalizePassingStatus(status) {
 // Helper function to check if date is within filter range
 function isDateInRange(date, filterStart, filterEnd) {
     if (!filterStart && !filterEnd) {
-        // If no date filter, check against current week or month
+        // If no date filter, check against current week or today
         if (useWeekFilter && currentWeek !== null) {
             const weekDates = getDhakaWeekDates(currentWeek, currentWeekYear);
             filterStart = weekDates.start;
             filterEnd = weekDates.end;
         } else {
-            // Default to current month (matching getCurrentPeriodDates)
+            // Default to today (matching getCurrentPeriodDates)
             const today = getDhakaNow();
-            filterStart = getDhakaFirstDayOfMonth(today);
-            filterEnd = getDhakaLastDayOfMonth(today);
+            filterStart = getDhakaStartOfDay(today);
+            filterEnd = getDhakaEndOfDay(today);
         }
     }
     
