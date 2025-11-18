@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Report a Bug | QMS</title>
+<meta name="description" content="Report a Bug - Submit bug reports and issues">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="env-config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="confirmation-dialog.js"></script>
+    <script src="load-sidebar.js"></script>
+    <script src="search.js"></script>
+    <script src="form-validation.js"></script>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+<main class="main-content" role="main">
+    <p class="page-heading">Report a Bug</p>
+    <div style="margin-bottom: 1.125rem;"></div>
+
+    <div style="width: 100%; padding: 0 1.125rem; margin-top: 2rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+
+        <!-- Bug Report Section -->
+        <div style="background: white; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; width: 100%;">
+            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <svg style="width: 1.5rem; height: 1.5rem; color: #ef4444;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h2 style="font-size: 1.25rem; font-weight: 600; color: #111827; margin: 0; font-family: 'Poppins', sans-serif;">Report a Bug</h2>
+                </div>
+            </div>
+            <div style="padding: 1.5rem;">
+                <form id="bugReportForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Title -->
+                    <div>
+                        <label for="bugTitle" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                            Title <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="bugTitle" 
+                            name="title" 
+                            required
+                            placeholder="Brief description of the issue"
+                            style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; outline: none; transition: all 0.2s; box-sizing: border-box;"
+                            onfocus="this.style.borderColor='#1a733e'; this.style.boxShadow='0 0 0 3px rgba(26, 115, 62, 0.1)'"
+                            onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+                        >
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="bugDescription" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                            Description <span style="color: #ef4444;">*</span>
+                        </label>
+                        <textarea 
+                            id="bugDescription" 
+                            name="description" 
+                            required
+                            rows="6"
+                            placeholder="Please describe the bug in detail. Include steps to reproduce, expected behavior, and actual behavior."
+                            style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; outline: none; transition: all 0.2s; resize: vertical; box-sizing: border-box;"
+                            onfocus="this.style.borderColor='#1a733e'; this.style.boxShadow='0 0 0 3px rgba(26, 115, 62, 0.1)'"
+                            onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+                        ></textarea>
+                    </div>
+
+                    <!-- Severity -->
+                    <div>
+                        <label for="bugSeverity" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                            Severity <span style="color: #ef4444;">*</span>
+                        </label>
+                        <select 
+                            id="bugSeverity" 
+                            name="severity" 
+                            required
+                            style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; outline: none; transition: all 0.2s; box-sizing: border-box; background: white;"
+                            onfocus="this.style.borderColor='#1a733e'; this.style.boxShadow='0 0 0 3px rgba(26, 115, 62, 0.1)'"
+                            onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+                        >
+                            <option value="">Select severity...</option>
+                            <option value="low">Low - Minor issue, doesn't affect workflow</option>
+                            <option value="medium">Medium - Affects functionality but workaround exists</option>
+                            <option value="high">High - Significant impact on workflow</option>
+                            <option value="critical">Critical - System breaking, immediate attention needed</option>
+                        </select>
+                    </div>
+
+                    <!-- Browser Info -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        <div>
+                            <label for="bugBrowser" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                                Browser
+                            </label>
+                            <input 
+                                type="text" 
+                                id="bugBrowser" 
+                                name="browser" 
+                                readonly
+                                style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; background: #f9fafb; color: #4b5563; box-sizing: border-box;"
+                            >
+                        </div>
+                        <div>
+                            <label for="bugOS" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                                Operating System
+                            </label>
+                            <input 
+                                type="text" 
+                                id="bugOS" 
+                                name="os" 
+                                readonly
+                                style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; background: #f9fafb; color: #4b5563; box-sizing: border-box;"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Page URL -->
+                    <div>
+                        <label for="bugPageUrl" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                            Page URL (where the bug occurred)
+                        </label>
+                        <input 
+                            type="text" 
+                            id="bugPageUrl" 
+                            name="pageUrl" 
+                            readonly
+                            style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; background: #f9fafb; color: #4b5563; box-sizing: border-box;"
+                        >
+                    </div>
+
+                    <!-- Screenshot Upload (Optional) -->
+                    <div>
+                        <label for="bugScreenshot" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif;">
+                            Screenshot (Optional)
+                        </label>
+                        <input 
+                            type="file" 
+                            id="bugScreenshot" 
+                            name="screenshot" 
+                            accept="image/*"
+                            style="width: 100%; padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; outline: none; transition: all 0.2s; box-sizing: border-box;"
+                            onfocus="this.style.borderColor='#1a733e'; this.style.boxShadow='0 0 0 3px rgba(26, 115, 62, 0.1)'"
+                            onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+                        >
+                        <p style="margin-top: 0.25rem; font-size: 0.875rem; color: #6b7280; font-family: 'Poppins', sans-serif;">Upload a screenshot if available</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                        <button 
+                            type="button" 
+                            onclick="document.getElementById('bugReportForm').reset(); restoreAutoFilledFields();"
+                            style="padding: 0.5rem 1.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem; color: #374151; font-weight: 500; font-family: 'Poppins', sans-serif; cursor: pointer; transition: all 0.2s; background: white;"
+                            onmouseover="this.style.backgroundColor='#f9fafb'"
+                            onmouseout="this.style.backgroundColor='white'"
+                        >
+                            Clear
+                        </button>
+                        <button 
+                            type="submit" 
+                            style="padding: 0.5rem 1.5rem; background: #1a733e; color: white; border: none; border-radius: 0.5rem; font-weight: 500; font-family: 'Poppins', sans-serif; cursor: pointer; transition: all 0.2s;"
+                            onmouseover="this.style.backgroundColor='#0d5e3a'"
+                            onmouseout="this.style.backgroundColor='#1a733e'"
+                        >
+                            Submit Bug Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+// Populate browser and OS info
+document.addEventListener('DOMContentLoaded', function() {
+    // Get browser info
+    const userAgent = navigator.userAgent;
+    let browserName = 'Unknown';
+    if (userAgent.indexOf('Chrome') > -1) browserName = 'Chrome';
+    else if (userAgent.indexOf('Firefox') > -1) browserName = 'Firefox';
+    else if (userAgent.indexOf('Safari') > -1) browserName = 'Safari';
+    else if (userAgent.indexOf('Edge') > -1) browserName = 'Edge';
+    else if (userAgent.indexOf('Opera') > -1) browserName = 'Opera';
+
+    const browserVersion = userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/(\d+)/)?.[2] || 'Unknown';
+    document.getElementById('bugBrowser').value = `${browserName} ${browserVersion}`;
+
+    // Get OS info
+    let osName = 'Unknown';
+    if (userAgent.indexOf('Win') > -1) osName = 'Windows';
+    else if (userAgent.indexOf('Mac') > -1) osName = 'macOS';
+    else if (userAgent.indexOf('Linux') > -1) osName = 'Linux';
+    else if (userAgent.indexOf('Android') > -1) osName = 'Android';
+    else if (userAgent.indexOf('iOS') > -1) osName = 'iOS';
+    document.getElementById('bugOS').value = osName;
+
+    // Get current page URL
+    document.getElementById('bugPageUrl').value = window.location.href;
+});
+
+// Restore auto-filled fields after form reset
+function restoreAutoFilledFields() {
+    const userAgent = navigator.userAgent;
+    let browserName = 'Unknown';
+    if (userAgent.indexOf('Chrome') > -1) browserName = 'Chrome';
+    else if (userAgent.indexOf('Firefox') > -1) browserName = 'Firefox';
+    else if (userAgent.indexOf('Safari') > -1) browserName = 'Safari';
+    else if (userAgent.indexOf('Edge') > -1) browserName = 'Edge';
+    else if (userAgent.indexOf('Opera') > -1) browserName = 'Opera';
+
+    const browserVersion = userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/(\d+)/)?.[2] || 'Unknown';
+    document.getElementById('bugBrowser').value = `${browserName} ${browserVersion}`;
+
+    let osName = 'Unknown';
+    if (userAgent.indexOf('Win') > -1) osName = 'Windows';
+    else if (userAgent.indexOf('Mac') > -1) osName = 'macOS';
+    else if (userAgent.indexOf('Linux') > -1) osName = 'Linux';
+    else if (userAgent.indexOf('Android') > -1) osName = 'Android';
+    else if (userAgent.indexOf('iOS') > -1) osName = 'iOS';
+    document.getElementById('bugOS').value = osName;
+
+    document.getElementById('bugPageUrl').value = window.location.href;
+}
+
+// Handle bug report form submission
+document.getElementById('bugReportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const bugData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        severity: formData.get('severity'),
+        browser: formData.get('browser'),
+        os: formData.get('os'),
+        pageUrl: formData.get('pageUrl'),
+        timestamp: new Date().toISOString(),
+        userEmail: getCurrentUserEmail() || 'Unknown'
+    };
+
+    // Handle screenshot if provided
+    const screenshotFile = formData.get('screenshot');
+    if (screenshotFile && screenshotFile.size > 0) {
+        // Convert to base64 for storage
+        const reader = new FileReader();
+        reader.onload = async function() {
+            bugData.screenshot = reader.result;
+            await submitBugReport(bugData);
+        };
+        reader.readAsDataURL(screenshotFile);
+    } else {
+        await submitBugReport(bugData);
+    }
+});
+
+// Get current user email
+function getCurrentUserEmail() {
+    try {
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+            const user = JSON.parse(userInfo);
+            return user.email || user.id || null;
+        }
+    } catch (error) {
+        console.error('Error getting user email:', error);
+    }
+    return null;
+}
+
+// Submit bug report
+async function submitBugReport(bugData) {
+    try {
+        // Check if supabase client is available
+        if (!window.supabaseClient) {
+            throw new Error('Database connection not available');
+        }
+
+        // Get Supabase URL and anon key from environment
+        const supabaseUrl = window.env?.SUPABASE_URL || window.SupabaseConfig?.url;
+        const supabaseAnonKey = window.env?.SUPABASE_ANON_KEY || window.SupabaseConfig?.anonKey;
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Supabase configuration not available');
+        }
+
+        // ClickUp list ID for bug reports
+        const CLICKUP_LIST_ID = '901813387238';
+        
+        // Build task description with all bug report details
+        let description = `**Description:**\n${bugData.description}\n\n`;
+        description += `**Severity:** ${bugData.severity}\n\n`;
+        description += `**Browser:** ${bugData.browser}\n`;
+        description += `**OS:** ${bugData.os}\n`;
+        description += `**Page URL:** ${bugData.pageUrl}\n`;
+        description += `**Reported by:** ${bugData.userEmail}\n`;
+        description += `**Timestamp:** ${bugData.timestamp}\n`;
+        
+        // Add screenshot note if available
+        if (bugData.screenshot) {
+            description += `\n**Screenshot:** [Image attached]`;
+        }
+
+        // Map severity to ClickUp priority
+        // ClickUp priority: 1 = Urgent, 2 = High, 3 = Normal, 4 = Low
+        const priorityMap = {
+            'low': 4,      // Low priority
+            'medium': 3,   // Normal priority
+            'high': 2,     // High priority
+            'critical': 1  // Urgent priority
+        };
+
+        // Prepare task data
+        const taskData = {
+            listId: CLICKUP_LIST_ID,
+            title: bugData.title,
+            description: description,
+            status: 'to do',
+            priority: priorityMap[bugData.severity] || 3,
+            tags: [bugData.severity] // Add severity as a tag
+        };
+
+        // Call Supabase Edge Function to create task in ClickUp
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/clickup-proxy?action=create-task`;
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskData),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to create task: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        const taskId = result.id;
+
+        // If screenshot exists, upload it to the task
+        if (bugData.screenshot && taskId) {
+            try {
+                // Convert base64 to blob
+                const base64Data = bugData.screenshot.split(',')[1];
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/png' });
+
+                // Upload screenshot to ClickUp task
+                const uploadUrl = `${supabaseUrl}/functions/v1/clickup-proxy?action=upload-attachment&taskId=${taskId}`;
+                
+                const formData = new FormData();
+                formData.append('file', blob, 'screenshot.png');
+
+                await fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${supabaseAnonKey}`,
+                        'apikey': supabaseAnonKey,
+                    },
+                    body: formData,
+                });
+            } catch (uploadError) {
+                console.warn('Failed to upload screenshot:', uploadError);
+                // Don't fail the whole submission if screenshot upload fails
+            }
+        }
+        
+        await window.confirmationDialog.show({
+            title: 'Bug Report Submitted',
+            message: 'Thank you for reporting this bug! It has been added to our tracking system and will be reviewed soon.',
+            confirmText: 'OK',
+            cancelText: '',
+            type: 'success'
+        });
+
+        // Reset form
+        document.getElementById('bugReportForm').reset();
+        
+        // Restore auto-filled fields
+        restoreAutoFilledFields();
+
+    } catch (error) {
+        console.error('Error submitting bug report:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: `Failed to submit bug report: ${error.message}. Please try again later or contact support directly.`,
+            confirmText: 'OK',
+            cancelText: '',
+            type: 'error'
+        });
+    }
+}
+</script>
+</body>
+</html>
+
