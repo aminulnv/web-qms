@@ -839,6 +839,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create reversal card
         function createReversalCard(reversal) {
+            const userInfo = getCurrentUserInfo();
+            const isAgent = userInfo.isAgent;
             const requestedDate = formatCardDate(reversal.reversal_requested_at);
             
             // Use reversal_status column (with fallback to reversal_approved for backward compatibility)
@@ -920,8 +922,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span style="font-weight: 500;">${reversal.score_before_appeal || reversal.average_score || '0'}%</span>
                                 <span style="color: #d1d5db;">•</span>
                                 <span>${escapeHtml(reversal.reversal_reason || 'No reason provided')}</span>
-                                <span style="color: #d1d5db;">•</span>
-                                <span style="color: #374151; font-weight: 500;">${escapeHtml(reversal.auditor_name || 'Unknown auditor')}</span>
+                                ${!isAgent ? `<span style="color: #d1d5db;">•</span>
+                                <span style="color: #374151; font-weight: 500;">${escapeHtml(reversal.auditor_name || 'Unknown auditor')}</span>` : ''}
                                 <span style="color: #d1d5db;">•</span>
                                 <span>${requestedDate}</span>
                             </p>
@@ -1201,8 +1203,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            const userInfo = getCurrentUserInfo();
+            const isAgent = userInfo.isAgent;
+            
             const headers = [
-                'ID', 'Employee Name', 'Auditor Name', 'Score Before Appeal', 
+                'ID', 'Employee Name', ...(isAgent ? [] : ['Auditor Name']), 'Score Before Appeal', 
                 'Reversal Type', 'Reversal Reason', 'Reversal Status', 'Requested At', 
                 'Responded At', 'Interaction ID', 'Scorecard'
             ];
@@ -1212,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ...filteredReversals.map(r => [
                     r.id || '',
                     r.employee_name || '',
-                    r.auditor_name || '',
+                    ...(isAgent ? [] : [r.auditor_name || '']),
                     r.score_before_appeal || r.average_score || '',
                     r.reversal_type || '',
                     r.reversal_reason || '',

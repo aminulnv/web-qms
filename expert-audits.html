@@ -440,7 +440,7 @@
         </div>
         
         <!-- Auditor Name -->
-        <div>
+        <div id="auditorNameFilterContainer">
             <label for="auditorNameFilter" style="font-size: 0.5156rem; font-weight: 500; color: #374151; margin-bottom: 0.0938rem; font-family: 'Poppins', sans-serif; display: block;">Auditor</label>
             <input type="text" id="auditorNameFilter" placeholder="Auditor name..." style="padding: 0.1875rem 0.2812rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.5156rem; font-family: 'Poppins', sans-serif; width: 100%;">
         </div>
@@ -1040,6 +1040,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize user info first
     initializeUserInfo();
+    
+    // Hide auditor name filter for employees
+    if (isAgent) {
+        const auditorFilterContainer = document.getElementById('auditorNameFilterContainer');
+        if (auditorFilterContainer) {
+            auditorFilterContainer.style.display = 'none';
+        }
+    }
     
     // Initialize month filter (default view)
     initializeMonthFilter();
@@ -2252,8 +2260,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span style="font-weight: 500;">${audit.averageScore || '0'}%</span>
                             <span style="color: #d1d5db;">•</span>
                             <span>${audit.totalErrorsCount || '0'} errors</span>
-                            <span style="color: #d1d5db;">•</span>
-                            <span style="color: #374151; font-weight: 500;">${escapeHtml(audit.auditorName || 'Unknown auditor')}</span>
+                            ${!isAgent ? `<span style="color: #d1d5db;">•</span>
+                            <span style="color: #374151; font-weight: 500;">${escapeHtml(audit.auditorName || 'Unknown auditor')}</span>` : ''}
                             <span style="color: #d1d5db;">•</span>
                             <span>${submittedDateTime}</span>
                         </p>
@@ -2909,7 +2917,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Convert audits to CSV format
         const headers = [
-            'ID', 'Submitted At', 'Employee Name', 'Auditor Name', 'Audit Type', 
+            'ID', 'Submitted At', 'Employee Name', ...(isAgent ? [] : ['Auditor Name']), 'Audit Type', 
             'Passed Status', 'Average Score', 'Total Errors', 'Quarter', 'Channel',
             'Interaction ID', 'Week', 'Country', 'Employee Type', 'Validation Status',
             'Employee Pre Status', 'Employee Post Status', 'Audit Duration'
@@ -2921,7 +2929,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 audit.id || '',
                 audit.submittedAt || '',
                 audit.employeeName || '',
-                audit.auditorName || '',
+                ...(isAgent ? [] : [audit.auditorName || '']),
                 audit.auditType || '',
                 audit.passingStatus || '',
                 audit.averageScore || '',
