@@ -2018,7 +2018,8 @@ function renderRecentUpdatesFromData(allUpdates) {
       
       let statusText = '';
       if (update.type === 'audit_completed') {
-        statusText = 'completed your audit';
+        const interactionId = update.interactionId || 'N/A';
+        statusText = isAgent ? `#${interactionId} was audited` : `completed your audit`;
       } else if (update.type === 'reversal_requested') {
         statusText = isAgent 
           ? `You requested reversal for audit ${update.interactionId || ''}`
@@ -2041,7 +2042,7 @@ function renderRecentUpdatesFromData(allUpdates) {
         onClickAction = `onclick="viewAudit('${update.assignmentId}')"`;
       }
 
-      // Determine styling for reversal status updates
+      // Determine styling for different update types
       let bgColor = 'bg-primary/10';
       let textColor = 'text-primary';
       if (update.type === 'reversal_status_update') {
@@ -2061,23 +2062,44 @@ function renderRecentUpdatesFromData(allUpdates) {
       } else if (update.type === 'reversal_requested') {
         bgColor = 'bg-warning/10';
         textColor = 'text-warning';
+      } else if (update.type === 'audit_completed' && isAgent) {
+        // Use success colors for completed audits for employees
+        bgColor = 'bg-success/10';
+        textColor = 'text-success';
       }
 
+      // For employees viewing audit_completed updates, use generic icon instead of auditor initials
+      const useGenericIcon = isAgent && update.type === 'audit_completed';
+      const iconContent = useGenericIcon 
+        ? `<svg class="w-4 h-4 ${textColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>`
+        : `<span class="text-xs font-semibold ${textColor}">${initials}</span>`;
+
+      // For agents viewing audit_completed updates, show View button on the right
+      const showViewButton = isAgent && update.type === 'audit_completed';
+      const viewButton = showViewButton 
+        ? `<button onclick="event.stopPropagation(); viewAuditDetails('${update.auditId}', '${update.scorecardId || ''}', '${update.scorecardTable || ''}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors flex-shrink-0">
+            View
+          </button>`
+        : '';
+
       return `
-        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer" ${onClickAction}>
+        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors ${onClickAction ? 'cursor-pointer' : ''}" ${onClickAction || ''}>
           <div class="flex items-start gap-2.5">
             <div class="w-7 h-7 rounded-full ${bgColor} flex items-center justify-center flex-shrink-0">
-              <span class="text-xs font-semibold ${textColor}">${initials}</span>
+              ${iconContent}
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs text-gray-900 leading-snug">
-                ${isAgent && (update.type === 'reversal_requested' || update.type === 'reversal_status_update')
+                ${isAgent && (update.type === 'reversal_requested' || update.type === 'reversal_status_update' || update.type === 'audit_completed')
                   ? statusText
                   : `<span class="font-medium">${escapeHtml(update.displayName)}</span> ${statusText}`
                 }
               </p>
               <p class="text-[10px] text-gray-500 mt-0.5">${timestamp}</p>
             </div>
+            ${viewButton}
           </div>
         </div>
       `;
@@ -2500,10 +2522,8 @@ function renderAssignedAudits() {
                       ${statusIcon} ${normalizedStatus}
                     </span>
                   </div>
-                  <!-- Row 2: Auditor name • Channel • Score • Errors • Date -->
+                  <!-- Row 2: Channel • Score • Errors • Date -->
                   <p class="text-[10px] text-gray-600 flex items-center gap-1 flex-wrap">
-                    <span class="font-medium text-gray-700">${escapeHtml(displayName)}</span>
-                    <span class="text-gray-300">•</span>
                     <span>${escapeHtml(channel)}</span>
                     <span class="text-gray-300">•</span>
                     <span class="font-medium text-gray-700">${averageScore}%</span>
@@ -3674,12 +3694,15 @@ async function fetchAndCacheNotifications(cacheKey) {
     if (!scError && scorecards) {
       const assignmentPromises = scorecards.map(async (scorecard) => {
         try {
+          // For agents, only fetch completed audits; for auditors, fetch all statuses
+          const statusFilter = isAgent ? ['completed'] : ['pending', 'in_progress', 'completed'];
+          
           // Try query with audit_status filter first
           let { data: audits, error } = await window.supabaseClient
             .from(scorecard.table_name)
             .select('*')
             .eq(notificationFilterField, currentUserEmail)
-            .in('audit_status', ['pending', 'in_progress', 'completed'])
+            .in('audit_status', statusFilter)
             .order('assignment_created_at', { ascending: false })
             .limit(20);
           
@@ -3708,8 +3731,9 @@ async function fetchAndCacheNotifications(cacheKey) {
               error = null;
               // Filter client-side for audit_status if column exists
               if (audits && audits.some(a => a.audit_status)) {
+                const statusFilter = isAgent ? ['completed'] : ['pending', 'in_progress', 'completed'];
                 audits = audits.filter(a => 
-                  !a.audit_status || ['pending', 'in_progress', 'completed'].includes(a.audit_status)
+                  !a.audit_status || statusFilter.includes(a.audit_status)
                 );
               }
             } else {
@@ -3874,8 +3898,13 @@ async function fetchAndCacheNotifications(cacheKey) {
     // Combine and format notifications
     notifications = [];
 
-    // Add assignment updates
+    // Add assignment updates (only for auditors, or completed audits for agents)
     (assignments || []).forEach(assignment => {
+      // For agents, only show completed audits, not pending/in_progress assignments
+      if (isAgent && assignment.status !== 'completed') {
+        return;
+      }
+      
       const employee = allUsers.find(u => u.email === assignment.employee_email);
       const employeeName = employee?.name || assignment.employee_name || assignment.employee_email?.split('@')[0] || 'Unknown';
       
