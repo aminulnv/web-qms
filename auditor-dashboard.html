@@ -140,6 +140,21 @@
             outline: none;
             border-color: var(--primary-color);
         }
+        
+        /* Loading animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Smooth transitions for stat cards */
+        #statsContainer > div {
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Smooth transitions for table updates */
+        #performanceTableBody {
+            transition: opacity 0.2s ease;
+        }
     </style>
 
 </head>
@@ -350,6 +365,10 @@ let useWeekFilter = false; // Default to month view instead of week view
 let presenceChannel = null;
 let onlineAuditors = new Set(); // Track online auditor emails
 let heartbeatInterval = null;
+let isInitialLoad = true; // Track if this is the first load
+let isLoading = false; // Track if data is currently loading
+let renderInProgress = false; // Prevent duplicate renders
+let loadingTimeout = null; // Track loading timeout
 
 // ============================================================================
 // Initialize Page
@@ -366,6 +385,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function initializeDashboard() {
     try {
+        // Show initial loading state
+        showLoadingState();
+        
         // Wait for Supabase to be ready
         let attempts = 0;
         while (!window.supabaseClient && attempts < 50) {
@@ -375,6 +397,7 @@ async function initializeDashboard() {
 
         if (!window.supabaseClient) {
             console.error('Supabase client not initialized');
+            hideLoadingState();
             return;
         }
 
@@ -384,6 +407,7 @@ async function initializeDashboard() {
 
         if (!currentUserEmail) {
             console.error('No user logged in');
+            hideLoadingState();
             return;
         }
 
@@ -401,8 +425,17 @@ async function initializeDashboard() {
         // Setup presence tracking after everything is loaded
         await setupPresenceTracking();
         
+        // Mark initial load as complete after a short delay to ensure all renders are done
+        setTimeout(() => {
+            isInitialLoad = false;
+        }, 500);
+        
+        // Hide loading state
+        hideLoadingState();
+        
     } catch (error) {
         console.error('Error initializing dashboard:', error);
+        hideLoadingState();
     }
 }
 
@@ -420,6 +453,16 @@ function getCachedData(cacheKey) {
         if (!cached) return null;
         
         const { data, timestamp } = JSON.parse(cached);
+        
+        // Check if cache is stale (older than 5 minutes)
+        const cacheAge = Date.now() - timestamp;
+        const maxAge = 5 * 60 * 1000; // 5 minutes
+        
+        if (cacheAge > maxAge) {
+            // Cache is stale, return null to force fresh fetch
+            return null;
+        }
+        
         return data;
     } catch (e) {
         console.warn('Error reading cache:', e);
@@ -679,7 +722,7 @@ async function loadAssignments() {
         
         // Check cache first and render immediately
         const cachedAssignments = getCachedData(cacheKey);
-        if (cachedAssignments) {
+        if (cachedAssignments && cachedAssignments.length > 0) {
             console.log('Rendering cached assignments immediately');
             allAssignments = cachedAssignments;
             unfilteredAssignments = [...allAssignments];
@@ -689,22 +732,40 @@ async function loadAssignments() {
             populateAuditorFilter();
             populateEmployeeFilter();
             
-            // Update dashboard based on current tab
-            await updateDashboard();
+            // Update dashboard based on current tab (only if initial load)
+            if (isInitialLoad) {
+                await updateDashboard();
+            }
+        } else {
+            // No cache available, show loading and fetch immediately
+            if (isInitialLoad) {
+                showLoadingState();
+            }
+            // Still populate filters with empty data so UI is ready
+            populateChannelFilter();
+            populateAuditorFilter();
+            populateEmployeeFilter();
         }
         
         // Always fetch fresh data in background
-        fetchAndCacheAssignments(cacheKey, period);
+        await fetchAndCacheAssignments(cacheKey, period);
         
     } catch (error) {
         console.error('Error loading assignments:', error);
         allAssignments = [];
         unfilteredAssignments = [];
+        hideLoadingState();
     }
 }
 
 async function fetchAndCacheAssignments(cacheKey, period) {
     try {
+        // Prevent duplicate fetches
+        if (isLoading) {
+            return;
+        }
+        isLoading = true;
+        
         let assignmentsQuery = window.supabaseClient
             .from('audit_assignments')
             .select('*')
@@ -748,6 +809,9 @@ async function fetchAndCacheAssignments(cacheKey, period) {
         unfilteredAssignments = [...allAssignments]; // Store unfiltered copy
         console.log(`Loaded ${allAssignments.length} assignments`);
         
+        // Check if we had cached data before updating
+        const hadCachedData = getCachedData(cacheKey) !== null;
+        
         // Cache the fresh data
         setCachedData(cacheKey, allAssignments);
         
@@ -756,14 +820,20 @@ async function fetchAndCacheAssignments(cacheKey, period) {
         populateAuditorFilter();
         populateEmployeeFilter();
         
-        // Update UI with fresh data
-        console.log('Updating UI with fresh assignments');
-        await updateDashboard();
+        // Update UI with fresh data (always on initial load, or if no cache was available)
+        if (isInitialLoad || !hadCachedData) {
+            console.log('Updating UI with fresh assignments');
+            await updateDashboard();
+        }
+        
+        isLoading = false;
         
     } catch (error) {
         console.error('Error fetching assignments:', error);
         allAssignments = [];
         unfilteredAssignments = [];
+        isLoading = false;
+        hideLoadingState();
     }
 }
 
@@ -771,12 +841,26 @@ async function fetchAndCacheAssignments(cacheKey, period) {
 // Update Dashboard
 // ============================================================================
 async function updateDashboard() {
-    if (currentTab === 0) {
-        // Team Stats
-        await updateTeamStats();
-    } else if (currentTab === 1) {
-        // Standup View
-        await updateStandupView();
+    // Prevent duplicate updates
+    if (renderInProgress) {
+        return;
+    }
+    
+    renderInProgress = true;
+    
+    try {
+        if (currentTab === 0) {
+            // Team Stats
+            await updateTeamStats();
+        } else if (currentTab === 1) {
+            // Standup View
+            await updateStandupView();
+        }
+    } finally {
+        // Use a small delay to prevent rapid re-renders
+        setTimeout(() => {
+            renderInProgress = false;
+        }, 100);
     }
 }
 
@@ -799,13 +883,17 @@ async function updateTeamStats() {
         renderTeamStats(cachedStats);
         // Update online status indicators after rendering
         setTimeout(() => updateOnlineStatusIndicators(), 100);
+        hideLoadingState();
+    } else if (isInitialLoad) {
+        // Show loading if no cache and initial load
+        showLoadingState();
     }
     
-    // Always fetch fresh data in background
-    fetchAndCacheTeamStats(cacheKey, period);
+    // Always fetch fresh data in background (but don't show loading if we have cache)
+    fetchAndCacheTeamStats(cacheKey, period, !!cachedStats);
 }
 
-async function fetchAndCacheTeamStats(cacheKey, period) {
+async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
     // Get all Quality Analysts (auditors)
     const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
     
@@ -1589,10 +1677,30 @@ async function fetchAndCacheTeamStats(cacheKey, period) {
         
         // Update UI with fresh data (only if still on Team Stats tab)
         if (currentTab === 0) {
-            console.log('Updating UI with fresh team stats');
-            renderTeamStats(statsData);
-            // Update online status indicators after rendering
-            setTimeout(() => updateOnlineStatusIndicators(), 100);
+            // Only update if data actually changed or we didn't have cached data
+            if (!hasCachedData || isInitialLoad) {
+                console.log('Updating UI with fresh team stats');
+                renderTeamStats(statsData);
+                // Update online status indicators after rendering
+                setTimeout(() => updateOnlineStatusIndicators(), 100);
+            } else {
+                // Silently update in background without visual jump
+                // Only update if there's a significant difference
+                const cachedStats = getCachedData(cacheKey);
+                if (cachedStats) {
+                    const hasSignificantChange = 
+                        Math.abs((cachedStats.totalAssigned || 0) - (statsData.totalAssigned || 0)) > 0 ||
+                        Math.abs((cachedStats.completed || 0) - (statsData.completed || 0)) > 0;
+                    
+                    if (hasSignificantChange) {
+                        // Smooth update with fade effect
+                        renderTeamStatsWithFade(statsData);
+                    }
+                } else {
+                    renderTeamStats(statsData);
+                }
+            }
+            hideLoadingState();
         } else {
             console.log('Skipping team stats render - user switched to tab', currentTab);
         }
@@ -1777,10 +1885,14 @@ async function updateStandupView() {
     if (cachedStandupData && currentTab === 1) {
         console.log('Rendering cached standup view immediately');
         renderStandupViewData(cachedStandupData);
+        hideLoadingState();
+    } else if (isInitialLoad) {
+        // Show loading if no cache and initial load
+        showLoadingState();
     }
     
-    // Always fetch fresh data in background
-    fetchAndCacheStandupView(cacheKey);
+    // Always fetch fresh data in background (but don't show loading if we have cache)
+    fetchAndCacheStandupView(cacheKey, !!cachedStandupData);
 }
 
 // Render the UI structure immediately (cards, table headers) - no data needed
@@ -1940,7 +2052,7 @@ function renderStandupViewData(standupData) {
     }
 }
 
-async function fetchAndCacheStandupView(cacheKey) {
+async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
     // Only proceed if we're still on Standup View tab
     if (currentTab !== 1) {
         return;
@@ -2378,8 +2490,26 @@ async function fetchAndCacheStandupView(cacheKey) {
         
         // Update UI with fresh data (only if still on Standup View tab)
         if (currentTab === 1) {
-            console.log('Updating UI with fresh standup view data');
-            renderStandupViewData(standupData);
+            // Only update if data actually changed or we didn't have cached data
+            if (!hasCachedData || isInitialLoad) {
+                console.log('Updating UI with fresh standup view data');
+                renderStandupViewData(standupData);
+            } else {
+                // Silently update in background without visual jump
+                const cachedData = getCachedData(cacheKey);
+                if (cachedData) {
+                    const hasSignificantChange = 
+                        Math.abs((cachedData.totalAssigned || 0) - (standupData.totalAssigned || 0)) > 0 ||
+                        Math.abs((cachedData.completed || 0) - (standupData.completed || 0)) > 0;
+                    
+                    if (hasSignificantChange) {
+                        renderStandupViewData(standupData);
+                    }
+                } else {
+                    renderStandupViewData(standupData);
+                }
+            }
+            hideLoadingState();
         } else {
             console.log('Skipping standup view render - user switched to tab', currentTab);
         }
@@ -2417,6 +2547,9 @@ async function fetchAndCacheStandupView(cacheKey) {
         slider.style.left = `${sliderLeft}px`;
         slider.style.width = `${tabWidth}px`;
         
+    // Show loading state when switching tabs
+    showLoadingState();
+    
     // Update dashboard based on tab
     await updateDashboard();
 }
@@ -2540,6 +2673,9 @@ function populateScorecardFilter() {
 }
 
 async function applyFilters() {
+    // Show loading state when filters change
+    showLoadingState();
+    
     // Get filter values
     const statusEl = document.getElementById('statusFilter');
     const channelEl = document.getElementById('channelFilter');
@@ -2779,6 +2915,9 @@ function updateWeekDisplay() {
 }
 
 function navigateWeek(direction) {
+    // Show loading state when navigating weeks
+    showLoadingState();
+    
     // Initialize current week if not set
     if (currentWeek === null) {
         const today = getDhakaNow();
@@ -2814,11 +2953,16 @@ function navigateWeek(direction) {
     }
     
     updateWeekDisplay();
-    applyFilters();
+    
+    // Reload assignments with new week filter
+    loadAssignments();
 }
 
 // Function to switch to week view when week display is clicked
 function switchToWeekView() {
+    // Show loading state when switching to week view
+    showLoadingState();
+    
     // Initialize current week if not set
     if (currentWeek === null) {
         const today = getDhakaNow();
@@ -2841,7 +2985,9 @@ function switchToWeekView() {
     quickDateButtons.forEach(btn => btn.classList.remove('active'));
     
     updateWeekDisplay();
-    applyFilters();
+    
+    // Reload assignments with new week filter
+    loadAssignments();
 }
 
 function setupEventListeners() {
@@ -2923,6 +3069,9 @@ function setupEventListeners() {
 }
 
 window.applyDateFilter = function() {
+    // Show loading state when date filter changes
+    showLoadingState();
+    
     const startDateEl = document.getElementById('startDate');
     const endDateEl = document.getElementById('endDate');
     const startDate = startDateEl?.value || '';
@@ -2960,26 +3109,39 @@ window.applyDateFilter = function() {
 
     const dateDropdown = document.getElementById('dateDropdown');
     if (dateDropdown) dateDropdown.classList.remove('active');
-    applyFilters();
+    
+    // Reload assignments with new date filter
+    loadAssignments();
 };
 
 window.clearDateFilter = function() {
+    // Show loading state when clearing date filter
+    showLoadingState();
+    
     // Reset to today view
     initializeTodayFilter();
     const dateDropdown = document.getElementById('dateDropdown');
     if (dateDropdown) dateDropdown.classList.remove('active');
     updateWeekDisplay(); // Update week display
-    applyFilters();
+    
+    // Reload assignments with today filter
+    loadAssignments();
 };
 
 // Use shared date filter utility - wrap to provide page-specific callbacks
 const originalApplyQuickDateFilter = window.applyQuickDateFilter;
 window.applyQuickDateFilter = function(period) {
+    // Show loading state when quick date filter changes
+    showLoadingState();
+    
     originalApplyQuickDateFilter(period, {
         dateFilter: dateFilter,
         setUseWeekFilter: () => { useWeekFilter = false; },
         onUpdate: updateWeekDisplay,
-        onRefresh: applyFilters
+        onRefresh: () => {
+            // Reload assignments with new date filter
+            loadAssignments();
+        }
     });
 };
 
@@ -3192,6 +3354,81 @@ async function cleanupPresence() {
         }
     } catch (error) {
         console.error('Error cleaning up presence:', error);
+    }
+}
+
+// ============================================================================
+// Loading State Functions
+// ============================================================================
+function showLoadingState() {
+    // Clear any existing timeout
+    if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+    }
+    
+    // Show loading after a short delay to avoid flicker for fast loads
+    loadingTimeout = setTimeout(() => {
+        const tableBody = document.getElementById('performanceTableBody');
+        if (tableBody && !tableBody.querySelector('.loading-indicator')) {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-indicator';
+            loadingDiv.style.cssText = 'text-align: center; padding: 2rem; color: #6b7280;';
+            loadingDiv.innerHTML = `
+                <div style="display: inline-block; width: 1.5rem; height: 1.5rem; border: 0.1875rem solid #e5e7eb; border-top-color: var(--primary-color); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <div style="margin-top: 0.75rem; font-size: 0.6562rem;">Loading...</div>
+            `;
+            tableBody.innerHTML = '';
+            tableBody.appendChild(loadingDiv);
+        }
+        
+        // Add fade effect to stat cards
+        const statCards = document.querySelectorAll('#statsContainer > div');
+        statCards.forEach(card => {
+            card.style.opacity = '0.6';
+            card.style.transition = 'opacity 0.3s ease';
+        });
+    }, 200); // 200ms delay before showing loading
+}
+
+function hideLoadingState() {
+    // Clear timeout if loading hasn't shown yet
+    if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        loadingTimeout = null;
+    }
+    
+    // Remove loading indicator
+    const tableBody = document.getElementById('performanceTableBody');
+    if (tableBody) {
+        const loadingIndicator = tableBody.querySelector('.loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+    }
+    
+    // Restore stat cards opacity
+    const statCards = document.querySelectorAll('#statsContainer > div');
+    statCards.forEach(card => {
+        card.style.opacity = '1';
+    });
+}
+
+function renderTeamStatsWithFade(statsData) {
+    // Fade out, update, fade in
+    const tableBody = document.getElementById('performanceTableBody');
+    if (tableBody) {
+        tableBody.style.opacity = '0.5';
+        tableBody.style.transition = 'opacity 0.2s ease';
+        
+        setTimeout(() => {
+            renderTeamStats(statsData);
+            setTimeout(() => {
+                tableBody.style.opacity = '1';
+                setTimeout(() => updateOnlineStatusIndicators(), 100);
+            }, 50);
+        }, 200);
+    } else {
+        renderTeamStats(statsData);
     }
 }
 
