@@ -148,7 +148,10 @@ async fetch(tableName, options = {}) {
     throw new Error('Supabase client not initialized')
   }
   
-  let query = supabaseClient.from(tableName).select(options.select || '*')
+  // Get environment-aware table name
+  const envTableName = window.Environment?.getTableName(tableName) || tableName
+  
+  let query = supabaseClient.from(envTableName).select(options.select || '*')
   
   if (options.filter) {
     query = query.eq(options.filter.column, options.filter.value)
@@ -165,7 +168,7 @@ async fetch(tableName, options = {}) {
   const { data, error } = await query
   
   if (error) {
-    console.error(`Error fetching from ${tableName}:`, error)
+    console.error(`Error fetching from ${envTableName}:`, error)
     throw error
   }
   
@@ -180,13 +183,16 @@ async insert(tableName, data) {
     throw new Error('Supabase client not initialized')
   }
   
+  // Get environment-aware table name
+  const envTableName = window.Environment?.getTableName(tableName) || tableName
+  
   const { data: result, error } = await supabaseClient
-    .from(tableName)
+    .from(envTableName)
     .insert(data)
     .select()
   
   if (error) {
-    console.error(`Error inserting into ${tableName}:`, error)
+    console.error(`Error inserting into ${envTableName}:`, error)
     throw error
   }
   
@@ -201,6 +207,9 @@ async update(tableName, data, filter) {
   if (!supabaseClient) {
     throw new Error('Supabase client not initialized')
   }
+  
+  // Get environment-aware table name
+  const envTableName = window.Environment?.getTableName(tableName) || tableName
   
   // Safety check: If password_hash is being updated in users table, log heavily
   if (tableName === 'users' && data.password_hash !== undefined) {
@@ -220,7 +229,7 @@ async update(tableName, data, filter) {
     console.error('Full stack trace:', stackTrace);
   }
   
-  let query = supabaseClient.from(tableName).update(data)
+  let query = supabaseClient.from(envTableName).update(data)
   
   if (filter) {
     query = query.eq(filter.column, filter.value)
@@ -229,7 +238,7 @@ async update(tableName, data, filter) {
   const { data: result, error } = await query.select()
   
   if (error) {
-    console.error(`Error updating ${tableName}:`, error)
+    console.error(`Error updating ${envTableName}:`, error)
     throw error
   }
   
@@ -248,13 +257,16 @@ async delete(tableName, filter) {
     throw new Error('Filter is required for delete operations')
   }
   
+  // Get environment-aware table name
+  const envTableName = window.Environment?.getTableName(tableName) || tableName
+  
   const { error } = await supabaseClient
-    .from(tableName)
+    .from(envTableName)
     .delete()
     .eq(filter.column, filter.value)
   
   if (error) {
-    console.error(`Error deleting from ${tableName}:`, error)
+    console.error(`Error deleting from ${envTableName}:`, error)
     throw error
   }
   
