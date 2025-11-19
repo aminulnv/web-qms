@@ -444,33 +444,29 @@
     </div>
 
     <!-- Pull Conversations from Intercom Section -->
-    <div id="pullConversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem;">
-            <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+    <div id="pullConversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #d1fae5; margin-top: 0.6469rem; margin-bottom: 0.6469rem; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem; flex-wrap: wrap; gap: 0.6469rem;">
+            <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap; flex: 1;">
+            <h3 id="pullConversationsHeader" style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
                 <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Conversations from Intercom
+                <span>Conversations of</span>
+                <span id="pullConversationsEmployeeName" style="color: #374151; font-weight: 500;"></span>
+                <span id="pullConversationsAdminAliasChip" style="display: none;"></span>
             </h3>
-            <button onclick="closePullConversationsSection()" style="background: #f3f4f6; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; color: #374151; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
-                Close
-            </button>
-        </div>
-        
-        <!-- Date Selector and Count -->
-        <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
-            <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0.3234rem;">
-                    <label for="pullConversationsDate" style="font-size: 0.4852rem; font-weight: 500; color: #6b7280; white-space: nowrap;">Select Date:</label>
-                    <input type="date" id="pullConversationsDate" style="padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif;">
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.6469rem;">
-                    <div style="display: flex; align-items: center; gap: 0.3234rem;">
-                        <span style="font-size: 0.4852rem; color: #6b7280;">Participated Conversations:</span>
-                        <span id="pullConversationsCount" style="font-size: 0.5659rem; font-weight: 600; color: #1A733E;">0</span>
-                        <span id="pullConversationsAdminName" style="font-size: 0.4852rem; color: #6b7280; margin-left: 0.3234rem; font-weight: 500;"></span>
+                    <button id="dateRangeBtnYesterday" onclick="selectDateRange('yesterday')" style="padding: 0.2425rem 0.4043rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.style.background !== '#1A733E') this.style.backgroundColor='#15582E'" onmouseout="if(this.style.background !== '#1A733E') this.style.backgroundColor=''" title="Yesterday (Default)">
+                        Yesterday
+                    </button>
+                    <button id="dateRangeBtnLast3Days" onclick="selectDateRange('last3days')" style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.style.background !== '#1A733E') this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.style.background !== '#1A733E') this.style.backgroundColor='#f3f4f6'" title="Last 3 Days">
+                        Last 3 days
+                    </button>
+                    <button id="dateRangeBtnThisWeek" onclick="selectDateRange('thisweek')" style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.style.background !== '#1A733E') this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.style.background !== '#1A733E') this.style.backgroundColor='#f3f4f6'" title="This Week">
+                        This week
+            </button>
                     </div>
                     <button onclick="openPullConversationsFilterDialog()" style="display: flex; align-items: center; gap: 0.2425rem; padding: 0.2425rem 0.4852rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'" title="Advanced Filters">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -480,6 +476,15 @@
                         <span id="pullConversationsActiveFiltersCount" style="background: rgba(255,255,255,0.3); padding: 0.0808rem 0.2425rem; border-radius: 0.0808rem; font-size: 0.4043rem; font-weight: 600; display: none;">0</span>
                     </button>
                 </div>
+            <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                    <span style="font-size: 0.4852rem; color: #6b7280;">Conversations:</span>
+                    <span id="pullConversationsCount" style="font-size: 0.5659rem; font-weight: 600; color: #1A733E;">0</span>
+                    <span id="pullConversationsAdminName" style="font-size: 0.4852rem; color: #6b7280; margin-left: 0.3234rem; font-weight: 500;"></span>
+                </div>
+                <button onclick="closePullConversationsSection()" style="background: #f3f4f6; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; color: #374151; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">
+                    Close
+                </button>
             </div>
         </div>
         
@@ -516,15 +521,6 @@
         
         <!-- Conversations List -->
         <div id="pullConversationsList" style="display: none;">
-            <!-- Bulk Action Bar -->
-            <div id="pullConversationsBulkActions" style="display: none; background: #eff6ff; border-bottom: 0.0304rem solid #bfdbfe; padding: 0.4852rem 0.6469rem; display: flex; align-items: center; justify-content: space-between; border-radius: 0.3234rem 0.3234rem 0 0; border: 0.0304rem solid #e5e7eb; border-bottom: 0.0304rem solid #bfdbfe;">
-                <div style="display: flex; align-items: center; gap: 0.3234rem;">
-                    <span id="pullConversationsSelectedCount" style="font-size: 0.4852rem; font-weight: 600; color: #1e40af;">0 selected</span>
-                </div>
-                <button id="openSelectedInIntercomBtn" style="padding: 0.3234rem 0.6469rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#15582E'" onmouseout="this.style.backgroundColor='#1A733E'">
-                    Open Selected in Intercom
-                </button>
-            </div>
             <div style="background: white; border-radius: 0 0 0.3234rem 0.3234rem; border: 0.0304rem solid #e5e7eb; border-top: none; max-height: 60vh; overflow-x: auto; overflow-y: auto; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; min-width: fit-content; font-size: 0.6069rem;">
                     <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
@@ -2286,7 +2282,7 @@ function buildConversationLinkHTML(audit) {
         if (ASSIGNED_AUDITS_CONFIG.showViewConversationButton) {
             html = `<span style="display: inline-flex; align-items: center; gap: 0.2425rem; margin-left: 0.3234rem;">
                 <span style="font-size: 0.4043rem; color: #6b7280;">Conv:</span>
-                <span style="font-family: monospace; font-size: 0.4043rem; color: #2563eb; font-weight: 500;">${conversationId}</span>
+                <span style="font-family: 'Poppins', sans-serif; font-size: 0.4043rem; color: #2563eb; font-weight: 500;">${conversationId}</span>
                 <button 
                     onclick="event.stopPropagation(); window.open('${conversationUrl}', '_blank', 'noopener,noreferrer')" 
                     style="padding: 0.1617rem 0.3234rem; background-color: #2563eb; color: white; border: none; border-radius: 0.1213rem; font-size: 0.3639rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
@@ -2301,7 +2297,7 @@ function buildConversationLinkHTML(audit) {
             // Just show conversation ID as text with copy button
             html = `<span style="display: inline-flex; align-items: center; gap: 0.2425rem; margin-left: 0.3234rem;">
                 <span style="font-size: 0.4043rem; color: #6b7280;">Conv:</span>
-                <span style="font-family: monospace; font-size: 0.4043rem; color: #2563eb; font-weight: 500;">${conversationId}</span>
+                <span style="font-family: 'Poppins', sans-serif; font-size: 0.4043rem; color: #2563eb; font-weight: 500;">${conversationId}</span>
                 <button 
                     onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" 
                     style="padding: 0.0808rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
@@ -2364,6 +2360,217 @@ window.toggleAuditGroup = function(employeeEmail) {
     // Save state
     setExpandedState(employeeEmail, newExpandedState);
 };
+
+/**
+ * Collapse all audit groups except the specified employee's group
+ */
+function collapseAllOtherGroups(activeEmployeeEmail) {
+    if (!ASSIGNED_AUDITS_CONFIG.allowExpandCollapse) return;
+    
+    const normalizedActiveEmail = (activeEmployeeEmail || '').toLowerCase().trim();
+    const pendingAuditsList = document.getElementById('pendingAuditsList');
+    if (!pendingAuditsList) return;
+    
+    // Find all group cards
+    const allGroupCards = pendingAuditsList.querySelectorAll('div[style*="background: #f9fafb"]');
+    
+    allGroupCards.forEach(card => {
+        // Try to find the employee email associated with this card
+        const cardText = card.textContent || '';
+        const emailInCard = card.querySelector(`[data-email]`);
+        const cardEmail = emailInCard ? (emailInCard.getAttribute('data-email') || '').toLowerCase().trim() : '';
+        
+        // Check if this card's text contains an email that matches
+        let cardEmployeeEmail = null;
+        if (cardEmail) {
+            cardEmployeeEmail = cardEmail;
+        } else {
+            // Try to extract email from card content
+            const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/gi;
+            const matches = cardText.match(emailPattern);
+            if (matches && matches.length > 0) {
+                cardEmployeeEmail = matches[0].toLowerCase().trim();
+            }
+        }
+        
+        // Skip if this is the active employee's card
+        if (cardEmployeeEmail && cardEmployeeEmail === normalizedActiveEmail) {
+            return;
+        }
+        
+        // Find the nested group div (the expandable content)
+        const groupId = cardEmployeeEmail ? `auditGroup_${cardEmployeeEmail.replace(/[^a-zA-Z0-9]/g, '_')}` : null;
+        if (groupId) {
+            const groupDiv = document.getElementById(groupId);
+            if (groupDiv) {
+                // Collapse the group
+                groupDiv.style.display = 'none';
+                
+                // Update expand button icon
+                const expandButton = card.querySelector('button[onclick*="toggleAuditGroup"]');
+                if (expandButton) {
+                    expandButton.style.transform = 'rotate(0deg)';
+                    expandButton.title = 'Expand';
+                }
+                
+                // Save collapsed state
+                if (cardEmployeeEmail) {
+                    setExpandedState(cardEmployeeEmail, false);
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Expand the audit group for the specified employee
+ */
+function expandGroupForEmployee(employeeEmail) {
+    if (!ASSIGNED_AUDITS_CONFIG.allowExpandCollapse) return;
+    
+    const normalizedEmail = (employeeEmail || '').toLowerCase().trim();
+    const groupId = `auditGroup_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const groupDiv = document.getElementById(groupId);
+    
+    if (!groupDiv) return;
+    
+    // Expand the group
+    groupDiv.style.display = 'block';
+    
+    // Update expand button icon
+    const pendingAuditsList = document.getElementById('pendingAuditsList');
+    if (pendingAuditsList) {
+        // Find the card that contains this group
+        const card = groupDiv.closest('div[style*="background: #f9fafb"]');
+        if (card) {
+            const expandButton = card.querySelector('button[onclick*="toggleAuditGroup"]');
+            if (expandButton) {
+                expandButton.style.transform = 'rotate(90deg)';
+                expandButton.title = 'Collapse';
+            }
+        }
+    }
+    
+    // Save expanded state
+    setExpandedState(employeeEmail, true);
+}
+
+/**
+ * Highlight the group card for the specified employee with green border
+ */
+function highlightGroupCardForEmployee(employeeEmail) {
+    const normalizedEmail = (employeeEmail || '').toLowerCase().trim();
+    const pendingAuditsList = document.getElementById('pendingAuditsList');
+    if (!pendingAuditsList) return;
+    
+    // Find all group cards
+    const allGroupCards = pendingAuditsList.querySelectorAll('div[style*="background: #f9fafb"]');
+    
+    allGroupCards.forEach(card => {
+        // Try to find the employee email associated with this card
+        const emailInCard = card.querySelector(`[data-email]`);
+        const cardEmail = emailInCard ? (emailInCard.getAttribute('data-email') || '').toLowerCase().trim() : '';
+        
+        // Check if this card's text contains an email that matches
+        let cardEmployeeEmail = null;
+        if (cardEmail) {
+            cardEmployeeEmail = cardEmail;
+        } else {
+            const cardText = card.textContent || '';
+            const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/gi;
+            const matches = cardText.match(emailPattern);
+            if (matches && matches.length > 0) {
+                cardEmployeeEmail = matches[0].toLowerCase().trim();
+            }
+        }
+        
+        // Apply green highlighting if this is the active employee's card
+        if (cardEmployeeEmail && cardEmployeeEmail === normalizedEmail) {
+            // Store original border color if not already stored
+            if (!card.dataset.originalBorder) {
+                const currentStyle = card.getAttribute('style') || '';
+                const borderMatch = currentStyle.match(/border:\s*([^;]+)/);
+                if (borderMatch) {
+                    card.dataset.originalBorder = borderMatch[1];
+                } else {
+                    card.dataset.originalBorder = '0.0405rem solid #e5e7eb';
+                }
+            }
+            
+            // Apply green border
+            const currentStyle = card.getAttribute('style') || '';
+            const updatedStyle = currentStyle.replace(
+                /border:\s*[^;]+/,
+                'border: 0.0405rem solid #1A733E'
+            );
+            if (!updatedStyle.includes('border:')) {
+                card.setAttribute('style', currentStyle + '; border: 0.0405rem solid #1A733E;');
+            } else {
+                card.setAttribute('style', updatedStyle);
+            }
+            
+            // Also add a subtle green background tint
+            const bgStyle = card.getAttribute('style') || '';
+            if (!bgStyle.includes('background:')) {
+                card.setAttribute('style', bgStyle + '; background: #f0fdf4;');
+            } else {
+                card.setAttribute('style', bgStyle.replace(
+                    /background:\s*[^;]+/,
+                    'background: #f0fdf4'
+                ));
+            }
+        } else {
+            // Remove green highlighting from other cards
+            if (card.dataset.originalBorder) {
+                const currentStyle = card.getAttribute('style') || '';
+                card.setAttribute('style', currentStyle.replace(
+                    /border:\s*[^;]+/,
+                    `border: ${card.dataset.originalBorder}`
+                ));
+            }
+            
+            // Restore original background
+            const currentStyle = card.getAttribute('style') || '';
+            if (currentStyle.includes('background: #f0fdf4')) {
+                card.setAttribute('style', currentStyle.replace(
+                    /background:\s*#f0fdf4/,
+                    'background: #f9fafb'
+                ));
+            }
+        }
+    });
+}
+
+/**
+ * Remove green highlighting from all group cards
+ */
+function removeHighlightFromAllGroupCards() {
+    const pendingAuditsList = document.getElementById('pendingAuditsList');
+    if (!pendingAuditsList) return;
+    
+    const allGroupCards = pendingAuditsList.querySelectorAll('div[style*="background: #f9fafb"], div[style*="background: #f0fdf4"]');
+    
+    allGroupCards.forEach(card => {
+        // Restore original border if stored
+        if (card.dataset.originalBorder) {
+            const currentStyle = card.getAttribute('style') || '';
+            card.setAttribute('style', currentStyle.replace(
+                /border:\s*[^;]+/,
+                `border: ${card.dataset.originalBorder}`
+            ));
+            delete card.dataset.originalBorder;
+        }
+        
+        // Restore original background
+        const currentStyle = card.getAttribute('style') || '';
+        if (currentStyle.includes('background: #f0fdf4')) {
+            card.setAttribute('style', currentStyle.replace(
+                /background:\s*#f0fdf4/,
+                'background: #f9fafb'
+            ));
+        }
+    });
+}
 
 /**
  * Select a nested audit (single selection)
@@ -2598,6 +2805,85 @@ async function displayPendingAudits() {
             list.appendChild(groupCard);
         });
         
+        // Store original conversation ID values for inputs and add event listeners
+        setTimeout(() => {
+            const conversationInputs = list.querySelectorAll('input[id^="conversationIdInput_"]');
+            conversationInputs.forEach(input => {
+                // Store original value
+                input.setAttribute('data-original-value', input.value || '');
+                
+                // Add Enter key support
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        input.blur(); // This will trigger onchange
+                    }
+                });
+            });
+        }, 50);
+        
+        // Add drag-and-drop event listeners to nested audit cards
+        setTimeout(() => {
+            const nestedCards = list.querySelectorAll('.nested-audit-card[data-drop-target="true"]');
+            nestedCards.forEach(card => {
+                // Prevent default drag behavior on the card itself
+                card.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = 'move';
+                    // Add visual feedback
+                    if (!card.classList.contains('drag-over')) {
+                        card.classList.add('drag-over');
+                        card.style.backgroundColor = '#eff6ff';
+                        card.style.borderColor = '#2563eb';
+                    }
+                });
+                
+                card.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Remove visual feedback
+                    card.classList.remove('drag-over');
+                    const isSelected = selectedAuditId === card.getAttribute('data-audit-id');
+                    if (!isSelected) {
+                        card.style.backgroundColor = '';
+                        card.style.borderColor = '';
+                    }
+                });
+                
+                card.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Remove visual feedback
+                    card.classList.remove('drag-over');
+                    const isSelected = selectedAuditId === card.getAttribute('data-audit-id');
+                    if (!isSelected) {
+                        card.style.backgroundColor = '';
+                        card.style.borderColor = '';
+                    }
+                    
+                    const auditId = card.getAttribute('data-audit-id');
+                    const conversationData = e.dataTransfer.getData('application/json');
+                    
+                    if (conversationData && auditId) {
+                        try {
+                            const conversation = JSON.parse(conversationData);
+                            await linkConversationToAudit(conversation, auditId);
+                        } catch (error) {
+                            console.error('Error parsing conversation data:', error);
+                            await window.confirmationDialog.show({
+                                title: 'Error',
+                                message: 'Failed to link conversation: ' + error.message,
+                                confirmText: 'OK',
+                                type: 'error'
+                            });
+                        }
+                    }
+                });
+            });
+        }, 100);
+        
         // Add event listeners for pull conversations buttons in group headers AND nested cards
         setTimeout(() => {
             const pullBtns = list.querySelectorAll('.pull-conversations-btn, .pull-conversations-btn-group');
@@ -2830,6 +3116,9 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         const displayEmail = isAgent ? (audit.auditor_email || 'No email') : (audit.employee_email || 'No email');
         const adminAlias = isAgent ? null : (audit.intercom_admin_alias || null);
         
+        // Get conversation ID early to check if buttons should be shown
+        const conversationId = audit.conversation_id ? String(audit.conversation_id) : null;
+        
     // Status badge - larger for nested cards for better visibility
         let statusBadge = '';
         let actionButton = '';
@@ -2857,7 +3146,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         } else if (audit.status === 'in_progress') {
             // Status chip - very light purple indicator for in progress (pill-shaped)
             statusBadge = `<span style="background-color: #e9d5ff; color: #6b21a8; padding: ${isNested ? '0.1617rem 0.4852rem' : badgePadding}; border-radius: 9999px; font-size: ${isNested ? '0.4852rem' : badgeSize}; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; height: 1.2935rem;">In Progress</span>`;
-            if (canEdit) {
+            if (canEdit && conversationId) {
                 actionButton = `<button 
                     onclick="event.stopPropagation(); navigateToAssignment('${audit.id}')" 
                     style="padding: ${isNested ? '0.2425rem 0.4043rem' : '0.3234rem 0.6469rem'}; background-color: #1A733E; color: white; border: none; border-radius: ${isNested ? '0.2425rem' : '0.1617rem'}; font-size: ${isNested ? '0.4447rem' : '0.4852rem'}; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; height: ${isNested ? '1.6169rem' : 'auto'}; display: flex; align-items: center;"
@@ -2870,10 +3159,21 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         } else {
             // Status chip - very light red indicator for pending (pill-shaped)
             statusBadge = `<span style="background-color: #fee2e2; color: #991b1b; padding: ${isNested ? '0.1617rem 0.4852rem' : badgePadding}; border-radius: 9999px; font-size: ${isNested ? '0.4852rem' : badgeSize}; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; height: 1.2935rem;">Pending</span>`;
-            if (canEdit) {
+            if (canEdit && conversationId) {
+                // Check if conversations section is visible for this employee - if so, hide Start Audit button in nested cards
+                const pullConversationsSection = document.getElementById('pullConversationsSection');
+                const isConversationsVisible = pullConversationsSection && pullConversationsSection.style.display !== 'none';
+                const isEmployeeConversationsVisible = isConversationsVisible && pullConversationsAdminEmail && 
+                    (audit.employee_email || '').toLowerCase().trim() === (pullConversationsAdminEmail || '').toLowerCase().trim();
+                
+                // Hide Start Audit button in nested cards when conversations are visible for this employee
+                const shouldHideStartButton = isNested && isEmployeeConversationsVisible;
+                
                 actionButton = `<button 
+                    class="nested-start-audit-btn"
+                    data-audit-id="${audit.id}"
                     onclick="event.stopPropagation(); navigateToAssignment('${audit.id}')" 
-                    style="padding: ${isNested ? '0.2425rem 0.4043rem' : '0.3234rem 0.6469rem'}; background-color: #1A733E; color: white; border: none; border-radius: ${isNested ? '0.2425rem' : '0.1617rem'}; font-size: ${isNested ? '0.4447rem' : '0.4852rem'}; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; height: ${isNested ? '1.6169rem' : 'auto'}; display: flex; align-items: center;"
+                    style="padding: ${isNested ? '0.2425rem 0.4043rem' : '0.3234rem 0.6469rem'}; background-color: #1A733E; color: white; border: none; border-radius: ${isNested ? '0.2425rem' : '0.1617rem'}; font-size: ${isNested ? '0.4447rem' : '0.4852rem'}; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; height: ${isNested ? '1.6169rem' : 'auto'}; display: ${shouldHideStartButton ? 'none' : 'flex'}; align-items: center;"
                     onmouseover="this.style.backgroundColor='#15582E'"
                     onmouseout="this.style.backgroundColor='#1A733E'"
                 >
@@ -2921,7 +3221,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
     
     // For nested cards, create a professional card layout matching the reference design
     if (isNested) {
-        const conversationId = audit.conversation_id ? String(audit.conversation_id) : null;
+        // conversationId is already defined at the top of the function
         const workspaceId = window.intercomConfig?.appId || 'aphmhtyj';
         const conversationUrl = conversationId ? `https://app.intercom.com/a/inbox/${workspaceId}/inbox/conversation/${conversationId}?view` : '';
         
@@ -2945,22 +3245,46 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
         const employeeName = audit.employee_name || audit.employee_email?.split('@')[0] || 'Unknown';
         
         return `
-            <div class="nested-audit-card" data-audit-id="${audit.id}" style="${cardStyle} display: flex; align-items: center; gap: 0.8086rem; padding: 0.4043rem 0.8086rem; height: 2.5rem; max-height: 2.5rem; ${isNested ? 'cursor: pointer;' : ''}" ${isNested ? `onclick="selectNestedAudit('${audit.id}')"` : clickHandler}>
+            <div class="nested-audit-card" data-audit-id="${audit.id}" data-drop-target="true" style="${cardStyle} display: flex; align-items: center; gap: 0.8086rem; padding: 0.4043rem 0.8086rem; height: 2.5rem; max-height: 2.5rem; ${isNested ? 'cursor: pointer;' : ''}" ${isNested ? `onclick="selectNestedAudit('${audit.id}')"` : clickHandler}>
                 <!-- Left: Basic Info (Radio + Scorecard Name) -->
                 <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0; min-width: 0;">
                     ${radioButtonHTML}
                     <span style="font-size: 0.6069rem; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 10rem;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
                 </div>
                 
-                <!-- Middle: Crucial Info (Status Chip + Conversation ID, Employee, Date) -->
+                <!-- Middle: Crucial Info (Status Chip, Employee, Date) -->
                 <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1; min-width: 0; overflow: hidden;">
                     ${statusBadge}
-                    ${conversationId ? `
+                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
+                    <span style="font-size: 0.5252rem; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 7rem;">${escapeHtml(employeeName)}</span>
+                    ${adminAlias ? `<span style="font-size: 0.4447rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0404rem 0.1213rem; border-radius: 0.0808rem; border: 0.0202rem solid #86efac; white-space: nowrap; margin: 0 0.1617rem;" title="Intercom Admin Alias">${escapeHtml(adminAlias)}</span>` : ''}
+                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
+                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap;">${dateFormatted}</span>
+                </div>
+                
+                <!-- Right: Conversation ID Input and Actions -->
+                <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
                         <div style="display: flex; align-items: center; gap: 0.2425rem; flex-shrink: 0;">
-                            <svg style="width: 0.8886rem; height: 0.8886rem; color: #2563eb; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg style="width: 0.8886rem; height: 0.8886rem; color: ${conversationId ? '#2563eb' : '#9ca3af'}; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                             </svg>
-                            <span style="font-size: 0.5252rem; font-family: 'Courier New', monospace; color: #1e40af; font-weight: 600; white-space: nowrap;">${conversationId}</span>
+                        <input 
+                            type="text" 
+                            id="conversationIdInput_${audit.id}"
+                            value="${conversationId || ''}"
+                            placeholder="Enter conversation ID"
+                            data-audit-id="${audit.id}"
+                            ${conversationId ? 'readonly' : ''}
+                            onchange="updateConversationIdForAudit('${String(audit.id).replace(/'/g, "\\'")}', this.value)"
+                            onclick="event.stopPropagation();"
+                            onkeydown="if(event.target.readOnly && event.key !== 'Delete' && event.key !== 'Backspace' && !event.ctrlKey && !event.metaKey && !event.altKey) { event.preventDefault(); }"
+                            oninput="if(!this.value.trim()) { this.readOnly = false; this.style.color = '#6b7280'; this.style.fontWeight = '400'; this.style.borderColor = '#d1d5db'; this.style.background = 'white'; this.style.cursor = 'text'; this.title = 'Enter conversation ID'; }"
+                            style="padding: 0.1213rem 0.2425rem; font-size: 0.5252rem; font-family: 'Poppins', sans-serif; color: ${conversationId ? '#1e40af' : '#6b7280'}; font-weight: ${conversationId ? '600' : '400'}; border: 0.0304rem solid ${conversationId ? '#2563eb' : '#d1d5db'}; border-radius: 0.1617rem; background: ${conversationId ? '#f9fafb' : 'white'}; width: 8rem; min-width: 6rem; max-width: 10rem; white-space: nowrap; transition: all 0.2s; cursor: ${conversationId ? 'default' : 'text'};"
+                            onfocus="if(!this.readOnly) { this.style.borderColor='#2563eb'; this.style.outline='none'; }"
+                            onblur="this.style.borderColor='${conversationId ? '#2563eb' : '#d1d5db'}';"
+                            title="${conversationId ? 'Delete to edit or replace' : 'Enter conversation ID'}"
+                        />
+                        ${conversationId ? `
                             <button 
                                 onclick="event.stopPropagation(); navigator.clipboard.writeText('${conversationId}').then(() => { const btn = event.target.closest('button'); const originalHTML = btn.innerHTML; btn.innerHTML = '<svg style=\\'width: 0.7273rem; height: 0.7273rem;\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'2\\' d=\\'M5 13l4 4L19 7\\'></path></svg>'; setTimeout(() => { btn.innerHTML = originalHTML; }, 1000); }).catch(err => console.error('Failed to copy:', err));"
                                 style="padding: 0.1617rem; background-color: transparent; border: none; border-radius: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s; flex-shrink: 0;"
@@ -2972,24 +3296,22 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                                 </svg>
                             </button>
-                        </div>
-                    ` : `
-                        <div style="display: flex; align-items: center; gap: 0.2425rem; flex-shrink: 0;">
-                            <svg style="width: 0.8886rem; height: 0.8886rem; color: #9ca3af; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                            <button 
+                                class="remove-conversation-btn"
+                                data-audit-id="${audit.id}"
+                                data-conversation-id="${conversationId}"
+                                onclick="event.stopPropagation(); window.removeConversationFromAudit('${String(audit.id).replace(/'/g, "\\'")}', '${String(conversationId).replace(/'/g, "\\'")}')"
+                                style="padding: 0.1617rem; background-color: transparent; border: none; border-radius: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #dc2626; transition: all 0.2s; flex-shrink: 0;"
+                                onmouseover="this.style.backgroundColor='#fee2e2'; this.style.color='#991b1b';"
+                                onmouseout="this.style.backgroundColor='transparent'; this.style.color='#dc2626';"
+                                title="Remove conversation link"
+                            >
+                                <svg style="width: 0.7273rem; height: 0.7273rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
-                            <span style="font-size: 0.5252rem; color: #9ca3af; font-style: italic; white-space: nowrap;">No conversation</span>
+                            </button>
+                        ` : ''}
                         </div>
-                    `}
-                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
-                    <span style="font-size: 0.5252rem; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 7rem;">${escapeHtml(employeeName)}</span>
-                    ${adminAlias ? `<span style="font-size: 0.4447rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0404rem 0.1213rem; border-radius: 0.0808rem; border: 0.0202rem solid #86efac; white-space: nowrap; margin: 0 0.1617rem;" title="Intercom Admin Alias">${escapeHtml(adminAlias)}</span>` : ''}
-                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
-                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap;">${dateFormatted}</span>
-                </div>
-                
-                <!-- Right: Actions (Buttons only, chip moved to center) -->
-                <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
                     ${conversationId && conversationUrl ? `
                         <button 
                             onclick="event.stopPropagation(); window.open('${conversationUrl}', '_blank', 'noopener,noreferrer')" 
@@ -3777,6 +4099,8 @@ window.closeConversationsSection = function() {
 let pullConversationsAdminId = null;
 let pullConversationsAdminName = null;
 let pullConversationsAdminEmail = null;
+let pullConversationsAdminAlias = null;
+let pullConversationsDateRange = 'yesterday'; // Default: 'yesterday', 'last3days', 'thisweek'
 let pullConversationsList = []; // Original unfiltered list from cache/API
 let pullConversationsFilteredList = []; // Filtered list for display
 let pullConversationsFilters = {
@@ -3789,17 +4113,165 @@ let pullConversationsFilters = {
     conversationId: null
 };
 
+// Select date range and update button styles
+async function selectDateRange(range) {
+    pullConversationsDateRange = range;
+    
+    // Reset all buttons to default style
+    const yesterdayBtn = document.getElementById('dateRangeBtnYesterday');
+    const last3DaysBtn = document.getElementById('dateRangeBtnLast3Days');
+    const thisWeekBtn = document.getElementById('dateRangeBtnThisWeek');
+    
+    const activeStyle = {
+        background: '#1A733E',
+        color: 'white',
+        border: 'none'
+    };
+    
+    const inactiveStyle = {
+        background: '#f3f4f6',
+        color: '#374151',
+        border: '0.0304rem solid #d1d5db'
+    };
+    
+    // Apply styles based on selection
+    if (yesterdayBtn) {
+        if (range === 'yesterday') {
+            Object.assign(yesterdayBtn.style, activeStyle);
+        } else {
+            Object.assign(yesterdayBtn.style, inactiveStyle);
+        }
+    }
+    
+    if (last3DaysBtn) {
+        if (range === 'last3days') {
+            Object.assign(last3DaysBtn.style, activeStyle);
+        } else {
+            Object.assign(last3DaysBtn.style, inactiveStyle);
+        }
+    }
+    
+    if (thisWeekBtn) {
+        if (range === 'thisweek') {
+            Object.assign(thisWeekBtn.style, activeStyle);
+        } else {
+            Object.assign(thisWeekBtn.style, inactiveStyle);
+        }
+    }
+    
+    // Fetch conversations with new date range
+    if (pullConversationsAdminId) {
+        const dateRange = getDateRangeForSelection(range);
+        await fetchConversationsForDateRange(dateRange.startDate, dateRange.endDate);
+    }
+}
+
+// Get date range based on selection
+function getDateRangeForSelection(range) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let startDate, endDate;
+    
+    switch (range) {
+        case 'yesterday':
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            startDate = yesterday.toISOString().split('T')[0];
+            endDate = yesterday.toISOString().split('T')[0];
+            break;
+        case 'last3days':
+            const threeDaysAgo = new Date(today);
+            threeDaysAgo.setDate(today.getDate() - 3);
+            startDate = threeDaysAgo.toISOString().split('T')[0];
+            endDate = today.toISOString().split('T')[0];
+            break;
+        case 'thisweek':
+            // Get Monday of current week
+            const monday = new Date(today);
+            const day = monday.getDay();
+            const diff = monday.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            monday.setDate(diff);
+            startDate = monday.toISOString().split('T')[0];
+            endDate = today.toISOString().split('T')[0];
+            break;
+        default:
+            // Default to yesterday
+            const defaultYesterday = new Date(today);
+            defaultYesterday.setDate(today.getDate() - 1);
+            startDate = defaultYesterday.toISOString().split('T')[0];
+            endDate = defaultYesterday.toISOString().split('T')[0];
+    }
+    
+    return { startDate, endDate };
+}
+
+// Update pull conversations header with employee name and alias
+function updatePullConversationsHeader() {
+    const headerElement = document.getElementById('pullConversationsHeader');
+    const employeeNameElement = document.getElementById('pullConversationsEmployeeName');
+    const aliasChipElement = document.getElementById('pullConversationsAdminAliasChip');
+    
+    if (!headerElement || !employeeNameElement || !aliasChipElement) {
+        return;
+    }
+    
+    // Update employee name
+    if (pullConversationsAdminName) {
+        employeeNameElement.textContent = pullConversationsAdminName;
+    } else {
+        employeeNameElement.textContent = '';
+    }
+    
+    // Update alias chip
+    if (pullConversationsAdminAlias) {
+        aliasChipElement.style.display = 'inline-flex';
+        aliasChipElement.innerHTML = `<span style="font-size: 0.4852rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0808rem 0.2425rem; border-radius: 0.1617rem; border: 0.0304rem solid #86efac; white-space: nowrap; margin-left: 0.3234rem;" title="Intercom Admin Alias">${escapeHtml(pullConversationsAdminAlias)}</span>`;
+    } else {
+        aliasChipElement.style.display = 'none';
+        aliasChipElement.innerHTML = '';
+    }
+}
+
 // Pull conversations from Intercom - main function (for current user)
 window.pullConversationsFromIntercom = async function() {
     try {
         // Get current user's email from localStorage
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
         const currentUserEmail = (userInfo.email || '').toLowerCase().trim();
+        const currentUserName = userInfo.name || currentUserEmail.split('@')[0] || 'Unknown';
         
         if (!currentUserEmail) {
             showPullConversationsError('User email not found. Please log in again.');
             return;
         }
+        
+        // Reset admin info
+        pullConversationsAdminId = null;
+        pullConversationsAdminName = currentUserName;
+        pullConversationsAdminEmail = currentUserEmail;
+        pullConversationsAdminAlias = null;
+        
+        // Fetch admin alias from Supabase
+        if (window.supabaseClient) {
+            try {
+                const { data: userData, error: aliasError } = await window.supabaseClient
+                    .from('users')
+                    .select('intercom_admin_alias')
+                    .eq('email', currentUserEmail)
+                    .single();
+                
+                if (!aliasError && userData && userData.intercom_admin_alias) {
+                    pullConversationsAdminAlias = userData.intercom_admin_alias;
+                    console.log('✅ Found admin alias:', pullConversationsAdminAlias);
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch admin alias:', error);
+            }
+        }
+        
+        // Update header with employee name and alias
+        updatePullConversationsHeader();
         
         // Show the section
         const section = document.getElementById('pullConversationsSection');
@@ -3812,6 +4284,11 @@ window.pullConversationsFromIntercom = async function() {
             }
             section.style.display = 'block';
             section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Hide "Start Audit" buttons in nested cards for this employee when conversations are visible
+            if (pullConversationsAdminEmail) {
+                hideNestedStartButtonsForEmployee(pullConversationsAdminEmail);
+            }
         }
         
         // Set default date to yesterday
@@ -3824,27 +4301,15 @@ window.pullConversationsFromIntercom = async function() {
             dateInput.value = yesterdayStr;
         }
         
-        // Reset admin info
-        pullConversationsAdminId = null;
-        pullConversationsAdminName = null;
-        pullConversationsAdminEmail = currentUserEmail;
-        
         // Find admin ID for current user
         await findAdminIdForCurrentUser(currentUserEmail);
         
         // If admin ID found, load conversations
         if (pullConversationsAdminId) {
-            let selectedDate;
-            if (dateInput && dateInput.value) {
-                selectedDate = dateInput.value;
-            } else {
-                // Fallback to yesterday if date input is not available
-                const today = new Date();
-                const yesterday = new Date(today);
-                yesterday.setDate(today.getDate() - 1);
-                selectedDate = yesterday.toISOString().split('T')[0];
-            }
-            await fetchConversationsForCurrentUser(selectedDate);
+            // Initialize date range buttons (set Yesterday as default)
+            selectDateRange('yesterday');
+            const dateRange = getDateRangeForSelection('yesterday');
+            await fetchConversationsForDateRange(dateRange.startDate, dateRange.endDate);
         }
         
     } catch (error) {
@@ -3925,13 +4390,30 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
             }
         }
         
-        // Insert the section right after the target card
-        if (targetCard && targetCard.parentNode) {
-            // Insert right after the target card
+        // Collapse all other groups and expand current agent's group first
+        collapseAllOtherGroups(employeeEmail);
+        expandGroupForEmployee(employeeEmail);
+        highlightGroupCardForEmployee(employeeEmail);
+        
+        // Find the expanded group content area (auditGroup_${email}) inside the target card
+        const normalizedEmailForId = normalizedEmployeeEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        const groupContentDiv = document.getElementById(`auditGroup_${normalizedEmailForId}`);
+        
+        // Insert the section inside the expanded group content area
+        if (groupContentDiv) {
+            // Remove section from its current parent if it exists
+            if (section.parentNode) {
+                section.parentNode.removeChild(section);
+            }
+            // Append to the group content div (after all nested audit cards)
+            groupContentDiv.appendChild(section);
+            console.log('✅ Inserted conversations section inside employee group container');
+        } else if (targetCard && targetCard.parentNode) {
+            // Fallback: insert right after the target card if group div not found
             targetCard.parentNode.insertBefore(section, targetCard.nextSibling);
-            console.log('✅ Inserted conversations section after employee card');
+            console.log('⚠️ Group content div not found, inserted after employee card');
         } else {
-            // Fallback: insert after pendingAuditsSection
+            // Final fallback: insert after pendingAuditsSection
             const pendingAuditsSection = document.getElementById('pendingAuditsSection');
             if (pendingAuditsSection && section.parentNode) {
                 pendingAuditsSection.parentNode.insertBefore(section, pendingAuditsSection.nextSibling);
@@ -3941,6 +4423,9 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
         
         console.log('✅ Showing conversations section');
         section.style.display = 'block';
+        
+        // Hide "Start Audit" buttons in nested cards for this employee when conversations are visible
+        hideNestedStartButtonsForEmployee(employeeEmail);
         
         // Hide error and list initially
         const errorDiv = document.getElementById('pullConversationsError');
@@ -3975,6 +4460,29 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
         pullConversationsAdminId = null;
         pullConversationsAdminName = employeeName || null;
         pullConversationsAdminEmail = employeeEmail || null;
+        pullConversationsAdminAlias = null;
+        
+        // Fetch admin alias from Supabase
+        if (employeeEmail && window.supabaseClient) {
+            try {
+                const normalizedEmail = (employeeEmail || '').toLowerCase().trim();
+                const { data: userData, error: aliasError } = await window.supabaseClient
+                    .from('users')
+                    .select('intercom_admin_alias')
+                    .eq('email', normalizedEmail)
+                    .single();
+                
+                if (!aliasError && userData && userData.intercom_admin_alias) {
+                    pullConversationsAdminAlias = userData.intercom_admin_alias;
+                    console.log('✅ Found admin alias:', pullConversationsAdminAlias);
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch admin alias:', error);
+            }
+        }
+        
+        // Update header with employee name and alias
+        updatePullConversationsHeader();
         
         // Find admin ID for the employee email (optimized lookup: users table → cache → API → search modal)
         console.log('🔍 Looking up admin ID for email:', employeeEmail);
@@ -5188,7 +5696,169 @@ function clearAllConversationCaches() {
     }
 }
 
-// Fetch conversations for current user
+// Fetch conversations for date range
+async function fetchConversationsForDateRange(startDate, endDate) {
+    if (!pullConversationsAdminId) {
+        showPullConversationsError('Admin ID not found. Please try again.');
+        return;
+    }
+    
+    // Hide elements during loading
+    hideElementsDuringLoading();
+    
+    // Show loading state
+    const loadingDiv = document.getElementById('pullConversationsLoading');
+    const errorDiv = document.getElementById('pullConversationsError');
+    const listDiv = document.getElementById('pullConversationsList');
+    
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (listDiv) listDiv.style.display = 'none';
+    
+    // Get Supabase configuration
+    const supabaseUrl = window.SupabaseConfig?.url || '';
+    const supabaseAnonKey = window.SupabaseConfig?.anonKey || '';
+    
+    // Normalize adminId and dates
+    const normalizedAdminId = String(pullConversationsAdminId || '').trim();
+    const normalizedStartDate = startDate ? String(startDate).trim().split('T')[0] : '';
+    const normalizedEndDate = endDate ? String(endDate).trim().split('T')[0] : '';
+    
+    if (!normalizedAdminId || !normalizedStartDate || !normalizedEndDate) {
+        console.warn('⚠️ Cannot fetch: missing adminId or dates', { 
+            adminId: normalizedAdminId, 
+            startDate: normalizedStartDate,
+            endDate: normalizedEndDate
+        });
+        if (!normalizedAdminId) {
+            showPullConversationsError('Admin ID is missing. Please pull conversations again.');
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            return;
+        }
+        if (!normalizedStartDate || !normalizedEndDate) {
+            showPullConversationsError('Please select a date range.');
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            return;
+        }
+    }
+    
+    // Format dates for API (add time component)
+    const updatedSince = `${normalizedStartDate} 00:00:00`;
+    const updatedBefore = `${normalizedEndDate} 23:59:59`;
+    
+    // No cache for date ranges - always fetch from API
+    console.log('🌐 Fetching from API for date range:', normalizedStartDate, 'to', normalizedEndDate);
+    
+    // Update progress: Initial
+    updateProgressIndicator(10, 'Pulling from Intercom...');
+    
+    try {
+        // Build edge function URL with date range
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/intercom-proxy?endpoint=conversations&admin_id=${encodeURIComponent(pullConversationsAdminId)}&updated_since=${encodeURIComponent(updatedSince)}&updated_before=${encodeURIComponent(updatedBefore)}`;
+        
+        console.log('📡 Calling:', edgeFunctionUrl);
+        
+        // Update progress: Searching
+        updateProgressIndicator(20, 'Searching conversations in Intercom...');
+        
+        // Create AbortController for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds timeout
+        
+        let response;
+        try {
+            response = await fetch(edgeFunctionUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${supabaseAnonKey}`,
+                    'apikey': supabaseAnonKey,
+                    'Accept': 'application/json'
+                },
+                signal: controller.signal
+            });
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            
+            // Handle timeout and network errors
+            if (fetchError.name === 'AbortError') {
+                throw new Error('Request timed out. The Intercom API is taking too long to respond. Please try again or check your internet connection.');
+            } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('ERR_CONNECTION')) {
+                throw new Error('Connection failed. Please check your internet connection and try again. If the problem persists, the Intercom service may be temporarily unavailable.');
+            } else {
+                throw new Error(`Network error: ${fetchError.message}`);
+            }
+        }
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+            throw new Error(errorMsg);
+        }
+
+        // Update progress: Processing
+        updateProgressIndicator(70, 'Processing participation data...');
+        
+        const data = await response.json();
+        
+        // Extract conversations from response
+        let conversations = [];
+        if (data && Array.isArray(data.conversations)) {
+            conversations = data.conversations;
+        } else if (data && data.type === 'conversation.list' && Array.isArray(data.conversations)) {
+            conversations = data.conversations;
+        }
+        
+        const participationCount = data.participation_count || 0;
+        
+        console.log(`✅ Fetched ${conversations.length} conversations from API`);
+        console.log('📋 First conversation sample:', conversations[0] ? Object.keys(conversations[0]) : 'No conversations');
+        
+        // Update progress: Complete
+        updateProgressIndicator(100, 'Complete');
+        
+        // Small delay to show completion
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Store conversations (original unfiltered list)
+        pullConversationsList = conversations;
+        
+        // Initialize filtered list with all conversations
+        pullConversationsFilteredList = [...conversations];
+        
+        // Only apply filters if any are actually set
+        const hasActiveFilters = Object.values(pullConversationsFilters).some(value => value !== null && value !== '');
+        if (hasActiveFilters) {
+            await filterPullConversations();
+        } else {
+            // No filters, just display all conversations
+            await displayPullConversationsList(conversations);
+            updatePullConversationsCountAndAdmin(conversations.length);
+        }
+        
+        // Hide loading and show results
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (listDiv) listDiv.style.display = 'block';
+        
+        // Show elements after loading
+        showElementsAfterLoading();
+        
+        // Update active filters display
+        updatePullConversationsActiveFilters();
+        
+    } catch (error) {
+        console.error('❌ Error fetching conversations:', error);
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = `Error: ${error.message}`;
+        }
+        showElementsAfterLoading();
+    }
+}
+
+// Fetch conversations for current user (legacy function - kept for compatibility)
 async function fetchConversationsForCurrentUser(selectedDate) {
     if (!pullConversationsAdminId) {
         showPullConversationsError('Admin ID not found. Please try again.');
@@ -5547,12 +6217,13 @@ async function displayPullConversationsList(conversations) {
     // Get number of assigned audits for the specific employee whose conversations are being pulled
     // Use frontend pendingAudits array (already filtered to current user) instead of querying database
     let assignedAuditsCount = 0;
+    let employeeAudits = [];
     if (pullConversationsAdminEmail && pendingAudits && pendingAudits.length > 0) {
         // Normalize email for comparison (lowercase, trim)
         const normalizedEmail = (pullConversationsAdminEmail || '').toLowerCase().trim();
         
         // Filter pendingAudits for this specific employee (already filtered to current user)
-        const employeeAudits = pendingAudits.filter(audit => {
+        employeeAudits = pendingAudits.filter(audit => {
             const auditEmployeeEmail = (audit.employee_email || '').toLowerCase().trim();
             return auditEmployeeEmail === normalizedEmail && 
                    (audit.status === 'pending' || audit.status === 'in_progress');
@@ -5576,12 +6247,37 @@ async function displayPullConversationsList(conversations) {
     sortedConversations.forEach((conversation, index) => {
         const row = document.createElement('tr');
         
+        // Make row draggable
+        row.draggable = true;
+        row.setAttribute('data-conversation-id', conversation.id);
+        row.setAttribute('data-conversation-data', JSON.stringify(conversation));
+        row.style.cursor = 'grab'; // Show grab cursor on hover
+        
         // Highlight top conversations based on number of assigned audits for the employee
         const shouldHighlight = index < highlightCount;
         if (shouldHighlight) {
             row.style.backgroundColor = '#fef3c7'; // Light yellow background
             row.style.borderLeft = '0.2rem solid #f59e0b'; // Orange left border
         }
+        
+        // Add drag event handlers
+        row.addEventListener('dragstart', (e) => {
+            // Don't start drag if clicking on buttons or interactive elements
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('input')) {
+                e.preventDefault();
+                return;
+            }
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', conversation.id);
+            e.dataTransfer.setData('application/json', JSON.stringify(conversation));
+            row.style.opacity = '0.5';
+            row.style.cursor = 'grabbing';
+        });
+        
+        row.addEventListener('dragend', (e) => {
+            row.style.opacity = '1';
+            row.style.cursor = 'grab';
+        });
         
         // Extract data
         const clientName = extractClientName(conversation) || 'Unknown';
@@ -5667,7 +6363,7 @@ async function displayPullConversationsList(conversations) {
             </td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
                 <div style="display: flex; align-items: center; gap: 0.25rem;">
-                    <span style="font-family: monospace; font-size: 0.5252rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
+                    <span style="font-family: 'Poppins', sans-serif; font-size: 0.5252rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
                     ${conversationId && conversationId !== 'N/A' ? `<button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.08rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
                         <svg style="width: 0.65rem; height: 0.65rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -5698,17 +6394,32 @@ async function displayPullConversationsList(conversations) {
                     >
                         Open
                     </button>
+                ${shouldHighlight && employeeAudits.length > 0 ? `
+                    <button 
+                        class="quick-start-audit-btn"
+                        data-conversation-id="${conversation.id}"
+                        data-audit-index="${index % assignedAuditsCount}"
+                        data-audit-id="${employeeAudits[index % assignedAuditsCount]?.id || ''}"
+                        style="padding: 0.2425rem 0.4852rem; background-color: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                        onmouseover="this.style.backgroundColor='#15582E'"
+                        onmouseout="this.style.backgroundColor='#1A733E'"
+                        title="Start audit #${(index % assignedAuditsCount) + 1} for this conversation"
+                    >
+                        Start Audit #${(index % assignedAuditsCount) + 1}
+                    </button>
+                ` : `
                 <button 
                     class="start-audit-from-conversation-btn"
                     data-conversation-id="${conversation.id}"
-                    ${selectedAuditId ? '' : 'disabled'}
-                    style="padding: 0.16rem 0.32rem; font-size: 0.4852rem; font-weight: 500; color: ${selectedAuditId ? '#1A733E' : '#9ca3af'}; background: ${selectedAuditId ? '#d1fae5' : '#f3f4f6'}; border: none; border-radius: 0.16rem; cursor: ${selectedAuditId ? 'pointer' : 'not-allowed'}; transition: all 0.2s; white-space: nowrap; opacity: ${selectedAuditId ? '1' : '0.6'};"
-                    onmouseover="${selectedAuditId ? "this.style.background='#a7f3d0'" : ''}"
-                    onmouseout="${selectedAuditId ? "this.style.background='#d1fae5'" : ''}"
-                    title="${selectedAuditId ? 'Start audit from conversation' : 'Please select an assigned audit first'}"
+                        ${selectedAuditId ? '' : 'disabled'}
+                        style="padding: 0.16rem 0.32rem; font-size: 0.4852rem; font-weight: 500; color: ${selectedAuditId ? '#1A733E' : '#9ca3af'}; background: ${selectedAuditId ? '#d1fae5' : '#f3f4f6'}; border: none; border-radius: 0.16rem; cursor: ${selectedAuditId ? 'pointer' : 'not-allowed'}; transition: all 0.2s; white-space: nowrap; opacity: ${selectedAuditId ? '1' : '0.6'};"
+                        onmouseover="${selectedAuditId ? "this.style.background='#a7f3d0'" : ''}"
+                        onmouseout="${selectedAuditId ? "this.style.background='#d1fae5'" : ''}"
+                        title="${selectedAuditId ? 'Start audit from conversation' : 'Please select an assigned audit first'}"
                 >
                     Audit
                 </button>
+                `}
                 </div>
             </td>
         `;
@@ -5731,6 +6442,18 @@ async function displayPullConversationsList(conversations) {
                     return; // Button is disabled, do nothing
                 }
                 window.startAuditFromConversation(conversation);
+            });
+        }
+        
+        // Attach click handler to the Quick Start Audit button (for highlighted rows)
+        const quickStartButton = row.querySelector('.quick-start-audit-btn');
+        if (quickStartButton) {
+            quickStartButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const auditId = quickStartButton.getAttribute('data-audit-id');
+                if (auditId) {
+                    window.quickStartAuditFromConversation(conversation, auditId);
+                }
             });
         }
         
@@ -5766,14 +6489,9 @@ window.updatePullConversationsSelection = function() {
         selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < checkboxes.length;
     }
     
-    // Show/hide bulk actions bar
+    // Bulk actions bar removed - no longer needed
     if (bulkActionsBar) {
-        bulkActionsBar.style.display = selectedCount > 0 ? 'flex' : 'none';
-    }
-    
-    // Update count
-    if (selectedCountSpan) {
-        selectedCountSpan.textContent = `${selectedCount} selected`;
+        bulkActionsBar.style.display = 'none';
     }
 };
 
@@ -5948,10 +6666,114 @@ function showPullConversationsError(message) {
 }
 
 // Close pull conversations section
+// Hide "Start Audit" buttons in nested cards for a specific employee
+function hideNestedStartButtonsForEmployee(employeeEmail) {
+    if (!employeeEmail) return;
+    
+    const normalizedEmail = (employeeEmail || '').toLowerCase().trim();
+    
+    // Find all nested cards and check if they belong to this employee
+    // Method 1: Find by audit data (if we have pendingAudits)
+    if (pendingAudits && pendingAudits.length > 0) {
+        const employeeAuditIds = pendingAudits
+            .filter(audit => {
+                const auditEmail = (audit.employee_email || '').toLowerCase().trim();
+                return auditEmail === normalizedEmail && 
+                       (audit.status === 'pending' || audit.status === 'in_progress');
+            })
+            .map(audit => audit.id);
+        
+        employeeAuditIds.forEach(auditId => {
+            const card = document.querySelector(`.nested-audit-card[data-audit-id="${auditId}"]`);
+            if (card) {
+                const startButton = card.querySelector('.nested-start-audit-btn');
+                if (startButton) {
+                    startButton.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // Method 2: Find by group card and hide all nested cards within it
+    const groupCards = document.querySelectorAll('#pendingAuditsList > div');
+    groupCards.forEach(groupCard => {
+        const pullButton = groupCard.querySelector('.pull-conversations-btn-group[data-email]');
+        if (pullButton) {
+            const groupEmail = (pullButton.getAttribute('data-email') || '').toLowerCase().trim();
+            if (groupEmail === normalizedEmail) {
+                // This is the group for this employee, hide all Start Audit buttons in nested cards
+                const nestedCards = groupCard.querySelectorAll('.nested-audit-card');
+                nestedCards.forEach(card => {
+                    const startButton = card.querySelector('.nested-start-audit-btn');
+                    if (startButton) {
+                        startButton.style.display = 'none';
+                    }
+                });
+            }
+        }
+    });
+}
+
+// Show "Start Audit" buttons in nested cards for a specific employee
+function showNestedStartButtonsForEmployee(employeeEmail) {
+    if (!employeeEmail) return;
+    
+    const normalizedEmail = (employeeEmail || '').toLowerCase().trim();
+    
+    // Find all nested cards and check if they belong to this employee
+    // Method 1: Find by audit data (if we have pendingAudits)
+    if (pendingAudits && pendingAudits.length > 0) {
+        const employeeAuditIds = pendingAudits
+            .filter(audit => {
+                const auditEmail = (audit.employee_email || '').toLowerCase().trim();
+                return auditEmail === normalizedEmail && 
+                       (audit.status === 'pending' || audit.status === 'in_progress');
+            })
+            .map(audit => audit.id);
+        
+        employeeAuditIds.forEach(auditId => {
+            const card = document.querySelector(`.nested-audit-card[data-audit-id="${auditId}"]`);
+            if (card) {
+                const startButton = card.querySelector('.nested-start-audit-btn');
+                if (startButton) {
+                    startButton.style.display = 'flex';
+                }
+            }
+        });
+    }
+    
+    // Method 2: Find by group card and show all nested cards within it
+    const groupCards = document.querySelectorAll('#pendingAuditsList > div');
+    groupCards.forEach(groupCard => {
+        const pullButton = groupCard.querySelector('.pull-conversations-btn-group[data-email]');
+        if (pullButton) {
+            const groupEmail = (pullButton.getAttribute('data-email') || '').toLowerCase().trim();
+            if (groupEmail === normalizedEmail) {
+                // This is the group for this employee, show all Start Audit buttons in nested cards
+                const nestedCards = groupCard.querySelectorAll('.nested-audit-card');
+                nestedCards.forEach(card => {
+                    const startButton = card.querySelector('.nested-start-audit-btn');
+                    if (startButton) {
+                        startButton.style.display = 'flex';
+                    }
+                });
+            }
+        }
+    });
+}
+
 window.closePullConversationsSection = function() {
     const section = document.getElementById('pullConversationsSection');
     if (section) {
         section.style.display = 'none';
+        
+        // Remove green highlighting from all group cards
+        removeHighlightFromAllGroupCards();
+        
+        // Show "Start Audit" buttons in nested cards again when conversations section is closed
+        if (pullConversationsAdminEmail) {
+            showNestedStartButtonsForEmployee(pullConversationsAdminEmail);
+        }
     }
     // Reset state
     pullConversationsAdminId = null;
@@ -7874,7 +8696,7 @@ function displayEmployeeConversations() {
             </td>
             <td style="padding: 0.625rem 0.75rem; vertical-align: middle;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="font-family: 'Courier New', monospace; font-size: 0.8125rem; color: #4b5563; font-weight: 500;">${conversationId}</div>
+                    <div style="font-family: 'Poppins', sans-serif; font-size: 0.8125rem; color: #4b5563; font-weight: 500;">${conversationId}</div>
                     <button 
                         class="copy-button"
                         onclick="event.stopPropagation(); copyConversationId('${conversationId}', this);"
@@ -7976,6 +8798,577 @@ window.conversationsGoToPage = function(page) {
 window.navigateToAssignment = function(assignmentId) {
     // Navigate to audit-form.html with assignment parameter
     window.location.href = `audit-form.html?assignment=${assignmentId}`;
+};
+
+// Remove conversation link from audit
+async function removeConversationFromAudit(auditId, conversationId) {
+    try {
+        console.log('🗑️ Removing conversation link from audit:', { conversationId, auditId });
+        
+        // Show confirmation dialog
+        const proceed = await window.confirmationDialog.show({
+            title: 'Remove Conversation Link',
+            message: `Are you sure you want to remove the conversation link (ID: ${conversationId}) from this audit assignment?`,
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            type: 'warning'
+        });
+        
+        if (!proceed) {
+            return;
+        }
+        
+        // Get Supabase client
+        const supabaseClient = window.SupabaseConfig?.getClient?.();
+        if (!supabaseClient) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Database connection not available',
+                confirmText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        // Update assignment to remove conversation_id (set to null)
+        const { error: updateError } = await supabaseClient
+            .from('audit_assignments')
+            .update({ 
+                conversation_id: null
+            })
+            .eq('id', auditId);
+        
+        if (updateError) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to remove conversation link: ' + updateError.message,
+                confirmText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        console.log('✅ Successfully removed conversation link from audit');
+        
+        // Show success message
+        await window.confirmationDialog.show({
+            title: 'Success',
+            message: `Conversation link has been removed from the audit assignment.`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Update input field to make it editable
+        const input = document.getElementById(`conversationIdInput_${auditId}`);
+        if (input) {
+            input.value = '';
+            input.readOnly = false;
+            input.style.color = '#6b7280';
+            input.style.fontWeight = '400';
+            input.style.borderColor = '#d1d5db';
+            input.style.background = 'white';
+            input.style.cursor = 'text';
+            input.title = 'Enter conversation ID';
+        }
+        
+        // Refresh the pending audits display
+        await displayPendingAudits();
+        
+    } catch (error) {
+        console.error('Error removing conversation link:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to remove conversation link: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// Make function available globally
+window.removeConversationFromAudit = removeConversationFromAudit;
+
+// Update conversation ID for audit (from input field)
+async function updateConversationIdForAudit(auditId, conversationIdValue) {
+    try {
+        // Trim and validate the input
+        const conversationId = conversationIdValue ? conversationIdValue.trim() : null;
+        
+        // If empty, remove the conversation link and make input editable
+        if (!conversationId || conversationId === '') {
+            const input = document.getElementById(`conversationIdInput_${auditId}`);
+            if (input) {
+                input.readOnly = false;
+                input.style.background = 'white';
+                input.style.cursor = 'text';
+                input.title = 'Enter conversation ID';
+            }
+            await removeConversationFromAudit(auditId, '');
+            return;
+        }
+        
+        console.log('📝 Updating conversation ID for audit:', { conversationId, auditId });
+        
+        // Get Supabase client
+        const supabaseClient = window.SupabaseConfig?.getClient?.();
+        if (!supabaseClient) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Database connection not available',
+                confirmText: 'OK',
+                type: 'error'
+            });
+            // Reset input to original value
+            const input = document.getElementById(`conversationIdInput_${auditId}`);
+            if (input) {
+                const originalValue = input.getAttribute('data-original-value') || '';
+                input.value = originalValue;
+            }
+            return;
+        }
+        
+        // Get the current assignment to check if it already has a conversation_id
+        const { data: currentAssignment, error: fetchError } = await supabaseClient
+            .from('audit_assignments')
+            .select('id, conversation_id, employee_email, employee_name, auditor_email, status')
+            .eq('id', auditId)
+            .single();
+        
+        if (fetchError || !currentAssignment) {
+            console.error('Error fetching assignment:', fetchError);
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to load assignment details: ' + (fetchError?.message || 'Assignment not found'),
+                confirmText: 'OK',
+                type: 'error'
+            });
+            // Reset input
+            const input = document.getElementById(`conversationIdInput_${auditId}`);
+            if (input) {
+                const originalValue = input.getAttribute('data-original-value') || '';
+                input.value = originalValue;
+            }
+            return;
+        }
+        
+        // Check if assignment already has a different conversation_id
+        if (currentAssignment.conversation_id) {
+            const existingConvId = String(currentAssignment.conversation_id);
+            const newConvId = String(conversationId);
+            
+            // If it's the same conversation, no need to update
+            if (existingConvId === newConvId) {
+                return;
+            }
+            
+            // Different conversation - show warning
+            const proceed = await window.confirmationDialog.show({
+                title: 'Warning: Conversation Already Linked',
+                message: `This assignment already has a conversation linked (ID: ${existingConvId}).\n\n` +
+                        `You are trying to link a different conversation (ID: ${newConvId}).\n\n` +
+                        `Do you want to replace the existing conversation?`,
+                confirmText: 'Replace',
+                cancelText: 'Cancel',
+                type: 'warning'
+            });
+            
+            if (!proceed) {
+                // Reset input to original value and make it readonly again
+                const input = document.getElementById(`conversationIdInput_${auditId}`);
+                if (input) {
+                    input.value = existingConvId;
+                    input.readOnly = true;
+                    input.style.color = '#1e40af';
+                    input.style.fontWeight = '600';
+                    input.style.borderColor = '#2563eb';
+                    input.style.background = '#f9fafb';
+                    input.style.cursor = 'default';
+                    input.title = 'Delete to edit or replace';
+                }
+                return;
+            }
+        }
+        
+        // Update assignment with conversation_id
+        const { error: updateError } = await supabaseClient
+            .from('audit_assignments')
+            .update({ 
+                conversation_id: conversationId
+            })
+            .eq('id', auditId);
+        
+        if (updateError) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to update conversation ID: ' + updateError.message,
+                confirmText: 'OK',
+                type: 'error'
+            });
+            // Reset input to original value and restore readonly state
+            const input = document.getElementById(`conversationIdInput_${auditId}`);
+            if (input) {
+                const originalValue = input.getAttribute('data-original-value') || '';
+                input.value = originalValue;
+                if (originalValue) {
+                    input.readOnly = true;
+                    input.style.color = '#1e40af';
+                    input.style.fontWeight = '600';
+                    input.style.borderColor = '#2563eb';
+                    input.style.background = '#f9fafb';
+                    input.style.cursor = 'default';
+                    input.title = 'Delete to edit or replace';
+                } else {
+                    input.readOnly = false;
+                    input.style.color = '#6b7280';
+                    input.style.fontWeight = '400';
+                    input.style.borderColor = '#d1d5db';
+                    input.style.background = 'white';
+                    input.style.cursor = 'text';
+                    input.title = 'Enter conversation ID';
+                }
+            }
+            return;
+        }
+        
+        console.log('✅ Successfully updated conversation ID for audit');
+        
+        // Update the input's original value
+        const input = document.getElementById(`conversationIdInput_${auditId}`);
+        if (input) {
+            input.setAttribute('data-original-value', conversationId);
+            input.readOnly = true;
+            input.style.color = '#1e40af';
+            input.style.fontWeight = '600';
+            input.style.borderColor = '#2563eb';
+            input.style.background = '#f9fafb';
+            input.style.cursor = 'default';
+            input.title = 'Delete to edit or replace';
+        }
+        
+        // Refresh the pending audits display to show the linked conversation
+        await displayPendingAudits();
+        
+    } catch (error) {
+        console.error('Error updating conversation ID:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to update conversation ID: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+        // Reset input to original value and restore readonly state
+        const input = document.getElementById(`conversationIdInput_${auditId}`);
+        if (input) {
+            const originalValue = input.getAttribute('data-original-value') || '';
+            input.value = originalValue;
+            if (originalValue) {
+                input.readOnly = true;
+                input.style.color = '#1e40af';
+                input.style.fontWeight = '600';
+                input.style.borderColor = '#2563eb';
+                input.style.background = '#f9fafb';
+                input.style.cursor = 'default';
+                input.title = 'Delete to edit or replace';
+            } else {
+                input.readOnly = false;
+                input.style.color = '#6b7280';
+                input.style.fontWeight = '400';
+                input.style.borderColor = '#d1d5db';
+                input.style.background = 'white';
+                input.style.cursor = 'text';
+                input.title = 'Enter conversation ID';
+            }
+        }
+    }
+}
+
+// Make function available globally
+window.updateConversationIdForAudit = updateConversationIdForAudit;
+
+// Link conversation to audit via drag-and-drop
+async function linkConversationToAudit(conversation, auditId) {
+    try {
+        console.log('🔗 Linking conversation to audit via drag-and-drop:', { conversationId: conversation.id, auditId });
+        
+        const conversationId = conversation.id || null;
+        if (!conversationId) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Invalid conversation: No conversation ID found',
+                confirmText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        // Get Supabase client
+        const supabaseClient = window.SupabaseConfig?.getClient?.();
+        if (!supabaseClient) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Database connection not available',
+                confirmText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        // Get the current assignment to check if it already has a conversation_id
+        const { data: currentAssignment, error: fetchError } = await supabaseClient
+            .from('audit_assignments')
+            .select('id, conversation_id, employee_email, employee_name, auditor_email, status')
+            .eq('id', auditId)
+            .single();
+        
+        if (fetchError || !currentAssignment) {
+            console.error('Error fetching assignment:', fetchError);
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to load assignment details: ' + (fetchError?.message || 'Assignment not found'),
+                confirmText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        // Check if assignment already has a conversation_id
+        if (currentAssignment.conversation_id) {
+            const existingConvId = String(currentAssignment.conversation_id);
+            const newConvId = String(conversationId);
+            
+            // If it's the same conversation, just show success message
+            if (existingConvId === newConvId) {
+                await window.confirmationDialog.show({
+                    title: 'Already Linked',
+                    message: `This conversation (ID: ${newConvId}) is already linked to this audit.`,
+                    confirmText: 'OK',
+                    type: 'info'
+                });
+                return;
+            }
+            
+            // Different conversation - show warning
+            const proceed = await window.confirmationDialog.show({
+                title: 'Warning: Conversation Already Linked',
+                message: `This assignment already has a conversation linked (ID: ${existingConvId}).\n\n` +
+                        `You are trying to link a different conversation (ID: ${newConvId}).\n\n` +
+                        `Do you want to replace the existing conversation?`,
+                confirmText: 'Replace',
+                cancelText: 'Cancel',
+                type: 'warning'
+            });
+            
+            if (!proceed) {
+                return;
+            }
+        }
+        
+        // Update assignment with conversation_id
+        const { error: updateError } = await supabaseClient
+            .from('audit_assignments')
+            .update({ 
+                conversation_id: conversationId
+            })
+            .eq('id', auditId);
+        
+        if (updateError) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to link conversation to assignment: ' + updateError.message,
+                confirmText: 'OK',
+                type: 'error'
+            });
+            return;
+        }
+        
+        console.log('✅ Successfully linked conversation to assignment via drag-and-drop');
+        
+        // Update the input field value immediately (before refresh)
+        const input = document.getElementById(`conversationIdInput_${auditId}`);
+        if (input) {
+            input.value = conversationId;
+            input.setAttribute('data-original-value', conversationId);
+            input.style.color = '#1e40af';
+            input.style.fontWeight = '600';
+            input.style.borderColor = '#2563eb';
+        }
+        
+        // Update the audit card in the pendingAudits array immediately
+        const auditIndex = pendingAudits.findIndex(a => a.id === auditId);
+        if (auditIndex !== -1) {
+            pendingAudits[auditIndex].conversation_id = conversationId;
+        }
+        
+        // Update the card UI immediately without full refresh
+        const auditCard = document.querySelector(`.nested-audit-card[data-audit-id="${auditId}"]`);
+        if (auditCard) {
+            // Find conversation ID input and its container
+            const cardInput = auditCard.querySelector(`#conversationIdInput_${auditId}`);
+            const conversationContainer = cardInput ? cardInput.parentElement : null;
+            
+            if (cardInput) {
+                // Update conversation ID input
+                cardInput.value = conversationId;
+                cardInput.setAttribute('data-original-value', conversationId);
+                cardInput.readOnly = true;
+                cardInput.style.color = '#1e40af';
+                cardInput.style.fontWeight = '600';
+                cardInput.style.borderColor = '#2563eb';
+                cardInput.style.background = '#f9fafb';
+                cardInput.style.cursor = 'default';
+                cardInput.title = 'Delete to edit or replace';
+            }
+            
+            if (conversationContainer && cardInput) {
+                // Check if copy and remove buttons exist, if not create them
+                let copyBtn = conversationContainer.querySelector('button[title="Copy conversation ID"]');
+                let removeBtn = conversationContainer.querySelector('.remove-conversation-btn');
+                
+                if (!copyBtn) {
+                    // Create copy button
+                    copyBtn = document.createElement('button');
+                    copyBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(conversationId).then(() => {
+                            const originalHTML = copyBtn.innerHTML;
+                            copyBtn.innerHTML = '<svg style="width: 0.7273rem; height: 0.7273rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                            setTimeout(() => { copyBtn.innerHTML = originalHTML; }, 1000);
+                        }).catch(err => console.error('Failed to copy:', err));
+                    };
+                    copyBtn.style.cssText = 'padding: 0.1617rem; background-color: transparent; border: none; border-radius: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; transition: all 0.2s; flex-shrink: 0;';
+                    copyBtn.onmouseover = () => { copyBtn.style.backgroundColor = '#f3f4f6'; copyBtn.style.color = '#374151'; };
+                    copyBtn.onmouseout = () => { copyBtn.style.backgroundColor = 'transparent'; copyBtn.style.color = '#6b7280'; };
+                    copyBtn.title = 'Copy conversation ID';
+                    copyBtn.innerHTML = '<svg style="width: 0.7273rem; height: 0.7273rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>';
+                    conversationContainer.appendChild(copyBtn);
+                } else {
+                    copyBtn.style.display = 'flex';
+                }
+                
+                if (!removeBtn) {
+                    // Create remove button
+                    removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-conversation-btn';
+                    removeBtn.setAttribute('data-audit-id', auditId);
+                    removeBtn.setAttribute('data-conversation-id', conversationId);
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        window.removeConversationFromAudit(auditId, conversationId);
+                    };
+                    removeBtn.style.cssText = 'padding: 0.1617rem; background-color: transparent; border: none; border-radius: 0.1617rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #dc2626; transition: all 0.2s; flex-shrink: 0;';
+                    removeBtn.onmouseover = () => { removeBtn.style.backgroundColor = '#fee2e2'; removeBtn.style.color = '#991b1b'; };
+                    removeBtn.onmouseout = () => { removeBtn.style.backgroundColor = 'transparent'; removeBtn.style.color = '#dc2626'; };
+                    removeBtn.title = 'Remove conversation link';
+                    removeBtn.innerHTML = '<svg style="width: 0.7273rem; height: 0.7273rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                    conversationContainer.appendChild(removeBtn);
+                } else {
+                    removeBtn.style.display = 'flex';
+                    removeBtn.setAttribute('data-conversation-id', conversationId);
+                }
+                
+                // Update chat icon color
+                const chatIcon = conversationContainer.querySelector('svg');
+                if (chatIcon) {
+                    chatIcon.style.color = '#2563eb';
+                }
+            }
+            
+            // Update View button - check if it exists in the right section
+            const workspaceId = window.intercomConfig?.appId || 'aphmhtyj';
+            const conversationUrl = `https://app.intercom.com/a/inbox/${workspaceId}/inbox/conversation/${conversationId}?view`;
+            const rightSection = auditCard.querySelector('div[style*="flex-shrink: 0"]:last-child');
+            if (rightSection) {
+                let viewBtn = rightSection.querySelector('button[onclick*="window.open"]');
+                if (!viewBtn || !viewBtn.textContent.includes('View')) {
+                    // Create or update View button
+                    if (viewBtn) {
+                        viewBtn.remove();
+                    }
+                    viewBtn = document.createElement('button');
+                    viewBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        window.open(conversationUrl, '_blank', 'noopener,noreferrer');
+                    };
+                    viewBtn.style.cssText = 'padding: 0.2425rem 0.4043rem; background-color: #f3f4f6; color: #374151; border: none; border-radius: 0.2425rem; font-size: 0.4852rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 0.1617rem; height: 1.6169rem;';
+                    viewBtn.onmouseover = () => viewBtn.style.backgroundColor = '#e5e7eb';
+                    viewBtn.onmouseout = () => viewBtn.style.backgroundColor = '#f3f4f6';
+                    viewBtn.title = 'Open conversation in Intercom';
+                    viewBtn.innerHTML = '<svg style="width: 0.8886rem; height: 0.8886rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg><span>View</span>';
+                    rightSection.insertBefore(viewBtn, rightSection.firstChild);
+                }
+            }
+            
+            // Show Start/Continue button if it exists and conversationId is now available
+            const startBtn = auditCard.querySelector('.nested-start-audit-btn');
+            if (startBtn && conversationId) {
+                startBtn.style.display = 'flex';
+            }
+        }
+        
+        // Show success message
+        await window.confirmationDialog.show({
+            title: 'Success',
+            message: `Conversation (ID: ${conversationId}) has been linked to the audit assignment.`,
+            confirmText: 'OK',
+            type: 'success'
+        });
+        
+        // Refresh the pending audits display to ensure everything is in sync
+        await displayPendingAudits();
+        
+    } catch (error) {
+        console.error('Error linking conversation to audit:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to link conversation: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
+}
+
+// Quick start audit from conversation - auto-selects the audit and starts immediately
+window.quickStartAuditFromConversation = async function(conversation, auditId) {
+    try {
+        console.log('⚡ Quick Start Audit:', { conversationId: conversation.id, auditId });
+        
+        // Set the selected audit ID
+        selectedAuditId = auditId;
+        
+        // Update UI to reflect selection
+        const allNestedCards = document.querySelectorAll('.nested-audit-card');
+        allNestedCards.forEach(card => {
+            const cardAuditId = card.getAttribute('data-audit-id');
+            const radioButton = card.querySelector(`input[type="radio"][value="${cardAuditId}"]`);
+            const isSelected = selectedAuditId === cardAuditId;
+            
+            if (isSelected) {
+                card.style.background = '#eff6ff';
+                card.style.border = '0.0405rem solid #2563eb';
+                card.style.boxShadow = '0 0 0 0.0808rem rgba(37, 99, 235, 0.1)';
+                if (radioButton) radioButton.checked = true;
+            } else {
+                card.style.background = '#ffffff';
+                card.style.border = '0.0304rem solid #e5e7eb';
+                card.style.boxShadow = 'none';
+                if (radioButton) radioButton.checked = false;
+            }
+        });
+        
+        // Update audit buttons state
+        updateAuditButtonsState();
+        
+        // Start the audit immediately
+        await window.startAuditFromConversation(conversation);
+    } catch (error) {
+        console.error('Error in quickStartAuditFromConversation:', error);
+        await window.confirmationDialog.show({
+            title: 'Error',
+            message: 'Failed to start audit: ' + error.message,
+            confirmText: 'OK',
+            type: 'error'
+        });
+    }
 };
 
 window.startAssignedAudit = async function(assignmentId, employeeEmail, scorecardId) {
@@ -14261,53 +15654,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Bulk action button event listener
-    const openSelectedBtn = document.getElementById('openSelectedInIntercomBtn');
-    if (openSelectedBtn) {
-        openSelectedBtn.addEventListener('click', openSelectedConversationsInIntercom);
-    }
-    
-    // Keyboard shortcut: Ctrl+I (or Cmd+I on Mac) to open selected conversations in Intercom
-    document.addEventListener('keydown', function(e) {
-        // Check for Ctrl+I or Cmd+I
-        const isModifierPressed = e.ctrlKey || e.metaKey;
-        const isShiftPressed = e.shiftKey;
-        const isIPressed = e.key === 'i' || e.key === 'I';
-        
-        // Check for Ctrl+I (without Shift)
-        const isCtrlI = isModifierPressed && !isShiftPressed && isIPressed;
-        
-        if (isCtrlI) {
-            // Don't trigger if user is typing in an input field
-            const activeElement = document.activeElement;
-            const tagName = activeElement.tagName.toLowerCase();
-            const isInput = ['input', 'textarea', 'select'].includes(tagName);
-            const isContentEditable = activeElement.contentEditable === 'true';
-            
-            if (isInput || isContentEditable) {
-                return; // User is typing, ignore shortcut
-            }
-            
-            // Check if pull conversations section is visible
-            const pullConversationsList = document.getElementById('pullConversationsList');
-            if (!pullConversationsList || pullConversationsList.style.display === 'none') {
-                return; // Conversations list not visible, ignore shortcut
-            }
-            
-            // Check if there are selected conversations
-            const checkedBoxes = document.querySelectorAll('.conversation-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                return; // No conversations selected, ignore shortcut
-            }
-            
-            // Prevent default browser behavior
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Trigger the function
-            openSelectedConversationsInIntercom();
-        }
-    });
 });
 
 // ============================================================================
