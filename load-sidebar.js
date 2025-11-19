@@ -157,6 +157,7 @@ class SidebarLoader {
                 <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm491-80h69v-69l-69 69Zm-457 0h73l120-120h85L452-200h64l120-120h85L541-200h65l120-120h34v-440H200v509l69-69h85L434-200Zm72-200-56-56 177-177 80 80 147-147 56 56-203 204-80-80-121 120Z"/>
             </svg>
             <span class="brand-text">NEXT QMS</span>
+            <span class="brand-version" id="app-version">v1.0.0</span>
         </button>
     </div>
     
@@ -368,6 +369,9 @@ class SidebarLoader {
     // Initialize brand button navigation
     this.initBrandButton()
 
+    // Initialize version display
+    this.initVersionDisplay()
+
     // Initialize user profile functionality
     this.initUserProfile()
 
@@ -438,6 +442,18 @@ class SidebarLoader {
         }
       }
     })
+  }
+
+  /**
+   * Initialize version display
+   */
+  initVersionDisplay() {
+    const versionElement = document.getElementById('app-version')
+    if (!versionElement) return
+
+    // Get version from window.APP_VERSION (set by version.js)
+    const version = window.APP_VERSION || '1.0.0'
+    versionElement.textContent = `v${version}`
   }
 
   /**
