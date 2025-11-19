@@ -458,13 +458,13 @@
                 <span id="pullConversationsAdminAliasChip" style="display: none;"></span>
             </h3>
                 <div style="display: flex; align-items: center; gap: 0.3234rem;">
-                    <button id="dateRangeBtnYesterday" onclick="selectDateRange('yesterday')" style="padding: 0.2425rem 0.4043rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.style.background !== '#1A733E') this.style.backgroundColor='#15582E'" onmouseout="if(this.style.background !== '#1A733E') this.style.backgroundColor=''" title="Yesterday (Default)">
+                    <button id="dateRangeBtnYesterday" data-is-active="true" onclick="selectDateRange('yesterday')" style="padding: 0.2425rem 0.4043rem; background: #1A733E; color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.dataset.isActive === 'true') this.style.backgroundColor='#15582E'; else this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.dataset.isActive === 'true') this.style.backgroundColor='#1A733E'; else this.style.backgroundColor='#f3f4f6'" title="Yesterday (Default)">
                         Yesterday
                     </button>
-                    <button id="dateRangeBtnLast3Days" onclick="selectDateRange('last3days')" style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.style.background !== '#1A733E') this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.style.background !== '#1A733E') this.style.backgroundColor='#f3f4f6'" title="Last 3 Days">
+                    <button id="dateRangeBtnLast3Days" data-is-active="false" onclick="selectDateRange('last3days')" style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.dataset.isActive === 'true') this.style.backgroundColor='#15582E'; else this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.dataset.isActive === 'true') this.style.backgroundColor='#1A733E'; else this.style.backgroundColor='#f3f4f6'" title="Last 3 Days">
                         Last 3 days
                     </button>
-                    <button id="dateRangeBtnThisWeek" onclick="selectDateRange('thisweek')" style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.style.background !== '#1A733E') this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.style.background !== '#1A733E') this.style.backgroundColor='#f3f4f6'" title="This Week">
+                    <button id="dateRangeBtnThisWeek" data-is-active="false" onclick="selectDateRange('thisweek')" style="padding: 0.2425rem 0.4043rem; background: #f3f4f6; color: #374151; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="if(this.dataset.isActive === 'true') this.style.backgroundColor='#15582E'; else this.style.backgroundColor='#e5e7eb'" onmouseout="if(this.dataset.isActive === 'true') this.style.backgroundColor='#1A733E'; else this.style.backgroundColor='#f3f4f6'" title="This Week">
                         This week
             </button>
                     </div>
@@ -4138,24 +4138,30 @@ async function selectDateRange(range) {
     if (yesterdayBtn) {
         if (range === 'yesterday') {
             Object.assign(yesterdayBtn.style, activeStyle);
+            yesterdayBtn.dataset.isActive = 'true';
         } else {
             Object.assign(yesterdayBtn.style, inactiveStyle);
+            yesterdayBtn.dataset.isActive = 'false';
         }
     }
     
     if (last3DaysBtn) {
         if (range === 'last3days') {
             Object.assign(last3DaysBtn.style, activeStyle);
+            last3DaysBtn.dataset.isActive = 'true';
         } else {
             Object.assign(last3DaysBtn.style, inactiveStyle);
+            last3DaysBtn.dataset.isActive = 'false';
         }
     }
     
     if (thisWeekBtn) {
         if (range === 'thisweek') {
             Object.assign(thisWeekBtn.style, activeStyle);
+            thisWeekBtn.dataset.isActive = 'true';
         } else {
             Object.assign(thisWeekBtn.style, inactiveStyle);
+            thisWeekBtn.dataset.isActive = 'false';
         }
     }
     
