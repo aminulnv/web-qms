@@ -15,6 +15,29 @@
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="sidebar.css">
     <style>
+        /* Prevent horizontal overflow */
+        .main-content {
+            overflow-x: hidden;
+            max-width: calc(100vw - var(--sidebar-collapsed)) !important;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        
+        .sidebar:not(.collapsed) ~ .main-content {
+            max-width: calc(100vw - var(--sidebar-width)) !important;
+        }
+        
+        .main-content > * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        #pullConversationsSection {
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        
         .copy-button {
             display: inline-flex;
             align-items: center;
@@ -502,18 +525,20 @@
                     Open Selected in Intercom
                 </button>
             </div>
-            <div style="background: white; border-radius: 0 0 0.3234rem 0.3234rem; border: 0.0304rem solid #e5e7eb; border-top: none; max-height: 60vh; overflow: auto; position: relative;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 0.75rem;">
+            <div style="background: white; border-radius: 0 0 0.3234rem 0.3234rem; border: 0.0304rem solid #e5e7eb; border-top: none; max-height: 60vh; overflow-x: auto; overflow-y: auto; position: relative;">
+                <table style="width: 100%; border-collapse: collapse; min-width: fit-content; font-size: 0.6069rem;">
                     <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
                         <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; width: 3rem;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; width: 3rem;">
                                 <input type="checkbox" id="selectAllPullConversations" style="cursor: pointer;" title="Select all conversations">
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
                                     <span>Client</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Client</div>
@@ -527,11 +552,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
                                     <span>ID</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Conversation ID</div>
@@ -545,11 +572,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
                                     <span>Subject</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Subject</div>
@@ -563,11 +592,15 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
-                                    <span>⭐</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <svg style="width: 0.75rem; height: 0.75rem; color: #f59e0b;" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Rating</div>
@@ -581,11 +614,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>CX Score</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">CX Score</div>
@@ -599,11 +634,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Length</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Conversation Length</div>
@@ -617,11 +654,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Status</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Conversation Status</div>
@@ -635,11 +674,15 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
-                                    <span>🔴</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <svg style="width: 0.75rem; height: 0.75rem; color: #dc2626;" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                    </svg>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Priority</div>
@@ -647,17 +690,19 @@
                                             <p style="margin: 0 0 0.5rem 0;">Whether the conversation has been marked as high priority by the team.</p>
                                             <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
                                                 <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
-                                                <p style="margin: 0; color: #9ca3af;">🔴 shows when conversation is marked as <span style="color: white; font-weight: 600;">priority</span>, otherwise shows "-"</p>
+                                                <p style="margin: 0; color: #9ca3af;">Priority icon shows when conversation is marked as <span style="color: white; font-weight: 600;">priority</span>, otherwise shows "-"</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.125rem; position: relative;">
                                     <span>Tags</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Tags</div>
@@ -671,11 +716,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Created</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Created Date</div>
@@ -689,11 +736,13 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Updated</span>
-                                    <div class="info-icon" style="width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; cursor: help; transition: background 0.2s;">
-                                        <span style="font-size: 0.5rem; color: #4b5563; font-weight: bold; line-height: 1;">i</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.75rem; height: 0.75rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
                                     </div>
                                     <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
                                         <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">Updated Date</div>
@@ -707,7 +756,7 @@
                                     </div>
                                 </div>
                             </th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6875rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Action</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="pullConversationsTableBody">
@@ -2352,7 +2401,47 @@ window.selectNestedAudit = function(auditId) {
     });
     
     console.log('Selected audit ID:', selectedAuditId);
+    
+    // Update all audit buttons in the pulled conversations list
+    updateAuditButtonsState();
 };
+
+/**
+ * Update the state of all audit buttons in the pulled conversations list
+ * based on whether an audit is selected
+ */
+function updateAuditButtonsState() {
+    const auditButtons = document.querySelectorAll('.start-audit-from-conversation-btn');
+    auditButtons.forEach(button => {
+        if (selectedAuditId) {
+            // Enable button
+            button.disabled = false;
+            button.style.color = '#1A733E';
+            button.style.background = '#d1fae5';
+            button.style.cursor = 'pointer';
+            button.style.opacity = '1';
+            button.title = 'Start audit from conversation';
+            // Re-attach hover handlers
+            button.onmouseover = function() {
+                this.style.background = '#a7f3d0';
+            };
+            button.onmouseout = function() {
+                this.style.background = '#d1fae5';
+            };
+        } else {
+            // Disable button
+            button.disabled = true;
+            button.style.color = '#9ca3af';
+            button.style.background = '#f3f4f6';
+            button.style.cursor = 'not-allowed';
+            button.style.opacity = '0.6';
+            button.title = 'Please select an assigned audit first';
+            // Remove hover handlers
+            button.onmouseover = null;
+            button.onmouseout = null;
+        }
+    });
+}
 
 // Load pending audits for current user from audit_assignments table
 async function loadPendingAudits() {
@@ -5374,31 +5463,33 @@ function displayPullConversationsList(conversations) {
             const cxScoreNum = parseInt(cxScore);
             if (!isNaN(cxScoreNum)) {
                 const cxScoreColor = cxScoreNum >= 4 ? '#10b981' : cxScoreNum >= 3 ? '#f59e0b' : '#ef4444';
-                cxScoreHtml = `<span style="color: ${cxScoreColor}; font-weight: 600; font-size: 0.6875rem;">${cxScoreNum}</span>`;
+                cxScoreHtml = `<span style="color: ${cxScoreColor}; font-weight: 600; font-size: 0.6069rem;">${cxScoreNum}</span>`;
             }
         }
         
         // Calculate conversation length
         const conversationLength = conversation.conversation_parts?.conversation_parts?.length || 0;
         const lengthDisplay = conversationLength > 0 
-            ? `<span style="font-size: 0.6875rem; color: #374151; font-weight: 500;">${conversationLength}</span>`
-            : '<span style="color: #9ca3af;">-</span>';
+            ? `<span style="font-size: 0.6069rem; color: #374151; font-weight: 500;">${conversationLength}</span>`
+            : '<span style="color: #9ca3af; font-size: 0.5252rem;">-</span>';
         
         // Format rating (compact)
         let ratingHtml = '-';
         if (rating && rating !== '-') {
             const ratingColor = rating >= 4 ? '#10b981' : rating >= 3 ? '#f59e0b' : '#ef4444';
-            ratingHtml = `<span style="color: ${ratingColor}; font-weight: 600; font-size: 0.6875rem;">${rating}/5</span>`;
+            ratingHtml = `<span style="color: ${ratingColor}; font-weight: 600; font-size: 0.6069rem;">${rating}/5</span>`;
         }
         
         // Format state (compact badge)
         const stateColor = state === 'closed' ? '#10b981' : state === 'open' ? '#f59e0b' : '#6b7280';
-        const stateBadge = `<span style="background: ${stateColor === '#10b981' ? '#d1fae5' : stateColor === '#f59e0b' ? '#fef3c7' : '#f3f4f6'}; color: ${stateColor}; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 500;">${state}</span>`;
+        const stateBadge = `<span style="background: ${stateColor === '#10b981' ? '#d1fae5' : stateColor === '#f59e0b' ? '#fef3c7' : '#f3f4f6'}; color: ${stateColor}; padding: 0.08rem 0.25rem; border-radius: 0.16rem; font-size: 0.4852rem; font-weight: 500;">${state}</span>`;
         
         // Format priority (icon only)
         const priorityBadge = priority === 'priority' 
-            ? `<span style="color: #dc2626; font-size: 0.875rem;" title="Priority">🔴</span>`
-            : `<span style="color: #9ca3af; font-size: 0.6875rem;">-</span>`;
+            ? `<svg style="width: 0.75rem; height: 0.75rem; color: #dc2626; vertical-align: middle;" fill="currentColor" viewBox="0 0 24 24" title="Priority">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>`
+            : `<span style="color: #9ca3af; font-size: 0.5252rem;">-</span>`;
         
         // Format tags (show all with full names)
         let tagsHtml = '-';
@@ -5408,8 +5499,8 @@ function displayPullConversationsList(conversations) {
                 return tagName;
             }).filter(tag => tag);
             if (displayTags.length > 0) {
-                tagsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 0.125rem; max-width: 15rem;">
-                    ${displayTags.map(tag => `<span style="background: #e0e7ff; color: #4338ca; padding: 0.0625rem 0.25rem; border-radius: 0.125rem; font-size: 0.5625rem; font-weight: 500;">${escapeHtml(tag)}</span>`).join('')}
+                tagsHtml = `<div style="display: flex; flex-wrap: wrap; gap: 0.08rem; max-width: 15rem;">
+                    ${displayTags.map(tag => `<span style="background: #e0e7ff; color: #4338ca; padding: 0.04rem 0.16rem; border-radius: 0.08rem; font-size: 0.4447rem; font-weight: 500;">${escapeHtml(tag)}</span>`).join('')}
                 </div>`;
             }
         }
@@ -5419,52 +5510,54 @@ function displayPullConversationsList(conversations) {
         const updatedDateShort = updatedDate !== '-' ? new Date(updatedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-';
         
         row.innerHTML = `
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">
                 <input type="checkbox" class="conversation-checkbox" data-conversation-id="${conversation.id}" style="cursor: pointer;" onclick="event.stopPropagation(); updatePullConversationsSelection();">
             </td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
-                <div style="font-weight: 500; color: #111827; font-size: 0.75rem; line-height: 1.2;">${escapeHtml(clientName)}</div>
-                <div style="font-size: 0.625rem; color: #6b7280; line-height: 1.2;">${clientEmail ? escapeHtml(clientEmail.substring(0, 20)) + (clientEmail.length > 20 ? '...' : '') : '-'}</div>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
+                <div style="font-weight: 500; color: #111827; font-size: 0.6069rem; line-height: 1.2;">${escapeHtml(clientName)}</div>
+                <div style="font-size: 0.5252rem; color: #6b7280; line-height: 1.2;">${clientEmail ? escapeHtml(clientEmail.substring(0, 20)) + (clientEmail.length > 20 ? '...' : '') : '-'}</div>
             </td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
                 <div style="display: flex; align-items: center; gap: 0.25rem;">
-                    <span style="font-family: monospace; font-size: 0.625rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
-                    ${conversationId && conversationId !== 'N/A' ? `<button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.125rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
-                        <svg style="width: 0.75rem; height: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span style="font-family: monospace; font-size: 0.5252rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
+                    ${conversationId && conversationId !== 'N/A' ? `<button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.08rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
+                        <svg style="width: 0.65rem; height: 0.65rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                     </button>` : ''}
                 </div>
             </td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle;">
-                <div style="max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
+                <div style="max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.6069rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
             </td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${lengthDisplay}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${stateBadge}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">${priorityBadge}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; max-width: 15rem;">${tagsHtml}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${createdDate}">${createdDateShort}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; font-size: 0.6875rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${updatedDate}">${updatedDateShort}</td>
-            <td style="padding: 0.375rem 0.5rem; vertical-align: middle; text-align: center;">
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${lengthDisplay}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${stateBadge}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${priorityBadge}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; max-width: 15rem;">${tagsHtml}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; font-size: 0.5252rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${createdDate}">${createdDateShort}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; font-size: 0.5252rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${updatedDate}">${updatedDateShort}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">
                 <div style="display: flex; gap: 0.25rem; justify-content: center; align-items: center;">
                     <button 
                         class="open-in-intercom-btn"
                         data-conversation-id="${conversation.id}"
-                        style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #2563eb; background: #dbeafe; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                        style="padding: 0.16rem 0.32rem; font-size: 0.4852rem; font-weight: 500; color: #2563eb; background: #dbeafe; border: none; border-radius: 0.16rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
                         onmouseover="this.style.background='#bfdbfe'" 
                         onmouseout="this.style.background='#dbeafe'"
                         title="Open in Intercom"
                     >
-                        Open in Intercom
+                        Open
                     </button>
                 <button 
                     class="start-audit-from-conversation-btn"
                     data-conversation-id="${conversation.id}"
-                    style="padding: 0.25rem 0.5rem; font-size: 0.6875rem; font-weight: 500; color: #1A733E; background: #d1fae5; border: none; border-radius: 0.25rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
-                    onmouseover="this.style.background='#a7f3d0'"
-                    onmouseout="this.style.background='#d1fae5'"
+                    ${selectedAuditId ? '' : 'disabled'}
+                    style="padding: 0.16rem 0.32rem; font-size: 0.4852rem; font-weight: 500; color: ${selectedAuditId ? '#1A733E' : '#9ca3af'}; background: ${selectedAuditId ? '#d1fae5' : '#f3f4f6'}; border: none; border-radius: 0.16rem; cursor: ${selectedAuditId ? 'pointer' : 'not-allowed'}; transition: all 0.2s; white-space: nowrap; opacity: ${selectedAuditId ? '1' : '0.6'};"
+                    onmouseover="${selectedAuditId ? "this.style.background='#a7f3d0'" : ''}"
+                    onmouseout="${selectedAuditId ? "this.style.background='#d1fae5'" : ''}"
+                    title="${selectedAuditId ? 'Start audit from conversation' : 'Please select an assigned audit first'}"
                 >
                     Audit
                 </button>
@@ -5486,12 +5579,18 @@ function displayPullConversationsList(conversations) {
         if (auditButton) {
             auditButton.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (!selectedAuditId) {
+                    return; // Button is disabled, do nothing
+                }
                 window.startAuditFromConversation(conversation);
             });
         }
         
         tableBody.appendChild(row);
     });
+    
+    // Update all audit buttons after rendering
+    updateAuditButtonsState();
 }
 
 // Track open Intercom tabs
