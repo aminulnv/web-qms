@@ -204,6 +204,7 @@ class AccessControl {
           .eq('is_active', true)
 
         if (!pageError && pageRules) {
+          console.log('[AccessControl] Loaded page rules from database:', pageRules)
           // Convert database rules to internal format
           const dbPageRules = {}
           pageRules.forEach(rule => {
@@ -215,6 +216,11 @@ class AccessControl {
               dbPageRules[rule.resource_name].minRoleLevel = rule.min_role_level
             }
             // Note: customCheck functions cannot be stored in database, use defaults for those
+            console.log(`[AccessControl] Processed rule for ${rule.resource_name}:`, {
+              allowedRoles: rule.allowed_roles,
+              minRoleLevel: rule.min_role_level,
+              is_active: rule.is_active
+            })
           })
 
           // Merge database rules with defaults (database takes precedence, but keep customCheck from defaults)
@@ -224,10 +230,18 @@ class AccessControl {
             
             if (dbRule) {
               // Use database rule but preserve customCheck from default if it exists
-              this.PAGE_ACCESS_RULES[pageName] = {
+              // If allowedRoles is present, clear minRoleLevel to avoid conflicts
+              const mergedRule = {
                 ...dbRule,
                 customCheck: defaultRule.customCheck // Preserve custom check functions
               }
+              
+              // If allowedRoles is set, explicitly clear minRoleLevel
+              if (mergedRule.allowedRoles) {
+                mergedRule.minRoleLevel = undefined
+              }
+              
+              this.PAGE_ACCESS_RULES[pageName] = mergedRule
             } else {
               // Use default rule
               this.PAGE_ACCESS_RULES[pageName] = { ...defaultRule }
@@ -237,9 +251,20 @@ class AccessControl {
           // Add any new rules from database that aren't in defaults
           Object.keys(dbPageRules).forEach(pageName => {
             if (!this.PAGE_ACCESS_RULES[pageName]) {
-              this.PAGE_ACCESS_RULES[pageName] = dbPageRules[pageName]
+              const newRule = { ...dbPageRules[pageName] }
+              // If allowedRoles is set, explicitly clear minRoleLevel
+              if (newRule.allowedRoles) {
+                newRule.minRoleLevel = undefined
+              }
+              this.PAGE_ACCESS_RULES[pageName] = newRule
             }
           })
+          
+          // Debug: Log loaded rules
+          console.log('[AccessControl] Final merged access control rules:', this.PAGE_ACCESS_RULES)
+          if (this.PAGE_ACCESS_RULES['user-management.html']) {
+            console.log('[AccessControl] user-management.html rule:', this.PAGE_ACCESS_RULES['user-management.html'])
+          }
         }
 
         // Load feature rules
@@ -427,6 +452,7 @@ class AccessControl {
     // First check user-specific rules (highest priority)
     const userRule = await this.checkUserSpecificRule(user.email, pageName, 'page')
     if (userRule) {
+      console.log(`[AccessControl] User-specific rule found for ${user.email} on ${pageName}:`, userRule)
       return {
         allowed: userRule.access_type === 'allow',
         reason: userRule.access_type === 'allow' 
@@ -439,6 +465,8 @@ class AccessControl {
     // Get access rule for this page
     const rule = this.PAGE_ACCESS_RULES[pageName]
     
+    console.log(`[AccessControl] Checking access for ${user.email} (${user.role}) to ${pageName}:`, rule)
+    
     if (!rule) {
       // No rule defined - default to allowing access (fail open for backward compatibility)
       console.warn(`No access rule defined for page: ${pageName}`)
@@ -448,25 +476,28 @@ class AccessControl {
       }
     }
 
-    // Check allowedRoles first
+    // Check allowedRoles first - if present and user matches, allow access (unless customCheck overrides)
     if (rule.allowedRoles) {
-      if (!this.hasAllowedRole(user, rule.allowedRoles)) {
+      if (this.hasAllowedRole(user, rule.allowedRoles)) {
+        // User matches allowedRoles - allow access (but still run customCheck if present)
+        // Skip minRoleLevel check since allowedRoles takes precedence
+      } else {
         return {
           allowed: false,
           reason: `Role '${user.role}' is not allowed. Required: ${Array.isArray(rule.allowedRoles) ? rule.allowedRoles.join(', ') : rule.allowedRoles}`
         }
       }
-    }
-
-    // Check minRoleLevel
-    if (rule.minRoleLevel !== undefined) {
-      if (!this.hasMinimumRoleLevel(user, rule.minRoleLevel)) {
-        const requiredRole = Object.keys(this.ROLE_HIERARCHY).find(
-          role => this.ROLE_HIERARCHY[role] === rule.minRoleLevel
-        )
-        return {
-          allowed: false,
-          reason: `Insufficient role level. Required: ${requiredRole || `Level ${rule.minRoleLevel}`} or above`
+    } else {
+      // Only check minRoleLevel if allowedRoles is not specified
+      if (rule.minRoleLevel !== undefined) {
+        if (!this.hasMinimumRoleLevel(user, rule.minRoleLevel)) {
+          const requiredRole = Object.keys(this.ROLE_HIERARCHY).find(
+            role => this.ROLE_HIERARCHY[role] === rule.minRoleLevel
+          )
+          return {
+            allowed: false,
+            reason: `Insufficient role level. Required: ${requiredRole || `Level ${rule.minRoleLevel}`} or above`
+          }
         }
       }
     }

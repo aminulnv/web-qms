@@ -41,6 +41,8 @@
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
     <script src="keyboard-shortcuts.js"></script>
+    <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
     <style>
         /* Audit Reports Specific Styles */
         .expert-audits-container {
@@ -384,6 +386,12 @@
                     <button class="action-btn" style="flex: 1;" onclick="clearDateFilter()">Clear</button>
                 </div>
             </div>
+        </div>
+        <!-- Quick Date Filters -->
+        <div style="display: flex; align-items: center; gap: 0.375rem;">
+            <button class="action-btn quick-date-btn" id="todayBtn" onclick="applyQuickDateFilter('today')">Today</button>
+            <button class="action-btn quick-date-btn" id="yesterdayBtn" onclick="applyQuickDateFilter('yesterday')">Yesterday</button>
+            <button class="action-btn quick-date-btn active" id="thisMonthBtn" onclick="applyQuickDateFilter('thisMonth')">This Month</button>
         </div>
         <button class="action-btn" id="exportBtn">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1317,8 +1325,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Sort by submitted_at descending
                 combinedAudits.sort((a, b) => {
-                    const dateA = new Date(a.submitted_at);
-                    const dateB = new Date(b.submitted_at);
+                    const dateA = toDhakaTime(a.submitted_at);
+                    const dateB = toDhakaTime(b.submitted_at);
                     return dateB - dateA;
                 });
             } else {
@@ -1690,7 +1698,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         // Calculate actual trends from real data for last 7 days
-        const today = new Date();
+        const today = getDhakaNow();
         const trendValues = {
             totalAudits: [],
             avgQualityScore: [],
@@ -1706,14 +1714,15 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            date.setHours(0, 0, 0, 0);
-            const nextDate = new Date(date);
+            const dhakaDate = getDhakaStartOfDay(date);
+            const nextDate = new Date(dhakaDate);
             nextDate.setDate(nextDate.getDate() + 1);
+            const dhakaNextDate = getDhakaStartOfDay(nextDate);
             
             // Filter audits for this day from trendsAudits (which already respects week/date filter)
             const dayAudits = trendsAudits.filter(a => {
-                const submitted = new Date(a.submittedAt || a.submitted_at);
-                return submitted >= date && submitted < nextDate;
+                const submitted = toDhakaTime(a.submittedAt || a.submitted_at);
+                return submitted >= dhakaDate && submitted < dhakaNextDate;
             });
             
             const dayTotal = dayAudits.length;
@@ -2149,8 +2158,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Date formatting helper
     function formatCardDate(dateString) {
         if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        const now = new Date();
+        const date = toDhakaTime(dateString);
+        const now = getDhakaNow();
         const diffMs = now - date;
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
@@ -2161,7 +2170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (diffHours < 24) return `${diffHours}h ago`;
         if (diffDays < 7) return `${diffDays}d ago`;
         
-        return date.toLocaleDateString();
+        return formatDhakaDate(date);
     }
     
     // Create audit card
@@ -2271,63 +2280,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Week filter functions
-    function getWeekNumber(date = new Date()) {
-        const startOfYear = new Date(date.getFullYear(), 0, 1);
-        const dayOfWeek = startOfYear.getDay();
-        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const mondayOfWeek1 = new Date(startOfYear);
-        mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
-        mondayOfWeek1.setHours(0, 0, 0, 0);
-        
-        const dateDay = date.getDay();
-        const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
-        const mondayOfDateWeek = new Date(date);
-        mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
-        mondayOfDateWeek.setHours(0, 0, 0, 0);
-        
-        const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
-        const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
-        
-        return weekNumber;
+    function getWeekNumber(date = null) {
+        if (!date) date = getDhakaNow();
+        return getDhakaWeekNumber(date);
     }
 
     function getWeekDates(weekNumber, year) {
-        const startOfYear = new Date(year, 0, 1);
-        const dayOfWeek = startOfYear.getDay();
-        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const mondayOfWeek1 = new Date(startOfYear);
-        mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
-        
-        const weekStart = new Date(mondayOfWeek1);
-        weekStart.setDate(mondayOfWeek1.getDate() + (weekNumber - 1) * 7);
-        weekStart.setHours(0, 0, 0, 0);
-        
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        weekEnd.setHours(23, 59, 59, 999);
-        
-        return { start: weekStart, end: weekEnd };
+        return getDhakaWeekDates(weekNumber, year);
     }
 
     function initializeWeekFilter() {
-        const today = new Date();
-        currentWeek = getWeekNumber(today);
+        const today = getDhakaNow();
+        currentWeek = getDhakaWeekNumber(today);
         currentWeekYear = today.getFullYear();
         updateWeekDisplay();
     }
 
     function initializeMonthFilter() {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = today.getMonth();
-        
-        // Get first day of current month
-        const firstDay = new Date(year, month, 1);
-        const firstDayStr = firstDay.toISOString().split('T')[0];
-        
-        // Get last day of current month
-        const lastDay = new Date(year, month + 1, 0);
-        const lastDayStr = lastDay.toISOString().split('T')[0];
+        const today = getDhakaNow();
+        const firstDay = getDhakaFirstDayOfMonth(today);
+        const lastDay = getDhakaLastDayOfMonth(today);
+        const firstDayStr = formatDhakaDateForInput(firstDay);
+        const lastDayStr = formatDhakaDateForInput(lastDay);
         
         // Set date filter to current month
         dateFilter.start = firstDayStr;
@@ -2344,9 +2318,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update date button text to show current month
         if (dateBtnTextEl) {
-            const start = firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const end = lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const start = formatDhakaDate(firstDay, { month: 'short', day: 'numeric' });
+            const end = formatDhakaDate(lastDay, { month: 'short', day: 'numeric' });
             dateBtnTextEl.textContent = `${start} - ${end}`;
+        }
+        
+        // Activate "This Month" button
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        const thisMonthBtn = document.getElementById('thisMonthBtn');
+        if (thisMonthBtn) {
+            thisMonthBtn.classList.add('active');
         }
         
         // Update week display to show it's disabled
@@ -2432,6 +2414,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (endDateEl) endDateEl.value = '';
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         
+        // Clear active state of quick filter buttons when switching to week view
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        
         updateWeekDisplay();
         updateClearAllButtonVisibility();
         filterAudits();
@@ -2456,6 +2442,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (endDateEl) endDateEl.value = '';
         if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
         
+        // Clear active state of quick filter buttons when switching to week view
+        const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+        quickDateButtons.forEach(btn => btn.classList.remove('active'));
+        
         updateWeekDisplay();
         updateClearAllButtonVisibility();
         filterAudits();
@@ -2472,10 +2462,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const dateBtnTextEl = document.getElementById('dateBtnText');
         if (startDate || endDate) {
-            const start = startDate ? new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
-            const end = endDate ? new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
+            const start = startDate ? formatDhakaDate(parseDhakaDate(startDate), { month: 'short', day: 'numeric' }) : 'Start';
+            const end = endDate ? formatDhakaDate(parseDhakaDate(endDate), { month: 'short', day: 'numeric' }) : 'End';
             if (dateBtnTextEl) dateBtnTextEl.textContent = `${start} - ${end}`;
             useWeekFilter = false;
+            
+            // Clear active state of quick filter buttons when using custom date range
+            const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+            quickDateButtons.forEach(btn => btn.classList.remove('active'));
+            
             updateWeekDisplay(); // Update week display to show "-"
         } else {
             // If both dates are cleared, reset to current month view
@@ -2495,6 +2490,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateDropdown) dateDropdown.classList.remove('active');
         updateClearAllButtonVisibility();
         filterAudits();
+    };
+
+    // Use shared date filter utility - wrap to provide page-specific callbacks
+    const originalApplyQuickDateFilter = window.applyQuickDateFilter;
+    window.applyQuickDateFilter = function(period) {
+        originalApplyQuickDateFilter(period, {
+            dateFilter: dateFilter,
+            setUseWeekFilter: () => { useWeekFilter = false; },
+            onUpdate: updateWeekDisplay,
+            onRefresh: () => {
+                updateClearAllButtonVisibility();
+                filterAudits();
+            }
+        });
     };
     
     // Toggle filter panel
@@ -2525,17 +2534,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const submittedDate = a.submittedAt || a.submitted_at;
                 if (!submittedDate) return false;
                 
-                const submitted = new Date(submittedDate);
+                const submitted = toDhakaTime(submittedDate);
                 if (isNaN(submitted.getTime())) return false; // Invalid date
                 
                 if (dateFilter.start) {
-                    const startDate = new Date(dateFilter.start);
-                    startDate.setHours(0, 0, 0, 0);
+                    const startDate = getDhakaStartOfDay(parseDhakaDate(dateFilter.start));
                     if (submitted < startDate) return false;
                 }
                 if (dateFilter.end) {
-                    const endDate = new Date(dateFilter.end);
-                    endDate.setHours(23, 59, 59, 999);
+                    const endDate = getDhakaEndOfDay(parseDhakaDate(dateFilter.end));
                     if (submitted > endDate) return false;
                 }
                 return true;
@@ -2546,7 +2553,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const submittedDate = a.submittedAt || a.submitted_at;
                 if (!submittedDate) return false;
                 
-                const submitted = new Date(submittedDate);
+                const submitted = toDhakaTime(submittedDate);
                 if (isNaN(submitted.getTime())) return false; // Invalid date
                 
                 return submitted >= weekDates.start && submitted <= weekDates.end;
@@ -2621,14 +2628,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             let matchesDateRange = true;
             if (dateFromFilter || dateToFilter) {
-                const auditDate = new Date(audit.submittedAt);
+                const auditDate = toDhakaTime(audit.submittedAt);
                 if (dateFromFilter) {
-                    const fromDate = new Date(dateFromFilter);
+                    const fromDate = getDhakaStartOfDay(parseDhakaDate(dateFromFilter));
                     if (auditDate < fromDate) matchesDateRange = false;
                 }
                 if (dateToFilter) {
-                    const toDate = new Date(dateToFilter);
-                    toDate.setHours(23, 59, 59, 999); // Include entire end date
+                    const toDate = getDhakaEndOfDay(parseDhakaDate(dateToFilter));
                     if (auditDate > toDate) matchesDateRange = false;
                 }
             }
@@ -2938,7 +2944,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', `expert-audits-${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `expert-audits-${formatDhakaDateForInput(getDhakaNow())}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();

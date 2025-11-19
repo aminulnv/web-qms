@@ -41,6 +41,8 @@
     <script src="search.js" defer></script>
     <script src="form-validation.js" defer></script>
     <script src="keyboard-shortcuts.js" defer></script>
+    <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
 <style>
   .main-content {
     background-color: #f8f7f2;
@@ -184,7 +186,7 @@
 
       <!-- Right: Action Icons -->
       <div class="flex items-center gap-2">
-        <button id="createAuditBtn" onclick="window.location.href='audit-form.html'" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:bg-primary-dark transition-colors">
+        <button id="createAuditBtn" onclick="window.location.href='create-audit.html'" class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded text-xs font-medium hover:bg-primary-dark transition-colors">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
@@ -255,7 +257,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
         </button>
-        <div class="action-btn" id="weekDisplay" style="padding: 0.5rem 0.75rem; cursor: default; background-color: #1a733e; color: white; border-color: #1a733e;">
+        <div class="action-btn" id="weekDisplay" style="padding: 0.5rem 0.75rem; background-color: #1a733e; color: white; border-color: #1a733e;">
           <span id="weekText">Week -</span>
         </div>
         <button class="action-btn" id="nextWeekBtn" style="padding: 0.5rem 0.5625rem;" title="Next Week">
@@ -288,6 +290,12 @@
             <button class="action-btn" style="flex: 1;" onclick="clearDateFilter()">Clear</button>
           </div>
         </div>
+      </div>
+      <!-- Quick Date Filters -->
+      <div style="display: flex; align-items: center; gap: 0.375rem;">
+          <button class="action-btn quick-date-btn" id="todayBtn" onclick="applyQuickDateFilter('today')">Today</button>
+          <button class="action-btn quick-date-btn" id="yesterdayBtn" onclick="applyQuickDateFilter('yesterday')">Yesterday</button>
+          <button class="action-btn quick-date-btn active" id="thisMonthBtn" onclick="applyQuickDateFilter('thisMonth')">This Month</button>
       </div>
       <button class="action-btn" id="filterBtn">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -588,63 +596,20 @@ let currentWeekYear = null; // Year for the current week
 let useWeekFilter = true; // Whether to use week filter (default) or date range filter
 
 // Helper function to get week number (1-52)
-function getWeekNumber(date = new Date()) {
-  // Get the first day of the year
-  const startOfYear = new Date(date.getFullYear(), 0, 1);
-  
-  // Calculate the Monday of week 1 (the Monday of the week containing Jan 1)
-  // If Jan 1 is Sunday (getDay() === 0), Monday is 6 days before (previous Monday)
-  // Otherwise, Monday is (getDay() - 1) days before Jan 1
-  const dayOfWeek = startOfYear.getDay();
-  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const mondayOfWeek1 = new Date(startOfYear);
-  mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
-  mondayOfWeek1.setHours(0, 0, 0, 0);
-  
-  // Calculate the Monday of the week containing the given date
-  const dateDay = date.getDay();
-  const dateDaysToMonday = dateDay === 0 ? -6 : 1 - dateDay;
-  const mondayOfDateWeek = new Date(date);
-  mondayOfDateWeek.setDate(date.getDate() + dateDaysToMonday);
-  mondayOfDateWeek.setHours(0, 0, 0, 0);
-  
-  // Calculate the number of days from Monday of week 1 to Monday of date's week
-  const daysSinceWeek1 = Math.floor((mondayOfDateWeek - mondayOfWeek1) / (24 * 60 * 60 * 1000));
-  
-  // Calculate the week number (starting from 1)
-  const weekNumber = Math.floor(daysSinceWeek1 / 7) + 1;
-  
-  return weekNumber;
+function getWeekNumber(date = null) {
+  if (!date) date = getDhakaNow();
+  return getDhakaWeekNumber(date);
 }
 
 // Helper function to get week dates (Monday to Sunday)
 function getWeekDates(weekNumber, year) {
-  // Get the first day of the year
-  const startOfYear = new Date(year, 0, 1);
-  
-  // Calculate the Monday of week 1 (the Monday of the week containing Jan 1)
-  const dayOfWeek = startOfYear.getDay();
-  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const mondayOfWeek1 = new Date(startOfYear);
-  mondayOfWeek1.setDate(startOfYear.getDate() + daysToMonday);
-  
-  // Calculate the Monday of the desired week
-  const weekStart = new Date(mondayOfWeek1);
-  weekStart.setDate(mondayOfWeek1.getDate() + (weekNumber - 1) * 7);
-  weekStart.setHours(0, 0, 0, 0);
-  
-  // Calculate the last day of the week (Sunday)
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-  
-  return { start: weekStart, end: weekEnd };
+  return getDhakaWeekDates(weekNumber, year);
 }
 
 // Initialize week filter
 function initializeWeekFilter() {
-  const today = new Date();
-  currentWeek = getWeekNumber(today);
+  const today = getDhakaNow();
+  currentWeek = getDhakaWeekNumber(today);
   currentWeekYear = today.getFullYear();
   updateWeekDisplay();
 }
@@ -656,37 +621,36 @@ function updateWeekDisplay() {
   const nextWeekBtn = document.getElementById('nextWeekBtn');
   const weekDisplay = document.getElementById('weekDisplay');
   
+  // Initialize current week if not set
+  if (currentWeek === null) {
+    const today = getDhakaNow();
+    currentWeek = getDhakaWeekNumber(today);
+    currentWeekYear = today.getFullYear();
+  }
+  
   if (weekTextEl) {
     if (useWeekFilter && currentWeek !== null) {
       weekTextEl.textContent = `Week ${currentWeek}`;
     } else {
-      weekTextEl.textContent = '-';
+      weekTextEl.textContent = `Week ${currentWeek || '-'}`;
     }
   }
   
-  // Disable/enable week navigation buttons based on date range filter
+  // Always enable week navigation buttons - they can switch to week view when clicked
   if (prevWeekBtn) {
-    if (useWeekFilter) {
-      prevWeekBtn.disabled = false;
-      prevWeekBtn.style.opacity = '1';
-      prevWeekBtn.style.cursor = 'pointer';
-    } else {
-      prevWeekBtn.disabled = true;
-      prevWeekBtn.style.opacity = '0.5';
-      prevWeekBtn.style.cursor = 'not-allowed';
-    }
+    prevWeekBtn.removeAttribute('disabled');
+    prevWeekBtn.disabled = false;
+    prevWeekBtn.style.opacity = '1';
+    prevWeekBtn.style.cursor = 'pointer';
+    prevWeekBtn.style.pointerEvents = 'auto';
   }
   
   if (nextWeekBtn) {
-    if (useWeekFilter) {
-      nextWeekBtn.disabled = false;
-      nextWeekBtn.style.opacity = '1';
-      nextWeekBtn.style.cursor = 'pointer';
-    } else {
-      nextWeekBtn.disabled = true;
-      nextWeekBtn.style.opacity = '0.5';
-      nextWeekBtn.style.cursor = 'not-allowed';
-    }
+    nextWeekBtn.removeAttribute('disabled');
+    nextWeekBtn.disabled = false;
+    nextWeekBtn.style.opacity = '1';
+    nextWeekBtn.style.cursor = 'pointer';
+    nextWeekBtn.style.pointerEvents = 'auto';
   }
   
   // Update week display styling
@@ -695,16 +659,27 @@ function updateWeekDisplay() {
       weekDisplay.style.backgroundColor = '#1a733e';
       weekDisplay.style.color = 'white';
       weekDisplay.style.borderColor = '#1a733e';
+      weekDisplay.style.cursor = 'default';
+      weekDisplay.style.pointerEvents = 'auto';
     } else {
       weekDisplay.style.backgroundColor = '#f3f4f6';
       weekDisplay.style.color = '#6b7280';
       weekDisplay.style.borderColor = '#e5e7eb';
+      weekDisplay.style.cursor = 'pointer';
+      weekDisplay.style.pointerEvents = 'auto';
     }
   }
 }
 
 // Navigate week
 function navigateWeek(direction) {
+  // Initialize current week if not set
+  if (currentWeek === null) {
+    const today = getDhakaNow();
+    currentWeek = getDhakaWeekNumber(today);
+    currentWeekYear = today.getFullYear();
+  }
+  
   currentWeek += direction;
   
   // Handle week overflow/underflow
@@ -716,15 +691,22 @@ function navigateWeek(direction) {
     currentWeekYear -= 1;
   }
   
-  updateWeekDisplay();
-  useWeekFilter = true; // Ensure week filter is active
+  // Switch to week view when navigating
+  useWeekFilter = true;
   dateFilter.start = null;
   dateFilter.end = null;
   const startDateInput = document.getElementById('startDate');
   const endDateInput = document.getElementById('endDate');
+  const dateBtnTextEl = document.getElementById('dateBtnText');
   if (startDateInput) startDateInput.value = '';
   if (endDateInput) endDateInput.value = '';
-  updateDateButtonText();
+  if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+  
+  // Clear active state of quick filter buttons when switching to week view
+  const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+  quickDateButtons.forEach(btn => btn.classList.remove('active'));
+  
+  updateWeekDisplay();
   
   // Reload data with week filter
   Promise.all([
@@ -735,17 +717,72 @@ function navigateWeek(direction) {
   ]);
 }
 
-// Initialize date filter (now uses week filter by default)
+// Function to switch to week view when week display is clicked
+function switchToWeekView() {
+  // Initialize current week if not set
+  if (currentWeek === null) {
+    const today = getDhakaNow();
+    currentWeek = getDhakaWeekNumber(today);
+    currentWeekYear = today.getFullYear();
+  }
+  
+  useWeekFilter = true;
+  dateFilter.start = null;
+  dateFilter.end = null;
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  const dateBtnTextEl = document.getElementById('dateBtnText');
+  if (startDateInput) startDateInput.value = '';
+  if (endDateInput) endDateInput.value = '';
+  if (dateBtnTextEl) dateBtnTextEl.textContent = 'Date Range';
+  
+  // Clear active state of quick filter buttons when switching to week view
+  const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+  quickDateButtons.forEach(btn => btn.classList.remove('active'));
+  
+  updateWeekDisplay();
+  
+  // Reload data with week filter
+  Promise.all([
+    loadRecentUpdates(),
+    updateYourStats(),
+    loadAssignedAudits(),
+    loadNotifications()
+  ]);
+}
+
+// Initialize date filter (now uses month filter by default)
 function initializeDateFilter() {
-  initializeWeekFilter();
+  // Initialize month filter (default view)
+  const today = getDhakaNow();
+  const firstDay = getDhakaFirstDayOfMonth(today);
+  const lastDay = getDhakaLastDayOfMonth(today);
+  
+  dateFilter.start = firstDay;
+  dateFilter.end = lastDay;
+  useWeekFilter = false;
+  
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  if (startDateInput) startDateInput.value = formatDhakaDateForInput(firstDay);
+  if (endDateInput) endDateInput.value = formatDhakaDateForInput(lastDay);
+  
   updateDateButtonText();
+  
+  // Activate "This Month" button
+  const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+  quickDateButtons.forEach(btn => btn.classList.remove('active'));
+  const thisMonthBtn = document.getElementById('thisMonthBtn');
+  if (thisMonthBtn) {
+    thisMonthBtn.classList.add('active');
+  }
+  
+  // Initialize week filter for display purposes
+  initializeWeekFilter();
 }
 
 function formatDateForInput(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return formatDhakaDateForInput(date);
 }
 
 function updateDateButtonText() {
@@ -753,10 +790,10 @@ function updateDateButtonText() {
   if (!dateBtnText) return;
   
   if (dateFilter.start && dateFilter.end) {
-    const start = new Date(dateFilter.start);
-    const end = new Date(dateFilter.end);
-    const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const start = dateFilter.start instanceof Date ? dateFilter.start : parseDhakaDate(formatDhakaDateForInput(dateFilter.start));
+    const end = dateFilter.end instanceof Date ? dateFilter.end : parseDhakaDate(formatDhakaDateForInput(dateFilter.end));
+    const startStr = formatDhakaDate(start, { month: 'short', day: 'numeric' });
+    const endStr = formatDhakaDate(end, { month: 'short', day: 'numeric' });
     dateBtnText.textContent = `${startStr} - ${endStr}`;
   } else {
     dateBtnText.textContent = 'Date Range';
@@ -768,16 +805,16 @@ function getCurrentPeriodDates() {
   if (dateFilter.start || dateFilter.end) {
     // Using date range filter
     return {
-      start: dateFilter.start ? new Date(dateFilter.start) : new Date(0),
-      end: dateFilter.end ? new Date(dateFilter.end) : new Date()
+      start: dateFilter.start ? (dateFilter.start instanceof Date ? dateFilter.start : getDhakaStartOfDay(parseDhakaDate(formatDhakaDateForInput(dateFilter.start)))) : new Date(0),
+      end: dateFilter.end ? (dateFilter.end instanceof Date ? dateFilter.end : getDhakaEndOfDay(parseDhakaDate(formatDhakaDateForInput(dateFilter.end)))) : getDhakaNow()
     };
   } else if (useWeekFilter && currentWeek !== null) {
     // Using week filter
-    return getWeekDates(currentWeek, currentWeekYear);
+    return getDhakaWeekDates(currentWeek, currentWeekYear);
   } else {
     // Default to current week
-    const today = new Date();
-    return getWeekDates(getWeekNumber(today), today.getFullYear());
+    const today = getDhakaNow();
+    return getDhakaWeekDates(getDhakaWeekNumber(today), today.getFullYear());
   }
 }
 
@@ -787,16 +824,14 @@ function applyDateFilter() {
   const endDateInput = document.getElementById('endDate');
   
   if (startDateInput && startDateInput.value) {
-    const startDate = new Date(startDateInput.value);
-    startDate.setHours(0, 0, 0, 0);
+    const startDate = getDhakaStartOfDay(parseDhakaDate(startDateInput.value));
     dateFilter.start = startDate;
   } else {
     dateFilter.start = null;
   }
   
   if (endDateInput && endDateInput.value) {
-    const endDate = new Date(endDateInput.value);
-    endDate.setHours(23, 59, 59, 999);
+    const endDate = getDhakaEndOfDay(parseDhakaDate(endDateInput.value));
     dateFilter.end = endDate;
   } else {
     dateFilter.end = null;
@@ -804,13 +839,18 @@ function applyDateFilter() {
   
   // Update button text
   if (dateFilter.start || dateFilter.end) {
-    const start = dateFilter.start ? new Date(dateFilter.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Start';
-    const end = dateFilter.end ? new Date(dateFilter.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'End';
+    const start = dateFilter.start ? formatDhakaDate(dateFilter.start instanceof Date ? dateFilter.start : parseDhakaDate(formatDhakaDateForInput(dateFilter.start)), { month: 'short', day: 'numeric' }) : 'Start';
+    const end = dateFilter.end ? formatDhakaDate(dateFilter.end instanceof Date ? dateFilter.end : parseDhakaDate(formatDhakaDateForInput(dateFilter.end)), { month: 'short', day: 'numeric' }) : 'End';
     const dateBtnText = document.getElementById('dateBtnText');
     if (dateBtnText) {
       dateBtnText.textContent = `${start} - ${end}`;
     }
     useWeekFilter = false; // Date range overrides week filter
+    
+    // Clear active state of quick filter buttons when using custom date range
+    const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+    quickDateButtons.forEach(btn => btn.classList.remove('active'));
+    
     updateWeekDisplay(); // Update week display to show "-"
   } else {
     updateDateButtonText();
@@ -829,6 +869,87 @@ function applyDateFilter() {
   ]);
 }
 
+// Use shared date filter utility - wrap to provide page-specific callbacks
+// Note: home.html uses Date objects instead of date strings
+// Save reference to original utility function before defining wrapper
+const originalApplyQuickDateFilter = window.applyQuickDateFilter;
+
+window.applyQuickDateFilter = function(period) {
+  // Check if the utility function is available
+  if (typeof originalApplyQuickDateFilter !== 'function') {
+    console.error('applyQuickDateFilter utility not loaded yet. Please ensure date-filter-utils.js is loaded.');
+    // Fallback: try to apply the filter manually
+    try {
+      const today = getDhakaStartOfDay();
+      let startDate, endDate;
+      
+      switch(period) {
+        case 'today':
+          startDate = getDhakaStartOfDay();
+          endDate = getDhakaEndOfDay();
+          break;
+        case 'yesterday':
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+          startDate = getDhakaStartOfDay(yesterday);
+          endDate = getDhakaEndOfDay(yesterday);
+          break;
+        case 'thisMonth':
+          startDate = getDhakaFirstDayOfMonth(today);
+          endDate = getDhakaLastDayOfMonth(today);
+          break;
+        default:
+          return;
+      }
+      
+      dateFilter.start = startDate;
+      dateFilter.end = endDate;
+      useWeekFilter = false;
+      
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      if (startDateInput) startDateInput.value = formatDateForInput(startDate);
+      if (endDateInput) endDateInput.value = formatDateForInput(endDate);
+      
+      updateDateButtonText();
+      updateWeekDisplay();
+      
+      // Update active state
+      const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+      quickDateButtons.forEach(btn => btn.classList.remove('active'));
+      const activeButton = document.getElementById(period + 'Btn');
+      if (activeButton) activeButton.classList.add('active');
+      
+      // Refresh data
+      Promise.all([
+        loadRecentUpdates(),
+        updateYourStats(),
+        loadAssignedAudits(),
+        loadNotifications()
+      ]);
+    } catch (error) {
+      console.error('Error applying quick date filter:', error);
+    }
+    return;
+  }
+  
+  originalApplyQuickDateFilter(period, {
+    dateFilter: dateFilter,
+    setUseWeekFilter: () => { useWeekFilter = false; },
+    useDateObjects: true,
+    formatDateForInput: formatDateForInput,
+    onUpdate: updateWeekDisplay,
+    onRefresh: () => {
+      Promise.all([
+        loadRecentUpdates(),
+        updateYourStats(),
+        loadAssignedAudits(),
+        loadNotifications()
+      ]);
+    }
+  });
+};
+
 // Clear date filter
 function clearDateFilter() {
   dateFilter.start = null;
@@ -840,6 +961,11 @@ function clearDateFilter() {
   updateDateButtonText();
   document.getElementById('dateDropdown').classList.remove('active');
   useWeekFilter = true; // Go back to week filter
+  
+  // Clear active state of quick filter buttons
+  const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+  quickDateButtons.forEach(btn => btn.classList.remove('active'));
+  
   updateWeekDisplay(); // Update week display to show week number
   
   // Reload data with week filter
@@ -1207,6 +1333,8 @@ async function initializeDashboard() {
     // Initialize UI immediately - no waiting
     initializeDateFilter();
     setupEventListeners();
+    // Ensure week display is properly initialized after event listeners are set up
+    updateWeekDisplay();
     updateUserAvatar(userInfo);
 
     // Update section titles for agents and hide create audit button
@@ -1228,6 +1356,9 @@ async function initializeDashboard() {
       // Hide acknowledgment card for non-agents
       const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
       if (requiresAcknowledgmentCard) requiresAcknowledgmentCard.style.display = 'none';
+      // Ensure avgDuration card is visible for auditors
+      const avgDurationCard = document.getElementById('avgDurationCard');
+      if (avgDurationCard) avgDurationCard.style.display = 'block';
       const auditsTitle = document.getElementById('auditsSectionTitle');
       if (auditsTitle) auditsTitle.textContent = 'My Assigned Audits';
       const viewAllBtn = document.getElementById('viewAllBtn');
@@ -1284,11 +1415,25 @@ function setupEventListeners() {
   // Week navigation buttons
   const prevWeekBtn = document.getElementById('prevWeekBtn');
   const nextWeekBtn = document.getElementById('nextWeekBtn');
+  const weekDisplay = document.getElementById('weekDisplay');
+  
   if (prevWeekBtn) {
     prevWeekBtn.addEventListener('click', () => navigateWeek(-1));
   }
   if (nextWeekBtn) {
     nextWeekBtn.addEventListener('click', () => navigateWeek(1));
+  }
+  
+  // Make week display clickable to switch to week view when in month/date range view
+  if (weekDisplay) {
+    weekDisplay.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!useWeekFilter) {
+        switchToWeekView();
+      }
+    });
+    // Ensure it's clickable
+    weekDisplay.style.pointerEvents = 'auto';
   }
 
   // Date button
@@ -2238,10 +2383,9 @@ function renderAssignedAudits() {
       }
       
       const requestDate = formatTimestamp(audit.created_at);
-      const buttonText = audit.status === 'in_progress' ? 'Continue' : 'Start';
 
       return `
-        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAudit('${audit.id}')">
+        <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="window.location.href='create-audit.html'">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
               <div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
@@ -2264,8 +2408,8 @@ function renderAssignedAudits() {
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               ${statusBadge}
-              <button onclick="event.stopPropagation(); viewAudit('${audit.id}')" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
-                ${buttonText}
+              <button onclick="event.stopPropagation(); window.location.href='create-audit.html'" class="px-2.5 py-1 bg-primary text-white text-[10px] font-semibold rounded hover:bg-primary-dark transition-colors">
+                Get Started
               </button>
             </div>
           </div>
@@ -2530,7 +2674,7 @@ async function fetchAndCacheStats(cacheKey, period) {
       return;
     }
     
-    // Apply date filter to assignments (week or date range)
+    // Apply date filter to assignments (week or date range) for total assigned count
     let allAssignments = assignments || [];
     const period = getCurrentPeriodDates();
     allAssignments = allAssignments.filter(assignment => {
@@ -2540,9 +2684,78 @@ async function fetchAndCacheStats(cacheKey, period) {
     });
     
     const totalAssigned = allAssignments.length;
-    const completed = allAssignments.filter(a => a.status === 'completed').length;
     const inProgress = allAssignments.filter(a => a.status === 'in_progress').length;
     const pending = allAssignments.filter(a => a.status === 'pending').length;
+    
+    // Count completed audits from scorecard tables (based on submitted_at, not created_at)
+    let completed = 0;
+    try {
+      const { data: scorecards, error: scError } = await window.supabaseClient
+        .from('scorecards')
+        .select('table_name')
+        .eq('is_active', true);
+      
+      if (!scError && scorecards) {
+        const auditFilterField = isAgent ? 'employee_email' : 'auditor_email';
+        const completedPromises = scorecards.map(async (scorecard) => {
+          try {
+            // Query for completed audits (those with submitted_at)
+            let completedQuery = window.supabaseClient
+              .from(scorecard.table_name)
+              .select('id, submitted_at, audit_timestamp')
+              .eq(auditFilterField, currentUserEmail)
+              .not('submitted_at', 'is', null);
+            
+            // Apply date filters server-side if possible (convert Dhaka to UTC)
+            if (period.start) {
+              completedQuery = completedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+            }
+            if (period.end) {
+              completedQuery = completedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+            }
+            
+            const completedResult = await completedQuery;
+            
+            if (completedResult.error) {
+              // If server-side date filter fails, try without date filter and filter client-side
+              const retryQuery = await window.supabaseClient
+                .from(scorecard.table_name)
+                .select('id, submitted_at, audit_timestamp')
+                .eq(auditFilterField, currentUserEmail)
+                .not('submitted_at', 'is', null);
+              
+              if (retryQuery.data) {
+                // Filter client-side by date
+                const filteredCompleted = retryQuery.data.filter(audit => {
+                  if (!audit.submitted_at) return false;
+                  const auditDate = toDhakaTime(audit.submitted_at);
+                  return (!period.start || auditDate >= period.start) && 
+                         (!period.end || auditDate <= period.end);
+                });
+                return filteredCompleted.length;
+              }
+              return 0;
+            }
+            
+            return (completedResult.data || []).length;
+          } catch (err) {
+            console.warn(`Error counting completed audits from ${scorecard.table_name}:`, err);
+            return 0;
+          }
+        });
+        
+        const completedCounts = await Promise.all(completedPromises);
+        completed = completedCounts.reduce((sum, count) => sum + count, 0);
+      } else {
+        // Fallback to assignment-based count if no scorecards
+        completed = allAssignments.filter(a => a.status === 'completed').length;
+      }
+    } catch (error) {
+      console.error('Error calculating completed count:', error);
+      // Fallback to assignment-based count on error
+      completed = allAssignments.filter(a => a.status === 'completed').length;
+    }
+    
     const remaining = pending + inProgress;
     
     // Calculate percentage
@@ -2568,26 +2781,86 @@ async function fetchAndCacheStats(cacheKey, period) {
       if (!scError && scorecards) {
         const auditFilterField = isAgent ? 'employee_email' : 'auditor_email';
         
+        // Get period for date filtering (matching auditor-dashboard.html approach)
+        const period = getCurrentPeriodDates();
+        
         // Parallelize all duration queries
         const durationPromises = scorecards.map(async (scorecard) => {
           try {
-            // Try query with audit_duration filter first
-            let { data: audits, error } = await window.supabaseClient
+            // Build query with date filters server-side first (matching auditor-dashboard.html)
+            let durationQuery = window.supabaseClient
               .from(scorecard.table_name)
-              .select('audit_duration, submitted_at, audit_timestamp')
+              .select('audit_duration, submitted_at')
               .eq(auditFilterField, currentUserEmail)
               .not('audit_duration', 'is', null);
             
+            // Apply date filters server-side if possible (convert Dhaka to UTC)
+            if (period.start) {
+              durationQuery = durationQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+            }
+            if (period.end) {
+              durationQuery = durationQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+            }
+            
+            // Execute query
+            let result = await durationQuery;
+            let audits = result.data;
+            let error = result.error;
+            
+            // If server-side date filter fails, try without date filter and filter client-side
+            if (error && period && (period.start || period.end)) {
+              console.warn(`Server-side date filter failed for ${scorecard.table_name}, falling back to client-side filtering:`, error);
+              const retryQuery = window.supabaseClient
+                .from(scorecard.table_name)
+                .select('audit_duration, submitted_at')
+                .eq(auditFilterField, currentUserEmail)
+                .not('audit_duration', 'is', null);
+              
+              const retryResult = await retryQuery;
+              if (retryResult.data && period.start) {
+                // Filter client-side by date
+                retryResult.data = retryResult.data.filter(audit => {
+                  if (!audit.submitted_at) return false;
+                  const auditDate = toDhakaTime(audit.submitted_at);
+                  return (!period.start || auditDate >= period.start) && 
+                         (!period.end || auditDate <= period.end);
+                });
+                audits = retryResult.data;
+                error = null;
+              } else if (retryResult.error) {
+                // If still error, table might not have the filter field column - skip this table silently
+                return [];
+              }
+            }
+            
             // If error, try without audit_duration filter (some tables may not have this column)
             if (error) {
-              const retryQuery = await window.supabaseClient
+              let retryQuery = window.supabaseClient
                 .from(scorecard.table_name)
-                .select('audit_duration, submitted_at, audit_timestamp')
+                .select('audit_duration, submitted_at')
                 .eq(auditFilterField, currentUserEmail);
               
-              if (!retryQuery.error && retryQuery.data) {
+              // Apply date filters if period exists
+              if (period.start) {
+                retryQuery = retryQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+              }
+              if (period.end) {
+                retryQuery = retryQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+              }
+              
+              const retryResult = await retryQuery;
+              if (!retryResult.error && retryResult.data) {
                 // Filter client-side for non-null audit_duration
-                audits = retryQuery.data.filter(a => a.audit_duration != null);
+                audits = retryResult.data.filter(a => a.audit_duration != null);
+                // Also apply client-side date filtering as fallback
+                if (period.start && audits) {
+                  audits = audits.filter(audit => {
+                    if (!audit.submitted_at) return false;
+                    const auditDate = toDhakaTime(audit.submitted_at);
+                    return (!period.start || auditDate >= period.start) && 
+                           (!period.end || auditDate <= period.end);
+                  });
+                }
                 error = null;
               } else {
                 // If still error, table might not have the filter field column - skip this table silently
@@ -2595,16 +2868,18 @@ async function fetchAndCacheStats(cacheKey, period) {
               }
             }
             
-            if (!error && audits) {
-              // Apply date filter (week or date range)
-              const period = getCurrentPeriodDates();
-              let filteredAudits = audits.filter(audit => {
-                const auditDate = audit.submitted_at || audit.audit_timestamp;
-                if (!auditDate) return false;
-                return isDateInRange(auditDate, period.start, period.end);
-              });
+            if (!error && audits && audits.length > 0) {
+              // Fallback client-side filtering if server-side filter didn't work or data has no date
+              if (period.start) {
+                audits = audits.filter(audit => {
+                  if (!audit.submitted_at) return false;
+                  const auditDate = toDhakaTime(audit.submitted_at);
+                  return (!period.start || auditDate >= period.start) && 
+                         (!period.end || auditDate <= period.end);
+                });
+              }
               
-              return filteredAudits.map(audit => {
+              return audits.map(audit => {
                 // Handle duration conversion (new format: seconds, legacy format: minutes)
                 let durationInMinutes = 0;
                 if (typeof audit.audit_duration === 'number') {
@@ -2662,6 +2937,9 @@ async function fetchAndCacheStats(cacheKey, period) {
           } else {
             avgDurationText = `${Math.round(avgDuration)}m`;
           }
+          console.log(`Calculated avgDuration: ${avgDurationText} from ${auditCount} audits`);
+        } else {
+          console.log('No audits with duration data found for avgDuration calculation');
         }
       }
     } catch (error) {
@@ -2741,10 +3019,11 @@ async function fetchAndCacheStats(cacheKey, period) {
               totalScoreSum += audit.score;
               totalAuditsWithScore++;
             }
-            // Count passing/not passing
+            // Count passing/not passing - default to 'Not Passed' if status is empty/null
             if (audit.passingStatus === 'Passed' || audit.passingStatus === 'Passing') {
               passingCount++;
-            } else if (audit.passingStatus === 'Not Passed' || audit.passingStatus === 'Not Passing') {
+            } else {
+              // Count everything else (including 'Not Passed', 'Not Passing', empty, null, etc.) as 'Not Passed'
               notPassingCount++;
             }
           });
@@ -2829,10 +3108,11 @@ async function fetchAndCacheStats(cacheKey, period) {
               totalScoreSum += audit.score;
               totalAuditsWithScore++;
             }
-            // Count passing/not passing
+            // Count passing/not passing - default to 'Not Passed' if status is empty/null
             if (audit.passingStatus === 'Passed' || audit.passingStatus === 'Passing') {
               passingCount++;
-            } else if (audit.passingStatus === 'Not Passed' || audit.passingStatus === 'Not Passing') {
+            } else {
+              // Count everything else (including 'Not Passed', 'Not Passing', empty, null, etc.) as 'Not Passed'
               notPassingCount++;
             }
           });
@@ -3088,7 +3368,7 @@ function renderStatsFromData(stats) {
   // Update Average Quality Score card
   if (statsAvgQualityScore) statsAvgQualityScore.textContent = avgQualityScoreText;
   if (statsAvgScoreSubtitle) {
-    statsAvgScoreSubtitle.textContent = totalAuditsWithScore > 0 ? `from ${totalAuditsWithScore} audits` : 'No audits yet';
+    statsAvgScoreSubtitle.textContent = totalAuditsConducted > 0 ? `from ${totalAuditsConducted} audits` : 'No audits yet';
   }
   
   // Update passing and not passing count chips
@@ -3145,8 +3425,21 @@ function renderStatsFromData(stats) {
     requiresAcknowledgmentCard.style.display = 'none';
   }
   
-  if (statsAvgDuration) statsAvgDuration.textContent = avgDurationText;
-  if (statsAvgDurationSubtitle) statsAvgDurationSubtitle.textContent = 'per audit';
+  // Update Avg Duration card
+  if (statsAvgDuration) {
+    // Clear any loading placeholder and set the value directly
+    statsAvgDuration.innerHTML = '';
+    const displayValue = avgDurationText || '-';
+    statsAvgDuration.textContent = displayValue;
+    // Ensure element is visible (in case it was hidden)
+    statsAvgDuration.style.display = '';
+    console.log('Rendering avgDuration:', displayValue);
+  } else {
+    console.warn('statsAvgDuration element not found');
+  }
+  if (statsAvgDurationSubtitle) {
+    statsAvgDurationSubtitle.textContent = 'per audit';
+  }
 }
 
 function viewAudit(assignmentId) {

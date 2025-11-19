@@ -20,6 +20,8 @@
     <script src="load-sidebar.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
+    <script src="timezone-utils.js"></script>
+    <script src="date-filter-utils.js"></script>
     <style>
         .distribution-container {
             display: flex;
@@ -463,6 +465,17 @@
             background: #f9fafb;
             color: #374151;
             border-color: #d1d5db;
+        }
+        
+        .quick-date-btn.active {
+            background: #1A733E;
+            color: white;
+            border-color: #1A733E;
+        }
+        
+        .quick-date-btn.active:hover {
+            background: #15582E;
+            border-color: #15582E;
         }
 
         #autoAssignBySupervisorBtn {
@@ -1080,13 +1093,21 @@
                         </svg>
                         <h2 class="section-title">Agent-wise Audit Summary</h2>
                     </div>
-                    <button class="btn-secondary" onclick="refreshAgentWiseSummary()" style="display: flex; align-items: center; gap: 0.375rem;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="23 4 23 10 17 10"/>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                        </svg>
-                        Refresh
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 0.375rem;">
+                        <!-- Date Filter Buttons -->
+                        <div style="display: flex; gap: 0.375rem; align-items: center;">
+                            <button class="btn-secondary quick-date-btn" id="todayBtn" onclick="applyQuickDateFilter('today')" style="padding: 0.2812rem 0.5625rem; font-size: 0.5625rem;">Today</button>
+                            <button class="btn-secondary quick-date-btn" id="yesterdayBtn" onclick="applyQuickDateFilter('yesterday')" style="padding: 0.2812rem 0.5625rem; font-size: 0.5625rem;">Yesterday</button>
+                            <button class="btn-secondary quick-date-btn active" id="thisMonthBtn" onclick="applyQuickDateFilter('thisMonth')" style="padding: 0.2812rem 0.5625rem; font-size: 0.5625rem;">This Month</button>
+                        </div>
+                        <button class="btn-secondary" onclick="refreshAgentWiseSummary()" style="display: flex; align-items: center; gap: 0.375rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
                 </div>
             </div>
             <div style="margin-top: 0.75rem;">
@@ -1238,6 +1259,7 @@ let allAssignments = []; // Store all assignments for filtering
 let bulkAuditCount = 0; // Global bulk audit count (default 0, mandatory)
 let selectedQualityAnalysts = new Set(); // Set of selected QA emails
 let completedAuditsCache = new Map(); // Cache for completed audit counts (email -> count)
+let dateFilter = { start: null, end: null }; // Date filter for completed audits
 let columnFilters = {
     week: [],
     employee: [],
@@ -1286,6 +1308,9 @@ async function initializePage() {
             loadChannels(),
             loadEmployees()
         ]);
+        
+        // Initialize date filter to current month (default)
+        initializeDateFilter();
         
         // Then load assignments (depends on allUsers being loaded)
         await loadAssignedAudits();
@@ -1605,7 +1630,7 @@ async function loadAssignedAudits() {
 
 async function refreshAssignedAudits() {
     await loadAssignedAudits();
-    await loadCompletedAuditsCache(); // Refresh completed audits cache
+    await loadCompletedAuditsCache(); // Refresh completed audits cache with current date filter
     await loadAgentWiseSummary();
     // Refresh employee list to update stats
     applyFiltersAndGroup();
@@ -1813,7 +1838,9 @@ async function loadAgentWiseSummary() {
 }
 
 async function refreshAgentWiseSummary() {
+    await loadCompletedAuditsCache(); // Reload with current date filter
     await loadAgentWiseSummary();
+    applyFiltersAndGroup(); // Refresh employee list to update stats
 }
 
 // Sanitize email for use in DOM IDs
@@ -2296,11 +2323,59 @@ function getEmployeeAuditStats(employeeEmail) {
 }
 
 // ============================================================================
+// Date Filter Functions
+// ============================================================================
+function initializeDateFilter() {
+    const today = getDhakaNow();
+    const firstDay = getDhakaFirstDayOfMonth(today);
+    const lastDay = getDhakaLastDayOfMonth(today);
+    const firstDayStr = formatDhakaDateForInput(firstDay);
+    const lastDayStr = formatDhakaDateForInput(lastDay);
+    
+    // Set date filter to current month
+    dateFilter.start = firstDayStr;
+    dateFilter.end = lastDayStr;
+    
+    // Activate "This Month" button
+    const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+    quickDateButtons.forEach(btn => btn.classList.remove('active'));
+    const thisMonthBtn = document.getElementById('thisMonthBtn');
+    if (thisMonthBtn) {
+        thisMonthBtn.classList.add('active');
+    }
+}
+
+// Use shared date filter utility - wrap to provide page-specific callbacks
+const originalApplyQuickDateFilter = window.applyQuickDateFilter;
+window.applyQuickDateFilter = function(period) {
+    originalApplyQuickDateFilter(period, {
+        dateFilter: dateFilter,
+        onRefresh: () => {
+            // Reload completed audits cache with new date filter
+            loadCompletedAuditsCache().then(() => {
+                // Refresh the summary and employee list
+                loadAgentWiseSummary();
+                applyFiltersAndGroup();
+            });
+        }
+    });
+};
+
+// ============================================================================
 // Load Completed Audits Cache
 // ============================================================================
 async function loadCompletedAuditsCache() {
     try {
         completedAuditsCache.clear();
+        
+        // Get date filter period (convert date strings to Date objects)
+        let period = null;
+        if (dateFilter.start || dateFilter.end) {
+            period = {
+                start: dateFilter.start ? getDhakaStartOfDay(parseDhakaDate(dateFilter.start)) : null,
+                end: dateFilter.end ? getDhakaEndOfDay(parseDhakaDate(dateFilter.end)) : null
+            };
+        }
         
         // Get all audit tables
         let tablesToQuery = [];
@@ -2320,20 +2395,39 @@ async function loadCompletedAuditsCache() {
             }
         }
         
-        // Query each table for completed audits
+        // Query each table for completed audits with date filtering
         for (const tableName of tablesToQuery) {
             try {
+                // Select submitted_at for date filtering
                 let query = window.supabaseClient
                     .from(tableName)
-                    .select('employee_email, audit_status');
+                    .select('employee_email, audit_status, submitted_at')
+                    .not('submitted_at', 'is', null); // Only audits with submitted_at
+                
+                // Apply date filters server-side if possible (convert Dhaka to UTC)
+                if (period && period.start) {
+                    query = query.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                }
+                if (period && period.end) {
+                    query = query.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                }
                 
                 const { data, error } = await query;
                 
                 if (error) {
-                    // Some tables may not have audit_status column, try without filter
-                    const retryQuery = window.supabaseClient
+                    // Some tables may not have audit_status column, try without it
+                    let retryQuery = window.supabaseClient
                         .from(tableName)
-                        .select('employee_email');
+                        .select('employee_email, submitted_at')
+                        .not('submitted_at', 'is', null);
+                    
+                    // Apply date filters server-side if possible
+                    if (period && period.start) {
+                        retryQuery = retryQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
+                    }
+                    if (period && period.end) {
+                        retryQuery = retryQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
+                    }
                     
                     const retryResult = await retryQuery;
                     if (retryResult.error) {
@@ -2342,8 +2436,21 @@ async function loadCompletedAuditsCache() {
                     }
                     
                     // If no audit_status column, assume all are completed (legacy audits)
+                    // But still filter by date
                     if (retryResult.data) {
-                        retryResult.data.forEach(audit => {
+                        let filteredData = retryResult.data;
+                        
+                        // Fallback client-side date filtering if server-side filter failed
+                        if (period && period.start) {
+                            filteredData = filteredData.filter(audit => {
+                                if (!audit.submitted_at) return false;
+                                const auditDate = toDhakaTime(audit.submitted_at);
+                                return (!period.start || auditDate >= period.start) && 
+                                       (!period.end || auditDate <= period.end);
+                            });
+                        }
+                        
+                        filteredData.forEach(audit => {
                             if (audit.employee_email) {
                                 const email = (audit.employee_email || '').toLowerCase().trim();
                                 completedAuditsCache.set(email, (completedAuditsCache.get(email) || 0) + 1);
@@ -2351,10 +2458,23 @@ async function loadCompletedAuditsCache() {
                         });
                     }
                 } else if (data) {
-                    // Filter for completed audits
-                    data.forEach(audit => {
+                    // Filter for completed audits and apply date filter
+                    let filteredData = data;
+                    
+                    // Fallback client-side date filtering if server-side filter failed
+                    if (period && period.start) {
+                        filteredData = filteredData.filter(audit => {
+                            if (!audit.submitted_at) return false;
+                            const auditDate = toDhakaTime(audit.submitted_at);
+                            return (!period.start || auditDate >= period.start) && 
+                                   (!period.end || auditDate <= period.end);
+                        });
+                    }
+                    
+                    filteredData.forEach(audit => {
                         const auditStatus = audit.audit_status;
                         // Only include completed audits or audits without audit_status (legacy completed audits)
+                        // Matching expert-audits.html logic exactly
                         const isComplete = !auditStatus || auditStatus === 'completed';
                         if (isComplete && audit.employee_email) {
                             const email = (audit.employee_email || '').toLowerCase().trim();

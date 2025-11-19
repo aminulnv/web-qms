@@ -1098,9 +1098,28 @@ const availableDepartments = [
 ];
 
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Wait for access control to be initialized
+    let attempts = 0;
+    while ((!window.accessControl || !window.supabaseClient) && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
+    // Wait for rules to load from database
+    if (window.accessControl) {
+        await window.accessControl.loadRulesFromDatabase();
+    }
+    
     // Check page access using centralized access control
-    if (!window.accessControl || !window.accessControl.enforcePageAccess('user-management.html')) {
+    if (!window.accessControl) {
+        alert('Access control system not available. Please refresh the page.');
+        window.location.href = 'home.html';
+        return;
+    }
+    
+    const accessAllowed = await window.accessControl.enforcePageAccess('user-management.html');
+    if (!accessAllowed) {
         return; // Access denied, user will be redirected
     }
     

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bug Reports | QMS</title>
+<meta name="description" content="View all bug reports submitted to the QMS system">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="env-config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="load-sidebar.js"></script>
+</head>
+
+<body>
+<!-- Sidebar will be loaded dynamically by load-sidebar.js -->
+<main class="main-content" role="main">
+    <p class="page-heading">Bug Reports</p>
+    <div style="margin-bottom: 1.125rem;"></div>
+
+    <div style="width: 100%; padding: 0 1.125rem; margin-top: 2rem; max-width: 1200px; margin-left: auto; margin-right: auto;">
+        <!-- Info Banner -->
+        <div style="background: #e0f2fe; border: 1px solid #0284c7; border-radius: 0.375rem; padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <svg style="width: 1.25rem; height: 1.25rem; color: #0284c7; flex-shrink: 0; margin-top: 0.125rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p style="margin: 0; font-size: 0.875rem; color: #0c4a6e; font-family: 'Poppins', sans-serif; font-weight: 500;">
+                        This page displays all bug reports submitted to the QMS system. Reports are stored in ClickUp and synced here for public viewing.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" style="text-align: center; padding: 3rem;">
+            <div style="display: inline-block; width: 2rem; height: 2rem; border: 3px solid #e5e7eb; border-top-color: #1a733e; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 1rem; color: #6b7280; font-family: 'Poppins', sans-serif;">Loading bug reports...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.375rem; padding: 1.5rem; text-align: center;">
+            <svg style="width: 3rem; height: 3rem; color: #ef4444; margin: 0 auto 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <p style="margin: 0; color: #991b1b; font-family: 'Poppins', sans-serif; font-weight: 500;" id="errorMessage">Failed to load bug reports</p>
+            <button 
+                onclick="loadBugReports()" 
+                style="margin-top: 1rem; padding: 0.5rem 1.5rem; background: #1a733e; color: white; border: none; border-radius: 0.5rem; font-weight: 500; font-family: 'Poppins', sans-serif; cursor: pointer;"
+                onmouseover="this.style.backgroundColor='#0d5e3a'"
+                onmouseout="this.style.backgroundColor='#1a733e'"
+            >
+                Retry
+            </button>
+        </div>
+
+        <!-- Bug Reports List -->
+        <div id="bugReportsContainer" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0; font-family: 'Poppins', sans-serif;">All Bug Reports</h2>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <span id="reportCount" style="color: #6b7280; font-family: 'Poppins', sans-serif; font-size: 0.875rem;">0 reports</span>
+                    <button 
+                        onclick="loadBugReports()" 
+                        style="padding: 0.5rem 1rem; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; color: #374151; font-weight: 500; font-family: 'Poppins', sans-serif; cursor: pointer; font-size: 0.875rem;"
+                        onmouseover="this.style.backgroundColor='#f9fafb'"
+                        onmouseout="this.style.backgroundColor='white'"
+                    >
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div id="bugReportsList" style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Bug reports will be populated here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" style="display: none; text-align: center; padding: 3rem;">
+                <svg style="width: 4rem; height: 4rem; color: #d1d5db; margin: 0 auto 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p style="margin: 0; color: #6b7280; font-family: 'Poppins', sans-serif; font-size: 1rem;">No bug reports found</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+// ClickUp list ID for bug reports
+const CLICKUP_LIST_ID = '901813387238';
+
+// Load bug reports from ClickUp
+async function loadBugReports() {
+    const loadingState = document.getElementById('loadingState');
+    const errorState = document.getElementById('errorState');
+    const bugReportsContainer = document.getElementById('bugReportsContainer');
+    const bugReportsList = document.getElementById('bugReportsList');
+    const emptyState = document.getElementById('emptyState');
+    const reportCount = document.getElementById('reportCount');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Show loading, hide others
+    loadingState.style.display = 'block';
+    errorState.style.display = 'none';
+    bugReportsContainer.style.display = 'none';
+    emptyState.style.display = 'none';
+
+    try {
+        // Get Supabase URL and anon key
+        const supabaseUrl = window.env?.SUPABASE_URL || window.SupabaseConfig?.url;
+        const supabaseAnonKey = window.env?.SUPABASE_ANON_KEY || window.SupabaseConfig?.anonKey;
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new Error('Supabase configuration not available');
+        }
+
+        // Call Supabase Edge Function to get tasks from ClickUp
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/clickup-proxy?action=get-tasks&listId=${CLICKUP_LIST_ID}`;
+        
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'apikey': supabaseAnonKey,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to load bug reports: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const tasks = data.tasks || [];
+
+        // Hide loading
+        loadingState.style.display = 'none';
+        bugReportsContainer.style.display = 'block';
+
+        // Update count
+        reportCount.textContent = `${tasks.length} ${tasks.length === 1 ? 'report' : 'reports'}`;
+
+        // Clear existing reports
+        bugReportsList.innerHTML = '';
+
+        if (tasks.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        // Sort tasks by date created (newest first)
+        tasks.sort((a, b) => {
+            const dateA = parseInt(a.date_created || '0');
+            const dateB = parseInt(b.date_created || '0');
+            return dateB - dateA;
+        });
+
+        // Display each bug report
+        tasks.forEach((task) => {
+            const reportDiv = document.createElement('div');
+            reportDiv.style.cssText = 'background: white; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; padding: 1.5rem; transition: all 0.2s;';
+            reportDiv.onmouseover = () => reportDiv.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+            reportDiv.onmouseout = () => reportDiv.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+
+            // Parse description to extract details
+            const description = task.description || '';
+            const severityMatch = description.match(/\*\*Severity:\*\* (.+)/);
+            const browserMatch = description.match(/\*\*Browser:\*\* (.+)/);
+            const osMatch = description.match(/\*\*OS:\*\* (.+)/);
+            const pageUrlMatch = description.match(/\*\*Page URL:\*\* (.+)/);
+            const reportedByMatch = description.match(/\*\*Reported by:\*\* (.+)/);
+            const timestampMatch = description.match(/\*\*Timestamp:\*\* (.+)/);
+            
+            const severity = severityMatch ? severityMatch[1].trim() : 'Unknown';
+            const browser = browserMatch ? browserMatch[1].trim() : 'Unknown';
+            const os = osMatch ? osMatch[1].trim() : 'Unknown';
+            const pageUrl = pageUrlMatch ? pageUrlMatch[1].trim() : '';
+            const reportedBy = reportedByMatch ? reportedByMatch[1].trim() : 'Unknown';
+            const timestamp = timestampMatch ? timestampMatch[1].trim() : '';
+
+            // Format date
+            let formattedDate = '';
+            if (task.date_created) {
+                const date = new Date(parseInt(task.date_created));
+                formattedDate = date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            // Get priority color
+            const priorityColors = {
+                1: { bg: '#fee2e2', text: '#991b1b', label: 'Critical' },
+                2: { bg: '#fef3c7', text: '#92400e', label: 'High' },
+                3: { bg: '#dbeafe', text: '#1e40af', label: 'Medium' },
+                4: { bg: '#f3f4f6', text: '#374151', label: 'Low' }
+            };
+            const priority = task.priority ? priorityColors[task.priority.id] || priorityColors[3] : priorityColors[3];
+
+            // Get status color
+            const statusColors = {
+                'to do': { bg: '#f3f4f6', text: '#374151' },
+                'in progress': { bg: '#dbeafe', text: '#1e40af' },
+                'complete': { bg: '#d1fae5', text: '#065f46' },
+                'closed': { bg: '#e5e7eb', text: '#4b5563' }
+            };
+            const status = task.status ? (statusColors[task.status.status] || statusColors['to do']) : statusColors['to do'];
+
+            reportDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin: 0 0 0.5rem 0; font-family: 'Poppins', sans-serif;">
+                            ${task.name || 'Untitled Bug Report'}
+                        </h3>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                            <span style="padding: 0.25rem 0.75rem; background: ${priority.bg}; color: ${priority.text}; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                                ${priority.label}
+                            </span>
+                            <span style="padding: 0.25rem 0.75rem; background: ${status.bg}; color: ${status.text}; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; font-family: 'Poppins', sans-serif; text-transform: capitalize;">
+                                ${task.status?.status || 'to do'}
+                            </span>
+                            ${task.tags && task.tags.length > 0 ? task.tags.map(tag => `
+                                <span style="padding: 0.25rem 0.75rem; background: #f3f4f6; color: #374151; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 500; font-family: 'Poppins', sans-serif;">
+                                    ${tag.name || tag}
+                                </span>
+                            `).join('') : ''}
+                        </div>
+                    </div>
+                    ${task.url ? `
+                        <a href="${task.url}" target="_blank" rel="noopener noreferrer" 
+                           style="padding: 0.5rem 1rem; background: #1a733e; color: white; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; font-family: 'Poppins', sans-serif; text-decoration: none; white-space: nowrap;"
+                           onmouseover="this.style.backgroundColor='#0d5e3a'"
+                           onmouseout="this.style.backgroundColor='#1a733e'">
+                            View in ClickUp
+                        </a>
+                    ` : ''}
+                </div>
+                <div style="color: #374151; font-family: 'Poppins', sans-serif; font-size: 0.875rem; line-height: 1.6; margin-bottom: 1rem; white-space: pre-wrap;">
+                    ${description.split('\n\n')[0] || 'No description provided'}
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.875rem; color: #6b7280; font-family: 'Poppins', sans-serif;">
+                    <div>
+                        <strong style="color: #374151;">Reported by:</strong> ${reportedBy}
+                    </div>
+                    <div>
+                        <strong style="color: #374151;">Date:</strong> ${formattedDate || 'Unknown'}
+                    </div>
+                    <div>
+                        <strong style="color: #374151;">Browser:</strong> ${browser}
+                    </div>
+                    <div>
+                        <strong style="color: #374151;">OS:</strong> ${os}
+                    </div>
+                    ${pageUrl ? `
+                        <div style="grid-column: 1 / -1;">
+                            <strong style="color: #374151;">Page URL:</strong> 
+                            <a href="${pageUrl}" target="_blank" rel="noopener noreferrer" style="color: #1a733e; text-decoration: none; word-break: break-all;">
+                                ${pageUrl}
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            bugReportsList.appendChild(reportDiv);
+        });
+
+    } catch (error) {
+        console.error('Error loading bug reports:', error);
+        loadingState.style.display = 'none';
+        errorState.style.display = 'block';
+        errorMessage.textContent = error.message || 'Failed to load bug reports';
+    }
+}
+
+// Load bug reports when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadBugReports();
+});
+</script>
+</body>
+</html>
+
