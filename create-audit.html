@@ -6176,6 +6176,40 @@ function updatePullConversationsCountAndAdmin(count) {
     }
 }
 
+// Get list of already-audited conversation IDs
+async function getAlreadyAuditedConversationIds() {
+    const supabaseClient = window.SupabaseConfig?.getClient?.();
+    if (!supabaseClient) {
+        console.warn('Supabase client not available');
+        return new Set();
+    }
+    
+    try {
+        const { data: assignments, error } = await supabaseClient
+            .from('audit_assignments')
+            .select('conversation_id')
+            .not('conversation_id', 'is', null);
+        
+        if (error) {
+            console.error('Error fetching already-audited conversations:', error);
+            return new Set();
+        }
+        
+        // Create a Set of conversation IDs (as strings for comparison)
+        const auditedIds = new Set(
+            (assignments || [])
+                .map(a => String(a.conversation_id))
+                .filter(id => id && id !== 'null' && id !== 'undefined')
+        );
+        
+        console.log('✅ Loaded', auditedIds.size, 'already-audited conversation IDs');
+        return auditedIds;
+    } catch (error) {
+        console.error('Error in getAlreadyAuditedConversationIds:', error);
+        return new Set();
+    }
+}
+
 // Display conversations list
 async function displayPullConversationsList(conversations) {
     const tableBody = document.getElementById('pullConversationsTableBody');
@@ -6187,6 +6221,9 @@ async function displayPullConversationsList(conversations) {
         tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
         return;
     }
+    
+    // Get already-audited conversation IDs
+    const alreadyAuditedIds = await getAlreadyAuditedConversationIds();
     
     // Sort conversations by: Lowest Rating, Lowest CX Score, Longest Length
     const sortedConversations = [...conversations].sort((a, b) => {
@@ -6259,12 +6296,31 @@ async function displayPullConversationsList(conversations) {
         row.setAttribute('data-conversation-data', JSON.stringify(conversation));
         row.style.cursor = 'grab'; // Show grab cursor on hover
         
+        // Extract data
+        const clientName = extractClientName(conversation) || 'Unknown';
+        const clientEmail = extractClientEmail(conversation) || '';
+        const conversationId = (conversation.id || 'N/A').toString();
+        
+        // Check if this conversation is already audited
+        const isAlreadyAudited = alreadyAuditedIds.has(conversationId);
+        
         // Highlight top conversations based on number of assigned audits for the employee
-        const shouldHighlight = index < highlightCount;
+        // But prioritize "already audited" styling if applicable
+        const shouldHighlight = index < highlightCount && !isAlreadyAudited;
         if (shouldHighlight) {
             row.style.backgroundColor = '#fef3c7'; // Light yellow background
             row.style.borderLeft = '0.2rem solid #f59e0b'; // Orange left border
         }
+        
+        // Add visual indicator for already-audited conversations
+        if (isAlreadyAudited) {
+            row.style.backgroundColor = '#f3f4f6'; // Light gray background
+            row.style.opacity = '0.7'; // Slightly faded
+            row.style.borderLeft = '0.2rem solid #6b7280'; // Gray left border
+        }
+        
+        // Store the default opacity for dragend handler
+        const defaultOpacity = isAlreadyAudited ? '0.7' : '1';
         
         // Add drag event handlers
         row.addEventListener('dragstart', (e) => {
@@ -6281,14 +6337,10 @@ async function displayPullConversationsList(conversations) {
         });
         
         row.addEventListener('dragend', (e) => {
-            row.style.opacity = '1';
+            row.style.opacity = defaultOpacity;
             row.style.cursor = 'grab';
         });
         
-        // Extract data
-        const clientName = extractClientName(conversation) || 'Unknown';
-        const clientEmail = extractClientEmail(conversation) || '';
-        const conversationId = (conversation.id || 'N/A').toString();
         // Extract subject and strip HTML tags
         let subject = conversation.source?.subject || (conversation.source?.body ? conversation.source.body.substring(0, 50) : '') || 'No subject';
         // Strip HTML tags from subject
@@ -6375,6 +6427,7 @@ async function displayPullConversationsList(conversations) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                         </svg>
                     </button>` : ''}
+                    ${isAlreadyAudited ? `<span style="background: #6b7280; color: white; padding: 0.08rem 0.25rem; border-radius: 0.16rem; font-size: 0.4447rem; font-weight: 600; white-space: nowrap; margin-left: 0.25rem;" title="This conversation has already been audited">Audited</span>` : ''}
                 </div>
             </td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
