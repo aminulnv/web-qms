@@ -2060,10 +2060,29 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
     
     try {
         // Load all audit assignments with date filtering
+        // Filter to only Quality Analysts (auditors) to match Team Stats calculation
         const period = getCurrentPeriodDates();
+        
+        // Get all Quality Analysts (auditors) - matching Team Stats logic
+        const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
+        
+        if (qualityAnalysts.length === 0) {
+            const tableBody = document.getElementById('performanceTableBody');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <div style="text-align: center; padding: 1.5rem; color: #6b7280;">
+                        No Quality Analysts found in the system.
+                    </div>
+                `;
+            }
+            hideLoadingState();
+            return;
+        }
+        
         let assignmentsQuery = window.supabaseClient
             .from('audit_assignments')
             .select('*')
+            .in('auditor_email', qualityAnalysts.map(qa => qa.email))
             .order('created_at', { ascending: false });
         
         // Apply date filters server-side if possible (convert Dhaka to UTC)
@@ -2082,6 +2101,7 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
             const retryResult = await window.supabaseClient
                 .from('audit_assignments')
                 .select('*')
+                .in('auditor_email', qualityAnalysts.map(qa => qa.email))
                 .order('created_at', { ascending: false });
             
             if (retryResult.data && period.start) {
@@ -2281,22 +2301,18 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                                         const errorMessage = result.error.message || JSON.stringify(result.error);
                                         if (errorMessage.includes('audit_status') || result.error.code === 'PGRST116' || result.error.code === '42703') {
                                             // Retry without audit_status column (legacy tables)
+                                            // Don't apply server-side date filters - fetch all and filter client-side for accuracy
+                                            // This matches Team Stats logic exactly
                                             const retryQuery = window.supabaseClient
                                                 .from(tableName)
                                                 .select('id, submitted_at, employee_email')
                                                 .not('submitted_at', 'is', null);
                                             
-                                            if (period.start) {
-                                                retryQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
-                                            }
-                                            if (period.end) {
-                                                retryQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
-                                            }
-                                            
                                             const retryResult = await retryQuery;
                                             if (retryResult.data) {
-                                                // Apply client-side date filtering as fallback
-                                                if (period.start) {
+                                                // Always apply client-side date filtering for legacy tables to ensure accuracy
+                                                // period.start and period.end are already Date objects from getCurrentPeriodDates()
+                                                if (period && (period.start || period.end)) {
                                                     retryResult.data = retryResult.data.filter(audit => {
                                                         if (!audit.submitted_at) return false;
                                                         const auditDate = toDhakaTime(audit.submitted_at);
@@ -2420,9 +2436,125 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
         console.log('Standup View - Reversal count:', standupReversalCount);
         console.log('Standup View - Completed count:', completed);
         
-        // Calculate percentage and coverage (completed count is from scorecard tables)
-        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
-        const coveragePercent = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        // Calculate backlog coverage (assignments created on one day but completed on another)
+        // Filter by completed_at date (not created_at) to show backlog work completed in the selected period
+        // Use Dhaka timezone for date comparison to match the rest of the dashboard
+        // This matches Team Stats calculation logic exactly
+        let totalBacklogCount = 0;
+        let backlogByChannel = {}; // Track backlog per channel
+        
+        try {
+            // Get all Quality Analysts (auditors) - matching Team Stats logic
+            const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
+            
+            // Fetch all completed assignments for Quality Analysts, filtered by completed_at date
+            // This matches Team Stats calculation logic exactly
+            let backlogQuery = window.supabaseClient
+                .from('audit_assignments')
+                .select('*')
+                .in('auditor_email', qualityAnalysts.map(qa => qa.email))
+                .eq('status', 'completed')
+                .not('completed_at', 'is', null)
+                .not('created_at', 'is', null);
+            
+            // Filter by completed_at date (when the audit was completed, not when it was assigned)
+            if (period.start) {
+                backlogQuery = backlogQuery.gte('completed_at', dhakaDateToUTCISO(period.start));
+            }
+            if (period.end) {
+                backlogQuery = backlogQuery.lte('completed_at', dhakaDateToUTCISO(period.end));
+            }
+            
+            const { data: completedAssignments, error: backlogError } = await backlogQuery;
+            
+            if (!backlogError && completedAssignments) {
+                // Filter client-side to ensure accuracy with Dhaka timezone
+                const filteredCompleted = completedAssignments.filter(a => {
+                    if (!a.completed_at) return false;
+                    const completedDate = toDhakaTime(a.completed_at);
+                    // Check if completed date falls within the period
+                    const inPeriod = (!period.start || completedDate >= period.start) && 
+                                    (!period.end || completedDate <= period.end);
+                    if (!inPeriod) return false;
+                    
+                    // Check if created on a different day than completed (in Dhaka timezone)
+                    if (!a.created_at) return false;
+                    const createdDate = toDhakaTime(a.created_at);
+                    const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    return createdDay !== completedDay;
+                });
+                
+                totalBacklogCount = filteredCompleted.length;
+                
+                // Group backlog by channel
+                filteredCompleted.forEach(a => {
+                    const emp = allUsers.find(u => u.email === a.employee_email);
+                    const channel = emp?.channel || 'Unknown';
+                    if (!backlogByChannel[channel]) {
+                        backlogByChannel[channel] = 0;
+                    }
+                    backlogByChannel[channel]++;
+                });
+            } else if (backlogError) {
+                // Fallback: filter from all assignments if query fails
+                const allCompleted = allAuditAssignments.filter(a => {
+                    if (a.status !== 'completed' || !a.completed_at || !a.created_at) return false;
+                    const completedDate = toDhakaTime(a.completed_at);
+                    // Check if completed date falls within the period
+                    const inPeriod = (!period.start || completedDate >= period.start) && 
+                                    (!period.end || completedDate <= period.end);
+                    if (!inPeriod) return false;
+                    
+                    // Check if created on a different day than completed
+                    const createdDate = toDhakaTime(a.created_at);
+                    const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    return createdDay !== completedDay;
+                });
+                totalBacklogCount = allCompleted.length;
+                
+                // Group backlog by channel
+                allCompleted.forEach(a => {
+                    const emp = allUsers.find(u => u.email === a.employee_email);
+                    const channel = emp?.channel || 'Unknown';
+                    if (!backlogByChannel[channel]) {
+                        backlogByChannel[channel] = 0;
+                    }
+                    backlogByChannel[channel]++;
+                });
+            }
+        } catch (error) {
+            console.warn('Error calculating backlog for standup view:', error);
+            // Fallback to simple calculation from allAuditAssignments
+            const backlogItems = allAuditAssignments.filter(a => {
+                if (a.status !== 'completed' || !a.completed_at || !a.created_at) return false;
+                const createdDate = toDhakaTime(a.created_at);
+                const completedDate = toDhakaTime(a.completed_at);
+                const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                return createdDay !== completedDay;
+            });
+            totalBacklogCount = backlogItems.length;
+            
+            // Group backlog by channel
+            backlogItems.forEach(a => {
+                const emp = allUsers.find(u => u.email === a.employee_email);
+                const channel = emp?.channel || 'Unknown';
+                if (!backlogByChannel[channel]) {
+                    backlogByChannel[channel] = 0;
+                }
+                backlogByChannel[channel]++;
+            });
+        }
+        
+        // Exclude backlog audits from completed count (matching Team Stats logic exactly)
+        // Completed count should only show same-day completions (not backlog)
+        const sameDayCompleted = Math.max(0, completed - totalBacklogCount);
+        
+        // Calculate percentage and coverage (using same-day completed count, matching Team Stats)
+        const percentage = totalAssigned > 0 ? Math.round((sameDayCompleted / totalAssigned) * 100) : 0;
+        const coveragePercent = totalAssigned > 0 ? Math.round((sameDayCompleted / totalAssigned) * 100) : 0;
         
         // Group assignments by channel (for assigned, inProgress, pending counts)
         const channelStats = {};
@@ -2435,7 +2567,7 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
             if (!channelStats[channel]) {
                 channelStats[channel] = {
                     assigned: 0,
-                    completed: 0, // Will be set from scorecard tables
+                    completed: 0, // Will be set from scorecard tables (same-day only)
                     inProgress: 0,
                     pending: 0,
                     remaining: 0,
@@ -2455,6 +2587,7 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
         
         // Update completed counts from scorecard tables (completedAuditsByChannel)
         // This was populated in the results.forEach loop above
+        // Exclude backlog per channel to match Team Stats logic
         Object.keys(completedAuditsByChannel || {}).forEach(channel => {
             if (!channelStats[channel]) {
                 channelStats[channel] = {
@@ -2466,20 +2599,23 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                     percentage: 0
                 };
             }
-            channelStats[channel].completed = completedAuditsByChannel[channel];
+            // Exclude backlog from completed count per channel (matching Team Stats logic)
+            const channelBacklog = backlogByChannel[channel] || 0;
+            const channelCompleted = completedAuditsByChannel[channel] || 0;
+            channelStats[channel].completed = Math.max(0, channelCompleted - channelBacklog);
         });
         
-        // Calculate remaining and percentage for each channel
+        // Calculate remaining and percentage for each channel (using same-day completed count)
         Object.keys(channelStats).forEach(channel => {
             const stats = channelStats[channel];
             stats.remaining = stats.pending + stats.inProgress;
             stats.percentage = stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0;
         });
         
-        // Cache the computed data
+        // Cache the computed data (using sameDayCompleted to match Team Stats)
         const standupData = {
             totalAssigned,
-            completed,
+            completed: sameDayCompleted, // Use same-day completed count (excluding backlog)
             percentage,
             coveragePercent,
             passingRate,
