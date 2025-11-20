@@ -336,7 +336,7 @@
     <!-- Stats Cards -->
     <div class="flex flex-nowrap gap-3 mb-4 overflow-x-auto">
       <!-- Audits Conducted Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
+      <div id="auditsConductedCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,8 +369,26 @@
           </div>
         </div>
         <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Average Quality Score</div>
+        <div class="text-3xl font-bold text-gray-900 mb-1" id="statsAvgQualityScore">
+          <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgScoreSubtitle">
+          <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      </div>
+
+      <!-- Pass Rate Card (Employees Only) -->
+      <div id="passRateCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="display: none;">
+        <div class="flex items-center justify-between mb-2">
+          <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
+            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Pass Rate</div>
         <div class="flex items-start gap-2 mb-1">
-          <div class="text-3xl font-bold text-gray-900" id="statsAvgQualityScore">
+          <div class="text-3xl font-bold text-gray-900" id="statsPassRate">
             <div class="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
           </div>
           <div class="flex flex-col gap-1">
@@ -390,13 +408,13 @@
             </div>
           </div>
         </div>
-        <div class="text-xs font-medium text-gray-600 mt-1" id="statsAvgScoreSubtitle">
+        <div class="text-xs font-medium text-success mt-1" id="statsPassRateChange" style="display: none;">
           <div class="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
         </div>
       </div>
 
       <!-- Remaining Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
+      <div id="remainingCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition-colors">
             <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1208,16 +1226,30 @@ async function initializeDashboard() {
       if (inProgressCard) inProgressCard.style.display = 'none';
       const avgDurationCard = document.getElementById('avgDurationCard');
       if (avgDurationCard) avgDurationCard.style.display = 'none';
+      const auditsConductedCard = document.getElementById('auditsConductedCard');
+      if (auditsConductedCard) auditsConductedCard.style.display = 'none';
+      const remainingCard = document.getElementById('remainingCard');
+      if (remainingCard) remainingCard.style.display = 'none';
+      // Show pass rate card for agents
+      const passRateCard = document.getElementById('passRateCard');
+      if (passRateCard) passRateCard.style.display = 'block';
       // Show acknowledgment card for agents
       const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
       if (requiresAcknowledgmentCard) requiresAcknowledgmentCard.style.display = 'block';
     } else {
+      // Hide pass rate card for non-agents
+      const passRateCard = document.getElementById('passRateCard');
+      if (passRateCard) passRateCard.style.display = 'none';
       // Hide acknowledgment card for non-agents
       const requiresAcknowledgmentCard = document.getElementById('requiresAcknowledgmentCard');
       if (requiresAcknowledgmentCard) requiresAcknowledgmentCard.style.display = 'none';
       // Ensure avgDuration card is visible for auditors
       const avgDurationCard = document.getElementById('avgDurationCard');
       if (avgDurationCard) avgDurationCard.style.display = 'block';
+      const auditsConductedCard = document.getElementById('auditsConductedCard');
+      if (auditsConductedCard) auditsConductedCard.style.display = 'block';
+      const remainingCard = document.getElementById('remainingCard');
+      if (remainingCard) remainingCard.style.display = 'block';
       const auditsTitle = document.getElementById('auditsSectionTitle');
       if (auditsTitle) auditsTitle.textContent = 'My Assigned Audits';
       const viewAllBtn = document.getElementById('viewAllBtn');
@@ -2812,7 +2844,7 @@ async function fetchAndCacheStats(period) {
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
                   const passingStatus = audit.passing_status || audit.passingStatus || '';
-                  const normalizedStatus = passingStatus === 'Passing' ? 'Passed' : (passingStatus === 'Not Passing' ? 'Not Passed' : passingStatus);
+                  const normalizedStatus = normalizePassingStatus(passingStatus);
                   
                   return { 
                     score: !isNaN(score) ? score : null,
@@ -2835,8 +2867,9 @@ async function fetchAndCacheStats(period) {
               totalScoreSum += audit.score;
               totalAuditsWithScore++;
             }
-            // Count passing/not passing - default to 'Not Passed' if status is empty/null
-            if (audit.passingStatus === 'Passed' || audit.passingStatus === 'Passing') {
+            // Count passing/not passing - use normalized status for consistency
+            const normalizedStatus = normalizePassingStatus(audit.passingStatus);
+            if (normalizedStatus === 'Passed') {
               passingCount++;
             } else {
               // Count everything else (including 'Not Passed', 'Not Passing', empty, null, etc.) as 'Not Passed'
@@ -2897,7 +2930,7 @@ async function fetchAndCacheStats(period) {
                 return filteredAudits.map(audit => {
                   const score = parseFloat(audit.average_score || audit.averageScore || 0);
                   const passingStatus = audit.passing_status || audit.passingStatus || '';
-                  const normalizedStatus = passingStatus === 'Passing' ? 'Passed' : (passingStatus === 'Not Passing' ? 'Not Passed' : passingStatus);
+                  const normalizedStatus = normalizePassingStatus(passingStatus);
                   
                   return { 
                     score: !isNaN(score) ? score : null,
@@ -2924,8 +2957,9 @@ async function fetchAndCacheStats(period) {
               totalScoreSum += audit.score;
               totalAuditsWithScore++;
             }
-            // Count passing/not passing - default to 'Not Passed' if status is empty/null
-            if (audit.passingStatus === 'Passed' || audit.passingStatus === 'Passing') {
+            // Count passing/not passing - use normalized status for consistency
+            const normalizedStatus = normalizePassingStatus(audit.passingStatus);
+            if (normalizedStatus === 'Passed') {
               passingCount++;
             } else {
               // Count everything else (including 'Not Passed', 'Not Passing', empty, null, etc.) as 'Not Passed'
@@ -3220,6 +3254,20 @@ function renderStatsFromData(stats) {
     }
   }
   
+  // Calculate and update Pass Rate (for employees)
+  const passRate = totalAuditsConducted > 0 ? Math.round((passingCount / totalAuditsConducted) * 100) : 0;
+  const statsPassRate = document.getElementById('statsPassRate');
+  const statsPassRateChange = document.getElementById('statsPassRateChange');
+  if (statsPassRate) {
+    const loadingDiv = statsPassRate.querySelector('div');
+    if (loadingDiv) loadingDiv.remove();
+    statsPassRate.textContent = `${passRate}%`;
+  }
+  if (statsPassRateChange) {
+    // Hide the "X passed" text since we're showing counts as chips in the Pass Rate card
+    statsPassRateChange.style.display = 'none';
+  }
+  
   // Update other cards
   if (statsRemainingCount) statsRemainingCount.textContent = remaining;
   if (statsInProgressCount) statsInProgressCount.textContent = inProgress;
@@ -3300,6 +3348,15 @@ function getStatusText(status, isAgentView = false) {
     };
     return statusMap[status] || 'updated';
   }
+}
+
+// Helper function to normalize passing status (handles both old and new values)
+function normalizePassingStatus(status) {
+  if (!status) return status;
+  // Convert old values to new ones for consistency
+  if (status === 'Passing' || status === 'Pass') return 'Passed';
+  if (status === 'Not Passing') return 'Not Passed';
+  return status; // Return as-is if already normalized or unknown
 }
 
 function getInitials(name) {
