@@ -864,6 +864,10 @@ function generateErrorDetails(audit, errorFields) {
     const reversalRequestedAt = audit.reversalRequestedAt || audit.reversal_requested_at;
     const hasReversalSubmitted = !!reversalRequestedAt;
     
+    // Check if audit is acknowledged (hide comment input boxes if so)
+    const acknowledgementStatus = audit.acknowledgementStatus || audit.acknowledgement_status || '';
+    const isAcknowledged = acknowledgementStatus.toLowerCase() === 'acknowledged';
+    
     // Load parameter comments from audit data
     const parameterComments = audit.parameterComments || audit.parameter_comments || {};
     
@@ -958,7 +962,7 @@ function generateErrorDetails(audit, errorFields) {
         let commentHtml = '';
         if (showCommentsColumn) {
             // For auditors (non-audited employees), always show comments as read-only text
-            // For audited employees, show input boxes (or read-only if reversal submitted)
+            // For audited employees, show input boxes (or read-only if reversal submitted or audit acknowledged)
             if (hasFeedback) {
                 // Create input boxes/display for each feedback
                 commentHtml = feedbackArray.map((feedbackText, index) => {
@@ -967,13 +971,13 @@ function generateErrorDetails(audit, errorFields) {
                     return `
                         <div style="margin-bottom: ${index < feedbackArray.length - 1 ? '0.6469rem' : '0'};">
                             ${feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Comment ${index + 1}:</div>` : ''}
-                            ${!isAuditedEmployee || hasReversalSubmitted ? 
-                                // For auditors or after reversal submitted, show as read-only text
+                            ${!isAuditedEmployee || hasReversalSubmitted || isAcknowledged ? 
+                                // For auditors, after reversal submitted, or after acknowledgment, show as read-only text
                                 (existingComment ? 
                                     `<div style="font-size: 0.5659rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(existingComment)}</div>` :
                                     '<span style="color: #9ca3af; font-style: italic; font-size: 0.5659rem;">-</span>'
                                 ) :
-                                // For audited employees (before reversal), show input box
+                                // For audited employees (before reversal and before acknowledgment), show input box
                                 `<input type="text" id="${commentInputId}" data-param-key="${field.key}" data-feedback-index="${index}" value="${escapeHtml(existingComment)}" placeholder="Enter your comment..." style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0625rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif;" onchange="saveParameterComment('${field.key}', ${index}, this.value)" onblur="saveParameterComment('${field.key}', ${index}, this.value)">`
                             }
                 </div>
