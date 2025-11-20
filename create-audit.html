@@ -218,6 +218,29 @@
             text-align: center;
         }
 
+        /* AI Audit Status Animations */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -475,6 +498,14 @@
                         <span>Filters</span>
                         <span id="pullConversationsActiveFiltersCount" style="background: rgba(255,255,255,0.3); padding: 0.0808rem 0.2425rem; border-radius: 0.0808rem; font-size: 0.4043rem; font-weight: 600; display: none;">0</span>
                     </button>
+                    <button id="runAIAuditFromPullConversationsBtn" onclick="event.stopPropagation(); window.runAIAuditFromPullConversations();" style="display: flex; align-items: center; gap: 0.2425rem; padding: 0.2425rem 0.4852rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; box-shadow: 0 0.0606rem 0.1213rem rgba(59, 130, 246, 0.2);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 0.1213rem 0.2425rem rgba(59, 130, 246, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0.0606rem 0.1213rem rgba(59, 130, 246, 0.2)';" title="Run AI Audit for the currently displayed conversations">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        <span>Run AI Audit</span>
+                    </button>
                 </div>
             <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 0.3234rem;">
@@ -517,6 +548,45 @@
         <!-- Error State -->
         <div id="pullConversationsError" style="display: none; background: #fee2e2; color: #991b1b; padding: 0.6469rem; border-radius: 0.3234rem; margin-bottom: 0.6469rem; font-size: 0.4852rem;">
             <strong>Error:</strong> <span id="pullConversationsErrorMessage"></span>
+        </div>
+        
+        <!-- AI Audit Status Summary -->
+        <!-- Unified AI Audit Status Banner -->
+        <div id="aiAuditStatusBanner" style="display: none; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 0.375rem; padding: 0.75rem 1rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.375rem;">
+                        <svg style="width: 1.125rem; height: 1.125rem; color: #0284c7;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span style="font-size: 0.8125rem; font-weight: 700; color: #0c4a6e; font-family: 'Poppins', sans-serif;">AI Audit Status:</span>
+                    </div>
+                    <div id="aiAuditStatusCounts" style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <!-- Status counts will be inserted here -->
+                    </div>
+                </div>
+                <div id="aiAuditRealtimeIndicator" style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; color: #64748b;">
+                    <div id="aiAuditRealtimeDot" style="width: 0.5rem; height: 0.5rem; background: #10b981; border-radius: 50%; animation: pulse 2s ease-in-out infinite;"></div>
+                    <span>Live updates</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Audit Processing Indicator (for detailed processing list) -->
+        <div id="aiAuditProcessingIndicator" style="display: none; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6469rem;">
+                <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.3234rem;">
+                        <svg class="spinner" style="width: 1rem; height: 1rem; color: #3b82f6; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #1e40af;">Currently Processing:</span>
+                    </div>
+                    <div id="aiAuditProcessingList" style="display: flex; flex-wrap: wrap; gap: 0.3234rem; flex: 1;">
+                        <!-- Processing conversation badges will be inserted here -->
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Conversations List -->
@@ -650,6 +720,26 @@
                             </th>
                             <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>AI Status</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.5rem; height: 0.5rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">AI Audit Status</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Status of AI audit processing for this conversation. Click to view results or start manual audit.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Statuses:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #3B82F6;">🔄 Processing</span> (In progress), <span style="color: #10B981;">✅ Completed</span> (Results available), <span style="color: #EF4444;">❌ Failed</span> (Error occurred)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Status</span>
                                     <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
                                         <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.5rem; height: 0.5rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
@@ -757,6 +847,121 @@
                         <!-- Rows will be populated here -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Audit Modal -->
+    <div id="aiAuditModal" onclick="if(event.target === this) closeAIAuditSection();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;">
+        <div id="aiAuditSection" onclick="event.stopPropagation();" style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; max-width: 75rem; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1;">
+                    <h3 id="aiAuditHeader" style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
+                        <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="#1A733E">
+                            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"/>
+                            <path d="M19 19L20.09 21.26L23 22L20.09 22.74L19 25L17.91 22.74L15 22L17.91 21.26L19 19Z"/>
+                            <path d="M5 19L6.09 21.26L9 22L6.09 22.74L5 25L3.91 22.74L1 22L3.91 21.26L5 19Z"/>
+                        </svg>
+                        <span>AI Audit:</span>
+                        <span id="aiAuditEmployeeName" style="color: #374151; font-weight: 500;"></span>
+                    </h3>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.375rem; background: #f0f9ff; padding: 0.375rem 0.625rem; border-radius: 0.25rem; border: 1px solid #bae6fd;">
+                        <span style="font-size: 0.6875rem; color: #1e40af; font-weight: 500;">Sel:</span>
+                        <span id="aiAuditSelectedCount" style="font-size: 0.75rem; font-weight: 600; color: #1A733E;">0</span>
+                        <span style="font-size: 0.6875rem; color: #6b7280; margin: 0 0.25rem;">/</span>
+                        <span id="aiAuditTotalCount" style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">0</span>
+                    </div>
+                    <button onclick="closeAIAuditSection()" style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; color: #374151; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'" title="Close">
+                        ✕
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Configuration Section -->
+            <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid #e5e7eb;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.375rem; flex: 1; min-width: 200px;">
+                        <label style="font-size: 0.75rem; font-weight: 500; color: #374151; white-space: nowrap;">Scorecard:</label>
+                        <select id="aiAuditScorecardSelect" style="flex: 1; padding: 0.375rem 0.625rem; border: 1px solid #d1d5db; border-radius: 0.25rem; background-color: #ffffff; color: #374151; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.375rem center; background-size: 0.75rem; padding-right: 1.5rem;">
+                            <option value="">Select scorecard...</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.375rem;">
+                        <label style="font-size: 0.75rem; font-weight: 500; color: #374151; white-space: nowrap;">Date:</label>
+                        <input type="date" id="aiAuditDatePicker" style="padding: 0.375rem 0.625rem; border: 1px solid #d1d5db; border-radius: 0.25rem; background-color: #ffffff; color: #374151; font-size: 0.75rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer;">
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Quick Actions -->
+            <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.75rem; flex-wrap: wrap; padding: 0.5rem; background: #f9fafb; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+                <button onclick="selectTop10AIAuditConversations()" style="padding: 0.375rem 0.75rem; background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.backgroundColor='#fde68a';" onmouseout="this.style.backgroundColor='#fef3c7';" title="Select top 10">
+                    🏆 Top 10
+                </button>
+                <button onclick="selectAllAIAuditConversations()" style="padding: 0.375rem 0.75rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.backgroundColor='#e5e7eb';" onmouseout="this.style.backgroundColor='#f3f4f6';" title="Select all">
+                    ✓ All
+                </button>
+                <button onclick="clearAIAuditSelection()" style="padding: 0.375rem 0.75rem; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 0.25rem; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.backgroundColor='#fecaca';" onmouseout="this.style.backgroundColor='#fee2e2';" title="Clear">
+                    ✕ Clear
+                </button>
+                <div style="margin-left: auto; font-size: 0.625rem; color: #6b7280; font-style: italic;">
+                    💡 Already audited conversations are disabled
+                </div>
+            </div>
+        
+            <!-- Error State -->
+            <div id="aiAuditError" style="display: none; background: #fee2e2; color: #991b1b; padding: 0.5rem 0.75rem; border-radius: 0.25rem; margin-bottom: 0.75rem; font-size: 0.75rem; border: 1px solid #fca5a5;">
+                <strong>⚠️</strong> <span id="aiAuditErrorMessage"></span>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="aiAuditLoading" style="display: none; text-align: center; padding: 2rem; color: #6b7280;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+                    <div style="width: 1.5rem; height: 1.5rem; border: 0.2rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <p style="font-size: 0.875rem; margin: 0; color: #374151; font-weight: 500;">Processing conversations...</p>
+                </div>
+            </div>
+            
+            <!-- Conversations List -->
+            <div id="aiAuditConversationsList" style="display: none;">
+                <div style="background: white; border-radius: 0.375rem; border: 1px solid #e5e7eb; max-height: 45vh; overflow-x: auto; overflow-y: auto; position: relative;">
+                <table style="width: 100%; border-collapse: collapse; min-width: fit-content; font-size: 0.6069rem;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
+                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; width: 3rem;">
+                                <input type="checkbox" id="selectAllAIAuditConversations" style="cursor: pointer;" title="Select all conversations" onclick="selectAllAIAuditConversations(this.checked)">
+                            </th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Client</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">ID</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Subject</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">CSAT</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">CX Score</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Length</th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Rank</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aiAuditConversationsTableBody">
+                        <!-- Rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+            <!-- Submit Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div id="aiAuditSubmitInfo" style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem; font-weight: 500;">
+                        Select conversations and scorecard to submit
+                    </div>
+                    <div style="font-size: 0.625rem; color: #9ca3af;">
+                        ⏱️ Completes in 2-5 minutes
+                    </div>
+                </div>
+                <button id="aiAuditSubmitBtn" onclick="submitAIAuditBatch()" disabled style="padding: 0.5rem 1.25rem; background: #d1d5db; color: #9ca3af; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: not-allowed; transition: all 0.2s; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" onmouseover="if(!this.disabled) { this.style.background='linear-gradient(135deg, #15582E 0%, #1f7a3d 100%)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 6px rgba(26, 115, 62, 0.3)'; }" onmouseout="if(!this.disabled) { this.style.background='linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; }">
+                    Submit Batch
+                </button>
             </div>
         </div>
     </div>
@@ -3099,7 +3304,7 @@ function createGroupedAuditCard(group, isAgent, isExpanded) {
                             class="run-ai-audit-btn-group run-ai-audit-btn"
                             data-email="${escapeHtml(displayEmail)}"
                             data-name="${escapeHtml(displayName)}"
-                            onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}');"
+                            onclick="event.stopPropagation(); runAIAuditFromPullConversations('${escapeHtml(displayEmail)}', '${escapeHtml(displayName)}');"
                             title="Run AI Audit for ${escapeHtml(displayName)}"
                         >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -3414,7 +3619,7 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                         class="run-ai-audit-btn"
                         data-email="${escapeHtml(displayEmail)}"
                         data-name="${escapeHtml(displayName)}"
-                        onclick="event.stopPropagation(); showComingSoonDialog('${escapeHtml(displayName)}');"
+                        onclick="event.stopPropagation(); showAIAuditSection('${escapeHtml(displayEmail)}', '${escapeHtml(displayName)}');"
                         title="Run AI Audit for ${escapeHtml(displayName)}"
                     >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -4139,6 +4344,8 @@ let pullConversationsAdminId = null;
 let pullConversationsAdminName = null;
 let pullConversationsAdminEmail = null;
 let pullConversationsAdminAlias = null;
+let pullConversationsEmployeeEmail = null; // Store the employee email whose conversations were pulled
+let pullConversationsEmployeeName = null; // Store the employee name whose conversations were pulled
 let pullConversationsDateRange = 'yesterday'; // Default: 'yesterday', 'last3days', 'thisweek'
 let pullConversationsList = []; // Original unfiltered list from cache/API
 let pullConversationsFilteredList = []; // Filtered list for display
@@ -4296,6 +4503,8 @@ window.pullConversationsFromIntercom = async function() {
         pullConversationsAdminName = currentUserName;
         pullConversationsAdminEmail = currentUserEmail;
         pullConversationsAdminAlias = null;
+        pullConversationsEmployeeEmail = employeeEmail.trim(); // Store the employee email
+        pullConversationsEmployeeName = employeeName || employeeEmail; // Store the employee name
         
         // Fetch admin alias from Supabase
         if (window.supabaseClient) {
@@ -4379,6 +4588,30 @@ window.pullConversationsForEmployee = async function(employeeEmail, employeeName
             alert('Error: Conversations section not found. Please refresh the page.');
             return;
         }
+        
+        // Ensure Run AI Audit button has event listener attached
+        setTimeout(() => {
+            const runAIAuditBtn = document.getElementById('runAIAuditFromPullConversationsBtn');
+            if (runAIAuditBtn) {
+                // Remove any existing listeners by cloning the button
+                const newBtn = runAIAuditBtn.cloneNode(true);
+                runAIAuditBtn.parentNode.replaceChild(newBtn, runAIAuditBtn);
+                
+                // Add event listener to the new button
+                newBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    console.log('🔵 Run AI Audit button clicked (event listener)');
+                    if (window.runAIAuditFromPullConversations) {
+                        window.runAIAuditFromPullConversations();
+                    } else {
+                        console.error('❌ runAIAuditFromPullConversations function not found');
+                        alert('AI Audit function not loaded. Please refresh the page.');
+                    }
+                });
+                console.log('✅ Event listener attached to Run AI Audit button (after section shown)');
+            }
+        }, 100);
         
         // Find the specific audit card for this employee and insert the section right after it
         const normalizedEmployeeEmail = (employeeEmail || '').toLowerCase().trim();
@@ -6249,6 +6482,93 @@ async function getAlreadyAuditedConversationIds() {
     }
 }
 
+// Format time ago (e.g., "2 hours ago", "3 days ago")
+function formatTimeAgo(date) {
+    if (!date) return '';
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    
+    // For longer periods, show date
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Get AI audit status for conversations
+async function getAIAuditStatus(conversationIds) {
+    const supabaseClient = window.SupabaseConfig?.getClient?.();
+    if (!supabaseClient) {
+        console.warn('Supabase client not available for AI audit status');
+        return new Map();
+    }
+    
+    if (!conversationIds || conversationIds.length === 0) {
+        return new Map();
+    }
+    
+    try {
+        // Convert to strings for query
+        const conversationIdStrings = conversationIds.map(id => String(id));
+        
+        // Query ai_audit_results table
+        const { data: aiAuditResults, error } = await supabaseClient
+            .from('ai_audit_results')
+            .select('conversation_id, ai_scorecard_data, ai_confidence_score, batch_id, created_by, created_at')
+            .in('conversation_id', conversationIdStrings);
+        
+        if (error) {
+            console.error('Error fetching AI audit status:', error);
+            return new Map();
+        }
+        
+        // Create a map: conversationId -> status object
+        const statusMap = new Map();
+        
+        (aiAuditResults || []).forEach(result => {
+            const convId = String(result.conversation_id);
+            const hasScorecardData = result.ai_scorecard_data !== null && result.ai_scorecard_data !== undefined;
+            const createdAt = result.created_at ? new Date(result.created_at) : null;
+            const now = new Date();
+            
+            // Determine status
+            let status = 'none';
+            if (hasScorecardData) {
+                status = 'completed';
+            } else if (createdAt) {
+                // If created within last 2 hours and no scorecard data, consider it in progress
+                const hoursSinceCreation = (now - createdAt) / (1000 * 60 * 60);
+                if (hoursSinceCreation < 2) {
+                    status = 'in_progress';
+                } else {
+                    // Older than 2 hours with no data might be failed
+                    status = 'failed';
+                }
+            }
+            
+            statusMap.set(convId, {
+                status: status,
+                batch_id: result.batch_id || null,
+                created_by: result.created_by || null,
+                created_at: createdAt,
+                confidence_score: result.ai_confidence_score || null,
+                has_data: hasScorecardData
+            });
+        });
+        
+        console.log('✅ Loaded AI audit status for', statusMap.size, 'conversations');
+        return statusMap;
+    } catch (error) {
+        console.error('Error in getAIAuditStatus:', error);
+        return new Map();
+    }
+}
+
 // Display conversations list
 async function displayPullConversationsList(conversations) {
     const tableBody = document.getElementById('pullConversationsTableBody');
@@ -6257,12 +6577,32 @@ async function displayPullConversationsList(conversations) {
         tableBody.innerHTML = '';
     
     if (conversations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="13" style="text-align: center; padding: 1.9406rem; color: #9ca3af;">No conversations found for the selected date.</td></tr>';
         return;
     }
     
     // Get already-audited conversation IDs
     const alreadyAuditedIds = await getAlreadyAuditedConversationIds();
+    
+    // Get AI audit status for all conversations
+    const conversationIds = conversations.map(c => c.id).filter(id => id);
+    const aiAuditStatusMap = await getAIAuditStatus(conversationIds);
+    
+    // Calculate AI audit status summary
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let failedCount = 0;
+    aiAuditStatusMap.forEach(status => {
+        if (status.status === 'completed') completedCount++;
+        else if (status.status === 'in_progress') inProgressCount++;
+        else if (status.status === 'failed') failedCount++;
+    });
+    
+    // Update unified status banner
+    updateAIAuditStatusBanner(completedCount, inProgressCount, failedCount, conversations.length);
+    
+    // Update processing indicator with specific conversation IDs
+    updateAIAuditProcessingIndicator(aiAuditStatusMap, conversations);
     
     // Sort conversations by: Lowest Rating, Lowest CX Score, Longest Length
     const sortedConversations = [...conversations].sort((a, b) => {
@@ -6343,19 +6683,41 @@ async function displayPullConversationsList(conversations) {
         // Check if this conversation is already audited
         const isAlreadyAudited = alreadyAuditedIds.has(conversationId);
         
-        // Highlight top conversations based on number of assigned audits for the employee
-        // But prioritize "already audited" styling if applicable
-        const shouldHighlight = index < highlightCount && !isAlreadyAudited;
-        if (shouldHighlight) {
-            row.style.backgroundColor = '#fef3c7'; // Light yellow background
-            row.style.borderLeft = '0.2rem solid #f59e0b'; // Orange left border
-        }
+        // Get AI audit status
+        const aiStatus = aiAuditStatusMap.get(conversationId);
+        const aiStatusType = aiStatus ? aiStatus.status : 'none';
         
-        // Add visual indicator for already-audited conversations
+        // Determine if this row should be highlighted (for quick start audit button)
+        // Highlight top conversations that are NOT already audited
+        const shouldHighlight = index < highlightCount && !isAlreadyAudited;
+        
+        // Apply row highlighting with priority: Already Audited > AI Status > Top Highlight
+        // Clear visual hierarchy - AI status is more important than top highlight for user understanding
         if (isAlreadyAudited) {
-            row.style.backgroundColor = '#f3f4f6'; // Light gray background
-            row.style.opacity = '0.7'; // Slightly faded
-            row.style.borderLeft = '0.2rem solid #6b7280'; // Gray left border
+            // Already manually audited - light gray background, faded (highest priority)
+            row.style.backgroundColor = '#f3f4f6';
+            row.style.opacity = '0.7';
+            row.style.borderLeft = '0.2rem solid #6b7280';
+        } else if (aiStatusType === 'in_progress') {
+            // AI Audit in progress - prominent blue background with pulsing animation
+            row.style.backgroundColor = '#eff6ff';
+            row.style.borderLeft = '0.25rem solid #3b82f6';
+            row.style.animation = 'pulse 2s ease-in-out infinite';
+            row.style.transition = 'all 0.3s ease-in-out';
+        } else if (aiStatusType === 'completed') {
+            // AI Audit completed - green background
+            row.style.backgroundColor = '#f0fdf4';
+            row.style.borderLeft = '0.25rem solid #10b981';
+            row.style.transition = 'all 0.3s ease-in-out';
+        } else if (aiStatusType === 'failed') {
+            // AI Audit failed - red background
+            row.style.backgroundColor = '#fef2f2';
+            row.style.borderLeft = '0.25rem solid #ef4444';
+            row.style.transition = 'all 0.3s ease-in-out';
+        } else if (shouldHighlight) {
+            // Top conversation to highlight - light yellow background (lowest priority, only if no AI status)
+            row.style.backgroundColor = '#fef3c7';
+            row.style.borderLeft = '0.2rem solid #f59e0b';
         }
         
         // Store the default opacity for dragend handler
@@ -6450,6 +6812,77 @@ async function displayPullConversationsList(conversations) {
         const createdDateShort = createdDate !== '-' ? new Date(createdDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-';
         const updatedDateShort = updatedDate !== '-' ? new Date(updatedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-';
         
+        // Generate AI status badge and status column content
+        let aiStatusBadge = '';
+        let aiStatusColumn = '<span style="color: #9ca3af; font-size: 0.5252rem;">-</span>';
+        
+        if (aiStatus) {
+            const statusType = aiStatus.status;
+            const createdByEmail = aiStatus.created_by || '';
+            const createdByName = createdByEmail.split('@')[0] || 'Unknown';
+            const createdAtTime = aiStatus.created_at ? formatTimeAgo(aiStatus.created_at) : '';
+            const confidenceScore = aiStatus.confidence_score;
+            
+            if (statusType === 'completed') {
+                // Completed badge - larger, clearer
+                const tooltipText = `AI Audit completed ${createdAtTime}${createdByEmail ? ` by ${createdByName}` : ''}${confidenceScore ? `. Confidence: ${confidenceScore}%` : ''}. Click to view results or start manual audit.`;
+                aiStatusBadge = `<span class="ai-status-badge" data-conversation-id="${conversationId}" data-status="completed" style="display: inline-flex; align-items: center; gap: 0.25rem; background: #10b981; color: white; padding: 0.12rem 0.375rem; border-radius: 0.2rem; font-size: 0.5rem; font-weight: 700; white-space: nowrap; margin-left: 0.25rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);" onmouseover="this.style.background='#059669'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 4px rgba(16, 185, 129, 0.4)';" onmouseout="this.style.background='#10b981'; this.style.transform='scale(1)'; this.style.boxShadow='0 1px 2px rgba(16, 185, 129, 0.3)';" title="${tooltipText}">
+                    <span>✅</span>
+                    <span>AI Audited</span>
+                </span>`;
+                
+                // Status column content
+                aiStatusColumn = `
+                    <div style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <span style="color: #10b981; font-size: 0.75rem;">✅</span>
+                            <span style="color: #10b981; font-weight: 700; font-size: 0.5rem;">Completed</span>
+                        </div>
+                        <span style="color: #6b7280; font-size: 0.4447rem;">${createdAtTime}</span>
+                        ${confidenceScore ? `<span style="color: #059669; font-size: 0.4rem; font-weight: 600;">${confidenceScore}% confidence</span>` : ''}
+                    </div>
+                `;
+            } else if (statusType === 'in_progress') {
+                // In progress badge - more prominent with pulsing animation
+                aiStatusBadge = `<span class="ai-status-badge" data-conversation-id="${conversationId}" data-status="in_progress" style="display: inline-flex; align-items: center; gap: 0.25rem; background: #3b82f6; color: white; padding: 0.12rem 0.375rem; border-radius: 0.2rem; font-size: 0.5rem; font-weight: 700; white-space: nowrap; margin-left: 0.25rem; cursor: pointer; box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3); animation: pulse 2s ease-in-out infinite;" title="AI Audit in progress. Started ${createdAtTime}">
+                    <svg class="spinner" style="width: 0.625rem; height: 0.625rem; color: white; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>AI Auditing...</span>
+                </span>`;
+                
+                // Status column content with spinner
+                aiStatusColumn = `
+                    <div style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <svg class="spinner" style="width: 0.625rem; height: 0.625rem; color: #3b82f6; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span style="color: #3b82f6; font-weight: 700; font-size: 0.5rem;">Processing...</span>
+                        </div>
+                        <span style="color: #6b7280; font-size: 0.4447rem;">Started ${createdAtTime}</span>
+                    </div>
+                `;
+            } else if (statusType === 'failed') {
+                // Failed badge - clearer error state
+                aiStatusBadge = `<span class="ai-status-badge" data-conversation-id="${conversationId}" data-status="failed" style="display: inline-flex; align-items: center; gap: 0.25rem; background: #ef4444; color: white; padding: 0.12rem 0.375rem; border-radius: 0.2rem; font-size: 0.5rem; font-weight: 700; white-space: nowrap; margin-left: 0.25rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);" onmouseover="this.style.background='#dc2626'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 4px rgba(239, 68, 68, 0.4)';" onmouseout="this.style.background='#ef4444'; this.style.transform='scale(1)'; this.style.boxShadow='0 1px 2px rgba(239, 68, 68, 0.3)';" title="AI Audit failed ${createdAtTime}. Click to retry.">
+                    <span>❌</span>
+                    <span>AI Failed</span>
+                </span>`;
+                
+                // Status column content
+                aiStatusColumn = `
+                    <div style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <span style="color: #ef4444; font-size: 0.75rem;">❌</span>
+                            <span style="color: #ef4444; font-weight: 700; font-size: 0.5rem;">Failed</span>
+                        </div>
+                        <span style="color: #6b7280; font-size: 0.4447rem;">${createdAtTime}</span>
+                    </div>
+                `;
+            }
+        }
+        
         row.innerHTML = `
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">
                 <input type="checkbox" class="conversation-checkbox" data-conversation-id="${conversation.id}" style="cursor: pointer;" onclick="event.stopPropagation(); updatePullConversationsSelection();">
@@ -6459,7 +6892,7 @@ async function displayPullConversationsList(conversations) {
                 <div style="font-size: 0.5252rem; color: #6b7280; line-height: 1.2;">${clientEmail ? escapeHtml(clientEmail.substring(0, 20)) + (clientEmail.length > 20 ? '...' : '') : '-'}</div>
             </td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
-                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
                     <span style="font-family: 'Poppins', sans-serif; font-size: 0.5252rem; color: #6b7280;">${conversationId && conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
                     ${conversationId && conversationId !== 'N/A' ? `<button onclick="event.stopPropagation(); copyToClipboard('${conversationId}', this);" style="padding: 0.08rem; background: transparent; border: none; cursor: pointer; color: #6b7280; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">
                         <svg style="width: 0.65rem; height: 0.65rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -6467,6 +6900,7 @@ async function displayPullConversationsList(conversations) {
                         </svg>
                     </button>` : ''}
                     ${isAlreadyAudited ? `<span style="background: #6b7280; color: white; padding: 0.08rem 0.25rem; border-radius: 0.16rem; font-size: 0.4447rem; font-weight: 600; white-space: nowrap; margin-left: 0.25rem;" title="This conversation has already been audited">Audited</span>` : ''}
+                    ${aiStatusBadge}
                 </div>
             </td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
@@ -6475,6 +6909,7 @@ async function displayPullConversationsList(conversations) {
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${lengthDisplay}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${aiStatusColumn}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${stateBadge}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${priorityBadge}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; max-width: 15rem;">${tagsHtml}</td>
@@ -6492,7 +6927,15 @@ async function displayPullConversationsList(conversations) {
                     >
                         Open
                     </button>
-                ${shouldHighlight && employeeAudits.length > 0 ? `
+                ${isAlreadyAudited ? `
+                    <button 
+                        disabled
+                        style="padding: 0.16rem 0.32rem; font-size: 0.4852rem; font-weight: 500; color: #9ca3af; background: #f3f4f6; border: none; border-radius: 0.16rem; cursor: not-allowed; transition: all 0.2s; white-space: nowrap; opacity: 0.6;"
+                        title="This conversation has already been audited"
+                    >
+                        Audited
+                    </button>
+                ` : shouldHighlight && employeeAudits.length > 0 ? `
                     <button 
                         class="quick-start-audit-btn"
                         data-conversation-id="${conversation.id}"
@@ -6536,6 +6979,10 @@ async function displayPullConversationsList(conversations) {
         if (auditButton) {
             auditButton.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Don't allow starting audit if already audited
+                if (isAlreadyAudited) {
+                    return;
+                }
                 if (!selectedAuditId) {
                     return; // Button is disabled, do nothing
                 }
@@ -6555,12 +7002,723 @@ async function displayPullConversationsList(conversations) {
             });
         }
         
+        // Attach click handler to AI status badges
+        const aiStatusBadgeElement = row.querySelector('.ai-status-badge');
+        if (aiStatusBadgeElement) {
+            aiStatusBadgeElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const conversationId = aiStatusBadgeElement.getAttribute('data-conversation-id');
+                const status = aiStatusBadgeElement.getAttribute('data-status');
+                handleAIAuditStatusClick(conversationId, status, aiStatus);
+            });
+        }
+        
         tableBody.appendChild(row);
     });
     
     // Update all audit buttons after rendering
     updateAuditButtonsState();
+    
+    // Set up realtime subscription for AI audit status updates
+    setupAIAuditRealtimeSubscription();
+    
+    // Also update processing indicator
+    updateAIAuditProcessingIndicator(aiAuditStatusMap, conversations);
+    
+    // If AI Audit section is open for this employee, process conversations
+    const aiAuditSection = document.getElementById('aiAuditSection');
+    if (aiAuditSection && aiAuditSection.style.display !== 'none' && 
+        typeof aiAuditEmployeeEmail !== 'undefined' && aiAuditEmployeeEmail && 
+        typeof pullConversationsEmployeeEmail !== 'undefined' && pullConversationsEmployeeEmail && 
+        aiAuditEmployeeEmail.toLowerCase().trim() === pullConversationsEmployeeEmail.toLowerCase().trim()) {
+        console.log('🔄 AI Audit section is open, processing conversations from displayPullConversationsList');
+        // Use the full list (pullConversationsList) if available, otherwise use the conversations passed in
+        const conversationsToProcess = (typeof pullConversationsList !== 'undefined' && pullConversationsList && pullConversationsList.length > 0) 
+            ? pullConversationsList 
+            : conversations;
+        // Process conversations for AI Audit
+        processConversationsForAIAudit(conversationsToProcess);
+    }
 }
+
+// Handle AI audit status badge click
+async function handleAIAuditStatusClick(conversationId, status, aiStatusData) {
+    if (!conversationId || !status) return;
+    
+    console.log('🔍 AI Audit status clicked:', { conversationId, status, aiStatusData });
+    
+    if (status === 'completed') {
+        // Show AI audit results modal
+        await showAIAuditResultsModal(conversationId, aiStatusData);
+    } else if (status === 'in_progress') {
+        // Show progress info with better UX
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: '🔄 AI Audit In Progress',
+                message: `AI Audit is still processing for conversation ${conversationId}.\n\nPlease wait for completion. The status will update automatically when ready.`,
+                confirmText: 'OK',
+                type: 'info'
+            });
+        } else {
+            alert(`AI Audit is still processing for conversation ${conversationId}. Please wait for completion.`);
+        }
+    } else if (status === 'failed') {
+        // Offer to retry with better UX
+        if (window.confirmationDialog) {
+            const retry = await window.confirmationDialog.show({
+                title: '❌ AI Audit Failed',
+                message: `AI Audit failed for conversation ${conversationId}.\n\nWould you like to retry?`,
+                confirmText: 'Retry',
+                cancelText: 'Cancel',
+                type: 'error'
+            });
+            if (retry) {
+                // TODO: Implement retry logic
+                console.log('Retry AI audit for conversation:', conversationId);
+                showToastNotification('Retry functionality coming soon', 'info');
+            }
+        } else {
+            const retry = confirm(`AI Audit failed for conversation ${conversationId}. Would you like to retry?`);
+            if (retry) {
+                console.log('Retry AI audit for conversation:', conversationId);
+            }
+        }
+    }
+}
+
+// Show AI audit results modal
+async function showAIAuditResultsModal(conversationId, aiStatusData) {
+    const supabaseClient = window.SupabaseConfig?.getClient?.();
+    if (!supabaseClient) {
+        alert('Unable to load AI audit results. Please try again later.');
+        return;
+    }
+    
+    try {
+        // Fetch full AI audit result
+        const { data: aiResult, error } = await supabaseClient
+            .from('ai_audit_results')
+            .select('*')
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+        
+        if (error || !aiResult) {
+            if (window.confirmationDialog) {
+                await window.confirmationDialog.show({
+                    title: 'Results Not Found',
+                    message: 'AI audit results not found for this conversation.',
+                    confirmText: 'OK',
+                    type: 'warning'
+                });
+            } else {
+                alert('AI audit results not found for this conversation.');
+            }
+            return;
+        }
+        
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.id = 'aiAuditResultsModal';
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = 'background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;';
+        
+        const scorecardData = aiResult.ai_scorecard_data || {};
+        const confidenceScore = aiResult.ai_confidence_score || 'N/A';
+        const aiNotes = aiResult.ai_notes || 'No notes available.';
+        const createdBy = aiResult.created_by || 'Unknown';
+        const createdAt = aiResult.created_at ? new Date(aiResult.created_at).toLocaleString() : 'Unknown';
+        
+        // Format confidence score with color
+        const confidenceColor = confidenceScore >= 80 ? '#10b981' : confidenceScore >= 60 ? '#f59e0b' : '#ef4444';
+        const confidenceBadge = `<span style="background: ${confidenceColor}20; color: ${confidenceColor}; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-weight: 600; font-size: 0.875rem;">${confidenceScore}%</span>`;
+        
+        modalContent.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem;">
+                <div>
+                    <h2 style="margin: 0 0 0.25rem 0; font-size: 1.5rem; font-weight: 600; color: #111827; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>✅</span>
+                        <span>AI Audit Results</span>
+                    </h2>
+                    <p style="margin: 0; font-size: 0.875rem; color: #6b7280;">Review AI-generated audit analysis</p>
+                </div>
+                <button onclick="this.closest('#aiAuditResultsModal').remove();" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.25rem; transition: all 0.2s;" onmouseover="this.style.background='#f3f4f6'; this.style.color='#374151';" onmouseout="this.style.background='transparent'; this.style.color='#6b7280';">&times;</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Conversation ID</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.875rem; color: #374151; font-weight: 500; font-family: monospace;">${conversationId}</span>
+                        <button onclick="navigator.clipboard.writeText('${conversationId}'); this.textContent='✓'; setTimeout(() => this.textContent='📋', 2000); showToastNotification('Conversation ID copied!', 'success');" style="background: transparent; border: none; cursor: pointer; padding: 0.25rem; color: #6b7280; font-size: 0.875rem; transition: all 0.2s;" onmouseover="this.style.color='#1A733E';" onmouseout="this.style.color='#6b7280';" title="Copy ID">📋</button>
+                    </div>
+                </div>
+                <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Confidence Score</div>
+                    <div style="font-size: 1rem; font-weight: 600;">${confidenceBadge}</div>
+                </div>
+                <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Audited By</div>
+                    <div style="font-size: 0.875rem; color: #374151; font-weight: 500;">${createdBy}</div>
+                </div>
+                <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid #e5e7eb;">
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Completed</div>
+                    <div style="font-size: 0.875rem; color: #374151; font-weight: 500;">${createdAt}</div>
+                </div>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <strong style="color: #374151; font-size: 0.9375rem;">AI Analysis Notes</strong>
+                </div>
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 0.375rem; border: 1px solid #e5e7eb; color: #374151; line-height: 1.6; white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${escapeHtml(aiNotes)}</div>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                    <strong style="color: #374151; font-size: 0.9375rem;">Scorecard Data</strong>
+                    <button onclick="navigator.clipboard.writeText(JSON.stringify(${JSON.stringify(scorecardData)}, null, 2)); this.textContent='✓ Copied!'; setTimeout(() => this.textContent='📋 Copy', 2000); showToastNotification('Scorecard data copied!', 'success');" style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; color: #374151; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb';" onmouseout="this.style.background='#f3f4f6';">📋 Copy</button>
+                </div>
+                <pre style="background: #f9fafb; padding: 1rem; border-radius: 0.375rem; border: 1px solid #e5e7eb; overflow-x: auto; font-size: 0.8125rem; color: #374151; max-height: 300px; overflow-y: auto; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; line-height: 1.5;">${JSON.stringify(scorecardData, null, 2)}</pre>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+                <button onclick="startManualAuditFromAI('${conversationId}'); this.closest('#aiAuditResultsModal').remove();" style="flex: 1; padding: 0.875rem; background: linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%); color: white; border: none; border-radius: 0.375rem; font-weight: 600; font-size: 0.9375rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(26, 115, 62, 0.2);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(26, 115, 62, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(26, 115, 62, 0.2)';">🚀 Start Manual Audit</button>
+                <button onclick="this.closest('#aiAuditResultsModal').remove();" style="padding: 0.875rem 1.5rem; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 0.375rem; font-weight: 600; font-size: 0.9375rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb';" onmouseout="this.style.background='#f3f4f6';">Close</button>
+            </div>
+        `;
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    } catch (error) {
+        console.error('Error showing AI audit results:', error);
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Error loading AI audit results. Please try again later.',
+                confirmText: 'OK',
+                type: 'error'
+            });
+        } else {
+            alert('Error loading AI audit results. Please try again later.');
+        }
+    }
+}
+
+// Start manual audit from AI results
+async function startManualAuditFromAI(conversationId) {
+    // Find the conversation in the current list
+    const conversationRow = document.querySelector(`tr[data-conversation-id="${conversationId}"]`);
+    if (!conversationRow) {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Conversation Not Found',
+                message: 'Conversation not found in current list. Please refresh the page and try again.',
+                confirmText: 'OK',
+                type: 'warning'
+            });
+        } else {
+            alert('Conversation not found in current list. Please refresh the page.');
+        }
+        return;
+    }
+    
+    const conversationData = JSON.parse(conversationRow.getAttribute('data-conversation-data') || '{}');
+    if (!conversationData || !conversationData.id) {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Unable to load conversation data. Please try again.',
+                confirmText: 'OK',
+                type: 'error'
+            });
+        } else {
+            alert('Unable to load conversation data. Please try again.');
+        }
+        return;
+    }
+    
+    // Show toast notification
+    showToastNotification('Opening audit form...', 'info');
+    
+    // Use existing start audit flow
+    if (typeof window.startAuditFromConversation === 'function') {
+        window.startAuditFromConversation(conversationData);
+    } else {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Action Required',
+                message: 'Please select an audit assignment first, then click "Audit" button.',
+                confirmText: 'OK',
+                type: 'info'
+            });
+        } else {
+            alert('Please select an audit assignment first, then click "Audit" button.');
+        }
+    }
+}
+
+// Toast notification system
+let toastContainer = null;
+
+function showToastNotification(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.style.cssText = 'position: fixed; top: 1rem; right: 1rem; z-index: 10001; display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px; pointer-events: none;';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Determine colors based on type
+    const colors = {
+        success: { bg: '#d1fae5', border: '#10b981', text: '#065f46', icon: '✅' },
+        error: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b', icon: '❌' },
+        info: { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af', icon: 'ℹ️' },
+        warning: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', icon: '⚠️' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background: ${color.bg};
+        border: 1px solid ${color.border};
+        border-left: 4px solid ${color.border};
+        color: ${color.text};
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: slideInRight 0.3s ease-out;
+        pointer-events: auto;
+        cursor: pointer;
+    `;
+    
+    toast.innerHTML = `
+        <span style="font-size: 1rem;">${color.icon}</span>
+        <span style="flex: 1;">${escapeHtml(message)}</span>
+        <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: ${color.text}; cursor: pointer; padding: 0.25rem; font-size: 1.25rem; line-height: 1; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 5000);
+    
+    // Click to dismiss
+    toast.addEventListener('click', () => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    });
+}
+
+// Add toast animations to CSS (if not already present)
+if (!document.getElementById('toastAnimationsStyle')) {
+    const style = document.createElement('style');
+    style.id = 'toastAnimationsStyle';
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Update unified AI Audit Status Banner
+function updateAIAuditStatusBanner(completedCount, inProgressCount, failedCount, totalConversations) {
+    const banner = document.getElementById('aiAuditStatusBanner');
+    const countsContainer = document.getElementById('aiAuditStatusCounts');
+    
+    console.log('🔔 updateAIAuditStatusBanner called:', { completedCount, inProgressCount, failedCount, totalConversations });
+    
+    if (!banner || !countsContainer) {
+        console.warn('⚠️ Banner or counts container not found!', { banner: !!banner, countsContainer: !!countsContainer });
+        // Try to find them again after a short delay (in case DOM isn't ready)
+        setTimeout(() => {
+            const retryBanner = document.getElementById('aiAuditStatusBanner');
+            const retryCounts = document.getElementById('aiAuditStatusCounts');
+            if (retryBanner && retryCounts) {
+                console.log('✅ Found banner elements on retry, updating...');
+                updateAIAuditStatusBanner(completedCount, inProgressCount, failedCount, totalConversations);
+            }
+        }, 100);
+        return;
+    }
+    
+    // Only show banner if there are any AI audits
+    if (completedCount === 0 && inProgressCount === 0 && failedCount === 0) {
+        console.log('ℹ️ No AI audits, hiding banner');
+        banner.style.display = 'none';
+        return;
+    }
+    
+    console.log('✅ Showing banner with counts:', { completedCount, inProgressCount, failedCount });
+    
+    // Ensure the parent section is visible
+    const pullSection = document.getElementById('pullConversationsSection');
+    if (pullSection && pullSection.style.display === 'none') {
+        console.log('⚠️ Pull conversations section is hidden, but showing banner anyway');
+    }
+    
+    banner.style.display = 'block';
+    banner.style.visibility = 'visible';
+    banner.style.opacity = '1';
+    
+    // Build status counts HTML
+    const counts = [];
+    
+    if (inProgressCount > 0) {
+        counts.push(`
+            <span style="display: inline-flex; align-items: center; gap: 0.375rem; background: #dbeafe; color: #1e40af; padding: 0.375rem 0.625rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; border: 1px solid #93c5fd;">
+                <svg class="spinner" style="width: 0.75rem; height: 0.75rem; color: #1e40af; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span id="aiAuditProcessingCount">${inProgressCount}</span> Processing
+            </span>
+        `);
+    }
+    
+    if (completedCount > 0) {
+        counts.push(`
+            <span style="display: inline-flex; align-items: center; gap: 0.375rem; background: #d1fae5; color: #065f46; padding: 0.375rem 0.625rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; border: 1px solid #86efac;">
+                <span>✅</span>
+                <span id="aiAuditCompletedCount">${completedCount}</span> Completed
+            </span>
+        `);
+    }
+    
+    if (failedCount > 0) {
+        counts.push(`
+            <span style="display: inline-flex; align-items: center; gap: 0.375rem; background: #fee2e2; color: #991b1b; padding: 0.375rem 0.625rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; border: 1px solid #fca5a5;">
+                <span>❌</span>
+                <span id="aiAuditFailedCount">${failedCount}</span> Failed
+            </span>
+        `);
+    }
+    
+    countsContainer.innerHTML = counts.join('');
+    
+    // Add smooth transition
+    banner.style.transition = 'all 0.3s ease-in-out';
+}
+
+// Update AI Audit Processing Indicator
+function updateAIAuditProcessingIndicator(aiAuditStatusMap, conversations) {
+    const processingIndicator = document.getElementById('aiAuditProcessingIndicator');
+    const processingList = document.getElementById('aiAuditProcessingList');
+    
+    if (!processingIndicator || !processingList) return;
+    
+    // Find all in-progress conversations
+    const inProgressConversations = [];
+    conversations.forEach(conv => {
+        const status = aiAuditStatusMap.get(String(conv.id));
+        if (status && status.status === 'in_progress') {
+            const clientName = extractClientName(conv) || 'Unknown';
+            const createdAt = status.created_at;
+            const timeElapsed = createdAt ? formatTimeAgo(createdAt) : '';
+            inProgressConversations.push({
+                id: conv.id,
+                clientName: clientName,
+                timeElapsed: timeElapsed,
+                createdAt: createdAt
+            });
+        }
+    });
+    
+    if (inProgressConversations.length > 0) {
+        processingIndicator.style.display = 'block';
+        processingList.innerHTML = inProgressConversations.map(conv => {
+            return `
+                <div style="display: flex; align-items: center; gap: 0.25rem; background: white; border: 1px solid #3b82f6; border-radius: 0.25rem; padding: 0.25rem 0.5rem; font-size: 0.7rem; font-weight: 500; color: #1e40af; box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);">
+                    <svg class="spinner" style="width: 0.75rem; height: 0.75rem; color: #3b82f6; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span style="font-family: monospace; font-size: 0.65rem;">${conv.id}</span>
+                    <span style="color: #6b7280; font-size: 0.65rem;">•</span>
+                    <span style="font-size: 0.65rem; color: #6b7280;">${conv.clientName.substring(0, 15)}${conv.clientName.length > 15 ? '...' : ''}</span>
+                    <span style="color: #6b7280; font-size: 0.6rem; margin-left: 0.125rem;">(${conv.timeElapsed})</span>
+                </div>
+            `;
+        }).join('');
+    } else {
+        processingIndicator.style.display = 'none';
+    }
+}
+
+// Realtime subscription for AI audit status updates
+let aiAuditRealtimeChannel = null;
+
+// Set up Supabase Realtime subscription for AI audit results
+function setupAIAuditRealtimeSubscription() {
+    // Clean up existing subscription if any
+    if (aiAuditRealtimeChannel) {
+        window.supabaseClient.removeChannel(aiAuditRealtimeChannel);
+        aiAuditRealtimeChannel = null;
+    }
+    
+    if (!window.supabaseClient) {
+        console.warn('⚠️ Supabase client not available for realtime subscription');
+        return;
+    }
+    
+    // Get conversation IDs from current pull conversations list
+    if (typeof pullConversationsList === 'undefined' || !pullConversationsList || pullConversationsList.length === 0) {
+        console.log('ℹ️ No conversations to subscribe to');
+        return;
+    }
+    
+    const conversationIds = pullConversationsList.map(c => String(c.id)).filter(id => id);
+    if (conversationIds.length === 0) {
+        console.log('ℹ️ No valid conversation IDs to subscribe to');
+        return;
+    }
+    
+    console.log('🔔 Setting up realtime subscription for', conversationIds.length, 'conversations');
+    
+    // Store conversation IDs for filtering in the handler
+    // (Supabase Realtime doesn't support IN operator in filters, so we filter in the handler)
+    window.aiAuditSubscribedConversationIds = new Set(conversationIds);
+    
+    // Create a channel for AI audit results
+    // Subscribe to all changes and filter in the handler
+    aiAuditRealtimeChannel = window.supabaseClient
+        .channel('ai-audit-results-changes')
+        .on(
+            'postgres_changes',
+            {
+                event: '*', // Listen to INSERT, UPDATE, DELETE
+                schema: 'public',
+                table: 'ai_audit_results'
+            },
+            (payload) => {
+                console.log('🔔 AI Audit realtime update received:', payload);
+                handleAIAuditRealtimeUpdate(payload);
+            }
+        )
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ Subscribed to AI audit results realtime updates');
+            } else if (status === 'CHANNEL_ERROR') {
+                console.error('❌ Error subscribing to AI audit results:', status);
+                // Fallback to polling if realtime fails
+                console.log('🔄 Falling back to polling mechanism');
+                startAIAuditAutoRefresh();
+            } else if (status === 'TIMED_OUT') {
+                console.warn('⏱️ Realtime subscription timed out, falling back to polling');
+                startAIAuditAutoRefresh();
+            } else if (status === 'CLOSED') {
+                console.log('🔌 Realtime subscription closed');
+            }
+        });
+}
+
+// Handle realtime updates from Supabase
+function handleAIAuditRealtimeUpdate(payload) {
+    const { new: newRecord, old: oldRecord } = payload;
+    
+    // Only process if this conversation is in our subscribed list
+    const conversationId = newRecord?.conversation_id || oldRecord?.conversation_id;
+    if (!conversationId) {
+        console.log('ℹ️ Realtime update has no conversation_id, ignoring');
+        return;
+    }
+    
+    // Check if this conversation is in our subscribed set
+    const subscribedIds = window.aiAuditSubscribedConversationIds;
+    if (!subscribedIds || !subscribedIds.has(String(conversationId))) {
+        console.log('ℹ️ Realtime update for conversation not in subscribed list, ignoring:', conversationId);
+        return;
+    }
+    
+    // Extract event type from payload
+    const eventType = payload.eventType || (newRecord && !oldRecord ? 'INSERT' : oldRecord && newRecord ? 'UPDATE' : 'DELETE');
+    
+    console.log('🔄 Handling AI audit realtime update:', {
+        eventType,
+        conversationId: conversationId,
+        hasNewRecord: !!newRecord,
+        hasOldRecord: !!oldRecord
+    });
+    
+    // Determine the status
+    let status = 'none';
+    let confidenceScore = null;
+    if (newRecord) {
+        if (newRecord.ai_scorecard_data) {
+            status = 'completed';
+            confidenceScore = newRecord.ai_confidence_score;
+        } else {
+            status = 'in_progress';
+        }
+    }
+    
+    // Update the UI immediately
+    if (typeof pullConversationsList !== 'undefined' && pullConversationsList && pullConversationsList.length > 0) {
+        // Refresh the conversations list to show updated status
+        displayPullConversationsList(pullConversationsList).then(() => {
+            // Show user-friendly toast notification based on event type
+            if (eventType === 'INSERT' && status === 'in_progress') {
+                showToastNotification(`🔄 AI Audit started for conversation ${conversationId}`, 'info');
+            } else if (eventType === 'UPDATE' && status === 'completed') {
+                const confidenceText = confidenceScore ? ` (${confidenceScore}% confidence)` : '';
+                showToastNotification(`✅ AI Audit completed for conversation ${conversationId}${confidenceText}`, 'success');
+            } else if (eventType === 'UPDATE' && newRecord && !newRecord.ai_scorecard_data && oldRecord?.ai_scorecard_data) {
+                showToastNotification(`❌ AI Audit failed for conversation ${conversationId}`, 'error');
+            }
+        });
+    }
+}
+
+// Clean up realtime subscription
+function cleanupAIAuditRealtimeSubscription() {
+    if (aiAuditRealtimeChannel) {
+        console.log('🧹 Cleaning up AI audit realtime subscription');
+        window.supabaseClient.removeChannel(aiAuditRealtimeChannel);
+        aiAuditRealtimeChannel = null;
+    }
+    // Clear subscribed conversation IDs
+    if (window.aiAuditSubscribedConversationIds) {
+        window.aiAuditSubscribedConversationIds.clear();
+    }
+}
+
+// Auto-refresh AI audit status for in-progress items (fallback if realtime fails)
+let aiAuditRefreshInterval = null;
+let aiAuditRefreshCount = 0;
+
+function startAIAuditAutoRefresh() {
+    // Clear existing interval
+    if (aiAuditRefreshInterval) {
+        clearInterval(aiAuditRefreshInterval);
+    }
+    
+    aiAuditRefreshCount = 0;
+    
+    // Refresh every 15 seconds (more frequent for better UX)
+    aiAuditRefreshInterval = setInterval(async () => {
+        const tableBody = document.getElementById('pullConversationsTableBody');
+        if (!tableBody) return;
+        
+        // Check if there are any in-progress AI audits
+        const inProgressBadges = tableBody.querySelectorAll('.ai-status-badge[data-status="in_progress"]');
+        if (inProgressBadges.length === 0) {
+            // No in-progress items, stop refreshing
+            const processingIndicator = document.getElementById('aiAuditProcessingIndicator');
+            if (processingIndicator) {
+                processingIndicator.style.display = 'none';
+            }
+            if (aiAuditRefreshInterval) {
+                clearInterval(aiAuditRefreshInterval);
+                aiAuditRefreshInterval = null;
+            }
+            return;
+        }
+        
+        // Update refresh status
+        aiAuditRefreshCount++;
+        const refreshStatus = document.getElementById('aiAuditLastRefresh');
+        if (refreshStatus) {
+            const now = new Date();
+            refreshStatus.textContent = `Last checked: ${now.toLocaleTimeString()} (checking every 15s)`;
+        }
+        
+        // Get all conversation IDs from the table
+        const conversationRows = tableBody.querySelectorAll('tr[data-conversation-id]');
+        const conversationIds = Array.from(conversationRows).map(row => row.getAttribute('data-conversation-id')).filter(id => id);
+        
+        if (conversationIds.length === 0) return;
+        
+        // Fetch updated status
+        const updatedStatusMap = await getAIAuditStatus(conversationIds);
+        
+        // Track which conversations changed status
+        const statusChanges = [];
+        
+        // Update rows that have changed status
+        conversationRows.forEach(row => {
+            const conversationId = row.getAttribute('data-conversation-id');
+            const newStatus = updatedStatusMap.get(conversationId);
+            
+            if (newStatus && newStatus.status !== 'in_progress') {
+                // Status changed from in_progress
+                statusChanges.push({
+                    conversationId: conversationId,
+                    newStatus: newStatus.status
+                });
+            }
+        });
+        
+        // If any status changed, reload the list
+        if (statusChanges.length > 0) {
+            console.log('🔄 AI Audit status changed for', statusChanges.length, 'conversation(s)');
+            
+            // Show notifications for each status change
+            statusChanges.forEach(change => {
+                if (change.newStatus === 'completed') {
+                    showToastNotification(`✅ AI Audit completed for conversation ${change.conversationId}`, 'success');
+                } else if (change.newStatus === 'failed') {
+                    showToastNotification(`❌ AI Audit failed for conversation ${change.conversationId}`, 'error');
+                }
+            });
+            
+            // Reload the conversations list to show updated statuses
+            if (typeof pullConversationsList !== 'undefined' && pullConversationsList && pullConversationsList.length > 0) {
+                displayPullConversationsList(pullConversationsList);
+            }
+        } else {
+            // No status changes, but update the processing indicator with current time
+            if (typeof pullConversationsList !== 'undefined' && pullConversationsList && pullConversationsList.length > 0) {
+                // Update processing indicator without full reload
+                const aiAuditStatusMap = await getAIAuditStatus(conversationIds);
+                updateAIAuditProcessingIndicator(aiAuditStatusMap, pullConversationsList);
+            }
+        }
+    }, 15000); // 15 seconds - more frequent updates (fallback only)
+}
+
+// Cleanup realtime subscription on page unload
+window.addEventListener('beforeunload', () => {
+    cleanupAIAuditRealtimeSubscription();
+    if (aiAuditRefreshInterval) {
+        clearInterval(aiAuditRefreshInterval);
+        aiAuditRefreshInterval = null;
+    }
+});
 
 // Track open Intercom tabs
 let openIntercomTabs = [];
@@ -7109,6 +8267,875 @@ window.closeComingSoonDialog = function() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = '';
+    }
+};
+
+// ============================================================================
+// AI Audit Functions
+// ============================================================================
+
+// State variables for AI Audit
+let aiAuditEmployeeEmail = null;
+let aiAuditEmployeeName = null;
+let aiAuditConversations = [];
+let aiAuditTop10Ranked = [];
+let aiAuditSelectedConversations = new Set();
+
+// Ranking algorithm: Sorts conversations (same as pull conversations)
+function rankConversationsForAIAudit(conversations) {
+    // Sort all conversations (no filtering) - same logic as pull conversations
+    const sorted = [...conversations].sort((a, b) => {
+        // Extract rating (treat '-' or missing as high value for sorting)
+        const ratingA = a.conversation_rating?.rating;
+        const ratingB = b.conversation_rating?.rating;
+        const ratingAValue = (ratingA && ratingA !== '-') ? parseFloat(ratingA) : 999;
+        const ratingBValue = (ratingB && ratingB !== '-') ? parseFloat(ratingB) : 999;
+        
+        // Extract CX Score (treat null/undefined as high value for sorting)
+        const cxScoreA = a.custom_attributes?.["CX Score rating"];
+        const cxScoreB = b.custom_attributes?.["CX Score rating"];
+        const cxScoreAValue = (cxScoreA !== null && cxScoreA !== undefined) ? parseInt(cxScoreA) : 999;
+        const cxScoreBValue = (cxScoreB !== null && cxScoreB !== undefined) ? parseInt(cxScoreB) : 999;
+        
+        // Extract conversation length
+        const lengthA = a.conversation_parts?.conversation_parts?.length || 0;
+        const lengthB = b.conversation_parts?.conversation_parts?.length || 0;
+        
+        // Primary sort: Lowest Rating (ascending)
+        if (ratingAValue !== ratingBValue) {
+            return ratingAValue - ratingBValue;
+        }
+        
+        // Secondary sort: Lowest CX Score (ascending)
+        if (cxScoreAValue !== cxScoreBValue) {
+            return cxScoreAValue - cxScoreBValue;
+        }
+        
+        // Tertiary sort: Longest Length (descending - more messages first)
+        return lengthB - lengthA;
+    });
+    
+    // Return all sorted conversations (no limit, no rank numbers)
+    return sorted;
+}
+
+// Run AI Audit from Pull Conversations section
+// Can be called with employee email/name (from top buttons) or without (from pull conversations section)
+window.runAIAuditFromPullConversations = function(employeeEmail, employeeName) {
+    console.log('🔵 runAIAuditFromPullConversations called with:', { 
+        employeeEmail, 
+        employeeName, 
+        pullConversationsEmployeeEmail, 
+        pullConversationsEmployeeName 
+    });
+    
+    let targetEmail = employeeEmail;
+    let targetName = employeeName;
+    
+    // If no parameters provided, use the currently pulled conversations
+    if (!targetEmail) {
+        if (!pullConversationsEmployeeEmail) {
+            console.warn('⚠️ No conversations have been pulled');
+            if (window.confirmationDialog) {
+                window.confirmationDialog.show({
+                    title: 'Error',
+                    message: 'No conversations have been pulled. Please pull conversations first.',
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+            } else {
+                alert('No conversations have been pulled. Please pull conversations first.');
+            }
+            return;
+        }
+        targetEmail = pullConversationsEmployeeEmail;
+        targetName = pullConversationsEmployeeName || pullConversationsEmployeeEmail;
+        console.log('✅ Using pulled conversations:', { targetEmail, targetName });
+    } else {
+        // Parameters provided - check if conversations are pulled for this employee
+        const normalizedTargetEmail = (targetEmail || '').toLowerCase().trim();
+        const normalizedPulledEmail = (pullConversationsEmployeeEmail || '').toLowerCase().trim();
+        
+        // If conversations are pulled for a different employee, show warning
+        if (pullConversationsEmployeeEmail && normalizedTargetEmail !== normalizedPulledEmail) {
+            console.warn('⚠️ Conversations pulled for different employee:', { 
+                targetEmail, 
+                pullConversationsEmployeeEmail 
+            });
+            if (window.confirmationDialog) {
+                window.confirmationDialog.show({
+                    title: 'Conversations Not Pulled',
+                    message: `Conversations for ${targetName || targetEmail} have not been pulled yet. Please click "Pull Conversations" first, then use "Run AI Audit" from the pull conversations section.`,
+                    confirmText: 'OK',
+                    type: 'warning'
+                });
+            } else {
+                alert(`Conversations for ${targetName || targetEmail} have not been pulled yet. Please click "Pull Conversations" first.`);
+            }
+            return;
+        }
+        
+        // If no conversations pulled or they match, proceed
+        if (!targetName) {
+            targetName = targetEmail;
+        }
+    }
+    
+    console.log('🚀 Calling showAIAuditSection with:', { targetEmail, targetName });
+    // Call showAIAuditSection with the correct employee email
+    window.showAIAuditSection(targetEmail, targetName);
+};
+
+// Show AI Audit section
+window.showAIAuditSection = async function(employeeEmail, employeeName) {
+    if (!employeeEmail || !employeeEmail.trim()) {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Employee email is required to run AI Audit.',
+                confirmText: 'OK',
+                type: 'error'
+            });
+        } else {
+            alert('Employee email is required to run AI Audit.');
+        }
+        return;
+    }
+    
+    try {
+        // Store employee info
+        aiAuditEmployeeEmail = employeeEmail.trim();
+        aiAuditEmployeeName = employeeName || employeeEmail;
+        
+        // Show modal
+        const modal = document.getElementById('aiAuditModal');
+        if (!modal) {
+            console.error('AI Audit modal not found');
+            if (window.confirmationDialog) {
+                await window.confirmationDialog.show({
+                    title: 'Error',
+                    message: 'AI Audit modal not found. Please refresh the page.',
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+            } else {
+                alert('AI Audit modal not found. Please refresh the page.');
+            }
+            return;
+        }
+        
+        modal.style.display = 'flex';
+        console.log('✅ AI Audit modal opened for:', aiAuditEmployeeEmail);
+        
+        // Update header
+        const employeeNameSpan = document.getElementById('aiAuditEmployeeName');
+        if (employeeNameSpan) {
+            employeeNameSpan.textContent = aiAuditEmployeeName;
+        }
+        
+        // Set default date to today
+        const datePicker = document.getElementById('aiAuditDatePicker');
+        if (datePicker) {
+            const today = new Date().toISOString().split('T')[0];
+            datePicker.value = today;
+        }
+        
+        // Load scorecards
+        await loadAIAuditScorecards();
+        
+        // Check if conversations are already loaded for this employee
+        // Check both pullConversationsList (from Pull Conversations section) and rawEmployeeConversations (from View Conversations)
+        let availableConversations = null;
+        
+        const normalizedAIAuditEmail = (aiAuditEmployeeEmail || '').toLowerCase().trim();
+        const normalizedPullEmployeeEmail = (typeof pullConversationsEmployeeEmail !== 'undefined' && pullConversationsEmployeeEmail) 
+            ? pullConversationsEmployeeEmail.toLowerCase().trim() 
+            : '';
+        const normalizedCurrentEmployeeEmail = (typeof currentEmployeeEmail !== 'undefined' && currentEmployeeEmail) 
+            ? currentEmployeeEmail.toLowerCase().trim() 
+            : '';
+        
+        console.log('🔍 Checking for conversations for AI Audit:', {
+            employeeEmail: aiAuditEmployeeEmail,
+            normalizedAIAuditEmail: normalizedAIAuditEmail,
+            pullConversationsListLength: typeof pullConversationsList !== 'undefined' ? pullConversationsList.length : 'undefined',
+            pullConversationsEmployeeEmail: normalizedPullEmployeeEmail || 'undefined',
+            pullConversationsFilteredListLength: typeof pullConversationsFilteredList !== 'undefined' ? pullConversationsFilteredList.length : 'undefined',
+            rawEmployeeConversationsLength: typeof rawEmployeeConversations !== 'undefined' ? rawEmployeeConversations.length : 'undefined',
+            currentEmployeeEmail: normalizedCurrentEmployeeEmail || 'undefined'
+        });
+        
+        // Check if Pull Conversations section is visible (means user just pulled conversations)
+        const pullConversationsSection = document.getElementById('pullConversationsSection');
+        const isPullSectionVisible = pullConversationsSection && pullConversationsSection.style.display !== 'none';
+        
+        // First, check pullConversationsList (from Pull Conversations button)
+        // Compare with pullConversationsEmployeeEmail (the employee whose conversations were pulled)
+        if (typeof pullConversationsList !== 'undefined' && pullConversationsList && pullConversationsList.length > 0) {
+            // CRITICAL: Only use these conversations if the employee email matches
+            if (normalizedPullEmployeeEmail && normalizedPullEmployeeEmail === normalizedAIAuditEmail) {
+                availableConversations = pullConversationsList;
+                console.log('✅ Found conversations in pullConversationsList (email match):', availableConversations.length);
+            } else if (normalizedPullEmployeeEmail && normalizedPullEmployeeEmail !== normalizedAIAuditEmail) {
+                // Employee email doesn't match - don't use these conversations
+                console.warn('⚠️ Pull conversations are for a different employee. Ignoring pullConversationsList.');
+            } else if (!normalizedPullEmployeeEmail && isPullSectionVisible) {
+                // If pullConversationsEmployeeEmail is not set but section is visible, use conversations anyway
+                // This handles edge cases where the email wasn't stored
+                availableConversations = pullConversationsList;
+                console.log('✅ Found conversations in pullConversationsList (section visible, no email stored):', availableConversations.length);
+            }
+        }
+        
+        // Also check pullConversationsFilteredList (filtered version) if we didn't find anything yet
+        if (!availableConversations && typeof pullConversationsFilteredList !== 'undefined' && pullConversationsFilteredList && pullConversationsFilteredList.length > 0) {
+            if (normalizedPullEmployeeEmail && normalizedPullEmployeeEmail === normalizedAIAuditEmail) {
+                availableConversations = pullConversationsFilteredList;
+                console.log('✅ Found conversations in pullConversationsFilteredList (email match):', availableConversations.length);
+            } else if (!normalizedPullEmployeeEmail || isPullSectionVisible) {
+                availableConversations = pullConversationsFilteredList;
+                console.log('✅ Found conversations in pullConversationsFilteredList (section visible or no email, using anyway):', availableConversations.length);
+            }
+        }
+        
+        // Check rawEmployeeConversations (from View Conversations section) if we didn't find anything yet
+        if (!availableConversations && typeof rawEmployeeConversations !== 'undefined' && rawEmployeeConversations && rawEmployeeConversations.length > 0) {
+            if (normalizedCurrentEmployeeEmail && normalizedCurrentEmployeeEmail === normalizedAIAuditEmail) {
+                availableConversations = rawEmployeeConversations;
+                console.log('✅ Found conversations in rawEmployeeConversations (email match):', availableConversations.length);
+            }
+        }
+        
+        // Reset UI states first to prevent reload issues
+        const errorDiv = document.getElementById('aiAuditError');
+        const loadingDiv = document.getElementById('aiAuditLoading');
+        const conversationsListDiv = document.getElementById('aiAuditConversationsList');
+        
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (conversationsListDiv) conversationsListDiv.style.display = 'none';
+        
+        // Reset selection counts
+        updateAIAuditSelectionCount();
+        updateAIAuditSubmitButton();
+        
+        if (availableConversations && availableConversations.length > 0) {
+            // Use existing conversations
+            console.log('🚀 Processing conversations for AI Audit:', availableConversations.length);
+            // Process conversations (this will show the list and update UI)
+            await processConversationsForAIAudit(availableConversations);
+        } else {
+            // Show message to pull conversations first
+            console.log('❌ No conversations found, showing error');
+            showAIAuditError('Please pull conversations first using the "Pull Conversations" button.');
+        }
+        
+    } catch (error) {
+        console.error('Error showing AI Audit section:', error);
+        showAIAuditError('Failed to open AI Audit. Please try again.');
+    }
+};
+
+// Close AI Audit section
+window.closeAIAuditSection = function() {
+    const modal = document.getElementById('aiAuditModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    // Reset state
+    aiAuditEmployeeEmail = null;
+    aiAuditEmployeeName = null;
+    aiAuditConversations = [];
+    aiAuditTop10Ranked = [];
+    aiAuditSelectedConversations.clear();
+};
+
+// Process conversations for AI Audit
+async function processConversationsForAIAudit(conversations) {
+    console.log('📊 processConversationsForAIAudit called with:', conversations?.length || 0, 'conversations');
+    
+    if (!conversations || conversations.length === 0) {
+        console.warn('⚠️ No conversations provided to processConversationsForAIAudit');
+        showAIAuditError('No conversations available. Please pull conversations first.');
+        return;
+    }
+    
+    // Hide any previous errors FIRST
+    hideAIAuditError();
+    
+    // Store all conversations
+    aiAuditConversations = conversations;
+    console.log('✅ Stored', aiAuditConversations.length, 'conversations');
+    
+    // Sort all conversations (no filtering, no limit) - same as pull conversations
+    aiAuditTop10Ranked = rankConversationsForAIAudit(conversations);
+    console.log('✅ Sorted', aiAuditTop10Ranked.length, 'conversations');
+    
+    // Clear selection - let user choose manually
+    aiAuditSelectedConversations.clear();
+    console.log('✅ Cleared selection - user will choose manually');
+    
+    // Display conversations (async)
+    await displayAIAuditConversations();
+    console.log('✅ Displayed conversations in table');
+    
+    // Update counts
+    updateAIAuditSelectionCount();
+    
+    // Show conversations list (make sure it's visible)
+    const conversationsList = document.getElementById('aiAuditConversationsList');
+    if (conversationsList) {
+        conversationsList.style.display = 'block';
+        console.log('✅ Made conversations list visible');
+    }
+    
+    // Hide loading
+    const loading = document.getElementById('aiAuditLoading');
+    if (loading) loading.style.display = 'none';
+    
+    // Update submit button state
+    updateAIAuditSubmitButton();
+    
+    // Double-check error is hidden
+    hideAIAuditError();
+};
+
+// Display conversations in table
+async function displayAIAuditConversations() {
+    const tableBody = document.getElementById('aiAuditConversationsTableBody');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    // Get AI audit status for all conversations
+    const conversationIds = aiAuditConversations.map(c => c.id).filter(id => id);
+    const aiAuditStatusMap = await getAIAuditStatus(conversationIds);
+    
+    aiAuditConversations.forEach((conversation, index) => {
+        const row = document.createElement('tr');
+        
+        // Check if this is in the top 10 sorted conversations (for highlighting)
+        // Find the index in the sorted list
+        const sortedIndex = aiAuditTop10Ranked.findIndex(c => c.id === conversation.id);
+        const isTop10 = sortedIndex >= 0 && sortedIndex < 10;
+        const isSelected = aiAuditSelectedConversations.has(String(conversation.id));
+        
+        // Get conversation data
+        const conversationId = conversation.id || 'N/A';
+        const clientName = conversation.source?.author?.name || conversation.contacts?.contacts?.[0]?.name || 'Unknown';
+        const clientEmail = conversation.source?.author?.email || conversation.contacts?.contacts?.[0]?.email || null;
+        const subject = conversation.source?.subject || conversation.conversation_parts?.[0]?.body?.substring(0, 50) || 'No subject';
+        const csat = conversation.conversation_rating?.rating || conversation.rating || conversation.csat || null;
+        const cxScore = conversation.custom_attributes?.["CX Score rating"] || conversation.cx_score || conversation.cxScore || null;
+        const length = conversation.conversation_parts?.conversation_parts?.length || 
+                      conversation.conversation_parts?.length || 
+                      conversation.conversation_length || 
+                      conversation.length || 
+                      0;
+        
+        // Format CSAT
+        let csatHtml = '-';
+        if (csat !== null && csat !== undefined && csat !== '') {
+            const csatNum = typeof csat === 'number' ? csat : parseFloat(csat);
+            if (!isNaN(csatNum) && csatNum > 0) {
+                const stars = '⭐'.repeat(Math.floor(csatNum));
+                csatHtml = `<span style="color: ${csatNum <= 2 ? '#ef4444' : csatNum <= 3 ? '#f59e0b' : '#10b981'}; font-weight: 600;">${stars} ${csatNum}/5</span>`;
+            }
+        }
+        
+        // Format CX Score
+        let cxScoreHtml = '-';
+        if (cxScore !== null && cxScore !== undefined && cxScore !== '') {
+            const cxNum = typeof cxScore === 'number' ? cxScore : parseFloat(cxScore);
+            if (!isNaN(cxNum) && cxNum > 0) {
+                cxScoreHtml = `<span style="color: ${cxNum <= 2 ? '#ef4444' : cxNum <= 3 ? '#f59e0b' : '#10b981'}; font-weight: 600;">${cxNum}</span>`;
+            }
+        }
+        
+        // Get AI audit status
+        const aiStatus = aiAuditStatusMap.get(String(conversationId));
+        const aiStatusType = aiStatus ? aiStatus.status : 'none';
+        const isAlreadyAIAudited = aiStatusType === 'completed' || aiStatusType === 'in_progress';
+        const isInProgress = aiStatusType === 'in_progress';
+        
+        // Generate AI status badge
+        let aiStatusBadge = '';
+        if (aiStatusType === 'completed') {
+            aiStatusBadge = `<span style="background: #10b981; color: white; padding: 0.08rem 0.25rem; border-radius: 0.16rem; font-size: 0.4447rem; font-weight: 600; white-space: nowrap; margin-left: 0.25rem;" title="Already AI audited">✅ AI Audited</span>`;
+        } else if (aiStatusType === 'in_progress') {
+            aiStatusBadge = `<span style="background: #3b82f6; color: white; padding: 0.08rem 0.25rem; border-radius: 0.16rem; font-size: 0.4447rem; font-weight: 600; white-space: nowrap; margin-left: 0.25rem; display: inline-flex; align-items: center; gap: 0.16rem;" title="AI Audit in progress">🔄 Processing</span>`;
+        }
+        
+        // Apply row highlighting with priority: Already Audited > Top Highlight > AI Status
+        // Same logic as pull conversations
+        if (isAlreadyAIAudited) {
+            // Already AI audited - light green/blue background
+            if (aiStatusType === 'completed') {
+                row.style.backgroundColor = '#f0fdf4';
+                row.style.borderLeft = '0.1617rem solid #10b981';
+            } else if (aiStatusType === 'in_progress') {
+                row.style.backgroundColor = '#eff6ff';
+                row.style.borderLeft = '0.1617rem solid #3b82f6';
+            }
+        } else if (isTop10) {
+            // Top 10 conversation - light yellow background (same as pull conversations)
+            row.style.backgroundColor = '#fef3c7';
+            row.style.borderLeft = '0.1617rem solid #f59e0b';
+        }
+        
+        // Disable checkbox if already AI audited or in progress
+        const checkboxDisabled = isAlreadyAIAudited ? 'disabled' : '';
+        const checkboxStyle = isAlreadyAIAudited ? 'cursor: not-allowed; opacity: 0.5;' : 'cursor: pointer;';
+        
+        row.innerHTML = `
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">
+                <input type="checkbox" class="ai-audit-conversation-checkbox" data-conversation-id="${conversationId}" ${isSelected && !isAlreadyAIAudited ? 'checked' : ''} ${checkboxDisabled} style="${checkboxStyle}" onclick="event.stopPropagation(); if (!this.disabled) toggleAIAuditConversation('${conversationId}')">
+            </td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
+                <div style="font-weight: 500; color: #111827; font-size: 0.6069rem; line-height: 1.2;">${escapeHtml(clientName)}</div>
+                <div style="font-size: 0.5252rem; color: #6b7280; line-height: 1.2;">${clientEmail ? escapeHtml(clientEmail.substring(0, 20)) + (clientEmail.length > 20 ? '...' : '') : '-'}</div>
+            </td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
+                <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
+                    <span style="font-family: 'Poppins', sans-serif; font-size: 0.5252rem; color: #6b7280;">${conversationId !== 'N/A' ? conversationId : 'N/A'}</span>
+                    ${aiStatusBadge}
+                </div>
+            </td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle;">
+                <div style="max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.6069rem; color: #374151;" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+            </td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${csatHtml}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">
+                <span style="font-weight: 600; color: #374151;">${length}</span>
+            </td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">-</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+    
+    // Update select all checkbox
+    const selectAllCheckbox = document.getElementById('selectAllAIAuditConversations');
+    if (selectAllCheckbox) {
+        const allSelected = aiAuditConversations.length > 0 && 
+            aiAuditConversations.every(c => aiAuditSelectedConversations.has(String(c.id)));
+        selectAllCheckbox.checked = allSelected;
+        selectAllCheckbox.indeterminate = aiAuditSelectedConversations.size > 0 && aiAuditSelectedConversations.size < aiAuditConversations.length;
+    }
+};
+
+// Toggle conversation selection
+window.toggleAIAuditConversation = function(conversationId) {
+    const id = String(conversationId);
+    console.log('🔄 toggleAIAuditConversation called:', id, 'currently selected:', aiAuditSelectedConversations.has(id));
+    
+    if (aiAuditSelectedConversations.has(id)) {
+        aiAuditSelectedConversations.delete(id);
+        console.log('➖ Removed from selection. New size:', aiAuditSelectedConversations.size);
+    } else {
+        aiAuditSelectedConversations.add(id);
+        console.log('➕ Added to selection. New size:', aiAuditSelectedConversations.size);
+    }
+    
+    updateAIAuditSelectionCount();
+    updateAIAuditSubmitButton();
+};
+
+// Select top 10 conversations
+window.selectTop10AIAuditConversations = function() {
+    aiAuditSelectedConversations.clear();
+    aiAuditTop10Ranked.forEach(conv => {
+        aiAuditSelectedConversations.add(String(conv.id));
+    });
+    displayAIAuditConversations();
+    updateAIAuditSelectionCount();
+    updateAIAuditSubmitButton();
+};
+
+// Select all conversations
+window.selectAllAIAuditConversations = function(checked) {
+    if (checked === undefined) {
+        // Called from button
+        aiAuditSelectedConversations.clear();
+        aiAuditConversations.forEach(conv => {
+            aiAuditSelectedConversations.add(String(conv.id));
+        });
+    } else {
+        // Called from checkbox
+        if (checked) {
+            aiAuditConversations.forEach(conv => {
+                aiAuditSelectedConversations.add(String(conv.id));
+            });
+        } else {
+            aiAuditSelectedConversations.clear();
+        }
+    }
+    displayAIAuditConversations();
+    updateAIAuditSelectionCount();
+    updateAIAuditSubmitButton();
+};
+
+// Clear selection
+window.clearAIAuditSelection = function() {
+    aiAuditSelectedConversations.clear();
+    displayAIAuditConversations();
+    updateAIAuditSelectionCount();
+    updateAIAuditSubmitButton();
+};
+
+// Update selection count
+function updateAIAuditSelectionCount() {
+    const selectedCountSpan = document.getElementById('aiAuditSelectedCount');
+    const totalCountSpan = document.getElementById('aiAuditTotalCount');
+    
+    if (selectedCountSpan) {
+        selectedCountSpan.textContent = aiAuditSelectedConversations.size;
+    }
+    if (totalCountSpan) {
+        totalCountSpan.textContent = aiAuditConversations.length;
+    }
+}
+
+// Update submit button state
+function updateAIAuditSubmitButton() {
+    const submitBtn = document.getElementById('aiAuditSubmitBtn');
+    const submitInfo = document.getElementById('aiAuditSubmitInfo');
+    const scorecardSelect = document.getElementById('aiAuditScorecardSelect');
+    
+    const hasSelection = aiAuditSelectedConversations.size > 0;
+    const hasScorecard = scorecardSelect && scorecardSelect.value;
+    
+    console.log('🔍 updateAIAuditSubmitButton:', {
+        hasSelection,
+        selectionSize: aiAuditSelectedConversations.size,
+        hasScorecard,
+        scorecardValue: scorecardSelect?.value,
+        selectedIds: Array.from(aiAuditSelectedConversations)
+    });
+    
+    if (submitBtn) {
+        if (hasSelection && hasScorecard) {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('disabled'); // Ensure disabled attribute is removed
+            submitBtn.style.background = 'linear-gradient(135deg, #1A733E 0%, #2d9a5a 100%)';
+            submitBtn.style.color = 'white';
+            submitBtn.style.cursor = 'pointer';
+            submitBtn.style.opacity = '1';
+            submitBtn.textContent = `Submit AI Audit Batch (${aiAuditSelectedConversations.size})`;
+            console.log('✅ Button ENABLED');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.setAttribute('disabled', 'disabled'); // Ensure disabled attribute is set
+            submitBtn.style.background = '#d1d5db';
+            submitBtn.style.color = '#9ca3af';
+            submitBtn.style.cursor = 'not-allowed';
+            submitBtn.style.opacity = '0.6';
+            submitBtn.textContent = 'Submit AI Audit Batch';
+            console.log('❌ Button DISABLED - hasSelection:', hasSelection, 'hasScorecard:', hasScorecard);
+        }
+    }
+    
+    if (submitInfo) {
+        if (!hasSelection && !hasScorecard) {
+            submitInfo.textContent = 'Select conversations and scorecard to submit';
+            submitInfo.style.color = '#6b7280';
+        } else if (!hasSelection) {
+            submitInfo.textContent = '⚠️ Select at least one conversation';
+            submitInfo.style.color = '#f59e0b';
+        } else if (!hasScorecard) {
+            submitInfo.textContent = '⚠️ Select a scorecard';
+            submitInfo.style.color = '#f59e0b';
+        } else {
+            submitInfo.textContent = `✅ Ready to submit ${aiAuditSelectedConversations.size} conversation${aiAuditSelectedConversations.size !== 1 ? 's' : ''} for AI audit`;
+            submitInfo.style.color = '#10b981';
+        }
+    }
+}
+
+// Load scorecards for AI Audit
+async function loadAIAuditScorecards() {
+    const scorecardSelect = document.getElementById('aiAuditScorecardSelect');
+    if (!scorecardSelect) return;
+    
+    try {
+        // Query all active scorecards (temporarily showing all, not just AI audit enabled)
+        const { data, error } = await window.supabaseClient
+            .from('scorecards')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        scorecardSelect.innerHTML = '<option value="">Select scorecard...</option>';
+        
+        if (data && data.length > 0) {
+            data.forEach(scorecard => {
+                const option = document.createElement('option');
+                option.value = scorecard.id;
+                option.textContent = scorecard.name;
+                option.dataset.tableName = scorecard.table_name;
+                scorecardSelect.appendChild(option);
+            });
+        } else {
+            scorecardSelect.innerHTML = '<option value="">No scorecards found</option>';
+        }
+        
+        // Add change listener to update submit button
+        scorecardSelect.addEventListener('change', updateAIAuditSubmitButton);
+        
+    } catch (error) {
+        console.error('Error loading scorecards:', error);
+        showAIAuditError('Failed to load scorecards. Please refresh the page.');
+    }
+}
+
+// Show error
+function showAIAuditError(message) {
+    const errorDiv = document.getElementById('aiAuditError');
+    const errorMessage = document.getElementById('aiAuditErrorMessage');
+    if (errorDiv && errorMessage) {
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+// Hide error
+function hideAIAuditError() {
+    const errorDiv = document.getElementById('aiAuditError');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+        // Also clear the error message
+        const errorMessage = document.getElementById('aiAuditErrorMessage');
+        if (errorMessage) {
+            errorMessage.textContent = '';
+        }
+    }
+}
+
+// Submit AI Audit batch
+window.submitAIAuditBatch = async function() {
+    const scorecardSelect = document.getElementById('aiAuditScorecardSelect');
+    const datePicker = document.getElementById('aiAuditDatePicker');
+    const submitBtn = document.getElementById('aiAuditSubmitBtn');
+    
+    if (!scorecardSelect || !scorecardSelect.value) {
+        showAIAuditError('Please select a scorecard.');
+        return;
+    }
+    
+    if (aiAuditSelectedConversations.size === 0) {
+        showAIAuditError('Please select at least one conversation.');
+        return;
+    }
+    
+    // Check for already AI audited conversations and filter them out
+    const selectedIds = Array.from(aiAuditSelectedConversations);
+    const aiAuditStatusMap = await getAIAuditStatus(selectedIds);
+    const alreadyAuditedIds = [];
+    
+    selectedIds.forEach(id => {
+        const status = aiAuditStatusMap.get(String(id));
+        if (status && (status.status === 'completed' || status.status === 'in_progress')) {
+            alreadyAuditedIds.push(id);
+        }
+    });
+    
+    if (alreadyAuditedIds.length > 0) {
+        const confirmMessage = `${alreadyAuditedIds.length} conversation${alreadyAuditedIds.length !== 1 ? 's' : ''} ${alreadyAuditedIds.length !== 1 ? 'are' : 'is'} already AI audited or in progress. These will be excluded. Continue with the remaining ${aiAuditSelectedConversations.size - alreadyAuditedIds.length} conversation${(aiAuditSelectedConversations.size - alreadyAuditedIds.length) !== 1 ? 's' : ''}?`;
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        // Remove already audited conversations from selection
+        alreadyAuditedIds.forEach(id => {
+            aiAuditSelectedConversations.delete(String(id));
+        });
+        // Refresh display
+        displayAIAuditConversations();
+        updateAIAuditSelectionCount();
+        updateAIAuditSubmitButton();
+        
+        if (aiAuditSelectedConversations.size === 0) {
+            showAIAuditError('No conversations available to submit (all selected conversations are already AI audited or in progress).');
+            return;
+        }
+    }
+    
+    if (!aiAuditEmployeeEmail) {
+        showAIAuditError('Employee email is missing.');
+        return;
+    }
+    
+    try {
+        // Get user info
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const createdBy = userInfo.email || '';
+        
+        if (!createdBy) {
+            showAIAuditError('User email not found. Please log in again.');
+            return;
+        }
+        
+        // Get audit date
+        const auditDate = datePicker ? datePicker.value : new Date().toISOString().split('T')[0];
+        
+        // Get selected conversations
+        const selectedConvs = aiAuditConversations.filter(c => 
+            aiAuditSelectedConversations.has(String(c.id))
+        );
+        
+        // Build conversations array for payload
+        const conversationsPayload = selectedConvs.map(conv => ({
+            conversation_id: String(conv.id),
+            scorecard_id: scorecardSelect.value,
+            audit_date: auditDate,
+            employee_email: aiAuditEmployeeEmail,
+            employee_name: aiAuditEmployeeName,
+            created_by: createdBy
+        }));
+        
+        // Get Supabase URL (edge function will generate batch_id and set callback_url)
+        const supabaseUrl = window.SupabaseConfig?.url || window.env?.SUPABASE_URL || '';
+        
+        // Show loading state
+        const loadingDiv = document.getElementById('aiAuditLoading');
+        if (loadingDiv) {
+            loadingDiv.style.display = 'block';
+            loadingDiv.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.6469rem;">
+                    <div style="width: 1.5rem; height: 1.5rem; border: 0.1875rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                    <p style="font-size: 0.5659rem; margin: 0; color: #374151; font-weight: 500;">Submitting ${aiAuditSelectedConversations.size} conversation${aiAuditSelectedConversations.size !== 1 ? 's' : ''} for AI audit...</p>
+                    <p style="font-size: 0.4852rem; margin: 0; color: #6b7280;">This may take a few moments</p>
+                </div>
+            `;
+        }
+        
+        // Hide error if visible
+        hideAIAuditError();
+        
+        // Disable submit button
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.6';
+            submitBtn.textContent = 'Submitting...';
+        }
+        
+        // Use existing ai-audit-processor edge function (already deployed)
+        const supabaseAnonKey = window.SupabaseConfig?.anonKey || window.env?.SUPABASE_ANON_KEY || '';
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/ai-audit-processor`;
+        
+        // Get full conversation objects for selected conversations
+        const selectedConvsFull = aiAuditConversations.filter(c => 
+            aiAuditSelectedConversations.has(String(c.id))
+        );
+        
+        // Log what we're sending
+        console.log('📤 Submitting AI Audit batch via ai-audit-processor:', {
+            conversations_count: selectedConvsFull.length,
+            employee_email: aiAuditEmployeeEmail,
+            employee_name: aiAuditEmployeeName,
+            scorecard_id: scorecardSelect.value,
+            audit_date: auditDate,
+            created_by: createdBy,
+            edge_function_url: edgeFunctionUrl
+        });
+        console.log('📋 Selected conversation IDs:', selectedConvsFull.map(c => c.id));
+        
+        // Prepare payload for ai-audit-processor edge function
+        // The function expects: conversations (array of full objects), employee_email, employee_name, scorecard_id, audit_date, auditor_email
+        const edgeFunctionPayload = {
+            conversations: selectedConvsFull,
+            employee_email: aiAuditEmployeeEmail,
+            employee_name: aiAuditEmployeeName,
+            scorecard_id: scorecardSelect.value,
+            audit_date: auditDate,
+            auditor_email: createdBy
+        };
+        
+        console.log('📦 Edge function payload:', JSON.stringify(edgeFunctionPayload, null, 2));
+        
+        // Send to ai-audit-processor edge function (handles n8n communication and avoids CORS)
+        const response = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${supabaseAnonKey}`
+            },
+            body: JSON.stringify(edgeFunctionPayload)
+        });
+        
+        if (!response.ok) {
+            let errorText = '';
+            try {
+                const errorData = await response.json();
+                errorText = errorData.error || JSON.stringify(errorData);
+                console.error('❌ Edge function error:', errorData);
+            } catch (e) {
+                errorText = await response.text();
+                console.error('❌ Edge function error (text):', errorText);
+            }
+            throw new Error(errorText || `Edge function error (${response.status})`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ AI Audit batch submitted successfully:', result);
+        console.log('📦 Response from edge function:', JSON.stringify(result, null, 2));
+        
+        // Get batch_id from response (edge function generates it)
+        const responseBatchId = result.batch_id || 'N/A';
+        const conversationsSent = result.conversations_sent || aiAuditSelectedConversations.size;
+        
+        // Hide loading state
+        if (loadingDiv) {
+            loadingDiv.style.display = 'none';
+        }
+        
+        // Show toast notification for better UX
+        showToastNotification(`✅ ${conversationsSent} conversation${conversationsSent !== 1 ? 's' : ''} submitted for AI audit (Batch: ${responseBatchId})`, 'success');
+        
+        // Close modal immediately after successful submission
+        closeAIAuditSection();
+        
+        // Ensure Pull Conversations section is visible to show updates
+        const pullSection = document.getElementById('pullConversationsSection');
+        if (pullSection) {
+            pullSection.style.display = 'block';
+        }
+        
+        // Set up realtime subscription for immediate updates
+        setupAIAuditRealtimeSubscription();
+        
+        // Refresh conversations list once to show initial status (realtime will handle subsequent updates)
+        if (typeof pullConversationsList !== 'undefined' && pullConversationsList && pullConversationsList.length > 0) {
+            // Small delay to ensure backend has processed the submission
+            setTimeout(async () => {
+                await displayPullConversationsList(pullConversationsList);
+            }, 1000);
+        }
+        
+    } catch (error) {
+        console.error('Error submitting AI Audit batch:', error);
+        
+        // Hide loading state
+        const loadingDiv = document.getElementById('aiAuditLoading');
+        if (loadingDiv) {
+            loadingDiv.style.display = 'none';
+        }
+        
+        // Show error with better UX
+        const errorMessage = error.message || 'Unknown error occurred';
+        showAIAuditError(`Failed to submit batch: ${errorMessage}`);
+        showToastNotification(`❌ Failed to submit AI audit batch`, 'error');
+        
+        // Re-enable submit button
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            updateAIAuditSubmitButton();
+        }
     }
 };
 
@@ -8392,6 +10419,13 @@ async function fetchEmployeeConversationsProgressively(adminId, updatedSince, up
         if (listDiv) listDiv.style.display = 'block';
         
         displayEmployeeConversations();
+        
+        // If AI Audit section is open for this employee, process conversations
+        const aiAuditSection = document.getElementById('aiAuditSection');
+        if (aiAuditSection && aiAuditSection.style.display !== 'none' && 
+            aiAuditEmployeeEmail && aiAuditEmployeeEmail.toLowerCase().trim() === currentEmployeeEmail.toLowerCase().trim()) {
+            processConversationsForAIAudit(rawEmployeeConversations);
+        }
         
     } catch (error) {
         console.error('❌ Error fetching conversations:', error);
@@ -9795,13 +11829,55 @@ window.startAuditFromConversation = async function(conversation) {
             }
         }
         
+        // Check if conversation has AI audit data
+        let aiAuditData = null;
+        if (conversation && conversation.id) {
+            try {
+                const supabaseClient = window.SupabaseConfig?.getClient?.();
+                if (supabaseClient) {
+                    console.log('🔍 Checking for AI audit data for conversation:', conversation.id);
+                    const { data: aiResult, error } = await supabaseClient
+                        .from('ai_audit_results')
+                        .select('*')
+                        .eq('conversation_id', String(conversation.id))
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if no result
+                    
+                    if (error) {
+                        console.warn('⚠️ Error fetching AI audit data:', error);
+                    } else if (aiResult && aiResult.ai_scorecard_data) {
+                        aiAuditData = {
+                            scorecard_id: aiResult.scorecard_id,
+                            ai_scorecard_data: aiResult.ai_scorecard_data,
+                            ai_confidence_score: aiResult.ai_confidence_score,
+                            ai_notes: aiResult.ai_notes,
+                            batch_id: aiResult.batch_id
+                        };
+                        console.log('✅ Found AI audit data for conversation:', conversation.id);
+                        console.log('📊 AI Audit data:', {
+                            scorecard_id: aiAuditData.scorecard_id,
+                            has_scorecard_data: !!aiAuditData.ai_scorecard_data,
+                            confidence_score: aiAuditData.ai_confidence_score,
+                            data_keys: aiAuditData.ai_scorecard_data ? Object.keys(aiAuditData.ai_scorecard_data) : []
+                        });
+                    } else {
+                        console.log('ℹ️ No AI audit data found for conversation:', conversation.id);
+                    }
+                }
+            } catch (aiError) {
+                console.error('❌ Error checking for AI audit data:', aiError);
+            }
+        }
+        
         // Navigate to audit-form.html with conversation data (original flow when no assignment selected)
         // Store conversation data in sessionStorage to pass to new page
         sessionStorage.setItem('pendingConversationData', JSON.stringify({
             conversation: conversation,
             adminInfo: adminInfo,
             adminEmail: adminEmail,
-            conversation_id: conversation.id || null  // Store conversation ID for linking
+            conversation_id: conversation.id || null,  // Store conversation ID for linking
+            aiAuditData: aiAuditData  // Include AI audit data if available
         }));
         window.location.href = 'audit-form.html?fromConversation=true';
         
@@ -13184,6 +15260,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Load the assignment and start the audit
         loadAssignmentFromURL(assignmentId);
     }
+    // Set up event listener for Run AI Audit button in pull conversations section
+    const runAIAuditBtn = document.getElementById('runAIAuditFromPullConversationsBtn');
+    if (runAIAuditBtn) {
+        runAIAuditBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('🔵 Run AI Audit button clicked (event listener)');
+            if (window.runAIAuditFromPullConversations) {
+                window.runAIAuditFromPullConversations();
+            } else {
+                console.error('❌ runAIAuditFromPullConversations function not found');
+                alert('AI Audit function not loaded. Please refresh the page.');
+            }
+        });
+        console.log('✅ Event listener attached to Run AI Audit button');
+    }
+
 }); // End of DOMContentLoaded
 
 // Load assignment from URL parameter and start audit
@@ -15990,6 +18083,15 @@ Next Steps:
         console.error('Stack:', error.stack);
     }
 };
+
+// Cleanup realtime subscription on page unload
+window.addEventListener('beforeunload', () => {
+    cleanupAIAuditRealtimeSubscription();
+    if (aiAuditRefreshInterval) {
+        clearInterval(aiAuditRefreshInterval);
+        aiAuditRefreshInterval = null;
+    }
+});
 </script>
 
     <!-- Image Viewer Modal -->

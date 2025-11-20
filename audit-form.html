@@ -460,6 +460,30 @@
         </div>
     </div>
 
+    <!-- AI Audit Indicator Banner -->
+    <div id="aiAuditIndicator" style="display: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.4852rem 0.9704rem; color: white; box-shadow: 0 0.1213rem 0.1819rem rgba(0,0,0,0.1); margin-bottom: 0.5rem; flex-shrink: 0; border-radius: 0.2425rem; margin-left: 0.9704rem; margin-right: 0.9704rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.6469rem;">
+            <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1;">
+                <div id="aiAuditLoadingSpinner" style="display: none; width: 0.8086rem; height: 0.8086rem; border: 0.1213rem solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div id="aiAuditSuccessIcon" style="display: none; width: 0.8086rem; height: 0.8086rem; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.5659rem;">✓</div>
+                <div style="flex: 1;">
+                    <div id="aiAuditLoadingText" style="display: none; font-size: 0.5659rem; font-weight: 600; font-family: 'Poppins', sans-serif;">Loading AI Audit data...</div>
+                    <div id="aiAuditSuccessText" style="display: none; font-size: 0.5659rem; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                        <span>AI Audit data loaded</span>
+                        <span id="aiAuditConfidence" style="font-size: 0.4852rem; opacity: 0.9; margin-left: 0.3234rem;"></span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="clearAIAuditButton" onclick="clearAIAuditData()" style="display: none; background: rgba(255,255,255,0.2); border: 0.0606rem solid white; border-radius: 0.1617rem; padding: 0.2425rem 0.4852rem; font-size: 0.4852rem; font-weight: 600; cursor: pointer; color: white; font-family: 'Poppins', sans-serif; transition: all 0.2s; white-space: nowrap;">Clear AI Data</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
     <!-- Scorecard Info (moved to Error Details section, keeping scorecardInfo div here for backward compatibility) -->
     <div id="scorecardInfo" style="display: none; position: absolute; visibility: hidden;">
         <div style="display: flex; align-items: center; gap: 0.4852rem; font-size: 0.4447rem; color: #6b7280;">
@@ -737,7 +761,7 @@ let currentParameters = [];
 let allAvailableScorecards = [];
 
 // Load available scorecards
-async function loadScorecards(channelFilter = null) {
+async function loadScorecards(channelFilter = null, preselectedScorecardId = null) {
     const scorecardSelect = document.getElementById('scorecardSelect');
     
     try {
@@ -802,11 +826,53 @@ async function loadScorecards(channelFilter = null) {
                 scorecardSelect.appendChild(option);
             });
             
-            // Auto-select the first scorecard if available (whether one or multiple)
-            // This will be the default one if it exists, otherwise the newest one
+            // Auto-select scorecard: use preselected ID if provided, otherwise use first available
             if (filteredScorecards.length > 0) {
-                scorecardSelect.value = filteredScorecards[0].id;
-                await loadScorecardParameters(filteredScorecards[0].id);
+                if (preselectedScorecardId) {
+                    // Check if the preselected scorecard exists in the filtered list
+                    const preselectedExists = filteredScorecards.some(sc => sc.id === preselectedScorecardId);
+                    if (preselectedExists) {
+                        scorecardSelect.value = preselectedScorecardId;
+                        await loadScorecardParameters(preselectedScorecardId);
+                    } else {
+                        // If preselected doesn't exist in filtered list, check if it exists in all scorecards
+                        // This can happen when channel filter is applied but preselected scorecard doesn't match
+                        const preselectedInAll = allAvailableScorecards.some(sc => sc.id === preselectedScorecardId);
+                        if (preselectedInAll && !channelFilter) {
+                            // If no channel filter, the scorecard should be in the list - this shouldn't happen
+                            console.warn('⚠️ Preselected scorecard not found in list even without channel filter:', preselectedScorecardId);
+                            scorecardSelect.value = filteredScorecards[0].id;
+                            await loadScorecardParameters(filteredScorecards[0].id);
+                        } else if (preselectedInAll && channelFilter) {
+                            // Scorecard exists but doesn't match channel filter - add it anyway for AI audit
+                            console.log('⚠️ Preselected scorecard doesn\'t match channel filter, but adding it for AI audit:', preselectedScorecardId);
+                            const preselectedScorecard = allAvailableScorecards.find(sc => sc.id === preselectedScorecardId);
+                            if (preselectedScorecard) {
+                                const option = document.createElement('option');
+                                option.value = preselectedScorecard.id;
+                                option.textContent = preselectedScorecard.name + ' (AI Audit)';
+                                option.dataset.threshold = preselectedScorecard.passing_threshold;
+                                option.dataset.tableName = preselectedScorecard.table_name;
+                                option.dataset.channels = preselectedScorecard.channels || '';
+                                scorecardSelect.appendChild(option);
+                                scorecardSelect.value = preselectedScorecardId;
+                                await loadScorecardParameters(preselectedScorecardId);
+                            } else {
+                                scorecardSelect.value = filteredScorecards[0].id;
+                                await loadScorecardParameters(filteredScorecards[0].id);
+                            }
+                        } else {
+                            // Scorecard doesn't exist at all, fall back to first
+                            console.warn('⚠️ Preselected scorecard not found in all scorecards, using first available:', preselectedScorecardId);
+                            scorecardSelect.value = filteredScorecards[0].id;
+                            await loadScorecardParameters(filteredScorecards[0].id);
+                        }
+                    }
+                } else {
+                    // No preselection, use first scorecard
+                    scorecardSelect.value = filteredScorecards[0].id;
+                    await loadScorecardParameters(filteredScorecards[0].id);
+                }
             }
             // If channel is selected but no matching scorecard, show message
             else if (channelFilter && filteredScorecards.length === 0) {
@@ -7558,6 +7624,121 @@ window.startAuditFromConversation = async function(conversation) {
 };
 
 // ============================================================================
+// AI Audit Indicator Functions
+// ============================================================================
+
+// Show/hide AI audit indicator
+function showAIAuditIndicator(state, confidenceScore = null) {
+    const indicator = document.getElementById('aiAuditIndicator');
+    const loadingSpinner = document.getElementById('aiAuditLoadingSpinner');
+    const loadingText = document.getElementById('aiAuditLoadingText');
+    const successIcon = document.getElementById('aiAuditSuccessIcon');
+    const successText = document.getElementById('aiAuditSuccessText');
+    const clearButton = document.getElementById('clearAIAuditButton');
+    const confidenceSpan = document.getElementById('aiAuditConfidence');
+    
+    if (!indicator) return;
+    
+    if (state === 'loading') {
+        indicator.style.display = 'block';
+        loadingSpinner.style.display = 'block';
+        loadingText.style.display = 'block';
+        successIcon.style.display = 'none';
+        successText.style.display = 'none';
+        clearButton.style.display = 'none';
+    } else if (state === 'loaded') {
+        indicator.style.display = 'block';
+        loadingSpinner.style.display = 'none';
+        loadingText.style.display = 'none';
+        successIcon.style.display = 'flex';
+        successText.style.display = 'block';
+        clearButton.style.display = 'block';
+        
+        if (confidenceScore !== null && confidenceScore !== undefined) {
+            confidenceSpan.textContent = `(Confidence: ${confidenceScore}%)`;
+        } else {
+            confidenceSpan.textContent = '';
+        }
+    } else if (state === 'hidden') {
+        indicator.style.display = 'none';
+    }
+}
+
+// Clear AI audit data from form
+function clearAIAuditData() {
+    if (!confirm('Are you sure you want to clear all AI audit data from this form? This will reset all error counts, feedback, and recommendations.')) {
+        return;
+    }
+    
+    // Clear all error parameter fields
+    if (currentParameters && currentParameters.length > 0) {
+        for (const param of currentParameters) {
+            const field = document.getElementById(param.field_id);
+            if (field) {
+                if (param.field_type === 'radio') {
+                    // Uncheck all radio buttons for this parameter
+                    const radioInputs = document.querySelectorAll(`input[name="${param.field_id}"]`);
+                    radioInputs.forEach(radio => radio.checked = false);
+                } else {
+                    // Reset counter fields
+                    field.value = 0;
+                    const displaySpan = document.getElementById(`${param.field_id}_display`);
+                    if (displaySpan) {
+                        displaySpan.textContent = '0';
+                    }
+                    field.dispatchEvent(new Event('input', { bubbles: true }));
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+            
+            // Clear feedback fields
+            let feedbackIndex = 0;
+            while (true) {
+                const feedbackTextarea = document.getElementById(`feedback_${param.field_id}_${feedbackIndex}`);
+                if (feedbackTextarea) {
+                    feedbackTextarea.value = '';
+                    feedbackTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    feedbackIndex++;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Clear error description and recommendations
+    const errorDescriptionField = document.getElementById('errorDescription');
+    if (errorDescriptionField) {
+        errorDescriptionField.value = '';
+    }
+    
+    const recommendationsField = document.getElementById('recommendations');
+    if (recommendationsField) {
+        recommendationsField.value = '';
+    }
+    
+    // Recalculate average score
+    if (typeof window.calculateAverageScore === 'function') {
+        window.calculateAverageScore();
+    } else if (typeof calculateAverageScore === 'function') {
+        calculateAverageScore();
+    }
+    
+    // Hide the indicator
+    showAIAuditIndicator('hidden');
+    
+    // Show notification
+    if (typeof window.showToastNotification === 'function') {
+        window.showToastNotification('AI Audit data cleared from form', 'info');
+    } else {
+        console.log('✅ AI Audit data cleared from form');
+    }
+}
+
+// Make clearAIAuditData globally accessible
+window.clearAIAuditData = clearAIAuditData;
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -10060,6 +10241,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     return; // Let the edit mode handler manage the scorecard selection
                 }
                 
+                // Don't clear form if we're loading AI audit data
+                if (window.isLoadingAIAuditData) {
+                    console.log('⏸️ Skipping form clear - AI audit data is being loaded');
+                    return;
+                }
+                
                 const selectedValue = this.value;
                 // Validate before loading to prevent UUID errors
                 if (selectedValue && selectedValue !== 'null' && selectedValue !== 'undefined' && selectedValue.trim() !== '') {
@@ -10084,6 +10271,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const channelSelect = document.getElementById('channel');
         if (channelSelect) {
             channelSelect.addEventListener('change', async function() {
+                // Don't auto-select if we're loading an assignment scorecard
+                if (window.isLoadingAssignmentScorecard) {
+                    console.log('⏸️ Skipping channel auto-select - assignment scorecard is being loaded');
+                    return;
+                }
+                
+                // Don't filter if scorecard is already selected (e.g., from AI audit)
+                const scorecardSelect = document.getElementById('scorecardSelect');
+                if (scorecardSelect && scorecardSelect.value && scorecardSelect.value !== '') {
+                    console.log('⏸️ Scorecard already selected, skipping channel filter:', scorecardSelect.value);
+                    return;
+                }
+                
                 const selectedChannel = this.value;
                 if (selectedChannel) {
                     await autoSelectScorecardByChannel(selectedChannel);
@@ -10096,14 +10296,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Also trigger on page load if channel is already selected
             if (channelSelect.value) {
                 setTimeout(async () => {
-                    await autoSelectScorecardByChannel(channelSelect.value);
+                    // Don't auto-select if we're loading an assignment scorecard
+                    if (!window.isLoadingAssignmentScorecard) {
+                        await autoSelectScorecardByChannel(channelSelect.value);
+                    }
                 }, 500);
             } else {
                 // If no channel selected, ensure first scorecard is auto-selected after a delay
                 setTimeout(async () => {
-                    const scorecardSelect = document.getElementById('scorecardSelect');
-                    if (scorecardSelect && (!scorecardSelect.value || scorecardSelect.value === '')) {
-                        await loadScorecards();
+                    // Don't auto-select if we're loading an assignment scorecard
+                    if (!window.isLoadingAssignmentScorecard) {
+                        const scorecardSelect = document.getElementById('scorecardSelect');
+                        if (scorecardSelect && (!scorecardSelect.value || scorecardSelect.value === '')) {
+                            await loadScorecards();
+                        }
                     }
                 }, 800);
             }
@@ -11174,19 +11380,157 @@ async function loadAssignmentFromURL(assignmentId) {
             pendingConversationId = mappedAssignment.conversation_id;
         }
         
-        // Auto-select the scorecard from assignment
+        // Check for AI audit data if conversation_id exists
+        let aiAuditData = null;
+        if (mappedAssignment.conversation_id) {
+            try {
+                console.log('🔍 Checking for AI audit data for conversation:', mappedAssignment.conversation_id);
+                const { data: aiResult, error: aiError } = await window.supabaseClient
+                    .from('ai_audit_results')
+                    .select('*')
+                    .eq('conversation_id', String(mappedAssignment.conversation_id))
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+                
+                if (aiError) {
+                    console.warn('⚠️ Error fetching AI audit data:', aiError);
+                } else if (aiResult && aiResult.ai_scorecard_data) {
+                    aiAuditData = {
+                        scorecard_id: aiResult.scorecard_id,
+                        ai_scorecard_data: aiResult.ai_scorecard_data,
+                        ai_confidence_score: aiResult.ai_confidence_score,
+                        ai_notes: aiResult.ai_notes,
+                        batch_id: aiResult.batch_id
+                    };
+                    console.log('✅ Found AI audit data for conversation:', mappedAssignment.conversation_id);
+                    console.log('📊 AI Audit data:', {
+                        scorecard_id: aiAuditData.scorecard_id,
+                        has_scorecard_data: !!aiAuditData.ai_scorecard_data,
+                        confidence_score: aiAuditData.ai_confidence_score,
+                        data_keys: aiAuditData.ai_scorecard_data ? Object.keys(aiAuditData.ai_scorecard_data) : []
+                    });
+                } else {
+                    console.log('ℹ️ No AI audit data found for conversation:', mappedAssignment.conversation_id);
+                }
+            } catch (aiError) {
+                console.error('❌ Error checking for AI audit data:', aiError);
+            }
+        }
+        
+        // Auto-select the scorecard from assignment (or from AI audit if available)
+        // IMPORTANT: Load scorecards FIRST, before setting channel, to prevent channel filter from interfering
         const scorecardSelect = document.getElementById('scorecardSelect');
-        if (scorecardSelect && mappedAssignment.scorecard_id) {
-            // First, ensure scorecards are loaded
-            await loadScorecards();
-            // Then select the assigned scorecard
-            scorecardSelect.value = mappedAssignment.scorecard_id;
-            // Load the scorecard parameters
-            await loadScorecardParameters(mappedAssignment.scorecard_id);
+        // Prioritize AI audit scorecard if available
+        const scorecardIdToUse = aiAuditData?.scorecard_id || mappedAssignment.scorecard_id;
+        
+        console.log('📋 Scorecard selection:', {
+            aiAuditScorecardId: aiAuditData?.scorecard_id,
+            assignmentScorecardId: mappedAssignment.scorecard_id,
+            scorecardIdToUse: scorecardIdToUse
+        });
+        
+        // Set a flag to prevent channel change listener from interfering
+        window.isLoadingAssignmentScorecard = true;
+        
+        if (scorecardSelect && scorecardIdToUse) {
+            // When we have AI audit data, we need to load ALL scorecards (not filtered by channel)
+            // because the AI audit scorecard might not match the current channel filter
+            // Load scorecards without channel filter FIRST, before setting channel
+            console.log('🔄 Loading scorecards with AI audit scorecard (NO channel filter):', scorecardIdToUse);
+            await loadScorecards(null, scorecardIdToUse); // null = no channel filter, preselectedScorecardId = AI audit scorecard
+            
+            // Wait a bit for the dropdown to be populated
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Double-check the value is set (in case loadScorecards didn't find it)
+            if (scorecardSelect.value !== scorecardIdToUse) {
+                console.log('⚠️ Scorecard value mismatch. Expected:', scorecardIdToUse, 'Got:', scorecardSelect.value);
+                // Check if the scorecard exists in dropdown
+                const scorecardOption = Array.from(scorecardSelect.options).find(opt => opt.value === scorecardIdToUse);
+                if (scorecardOption) {
+                    console.log('✅ Setting scorecard dropdown to:', scorecardIdToUse);
+                    scorecardSelect.value = scorecardIdToUse;
+                    // Don't trigger change event here to avoid clearing form - we'll load parameters directly
+                    // Load the scorecard parameters
+                    await loadScorecardParameters(scorecardIdToUse);
+                } else {
+                    console.warn('⚠️ Scorecard not found in dropdown:', scorecardIdToUse);
+                    console.log('Available options:', Array.from(scorecardSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
+                    
+                    // If scorecard not found, try loading it directly from database and adding to dropdown
+                    try {
+                        const { data: scorecardData, error: scError } = await window.supabaseClient
+                            .from('scorecards')
+                            .select('*')
+                            .eq('id', scorecardIdToUse)
+                            .eq('is_active', true)
+                            .single();
+                        
+                        if (!scError && scorecardData) {
+                            console.log('✅ Found scorecard in database, adding to dropdown:', scorecardData.name);
+                            const option = document.createElement('option');
+                            option.value = scorecardData.id;
+                            option.textContent = scorecardData.name + (aiAuditData ? ' (AI Audit)' : '');
+                            option.dataset.threshold = scorecardData.passing_threshold;
+                            option.dataset.tableName = scorecardData.table_name;
+                            option.dataset.channels = scorecardData.channels || '';
+                            scorecardSelect.appendChild(option);
+                            scorecardSelect.value = scorecardIdToUse;
+                            await loadScorecardParameters(scorecardIdToUse);
+                        } else {
+                            console.error('❌ Scorecard not found in database:', scError);
+                        }
+                    } catch (err) {
+                        console.error('Error loading scorecard directly:', err);
+                    }
+                }
+            } else {
+                console.log('✅ Scorecard already set in dropdown:', scorecardIdToUse);
+                // Value is already set, just ensure parameters are loaded
+                // The change event might have already been triggered, but ensure parameters are loaded
+                if (!currentParameters || currentParameters.length === 0) {
+                    await loadScorecardParameters(scorecardIdToUse);
+                }
+            }
         } else if (scorecardSelect) {
             // If no scorecard ID provided, auto-select first available
             await loadScorecards();
         }
+        
+        // NOW set the channel AFTER scorecards are loaded and selected
+        // This way, even if the channel listener fires, the scorecard is already set
+        const channelField = document.getElementById('channel');
+        if (channelField && assignment.channel) {
+            // Temporarily remove the change listener to prevent filtering
+            const channelSelect = document.getElementById('channel');
+            if (channelSelect && scorecardIdToUse) {
+                // Clone the element to remove all event listeners
+                const newChannelSelect = channelSelect.cloneNode(true);
+                channelSelect.parentNode.replaceChild(newChannelSelect, channelSelect);
+                // Re-attach the listener after a delay
+                setTimeout(() => {
+                    const restoredChannelSelect = document.getElementById('channel');
+                    if (restoredChannelSelect) {
+                        restoredChannelSelect.addEventListener('change', async function() {
+                            // Don't auto-select if we're loading an assignment scorecard
+                            if (window.isLoadingAssignmentScorecard) {
+                                console.log('⏸️ Skipping channel auto-select - assignment scorecard is being loaded');
+                                return;
+                            }
+                            const selectedChannel = this.value;
+                            await autoSelectScorecardByChannel(selectedChannel);
+                        });
+                    }
+                }, 1000);
+            }
+            
+            channelField.value = assignment.channel;
+            console.log('✅ Channel pre-filled:', assignment.channel);
+        }
+        
+        // Clear the flag after scorecard is loaded
+        window.isLoadingAssignmentScorecard = false;
         
         // Show the full screen audit form modal
         const auditFormModal = document.getElementById('auditFormModal');
@@ -11227,12 +11571,7 @@ async function loadAssignmentFromURL(assignmentId) {
             console.warn('⚠️ Employee not found in dropdown for email:', mappedAssignment.employee_email);
         }
         
-        // Pre-fill channel if available in assignment
-        const channelField = document.getElementById('channel');
-        if (channelField && assignment.channel) {
-            channelField.value = assignment.channel;
-            console.log('✅ Channel pre-filled:', assignment.channel);
-        }
+        // Channel is already set above before loading scorecards
         
         // Pre-fill interaction date if available
         const interactionDateField = document.getElementById('interactionDate');
@@ -11290,6 +11629,210 @@ async function loadAssignmentFromURL(assignmentId) {
                     }
                 }, 300);
             }
+        }
+        
+        // Wait for all initialization to complete before loading AI audit data
+        // This ensures employee selection, scorecard loading, conversation loading, etc. are all done
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Preload AI audit data if available (do this LAST to prevent it from being cleared)
+        if (aiAuditData && aiAuditData.scorecard_id && aiAuditData.ai_scorecard_data) {
+            // Show loading indicator
+            showAIAuditIndicator('loading');
+            
+            // Set flag to prevent form clearing during AI audit data loading
+            window.isLoadingAIAuditData = true;
+            
+            console.log('🔒 Locking form to prevent clearing during AI audit data load');
+            console.log('✅ AI Audit data found, preloading into form');
+            console.log('📊 AI Audit data structure:', {
+                scorecard_id: aiAuditData.scorecard_id,
+                has_scorecard_data: !!aiAuditData.ai_scorecard_data,
+                confidence_score: aiAuditData.ai_confidence_score,
+                data_type: typeof aiAuditData.ai_scorecard_data,
+                data_keys: aiAuditData.ai_scorecard_data ? Object.keys(aiAuditData.ai_scorecard_data) : []
+            });
+            
+            // Wait for scorecard parameters to be fully loaded and rendered
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Populate error fields from AI audit data
+            const aiScorecardData = aiAuditData.ai_scorecard_data;
+            if (aiScorecardData && typeof aiScorecardData === 'object' && currentParameters && currentParameters.length > 0) {
+                console.log('📝 Populating form fields from AI audit data...');
+                console.log('📋 Available parameters:', currentParameters.length);
+                console.log('📋 Parameter field_ids:', currentParameters.map(p => p.field_id));
+                console.log('📋 AI data keys:', Object.keys(aiScorecardData));
+                
+                // Create mapping from generic field IDs (field_1, field_2, etc.) to actual parameter field_ids
+                // Parameters are ordered by display_order, so field_1 = first parameter, field_2 = second, etc.
+                const fieldIdMapping = {};
+                const feedbackFieldIdMapping = {};
+                currentParameters.forEach((param, index) => {
+                    const genericFieldId = `field_${index + 1}`;
+                    fieldIdMapping[genericFieldId] = param.field_id;
+                    feedbackFieldIdMapping[`feedback_${genericFieldId}`] = `feedback_${param.field_id}`;
+                });
+                
+                console.log('🗺️ Field ID mapping:', fieldIdMapping);
+                console.log('🗺️ Feedback field ID mapping:', feedbackFieldIdMapping);
+                
+                // Create a normalized AI data object with actual field_ids
+                const normalizedAIData = {};
+                for (const [genericKey, value] of Object.entries(aiScorecardData)) {
+                    if (genericKey.startsWith('field_') && !genericKey.startsWith('feedback_')) {
+                        // Map generic field ID to actual field_id
+                        const actualFieldId = fieldIdMapping[genericKey];
+                        if (actualFieldId) {
+                            normalizedAIData[actualFieldId] = value;
+                            console.log(`🔄 Mapped ${genericKey} → ${actualFieldId}: ${value}`);
+                        }
+                    } else if (genericKey.startsWith('feedback_field_')) {
+                        // Map generic feedback field ID to actual feedback field_id
+                        const actualFeedbackFieldId = feedbackFieldIdMapping[genericKey];
+                        if (actualFeedbackFieldId) {
+                            normalizedAIData[actualFeedbackFieldId] = value;
+                            console.log(`🔄 Mapped ${genericKey} → ${actualFeedbackFieldId}`);
+                        }
+                    } else {
+                        // Keep other fields as-is (error_description, recommendations, etc.)
+                        normalizedAIData[genericKey] = value;
+                    }
+                }
+                
+                console.log('📦 Normalized AI data:', normalizedAIData);
+                
+                let populatedCount = 0;
+                let notFoundCount = 0;
+                let noValueCount = 0;
+                
+                // First, set all error count values
+                for (const param of currentParameters) {
+                    const fieldValue = normalizedAIData[param.field_id];
+                    
+                    // Log each parameter for debugging
+                    console.log(`🔍 Checking parameter: ${param.error_name} (field_id: ${param.field_id}), AI value: ${fieldValue}`);
+                    
+                    if (fieldValue !== undefined && fieldValue !== null) {
+                        const field = document.getElementById(param.field_id);
+                        if (field) {
+                            if (param.field_type === 'radio') {
+                                // For radio buttons, select the appropriate option
+                                const radioInput = document.querySelector(`input[name="${param.field_id}"][value="${fieldValue}"]`);
+                                if (radioInput) {
+                                    radioInput.checked = true;
+                                    radioInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                    console.log(`✅ Set radio ${param.field_id} (${param.error_name}) to ${fieldValue}`);
+                                    populatedCount++;
+                                } else {
+                                    console.warn(`⚠️ Radio input not found: ${param.field_id} (${param.error_name}) with value ${fieldValue}`);
+                                    notFoundCount++;
+                                }
+                            } else {
+                                // For counter fields - also update the display span
+                                field.value = fieldValue;
+                                const displaySpan = document.getElementById(`${param.field_id}_display`);
+                                if (displaySpan) {
+                                    displaySpan.textContent = fieldValue;
+                                }
+                                field.dispatchEvent(new Event('input', { bubbles: true }));
+                                field.dispatchEvent(new Event('change', { bubbles: true }));
+                                console.log(`✅ Set counter ${param.field_id} (${param.error_name}) to ${fieldValue}`);
+                                populatedCount++;
+                            }
+                        } else {
+                            console.warn(`⚠️ Field not found in DOM: ${param.field_id} (${param.error_name})`);
+                            notFoundCount++;
+                        }
+                    } else {
+                        console.log(`ℹ️ No AI value for ${param.field_id} (${param.error_name})`);
+                        noValueCount++;
+                    }
+                }
+                
+                console.log(`📊 Population summary: ${populatedCount} populated, ${notFoundCount} not found, ${noValueCount} no value`);
+                
+                // Wait for feedback boxes to be created/updated based on error counts
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Then, set feedback values
+                for (const param of currentParameters) {
+                    const fieldValue = normalizedAIData[param.field_id];
+                    const feedbackKey = `feedback_${param.field_id}`;
+                    const feedbackValue = normalizedAIData[feedbackKey];
+                    
+                    if (feedbackValue && fieldValue > 0) {
+                        // feedbackValue can be an array or a single string
+                        const feedbackArray = Array.isArray(feedbackValue) ? feedbackValue : [feedbackValue];
+                        if (feedbackArray.length > 0) {
+                            // Set feedback values
+                            for (let index = 0; index < feedbackArray.length; index++) {
+                                const feedback = feedbackArray[index];
+                                const feedbackTextarea = document.getElementById(`feedback_${param.field_id}_${index}`);
+                                if (feedbackTextarea && feedback) {
+                                    feedbackTextarea.value = feedback;
+                                    feedbackTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                    console.log(`✅ Set feedback ${param.field_id}_${index} (${param.error_name})`);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Populate other fields from AI audit data
+                const errorDescriptionField = document.getElementById('errorDescription');
+                if (errorDescriptionField && normalizedAIData.error_description) {
+                    errorDescriptionField.value = normalizedAIData.error_description;
+                    console.log('✅ Set error description');
+                }
+                
+                const recommendationsField = document.getElementById('recommendations');
+                if (recommendationsField && normalizedAIData.recommendations) {
+                    recommendationsField.value = normalizedAIData.recommendations;
+                    console.log('✅ Set recommendations');
+                }
+                
+                // AI Notes (if available)
+                if (aiAuditData.ai_notes) {
+                    console.log('📝 AI Notes:', aiAuditData.ai_notes);
+                }
+                
+                // Recalculate average score after populating fields
+                await new Promise(resolve => setTimeout(resolve, 300));
+                if (typeof window.calculateAverageScore === 'function') {
+                    window.calculateAverageScore();
+                } else if (typeof calculateAverageScore === 'function') {
+                    calculateAverageScore();
+                }
+                
+                // Show notification that AI audit data was preloaded
+                if (typeof window.showToastNotification === 'function') {
+                    window.showToastNotification(`✅ AI Audit data preloaded (${populatedCount} fields, Confidence: ${aiAuditData.ai_confidence_score || 'N/A'}%)`, 'success');
+                } else if (typeof showToastNotification === 'function') {
+                    showToastNotification(`✅ AI Audit data preloaded (${populatedCount} fields, Confidence: ${aiAuditData.ai_confidence_score || 'N/A'}%)`, 'success');
+                } else {
+                    console.log(`✅ AI Audit data preloaded (${populatedCount} fields, Confidence: ${aiAuditData.ai_confidence_score || 'N/A'}%)`);
+                }
+                
+                console.log('✅ AI Audit data preloaded into form successfully');
+                
+                // Show loaded state with clear button
+                showAIAuditIndicator('loaded', aiAuditData.ai_confidence_score);
+            } else {
+                console.warn('⚠️ AI scorecard data is not a valid object or parameters not loaded:', {
+                    hasData: !!aiScorecardData,
+                    dataType: typeof aiScorecardData,
+                    paramsCount: currentParameters ? currentParameters.length : 0
+                });
+                // Hide indicator if data couldn't be loaded
+                showAIAuditIndicator('hidden');
+            }
+            
+            // Clear the flag after loading is complete
+            window.isLoadingAIAuditData = false;
+        } else {
+            // Hide indicator if no AI audit data
+            showAIAuditIndicator('hidden');
         }
         
         // Show and start the timer
@@ -14191,7 +14734,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 let pendingConversationId = null;
 
 async function loadConversationDataIntoForm(conversationData) {
-    const { conversation, adminInfo, adminEmail, conversation_id } = conversationData;
+    const { conversation, adminInfo, adminEmail, conversation_id, aiAuditData } = conversationData;
     
     // Store conversation ID for later use when creating/updating assignment
     pendingConversationId = conversation_id || conversation?.id || null;
@@ -14279,19 +14822,164 @@ async function loadConversationDataIntoForm(conversationData) {
         }
     }
     
-    // Auto-select scorecard based on channel (if channel was set from employee selection)
-    const scorecardSelect = document.getElementById('scorecardSelect');
-    const channelSelect = document.getElementById('channel');
-    if (scorecardSelect) {
-        // Wait a bit for employee change event to set the channel
-        await new Promise(resolve => setTimeout(resolve, 300));
+    // Check if AI audit data is available and preload it
+    if (aiAuditData && aiAuditData.scorecard_id && aiAuditData.ai_scorecard_data) {
+        console.log('✅ AI Audit data found, preloading into form');
+        console.log('📊 AI Audit data structure:', {
+            scorecard_id: aiAuditData.scorecard_id,
+            has_scorecard_data: !!aiAuditData.ai_scorecard_data,
+            confidence_score: aiAuditData.ai_confidence_score,
+            data_type: typeof aiAuditData.ai_scorecard_data,
+            data_keys: aiAuditData.ai_scorecard_data ? Object.keys(aiAuditData.ai_scorecard_data) : []
+        });
         
-        // If channel is selected, load scorecards filtered by channel (will auto-select default)
-        if (channelSelect && channelSelect.value) {
-            await autoSelectScorecardByChannel(channelSelect.value);
+        // Load scorecards first
+        await loadScorecards();
+        
+        // Select the scorecard from AI audit
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect && aiAuditData.scorecard_id) {
+            // Check if scorecard exists in dropdown
+            const scorecardOption = Array.from(scorecardSelect.options).find(opt => opt.value === aiAuditData.scorecard_id);
+            if (scorecardOption) {
+                scorecardSelect.value = aiAuditData.scorecard_id;
+                // Trigger change event to ensure scorecard is properly selected
+                scorecardSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                // Load scorecard parameters (this will render the error fields)
+                await loadScorecardParameters(aiAuditData.scorecard_id);
+            } else {
+                console.warn('⚠️ Scorecard not found in dropdown, loading parameters directly:', aiAuditData.scorecard_id);
+                // Still try to load parameters directly
+                await loadScorecardParameters(aiAuditData.scorecard_id);
+            }
+            
+            // Wait for parameters to be fully rendered
+            // Wait longer to ensure all DOM updates are complete
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Populate error fields from AI audit data
+            const aiScorecardData = aiAuditData.ai_scorecard_data;
+            if (aiScorecardData && typeof aiScorecardData === 'object') {
+                console.log('📝 Populating form fields from AI audit data...');
+                console.log('📋 Available parameters:', currentParameters.length);
+                console.log('📋 AI data keys:', Object.keys(aiScorecardData));
+                
+                // First, set all error count values
+                for (const param of currentParameters) {
+                    const fieldValue = aiScorecardData[param.field_id];
+                    if (fieldValue !== undefined && fieldValue !== null) {
+                        const field = document.getElementById(param.field_id);
+                        if (field) {
+                            if (param.field_type === 'radio') {
+                                // For radio buttons, select the appropriate option
+                                const radioInput = document.querySelector(`input[name="${param.field_id}"][value="${fieldValue}"]`);
+                                if (radioInput) {
+                                    radioInput.checked = true;
+                                    radioInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                    console.log(`✅ Set radio ${param.field_id} to ${fieldValue}`);
+                                } else {
+                                    console.warn(`⚠️ Radio input not found: ${param.field_id} with value ${fieldValue}`);
+                                }
+                            } else {
+                                // For counter fields
+                                field.value = fieldValue;
+                                field.dispatchEvent(new Event('input', { bubbles: true }));
+                                field.dispatchEvent(new Event('change', { bubbles: true }));
+                                console.log(`✅ Set counter ${param.field_id} to ${fieldValue}`);
+                            }
+                        } else {
+                            console.warn(`⚠️ Field not found: ${param.field_id}`);
+                        }
+                    }
+                }
+                
+                // Wait for feedback boxes to be created/updated based on error counts
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Then, set feedback values
+                for (const param of currentParameters) {
+                    const fieldValue = aiScorecardData[param.field_id];
+                    const feedbackKey = `feedback_${param.field_id}`;
+                    const feedbackValue = aiScorecardData[feedbackKey];
+                    
+                    if (feedbackValue && fieldValue > 0) {
+                        // feedbackValue can be an array or a single string
+                        const feedbackArray = Array.isArray(feedbackValue) ? feedbackValue : [feedbackValue];
+                        if (feedbackArray.length > 0) {
+                            // Set feedback values
+                            for (let index = 0; index < feedbackArray.length; index++) {
+                                const feedback = feedbackArray[index];
+                                const feedbackTextarea = document.getElementById(`feedback_${param.field_id}_${index}`);
+                                if (feedbackTextarea && feedback) {
+                                    feedbackTextarea.value = feedback;
+                                    feedbackTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                    console.log(`✅ Set feedback ${param.field_id}_${index}`);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Populate other fields from AI audit data
+                // Error description
+                const errorDescriptionField = document.getElementById('errorDescription');
+                if (errorDescriptionField && aiScorecardData.error_description) {
+                    errorDescriptionField.value = aiScorecardData.error_description;
+                    console.log('✅ Set error description');
+                }
+                
+                // Recommendations
+                const recommendationsField = document.getElementById('recommendations');
+                if (recommendationsField && aiScorecardData.recommendations) {
+                    recommendationsField.value = aiScorecardData.recommendations;
+                    console.log('✅ Set recommendations');
+                }
+                
+                // AI Notes (if available)
+                if (aiAuditData.ai_notes) {
+                    // You might want to show this in a separate field or notification
+                    console.log('📝 AI Notes:', aiAuditData.ai_notes);
+                }
+                
+                // Recalculate average score after populating fields
+                await new Promise(resolve => setTimeout(resolve, 200));
+                if (typeof window.calculateAverageScore === 'function') {
+                    window.calculateAverageScore();
+                } else if (typeof calculateAverageScore === 'function') {
+                    calculateAverageScore();
+                }
+                
+                // Show notification that AI audit data was preloaded
+                if (typeof window.showToastNotification === 'function') {
+                    window.showToastNotification(`✅ AI Audit data preloaded (Confidence: ${aiAuditData.ai_confidence_score || 'N/A'}%)`, 'success');
+                } else if (typeof showToastNotification === 'function') {
+                    showToastNotification(`✅ AI Audit data preloaded (Confidence: ${aiAuditData.ai_confidence_score || 'N/A'}%)`, 'success');
+                } else {
+                    console.log('✅ AI Audit data preloaded (Confidence: ' + (aiAuditData.ai_confidence_score || 'N/A') + '%)');
+                }
+                
+                console.log('✅ AI Audit data preloaded into form successfully');
+            } else {
+                console.warn('⚠️ AI scorecard data is not a valid object:', aiScorecardData);
+            }
         } else {
-            // Otherwise, just load all scorecards
-            await loadScorecards();
+            console.warn('⚠️ Scorecard select not found or scorecard_id missing');
+        }
+    } else {
+        // Auto-select scorecard based on channel (if channel was set from employee selection)
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        const channelSelect = document.getElementById('channel');
+        if (scorecardSelect) {
+            // Wait a bit for employee change event to set the channel
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // If channel is selected, load scorecards filtered by channel (will auto-select default)
+            if (channelSelect && channelSelect.value) {
+                await autoSelectScorecardByChannel(channelSelect.value);
+            } else {
+                // Otherwise, just load all scorecards
+                await loadScorecards();
+            }
         }
     }
 }
