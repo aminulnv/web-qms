@@ -624,9 +624,9 @@ class SidebarLoader {
     const menuItems = document.querySelectorAll(".menu-item:not(.has-submenu)")
 
     menuItems.forEach((item) => {
-      item.addEventListener("click", () => {
+      item.addEventListener("click", async () => {
         const label = item.getAttribute("aria-label")
-        this.navigateToPage(label)
+        await this.navigateToPage(label)
       })
     })
   }
@@ -699,7 +699,35 @@ class SidebarLoader {
   /**
    * Navigate to appropriate page based on menu item
    */
-  navigateToPage(label) {
+  async navigateToPage(label) {
+    // Check if user is an agent trying to access Performance
+    if (label === "Performance") {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}")
+        const currentUserRole = userInfo.role || ""
+        const isAgent = currentUserRole === "Employee"
+        
+        if (isAgent) {
+          // Show "coming soon" message for agents
+          if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+              title: "Coming Soon",
+              message: "This feature is coming soon. Stay tuned for updates!",
+              confirmText: "OK",
+              type: "info",
+            })
+          } else {
+            // Fallback to alert if confirmationDialog is not available
+            alert("This feature is coming soon. Stay tuned for updates!")
+          }
+          return // Prevent navigation
+        }
+      } catch (error) {
+        console.error("Error checking user role:", error)
+        // If error, allow navigation to proceed normally
+      }
+    }
+    
     const pageMap = {
       Search: "search.html",
       Home: "home.html",
