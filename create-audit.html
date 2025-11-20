@@ -1658,6 +1658,9 @@ async function loadScorecards(channelFilter = null) {
             if (filteredScorecards.length > 0) {
                 scorecardSelect.value = filteredScorecards[0].id;
                 await loadScorecardParameters(filteredScorecards[0].id);
+                
+                // Update default badge indicator
+                updateDefaultScorecardBadge(filteredScorecards[0], channelFilter);
             }
             // If channel is selected but no matching scorecard, show message
             else if (channelFilter && filteredScorecards.length === 0) {
@@ -1694,6 +1697,37 @@ async function autoSelectScorecardByChannel(channelName) {
     
     // The loadScorecards function will already auto-select the first scorecard
     // No additional logic needed here
+}
+
+// Update default scorecard badge indicator
+function updateDefaultScorecardBadge(scorecard, channelFilter) {
+    // Remove any existing badge first
+    removeDefaultScorecardBadge();
+    
+    // Check if this is a default scorecard for the current channel
+    const isDefault = channelFilter && scorecard && scorecard.default_for_channels && 
+                      typeof scorecard.default_for_channels === 'string' &&
+                      scorecard.default_for_channels.split(',').map(c => c.trim()).includes(channelFilter);
+    
+    if (isDefault) {
+        const scorecardSelect = document.getElementById('scorecardSelect');
+        if (scorecardSelect && scorecardSelect.parentElement) {
+            const badge = document.createElement('span');
+            badge.id = 'defaultScorecardBadge';
+            badge.textContent = '⭐ Default';
+            badge.style.cssText = 'font-size: 0.4043rem; color: #1A733E; background: #d1fae5; padding: 0.1617rem 0.3234rem; border-radius: 0.1617rem; font-weight: 600; margin-left: 0.3234rem; white-space: nowrap; display: inline-flex; align-items: center;';
+            badge.title = 'This is the default scorecard for the selected channel';
+            scorecardSelect.parentElement.appendChild(badge);
+        }
+    }
+}
+
+// Remove default scorecard badge
+function removeDefaultScorecardBadge() {
+    const existingBadge = document.getElementById('defaultScorecardBadge');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
 }
 
 // Load parameters for selected scorecard
@@ -3853,6 +3887,9 @@ window.createManualAudit = async function() {
     if (scorecardSelect) {
         scorecardSelect.value = '';
     }
+    
+    // Remove default badge
+    removeDefaultScorecardBadge();
     
     // Reset employee select
     const employeeSelect = document.getElementById('employeeName');
@@ -12284,12 +12321,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Validate before loading to prevent UUID errors
                 if (selectedValue && selectedValue !== 'null' && selectedValue !== 'undefined' && selectedValue.trim() !== '') {
                     await loadScorecardParameters(selectedValue);
+                    
+                    // Update default badge indicator
+                    const channelFilter = document.getElementById('channel')?.value;
+                    const selectedScorecard = allAvailableScorecards.find(s => s.id === selectedValue);
+                    if (selectedScorecard) {
+                        updateDefaultScorecardBadge(selectedScorecard, channelFilter);
+                    } else {
+                        // Remove badge if scorecard not found
+                        removeDefaultScorecardBadge();
+                    }
                 } else {
                     // Clear scorecard info if invalid selection
                     currentScorecard = null;
                     currentParameters = [];
                     document.getElementById('scorecardInfo').style.display = 'none';
                     clearErrorParameters();
+                    removeDefaultScorecardBadge();
                 }
             });
         }
@@ -12305,7 +12353,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (channelSelect) {
             channelSelect.addEventListener('change', async function() {
                 const selectedChannel = this.value;
-                await autoSelectScorecardByChannel(selectedChannel);
+                if (selectedChannel) {
+                    await autoSelectScorecardByChannel(selectedChannel);
+                    // Badge will be updated by loadScorecards function
+                } else {
+                    // If channel is cleared, reload all scorecards
+                    await loadScorecards();
+                    // Remove badge when channel is cleared
+                    removeDefaultScorecardBadge();
+                }
             });
             
             // Also trigger on page load if channel is already selected

@@ -1872,14 +1872,10 @@ async function handleScorecardSubmit(e) {
         table_name: document.getElementById('tableName').value.toLowerCase().replace(/[^a-z0-9_]/g, '_'),
         channels: channelsString,
         scoring_type: scoringType,
-        created_by: userEmail
+        created_by: userEmail,
+        // Always include default_for_channels (even if empty) so it can be cleared
+        default_for_channels: defaultChannelsString || null
     };
-    
-    // Only include default_for_channels if there are default channels selected
-    // This allows graceful degradation if the column doesn't exist yet
-    if (defaultChannelsString) {
-        scorecardData.default_for_channels = defaultChannelsString;
-    }
     
     // Add hybrid-specific fields
     if (scoringType === 'hybrid') {

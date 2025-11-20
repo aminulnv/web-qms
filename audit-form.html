@@ -836,6 +836,7 @@ async function autoSelectScorecardByChannel(channelName) {
     // No additional logic needed here
 }
 
+
 // Load parameters for selected scorecard
 async function loadScorecardParameters(scorecardId) {
     // Handle empty, null, or "null" string values
@@ -9543,7 +9544,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (channelSelect) {
             channelSelect.addEventListener('change', async function() {
                 const selectedChannel = this.value;
-                await autoSelectScorecardByChannel(selectedChannel);
+                if (selectedChannel) {
+                    await autoSelectScorecardByChannel(selectedChannel);
+                } else {
+                    // If channel is cleared, reload all scorecards
+                    await loadScorecards();
+                }
             });
             
             // Also trigger on page load if channel is already selected
