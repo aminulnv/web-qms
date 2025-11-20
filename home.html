@@ -996,137 +996,17 @@ function applyFilters() {
   ]);
 }
 
-// Cache helper functions - unlimited cache with background refresh
-function getCacheKey(prefix, userEmail, period = null) {
-  const periodKey = period ? `${period.start}_${period.end}` : 'default';
-  return `homepage_cache_${prefix}_${userEmail}_${periodKey}`;
-}
-
-function getCachedData(cacheKey) {
-  try {
-    const cached = localStorage.getItem(cacheKey);
-    if (!cached) return null;
-    
-    const { data, timestamp } = JSON.parse(cached);
-    return data;
-  } catch (e) {
-    console.warn('Error reading cache:', e);
-    return null;
-  }
-}
-
-function setCachedData(cacheKey, data) {
-  try {
-    localStorage.setItem(cacheKey, JSON.stringify({
-      data,
-      timestamp: Date.now()
-    }));
-  } catch (e) {
-    console.warn('Error writing cache:', e);
-    // If storage is full, clear old cache entries
-    if (e.name === 'QuotaExceededError') {
-      clearOldCache();
-      // Try once more
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-      } catch (e2) {
-        console.error('Failed to cache after cleanup:', e2);
-      }
-    }
-  }
-}
-
-function clearOldCache() {
-  try {
-    const keys = Object.keys(localStorage);
-    const cacheKeys = keys.filter(k => k.startsWith('homepage_cache_'));
-    
-    // Keep only the most recent cache for each prefix/user combination
-    const cacheGroups = {};
-    cacheKeys.forEach(key => {
-      const parts = key.split('_');
-      if (parts.length >= 4) {
-        const prefix = parts[2];
-        const userEmail = parts[3];
-        const groupKey = `${prefix}_${userEmail}`;
-        if (!cacheGroups[groupKey]) {
-          cacheGroups[groupKey] = [];
-        }
-        cacheGroups[groupKey].push(key);
-      }
-    });
-    
-    // For each group, keep only the most recent entry
-    Object.values(cacheGroups).forEach(group => {
-      if (group.length > 1) {
-        // Sort by timestamp and keep only the newest
-        const withTimestamps = group.map(key => {
-          try {
-            const cached = localStorage.getItem(key);
-            if (cached) {
-              const { timestamp } = JSON.parse(cached);
-              return { key, timestamp };
-            }
-          } catch (e) {
-            return { key, timestamp: 0 };
-          }
-        }).sort((a, b) => b.timestamp - a.timestamp);
-        
-        // Remove all but the newest
-        withTimestamps.slice(1).forEach(({ key }) => {
-          localStorage.removeItem(key);
-        });
-      }
-    });
-  } catch (e) {
-    console.warn('Error clearing old cache:', e);
-  }
-}
-
-function invalidateHomepageCache(userEmail = null) {
-  try {
-    const keys = Object.keys(localStorage);
-    const cacheKeys = keys.filter(k => k.startsWith('homepage_cache_'));
-    
-    if (userEmail) {
-      // Invalidate only for specific user
-      cacheKeys.forEach(key => {
-        if (key.includes(userEmail)) {
-          localStorage.removeItem(key);
-        }
-      });
-    } else {
-      // Invalidate all homepage cache
-      cacheKeys.forEach(key => localStorage.removeItem(key));
-    }
-  } catch (e) {
-    console.warn('Error invalidating cache:', e);
-  }
-}
-
 // Populate filter options
 async function populateFilters() {
   try {
-    const cacheKey = getCacheKey('filters', currentUserEmail, null);
-    
-    // Check cache first and render immediately
-    const cachedFilters = getCachedData(cacheKey);
-    if (cachedFilters) {
-      console.log('Rendering cached filters immediately');
-      renderFiltersFromData(cachedFilters);
-    }
-    
-    // Always fetch fresh data in background
-    fetchAndCacheFilters(cacheKey);
+    // Always fetch fresh data
+    await fetchAndCacheFilters();
   } catch (error) {
     console.error('Error populating filters:', error);
   }
 }
 
-async function fetchAndCacheFilters(cacheKey) {
+async function fetchAndCacheFilters() {
   try {
     // Load all assignments for filter population (without filters)
     let allAssignmentsForFilters = [];
@@ -1164,34 +1044,16 @@ async function fetchAndCacheFilters(cacheKey) {
       if (!scError && scorecards) {
         const assignmentPromises = scorecards.map(async (scorecard) => {
           try {
-            // Try query with audit_status filter first
+            // Query scorecard tables (all audits in scorecard tables are completed by default)
             let { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('channel, employee_email, audit_status')
-              .eq('auditor_email', currentUserEmail)
-              .in('audit_status', ['pending', 'in_progress', 'completed']);
+              .select('channel, employee_email')
+              .eq('auditor_email', currentUserEmail);
             
-            // If error, try without audit_status filter (some tables may not have this column)
             if (error) {
-              const retryQuery = await window.supabaseClient
-                .from(scorecard.table_name)
-                .select('channel, employee_email, audit_status')
-                .eq('auditor_email', currentUserEmail);
-              
-              if (!retryQuery.error && retryQuery.data) {
-                audits = retryQuery.data;
-                error = null;
-                // Filter client-side for audit_status if column exists
-                if (audits && audits.some(a => a.audit_status)) {
-                  audits = audits.filter(a => 
-                    !a.audit_status || ['pending', 'in_progress', 'completed'].includes(a.audit_status)
-                  );
-                }
-              } else {
-                // If still error, table might not have auditor_email column - skip this table silently
-                // Don't log warning as this is expected for some tables
-                return [];
-              }
+              // If error, table might not have auditor_email column - skip this table silently
+              // Don't log warning as this is expected for some tables
+              return [];
             }
             
             if (!error && audits) {
@@ -1213,11 +1075,8 @@ async function fetchAndCacheFilters(cacheKey) {
     const channels = [...new Set(allAssignmentsForFilters.map(a => a.channel).filter(Boolean))].sort();
     const agents = !isAgent ? [...new Set(allAssignmentsForFilters.map(a => a.employee_email).filter(Boolean))].sort() : [];
     
-    // Cache the fresh data
-    const filtersData = { channels, agents };
-    setCachedData(cacheKey, filtersData);
-    
     // Update UI with fresh data
+    const filtersData = { channels, agents };
     console.log('Updating UI with fresh filters');
     renderFiltersFromData(filtersData);
   } catch (error) {
@@ -1504,23 +1363,15 @@ async function loadRecentUpdates() {
     if (!updatesFeed) return;
 
     const period = getCurrentPeriodDates();
-    const cacheKey = getCacheKey('recentUpdates', currentUserEmail, period);
     
-    // Check cache first and render immediately
-    const cachedUpdates = getCachedData(cacheKey);
-    if (cachedUpdates) {
-      console.log('Rendering cached recent updates immediately');
-      renderRecentUpdatesFromData(cachedUpdates);
-    }
-    
-    // Always fetch fresh data in background
-    fetchAndCacheRecentUpdates(cacheKey, period);
+    // Always fetch fresh data
+    await fetchAndCacheRecentUpdates(period);
   } catch (error) {
     console.error('Error loading recent updates:', error);
   }
 }
 
-async function fetchAndCacheRecentUpdates(cacheKey, period) {
+async function fetchAndCacheRecentUpdates(period) {
   try {
     let allUpdates = [];
 
@@ -1564,9 +1415,9 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
                   type: 'audit_completed',
                   displayName: auditorName,
                   displayEmail: audit.auditor_email,
-                  timestamp: audit.submitted_at || audit.audit_timestamp,
+                  timestamp: audit.submitted_at,
                   status: 'completed',
-                  interactionId: audit.interaction_id || audit.interactionId,
+                  interactionId: audit.interaction_id,
                   scorecardId: scorecard.id,
                   scorecardTable: scorecard.table_name,
                   auditId: audit.id
@@ -1595,7 +1446,7 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
             // Query reversals - get all reversals and sort client-side to prioritize recent responses
             const { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, acknowledgement_status, interaction_id, interactionId, submitted_at')
+              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, acknowledgement_status, interaction_id, submitted_at')
               .not('reversal_requested_at', 'is', null)
               .order('reversal_requested_at', { ascending: false })
               .limit(200);
@@ -1647,7 +1498,6 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
               console.log(`Found ${filteredReversals.length} reversals for ${normalizedCurrentEmail} (isAgent: ${isAgent})`, filteredReversals.map(r => ({
                   id: r.id,
                   reversal_approved: r.reversal_approved,
-                  reversal_status: r.reversal_status,
                 acknowledgement_status: r.acknowledgement_status,
                   reversal_responded_at: r.reversal_responded_at,
                   reversal_requested_at: r.reversal_requested_at
@@ -1658,7 +1508,7 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
                 const auditorEmail = (reversal.auditor_email || '').toLowerCase().trim();
                 const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
                 const auditorName = auditorUser?.name || reversal.auditor_email?.split('@')[0] || 'Unknown';
-                const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
+                const interactionId = reversal.interaction_id || 'N/A';
                 
                 // Determine reversal status - check if it's been responded to first, then check acknowledgement
                 const acknowledgementStatus = reversal.acknowledgement_status || reversal.acknowledgementStatus;
@@ -1669,11 +1519,12 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
                 
                 let status = null;
                 
-                // Use reversal_status column if available (newer format)
-                if (reversal.reversal_status && reversal.reversal_status !== 'Pending') {
-                  status = reversal.reversal_status;
+                // Determine status from reversal_approved and acknowledgement_status
+                // Check acknowledgement first
+                if (acknowledgementStatus === 'Acknowledged') {
+                  status = 'Acknowledged';
                 }
-                // If reversal was responded to, check approval status (fallback for older data)
+                // If reversal was responded to, check approval status
                 else if (reversal.reversal_responded_at) {
                   const approved = reversal.reversal_approved;
                   if (approved === true || approved === 'true' || approved === 1 || approved === '1') {
@@ -1725,7 +1576,6 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
                     isAcknowledged,
                     acknowledgementStatus,
                     reversal_approved: reversal.reversal_approved,
-                    reversal_status: reversal.reversal_status,
                     reversal_responded_at: reversal.reversal_responded_at
                   });
                     
@@ -1769,57 +1619,27 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
         
         const assignmentPromises = scorecards.map(async (scorecard) => {
           try {
-            // Try query with audit_status filter first
+            // Query scorecard tables (all audits in scorecard tables are completed by default)
+            // Use submitted_at for ordering since assignment_created_at doesn't exist in scorecard tables
             let { data: audits, error } = await window.supabaseClient
               .from(scorecard.table_name)
               .select('*')
               .eq('auditor_email', currentUserEmail)
-              .in('audit_status', ['pending', 'in_progress', 'completed'])
-              .order('assignment_created_at', { ascending: false })
+              .order('submitted_at', { ascending: false })
               .limit(20);
             
-            // If error, try without audit_status filter (some tables may not have this column)
-            // Also try submitted_at if assignment_created_at doesn't exist
             if (error) {
-              let retryQuery = await window.supabaseClient
-                .from(scorecard.table_name)
-                .select('*')
-                .eq('auditor_email', currentUserEmail)
-                .order('assignment_created_at', { ascending: false })
-                .limit(20);
-              
-              // If still error (assignment_created_at might not exist), try with submitted_at
-              if (retryQuery.error) {
-                retryQuery = await window.supabaseClient
-                  .from(scorecard.table_name)
-                  .select('*')
-                  .eq('auditor_email', currentUserEmail)
-                  .order('submitted_at', { ascending: false })
-                  .limit(20);
-              }
-              
-              if (!retryQuery.error && retryQuery.data) {
-                audits = retryQuery.data;
-                error = null;
-                // Filter client-side for audit_status if column exists
-                if (audits && audits.some(a => a.audit_status)) {
-                  audits = audits.filter(a => 
-                    !a.audit_status || ['pending', 'in_progress', 'completed'].includes(a.audit_status)
-                  );
-                }
-              } else {
-                // If still error, table might not have auditor_email column - skip this table silently
-                // Don't log warning as this is expected for some tables
-                return [];
-              }
+              // If error, table might not have auditor_email column - skip this table silently
+              // Don't log warning as this is expected for some tables
+              return [];
             }
             
             if (!error && audits) {
               return audits.map(audit => ({
                 ...audit,
-                status: audit.audit_status,
-                created_at: audit.assignment_created_at || audit.created_at,
-                completed_at: audit.completed_at || (audit.audit_status === 'completed' ? audit.submitted_at : null)
+                status: 'completed', // All audits in scorecard tables are completed by default
+                created_at: audit.created_at,
+                completed_at: audit.submitted_at
               }));
             }
             return [];
@@ -1872,7 +1692,7 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
             // Try query with reversal filters first
             let { data: reversals, error } = await window.supabaseClient
               .from(scorecard.table_name)
-              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, interaction_id, interactionId')
+              .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, interaction_id')
               .not('reversal_requested_at', 'is', null)
               .is('reversal_approved', null) // Only unprocessed reversals
               .order('reversal_requested_at', { ascending: false })
@@ -1882,7 +1702,7 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
             if (error) {
               const retryQuery = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, interaction_id, interactionId')
+                .select('id, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, interaction_id')
                 .not('reversal_requested_at', 'is', null)
                 .order('reversal_requested_at', { ascending: false })
                 .limit(50);
@@ -1916,7 +1736,7 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
                 const employeeEmail = (reversal.employee_email || '').toLowerCase().trim();
                 const employeeUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === employeeEmail);
                 const employeeName = employeeUser?.name || reversal.employee_email?.split('@')[0] || 'Unknown';
-                const interactionId = reversal.interaction_id || reversal.interactionId || 'N/A';
+                const interactionId = reversal.interaction_id || 'N/A';
                 
                 // Add update for unprocessed reversal request (these appear in reversal.html)
                 if (reversal.reversal_requested_at) {
@@ -1973,9 +1793,6 @@ async function fetchAndCacheRecentUpdates(cacheKey, period) {
     
     // Limit to 15 most recent
     allUpdates = allUpdates.slice(0, 15);
-    
-    // Cache the fresh data
-    setCachedData(cacheKey, allUpdates);
     
     // Update UI with fresh data
     console.log('Updating UI with fresh recent updates');
@@ -2111,25 +1928,15 @@ async function loadAssignedAudits() {
     console.log('Loading audits for user:', currentUserEmail, 'Role:', currentUserRole, 'IsAgent:', isAgent);
     
     const period = getCurrentPeriodDates();
-    const cacheKey = getCacheKey('assignedAudits', currentUserEmail, period);
     
-    // Check cache first and render immediately
-    const cachedAudits = getCachedData(cacheKey);
-    if (cachedAudits) {
-      console.log('Rendering cached assigned audits immediately');
-      assignedAudits = cachedAudits;
-      allAssignments = cachedAudits;
-      renderAssignedAudits();
-    }
-    
-    // Always fetch fresh data in background
-    fetchAndCacheAssignedAudits(cacheKey, period);
+    // Always fetch fresh data
+    await fetchAndCacheAssignedAudits(period);
   } catch (error) {
     console.error('Error loading assigned audits:', error);
   }
 }
 
-async function fetchAndCacheAssignedAudits(cacheKey, period) {
+async function fetchAndCacheAssignedAudits(period) {
   try {
     if (isAgent) {
       // For employees: Load completed audits from scorecard tables
@@ -2139,9 +1946,6 @@ async function fetchAndCacheAssignedAudits(cacheKey, period) {
       await loadPendingAssignmentsForAuditor();
     }
 
-    // Cache the fresh data
-    setCachedData(cacheKey, assignedAudits);
-    
     // Update UI with fresh data
     console.log('Updating UI with fresh assigned audits');
     renderAssignedAudits();
@@ -2213,7 +2017,7 @@ async function loadCompletedAuditsForEmployee() {
           // Apply date filter (week or date range)
           const period = getCurrentPeriodDates();
           filteredAudits = filteredAudits.filter(audit => {
-            const auditDate = audit.submitted_at || audit.audit_timestamp;
+            const auditDate = audit.submitted_at;
             if (!auditDate) return false;
             return isDateInRange(auditDate, period.start, period.end);
           });
@@ -2255,8 +2059,8 @@ async function loadCompletedAuditsForEmployee() {
     
     // Sort by submitted_at descending
     combinedAudits.sort((a, b) => {
-      const dateA = new Date(a.submitted_at || a.audit_timestamp || 0);
-      const dateB = new Date(b.submitted_at || b.audit_timestamp || 0);
+      const dateA = new Date(a.submitted_at || 0);
+      const dateB = new Date(b.submitted_at || 0);
       return dateB - dateA;
     });
     
@@ -2477,10 +2281,10 @@ function renderAssignedAudits() {
       const statusColor = normalizedStatus === 'Passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
       const statusIcon = normalizedStatus === 'Passed' ? '✓' : '✗';
       
-      const submittedDate = formatTimestamp(audit.submitted_at || audit.audit_timestamp);
+      const submittedDate = formatTimestamp(audit.submitted_at);
       const averageScore = audit.average_score || audit.averageScore || '0';
       const totalErrors = audit.total_errors_count || audit.totalErrorsCount || '0';
-      const interactionId = audit.interaction_id || audit.interactionId || 'N/A';
+      const interactionId = audit.interaction_id || 'N/A';
       const channel = audit.channel || 'N/A';
       
       // Debug logging for reversal status
@@ -2612,13 +2416,13 @@ function sortAudits(audits) {
         const statusB2 = (b.passing_status || b.passingStatus || '').toLowerCase();
         return statusB2.localeCompare(statusA2);
       case 'date_asc':
-        const dateA = new Date(a.submitted_at || a.audit_timestamp || a.created_at || 0);
-        const dateB = new Date(b.submitted_at || b.audit_timestamp || b.created_at || 0);
+        const dateA = new Date(a.submitted_at || a.created_at || 0);
+        const dateB = new Date(b.submitted_at || b.created_at || 0);
         return dateA - dateB;
       case 'date_desc':
       default:
-        const dateA2 = new Date(a.submitted_at || a.audit_timestamp || a.created_at || 0);
-        const dateB2 = new Date(b.submitted_at || b.audit_timestamp || b.created_at || 0);
+        const dateA2 = new Date(a.submitted_at || a.created_at || 0);
+        const dateB2 = new Date(b.submitted_at || b.created_at || 0);
         return dateB2 - dateA2;
     }
   });
@@ -2657,23 +2461,15 @@ async function updateYourStats() {
     }
     
     const period = getCurrentPeriodDates();
-    const cacheKey = getCacheKey('stats', currentUserEmail, period);
     
-    // Check cache first and render immediately
-    const cachedStats = getCachedData(cacheKey);
-    if (cachedStats) {
-      console.log('Rendering cached stats immediately');
-      renderStatsFromData(cachedStats);
-    }
-    
-    // Always fetch fresh data in background
-    fetchAndCacheStats(cacheKey, period);
+    // Always fetch fresh data
+    await fetchAndCacheStats(period);
   } catch (error) {
     console.error('Error loading stats:', error);
   }
 }
 
-async function fetchAndCacheStats(cacheKey, period) {
+async function fetchAndCacheStats(period) {
   try {
     if (!currentUserEmail) {
       console.log('No user email found for stats');
@@ -2722,7 +2518,7 @@ async function fetchAndCacheStats(cacheKey, period) {
             // Query for completed audits (those with submitted_at)
             let completedQuery = window.supabaseClient
               .from(scorecard.table_name)
-              .select('id, submitted_at, audit_timestamp')
+              .select('id, submitted_at')
               .eq(auditFilterField, currentUserEmail)
               .not('submitted_at', 'is', null);
             
@@ -2740,7 +2536,7 @@ async function fetchAndCacheStats(cacheKey, period) {
               // If server-side date filter fails, try without date filter and filter client-side
               const retryQuery = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('id, submitted_at, audit_timestamp')
+                .select('id, submitted_at')
                 .eq(auditFilterField, currentUserEmail)
                 .not('submitted_at', 'is', null);
               
@@ -3008,7 +2804,7 @@ async function fetchAndCacheStats(cacheKey, period) {
                 // Apply date filter (week or date range)
                 const period = getCurrentPeriodDates();
                 filteredAudits = filteredAudits.filter(audit => {
-                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  const auditDate = audit.submitted_at;
                   if (!auditDate) return false;
                   return isDateInRange(auditDate, period.start, period.end);
                 });
@@ -3093,7 +2889,7 @@ async function fetchAndCacheStats(cacheKey, period) {
                 
                 // Apply date filter (week or date range)
                 filteredAudits = filteredAudits.filter(audit => {
-                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  const auditDate = audit.submitted_at;
                   if (!auditDate) return false;
                   return isDateInRange(auditDate, period.start, period.end);
                 });
@@ -3172,7 +2968,7 @@ async function fetchAndCacheStats(cacheKey, period) {
               // Get all audits for this employee and filter client-side
               const { data: allAudits, error: auditError } = await window.supabaseClient
                 .from(scorecard.table_name)
-                .select('id, employee_email, acknowledgement_status, submitted_at, audit_timestamp')
+                .select('id, employee_email, acknowledgement_status, submitted_at')
                 .limit(1000);
               
               if (!auditError && allAudits) {
@@ -3194,7 +2990,7 @@ async function fetchAndCacheStats(cacheKey, period) {
                 // Apply date filter (week or date range)
                 const period = getCurrentPeriodDates();
                 pendingAudits = pendingAudits.filter(audit => {
-                  const auditDate = audit.submitted_at || audit.audit_timestamp;
+                  const auditDate = audit.submitted_at;
                   if (!auditDate) return false;
                   return isDateInRange(auditDate, period.start, period.end);
                 });
@@ -3314,9 +3110,6 @@ async function fetchAndCacheStats(cacheKey, period) {
       totalReversals,
       requiresAcknowledgment
     };
-    
-    // Cache the fresh data
-    setCachedData(cacheKey, statsData);
     
     // Update UI with fresh data
     console.log('Updating UI with fresh stats');
@@ -3583,7 +3376,7 @@ function getReversalStatusChip(audit) {
   // If no reversal was requested, return empty
   if (!reversalRequestedAt) return '';
   
-  // Determine status - reversal_status column doesn't exist, use reversal_approved
+  // Determine status from reversal_approved and acknowledgement_status
   let status = null;
   
   // Check acknowledgement first
@@ -3658,26 +3451,14 @@ async function loadNotifications() {
   try {
     if (!currentUserEmail) return;
 
-    const cacheKey = getCacheKey('notifications', currentUserEmail, null);
-    
-    // Check cache first and render immediately
-    const cachedNotifications = getCachedData(cacheKey);
-    if (cachedNotifications) {
-      console.log('Rendering cached notifications immediately');
-      notifications = cachedNotifications.notifications;
-      unreadNotificationCount = cachedNotifications.unreadNotificationCount;
-      renderNotifications();
-      updateNotificationBadge();
-    }
-    
-    // Always fetch fresh data in background
-    fetchAndCacheNotifications(cacheKey);
+    // Always fetch fresh data
+    await fetchAndCacheNotifications();
   } catch (error) {
     console.error('Error loading notifications:', error);
   }
 }
 
-async function fetchAndCacheNotifications(cacheKey) {
+async function fetchAndCacheNotifications() {
   try {
     if (!currentUserEmail) return;
 
@@ -3694,61 +3475,27 @@ async function fetchAndCacheNotifications(cacheKey) {
     if (!scError && scorecards) {
       const assignmentPromises = scorecards.map(async (scorecard) => {
         try {
-          // For agents, only fetch completed audits; for auditors, fetch all statuses
-          const statusFilter = isAgent ? ['completed'] : ['pending', 'in_progress', 'completed'];
-          
-          // Try query with audit_status filter first
+          // Query scorecard tables (all audits in scorecard tables are completed by default)
+          // Use submitted_at for ordering since assignment_created_at doesn't exist in scorecard tables
           let { data: audits, error } = await window.supabaseClient
             .from(scorecard.table_name)
             .select('*')
             .eq(notificationFilterField, currentUserEmail)
-            .in('audit_status', statusFilter)
-            .order('assignment_created_at', { ascending: false })
+            .order('submitted_at', { ascending: false })
             .limit(20);
           
-          // If error, try without audit_status filter (some tables may not have this column)
-          // Also try submitted_at if assignment_created_at doesn't exist
           if (error) {
-            let retryQuery = await window.supabaseClient
-              .from(scorecard.table_name)
-              .select('*')
-              .eq(notificationFilterField, currentUserEmail)
-              .order('assignment_created_at', { ascending: false })
-              .limit(20);
-            
-            // If still error (assignment_created_at might not exist), try with submitted_at
-            if (retryQuery.error) {
-              retryQuery = await window.supabaseClient
-                .from(scorecard.table_name)
-                .select('*')
-                .eq(notificationFilterField, currentUserEmail)
-                .order('submitted_at', { ascending: false })
-                .limit(20);
-            }
-            
-            if (!retryQuery.error && retryQuery.data) {
-              audits = retryQuery.data;
-              error = null;
-              // Filter client-side for audit_status if column exists
-              if (audits && audits.some(a => a.audit_status)) {
-                const statusFilter = isAgent ? ['completed'] : ['pending', 'in_progress', 'completed'];
-                audits = audits.filter(a => 
-                  !a.audit_status || statusFilter.includes(a.audit_status)
-                );
-              }
-            } else {
-              // If still error, table might not have the filter field column - skip this table silently
-              // Don't log warning as this is expected for some tables
-              return [];
-            }
+            // If error, table might not have the filter field column - skip this table silently
+            // Don't log warning as this is expected for some tables
+            return [];
           }
           
           if (!error && audits) {
             return audits.map(audit => ({
               ...audit,
-              status: audit.audit_status,
-              created_at: audit.assignment_created_at || audit.created_at,
-              completed_at: audit.completed_at || (audit.audit_status === 'completed' ? audit.submitted_at : null)
+              status: 'completed', // All audits in scorecard tables are completed by default
+              created_at: audit.created_at,
+              completed_at: audit.submitted_at
             }));
           }
           return [];
@@ -3780,7 +3527,7 @@ async function fetchAndCacheNotifications(cacheKey) {
           // Try query with reversal_requested_at filter first
           let { data: auditReversals, error } = await window.supabaseClient
             .from(scorecard.table_name)
-            .select('id, employee_name, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, reversal_status, acknowledgement_status, interaction_id, interactionId, submitted_at')
+            .select('id, employee_name, employee_email, auditor_email, reversal_requested_at, reversal_responded_at, reversal_approved, acknowledgement_status, interaction_id, submitted_at')
             .not('reversal_requested_at', 'is', null)
             .order('reversal_requested_at', { ascending: false })
             .limit(200);
@@ -3842,11 +3589,12 @@ async function fetchAndCacheNotifications(cacheKey) {
               
               let status = null;
               
-              // Use reversal_status column if available (newer format)
-              if (rev.reversal_status && rev.reversal_status !== 'Pending') {
-                status = rev.reversal_status;
+              // Determine status from reversal_approved and acknowledgement_status
+              // Check acknowledgement first
+              if (acknowledgementStatus === 'Acknowledged') {
+                status = 'Acknowledged';
               }
-              // If reversal was responded to, check approval status (fallback for older data)
+              // If reversal was responded to, check approval status
               else if (rev.reversal_responded_at) {
                 const approved = rev.reversal_approved;
                 if (approved === true || approved === 'true' || approved === 1 || approved === '1') {
@@ -3924,7 +3672,7 @@ async function fetchAndCacheNotifications(cacheKey) {
       if (reversal.type === 'reversal_status_update') {
         // Status update notification
         const statusDisplay = reversal.reversal_status === 'Approved' ? 'Approved' : reversal.reversal_status === 'Rejected' ? 'Rejected' : reversal.reversal_status === 'Acknowledged' ? 'Acknowledged' : 'Updated';
-        const interactionId = reversal.interaction_id || reversal.interactionId || '';
+        const interactionId = reversal.interaction_id || '';
         notifications.push({
           id: `reversal-status-${reversal.id}`,
           type: 'reversal_status_update',
@@ -3971,12 +3719,6 @@ async function fetchAndCacheNotifications(cacheKey) {
       unreadNotificationCount = recentNotifications.length;
     }
 
-    // Cache the fresh data
-    setCachedData(cacheKey, {
-      notifications,
-      unreadNotificationCount
-    });
-    
     // Update UI with fresh data
     console.log('Updating UI with fresh notifications');
     renderNotifications();

@@ -439,129 +439,6 @@ async function initializeDashboard() {
     }
 }
 
-// ============================================================================
-// Cache Helper Functions
-// ============================================================================
-function getCacheKey(prefix, userEmail, period = null) {
-    const periodKey = period ? `${period.start}_${period.end}` : 'default';
-    return `auditor_dashboard_cache_${prefix}_${userEmail}_${periodKey}`;
-}
-
-function getCachedData(cacheKey) {
-    try {
-        const cached = localStorage.getItem(cacheKey);
-        if (!cached) return null;
-        
-        const { data, timestamp } = JSON.parse(cached);
-        
-        // Check if cache is stale (older than 5 minutes)
-        const cacheAge = Date.now() - timestamp;
-        const maxAge = 5 * 60 * 1000; // 5 minutes
-        
-        if (cacheAge > maxAge) {
-            // Cache is stale, return null to force fresh fetch
-            return null;
-        }
-        
-        return data;
-    } catch (e) {
-        console.warn('Error reading cache:', e);
-        return null;
-    }
-}
-
-function setCachedData(cacheKey, data) {
-    try {
-        localStorage.setItem(cacheKey, JSON.stringify({
-            data,
-            timestamp: Date.now()
-        }));
-    } catch (e) {
-        console.warn('Error writing cache:', e);
-        // If storage is full, clear old cache entries
-        if (e.name === 'QuotaExceededError') {
-            clearOldCache();
-            // Try once more
-            try {
-                localStorage.setItem(cacheKey, JSON.stringify({
-                    data,
-                    timestamp: Date.now()
-                }));
-            } catch (e2) {
-                console.error('Failed to cache after cleanup:', e2);
-            }
-        }
-    }
-}
-
-function clearOldCache() {
-    try {
-        const keys = Object.keys(localStorage);
-        const cacheKeys = keys.filter(k => k.startsWith('auditor_dashboard_cache_'));
-        
-        // Keep only the most recent cache for each prefix/user combination
-        const cacheGroups = {};
-        cacheKeys.forEach(key => {
-            const parts = key.split('_');
-            if (parts.length >= 5) {
-                const prefix = parts[3];
-                const userEmail = parts[4];
-                const groupKey = `${prefix}_${userEmail}`;
-                if (!cacheGroups[groupKey]) {
-                    cacheGroups[groupKey] = [];
-                }
-                cacheGroups[groupKey].push(key);
-            }
-        });
-        
-        // For each group, keep only the most recent entry
-        Object.values(cacheGroups).forEach(group => {
-            if (group.length > 1) {
-                // Sort by timestamp and keep only the newest
-                const withTimestamps = group.map(key => {
-                    try {
-                        const cached = localStorage.getItem(key);
-                        if (cached) {
-                            const { timestamp } = JSON.parse(cached);
-                            return { key, timestamp };
-                        }
-                    } catch (e) {
-                        return { key, timestamp: 0 };
-                    }
-                }).sort((a, b) => b.timestamp - a.timestamp);
-                
-                // Remove all but the newest
-                withTimestamps.slice(1).forEach(({ key }) => {
-                    localStorage.removeItem(key);
-                });
-            }
-        });
-    } catch (e) {
-        console.warn('Error clearing old cache:', e);
-    }
-}
-
-function invalidateAuditorDashboardCache(userEmail = null) {
-    try {
-        const keys = Object.keys(localStorage);
-        const cacheKeys = keys.filter(k => k.startsWith('auditor_dashboard_cache_'));
-        
-        if (userEmail) {
-            // Invalidate only for specific user
-            cacheKeys.forEach(key => {
-                if (key.includes(userEmail)) {
-                    localStorage.removeItem(key);
-                }
-            });
-        } else {
-            // Invalidate all auditor dashboard cache
-            cacheKeys.forEach(key => localStorage.removeItem(key));
-        }
-    } catch (e) {
-        console.warn('Error invalidating cache:', e);
-    }
-}
-
 // Get current period dates (week or date range) in Dhaka timezone
 function getCurrentPeriodDates() {
     if (dateFilter.start || dateFilter.end) {
@@ -678,18 +555,7 @@ async function loadAllUsers() {
 
 async function loadScorecards() {
     try {
-        const cacheKey = getCacheKey('scorecards', currentUserEmail, null);
-        
-        // Check cache first and render immediately
-        const cachedScorecards = getCachedData(cacheKey);
-        if (cachedScorecards) {
-            console.log('Rendering cached scorecards immediately');
-            allScorecards = cachedScorecards;
-            cachedScorecardTables = allScorecards.map(s => s.table_name).filter(Boolean);
-            populateScorecardFilter();
-        }
-        
-        // Always fetch fresh data in background
+        // Always fetch fresh data
         const { data, error } = await window.supabaseClient
             .from('scorecards')
             .select('id, name, table_name')
@@ -700,9 +566,6 @@ async function loadScorecards() {
         
         allScorecards = data || [];
         cachedScorecardTables = allScorecards.map(s => s.table_name).filter(Boolean);
-        
-        // Cache the fresh data
-        setCachedData(cacheKey, allScorecards);
         
         // Update UI with fresh data
         console.log('Updating UI with fresh scorecards');
@@ -718,37 +581,18 @@ async function loadScorecards() {
 async function loadAssignments() {
     try {
         const period = getCurrentPeriodDates();
-        const cacheKey = getCacheKey('assignments', currentUserEmail, period);
         
-        // Check cache first and render immediately
-        const cachedAssignments = getCachedData(cacheKey);
-        if (cachedAssignments && cachedAssignments.length > 0) {
-            console.log('Rendering cached assignments immediately');
-            allAssignments = cachedAssignments;
-            unfilteredAssignments = [...allAssignments];
-            
-            // Populate filters
-            populateChannelFilter();
-            populateAuditorFilter();
-            populateEmployeeFilter();
-            
-            // Update dashboard based on current tab (only if initial load)
-            if (isInitialLoad) {
-                await updateDashboard();
-            }
-        } else {
-            // No cache available, show loading and fetch immediately
-            if (isInitialLoad) {
-                showLoadingState();
-            }
-            // Still populate filters with empty data so UI is ready
-            populateChannelFilter();
-            populateAuditorFilter();
-            populateEmployeeFilter();
+        // Show loading if initial load
+        if (isInitialLoad) {
+            showLoadingState();
         }
+        // Populate filters with empty data so UI is ready
+        populateChannelFilter();
+        populateAuditorFilter();
+        populateEmployeeFilter();
         
-        // Always fetch fresh data in background
-        await fetchAndCacheAssignments(cacheKey, period);
+        // Always fetch fresh data
+        await fetchAndCacheAssignments(period);
         
     } catch (error) {
         console.error('Error loading assignments:', error);
@@ -758,7 +602,7 @@ async function loadAssignments() {
     }
 }
 
-async function fetchAndCacheAssignments(cacheKey, period) {
+async function fetchAndCacheAssignments(period) {
     try {
         // Prevent duplicate fetches
         if (isLoading) {
@@ -809,22 +653,14 @@ async function fetchAndCacheAssignments(cacheKey, period) {
         unfilteredAssignments = [...allAssignments]; // Store unfiltered copy
         console.log(`Loaded ${allAssignments.length} assignments`);
         
-        // Check if we had cached data before updating
-        const hadCachedData = getCachedData(cacheKey) !== null;
-        
-        // Cache the fresh data
-        setCachedData(cacheKey, allAssignments);
-        
         // Populate filters
         populateChannelFilter();
         populateAuditorFilter();
         populateEmployeeFilter();
         
-        // Update UI with fresh data (always on initial load, or if no cache was available)
-        if (isInitialLoad || !hadCachedData) {
-            console.log('Updating UI with fresh assignments');
-            await updateDashboard();
-        }
+        // Update UI with fresh data
+        console.log('Updating UI with fresh assignments');
+        await updateDashboard();
         
         isLoading = false;
         
@@ -873,55 +709,52 @@ async function updateTeamStats() {
     }
     
     const period = getCurrentPeriodDates();
-    const filterKey = JSON.stringify(currentFilters);
-    const cacheKey = getCacheKey('teamStats', currentUserEmail, period) + '_' + btoa(filterKey).slice(0, 20);
     
-    // Check cache first and render immediately (only if still on Team Stats tab)
-    const cachedStats = getCachedData(cacheKey);
-    if (cachedStats && currentTab === 0) {
-        console.log('Rendering cached team stats immediately');
-        renderTeamStats(cachedStats);
-        // Update online status indicators after rendering
-        setTimeout(() => updateOnlineStatusIndicators(), 100);
-        hideLoadingState();
-    } else if (isInitialLoad) {
-        // Show loading if no cache and initial load
+    // Show loading if initial load
+    if (isInitialLoad) {
         showLoadingState();
     }
     
-    // Always fetch fresh data in background (but don't show loading if we have cache)
-    fetchAndCacheTeamStats(cacheKey, period, !!cachedStats);
+    // Always fetch fresh data
+    await fetchAndCacheTeamStats(period);
 }
 
-async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
-    // Get all Quality Analysts (auditors)
-    const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
-    
-    if (qualityAnalysts.length === 0) {
-        const tableBody = document.getElementById('performanceTableBody');
-        tableBody.innerHTML = `
-            <div style="text-align: center; padding: 1.5rem; color: #6b7280;">
-                No Quality Analysts found in the system.
-            </div>
-        `;
+async function fetchAndCacheTeamStats(period) {
+    try {
+        // Ensure allUsers is loaded
+        if (!allUsers || allUsers.length === 0) {
+            console.warn('Users not loaded yet, waiting...');
+            await loadAllUsers();
+        }
         
-        // Reset stats
-        document.getElementById('stat1Label').textContent = 'ASSIGNED';
-        document.getElementById('stat1Count').textContent = '0';
-        document.getElementById('completedCount').textContent = '0';
-        document.getElementById('targetAchieved').textContent = '-';
-        document.getElementById('remainingCount').textContent = '0';
-        document.getElementById('stat4Label').textContent = 'IN PROGRESS';
-        document.getElementById('stat4Count').textContent = '0';
-        document.getElementById('stat4Subtitle').textContent = '-';
-        document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
-        document.getElementById('stat5Count').textContent = '0';
-        return;
-    }
-    
+        // Get all Quality Analysts (auditors)
+        const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
+        
+        if (qualityAnalysts.length === 0) {
+            const tableBody = document.getElementById('performanceTableBody');
+            tableBody.innerHTML = `
+                <div style="text-align: center; padding: 1.5rem; color: #6b7280;">
+                    No Quality Analysts found in the system.
+                </div>
+            `;
+            
+            // Reset stats
+            document.getElementById('stat1Label').textContent = 'ASSIGNED';
+            document.getElementById('stat1Count').textContent = '0';
+            document.getElementById('completedCount').textContent = '0';
+            document.getElementById('targetAchieved').textContent = '-';
+            document.getElementById('remainingCount').textContent = '0';
+            document.getElementById('stat4Label').textContent = 'IN PROGRESS';
+            document.getElementById('stat4Count').textContent = '0';
+            document.getElementById('stat4Subtitle').textContent = '-';
+            document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
+            document.getElementById('stat5Count').textContent = '0';
+            hideLoadingState();
+            return;
+        }
+        
         // Load all assignments for all Quality Analysts with date filtering
         // Note: period is already passed as a parameter to this function
-        try {
             let assignmentsQuery = window.supabaseClient
                 .from('audit_assignments')
                 .select('*')
@@ -976,15 +809,20 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
         let completed = 0; // Will be calculated from scorecard tables
         
         try {
+            // Ensure scorecards are loaded
+            if (!cachedScorecardTables || cachedScorecardTables.length === 0) {
+                await loadScorecards();
+            }
+            
             // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
             let tablesToQuery = [];
             try {
                 const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
                 
                 if (!tablesError && allTables && allTables.length > 0) {
-                    // Filter out ai_analysis_results and map to table names
+                    // Filter out ai_analysis_results and calibration_results and map to table names
                     tablesToQuery = allTables
-                        .filter(t => t.table_name !== 'ai_analysis_results')
+                        .filter(t => t.table_name !== 'ai_analysis_results' && t.table_name !== 'calibration_results')
                         .map(t => t.table_name);
                 } else {
                     // Fallback: use scorecard tables
@@ -1016,10 +854,10 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                             .not('reversal_requested_at', 'is', null);
                         
                         // Query to count completed audits (submitted in the period) - all audits regardless of auditor
-                        // Need to select audit_status to filter client-side (some tables may not have this column)
+                        // All audits in scorecard tables are completed by default (they have submitted_at)
                         let completedQuery = window.supabaseClient
                             .from(tableName)
-                            .select('id, submitted_at, audit_status')
+                            .select('id, submitted_at')
                             .not('submitted_at', 'is', null);
                         
                         // Apply date filters server-side if possible (convert Dhaka to UTC)
@@ -1102,35 +940,6 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                 try {
                                     let result = await completedQuery;
                                     
-                                    // If query failed because audit_status column doesn't exist, retry without it
-                                    if (result.error) {
-                                        const errorMessage = result.error.message || JSON.stringify(result.error);
-                                        if (errorMessage.includes('audit_status') || result.error.code === 'PGRST116' || result.error.code === '42703') {
-                                            // Retry without audit_status column (legacy tables)
-                                            // Don't apply server-side date filters - fetch all and filter client-side for accuracy
-                                            const retryQuery = window.supabaseClient
-                                                .from(tableName)
-                                                .select('id, submitted_at')
-                                                .not('submitted_at', 'is', null);
-                                            
-                                            const retryResult = await retryQuery;
-                                            if (retryResult.data) {
-                                                // Always apply client-side date filtering for legacy tables to ensure accuracy
-                                                // period.start and period.end are already Date objects from getCurrentPeriodDates()
-                                                if (period && (period.start || period.end)) {
-                                                    retryResult.data = retryResult.data.filter(audit => {
-                                                        if (!audit.submitted_at) return false;
-                                                        const auditDate = toDhakaTime(audit.submitted_at);
-                                                        return (!period.start || auditDate >= period.start) && 
-                                                               (!period.end || auditDate <= period.end);
-                                                    });
-                                                }
-                                                // For legacy tables without audit_status, all audits with submitted_at are considered completed
-                                                return retryResult;
-                                            }
-                                        }
-                                    }
-                                    
                                     // Fallback client-side filtering if server-side filter fails or data has no date
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
@@ -1145,11 +954,11 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                     // If server-side date filter fails, try without date filter and filter client-side
                                     const retryResult = await window.supabaseClient
                                         .from(tableName)
-                                        .select('id, submitted_at, audit_status')
+                                        .select('id, submitted_at')
                                         .not('submitted_at', 'is', null);
                                     
                                     if (retryResult.data) {
-                                        if (period.start) {
+                                        if (period && (period.start || period.end)) {
                                             retryResult.data = retryResult.data.filter(audit => {
                                                 if (!audit.submitted_at) return false;
                                                 const auditDate = toDhakaTime(audit.submitted_at);
@@ -1157,13 +966,6 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                                        (!period.end || auditDate <= period.end);
                                             });
                                         }
-                                        // Filter by audit_status (matching expert-audits.html logic exactly)
-                                        // Only include completed audits or audits without audit_status (legacy completed audits)
-                                        retryResult.data = retryResult.data.filter(audit => {
-                                            const auditStatus = audit.audit_status;
-                                            const isComplete = !auditStatus || auditStatus === 'completed';
-                                            return isComplete;
-                                        });
                                     }
                                     return retryResult;
                                 }
@@ -1196,14 +998,8 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                         }
                     });
                     teamReversalCount += result.reversals.length;
-                    // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
-                    // Only include completed audits or audits without audit_status (legacy completed audits)
-                    const completedAudits = result.completed.filter(audit => {
-                        const auditStatus = audit.audit_status;
-                        const isComplete = !auditStatus || auditStatus === 'completed';
-                        return isComplete;
-                    });
-                    completed += completedAudits.length;
+                    // All audits in scorecard tables are completed by default (they have submitted_at)
+                    completed += result.completed.length;
                 });
                 
                 if (auditCount > 0) {
@@ -1222,15 +1018,20 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
         console.log('Team Stats - Reversal count:', teamReversalCount);
         console.log('Team Stats - Completed count:', completed);
         
+        // Ensure scorecards are loaded
+        if (!cachedScorecardTables || cachedScorecardTables.length === 0) {
+            await loadScorecards();
+        }
+        
         // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
         let auditorTablesToQuery = [];
         try {
             const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
             
             if (!tablesError && allTables && allTables.length > 0) {
-                // Filter out ai_analysis_results and map to table names
+                // Filter out ai_analysis_results and calibration_results and map to table names
                 auditorTablesToQuery = allTables
-                    .filter(t => t.table_name !== 'ai_analysis_results')
+                    .filter(t => t.table_name !== 'ai_analysis_results' && t.table_name !== 'calibration_results')
                     .map(t => t.table_name);
             } else {
                 // Fallback: use scorecard tables
@@ -1268,10 +1069,10 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                 .not('audit_duration', 'is', null);
                             
                             // Build query for completed audits count
-                            // Need to select audit_status to filter client-side (matching expert-audits.html logic)
+                            // All audits in scorecard tables are completed by default (they have submitted_at)
                             let completedQuery = window.supabaseClient
                                 .from(tableName)
-                                .select('id, submitted_at, audit_status')
+                                .select('id, submitted_at')
                                 .eq('auditor_email', qa.email)
                                 .not('submitted_at', 'is', null);
                             
@@ -1291,100 +1092,32 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                 completedQuery
                             ]);
                             
+                            // Check if error is due to missing auditor_email column - skip this table if so
+                            // Only skip if error message specifically mentions auditor_email
+                            if (durationResult.error) {
+                                const errorMessage = durationResult.error.message || JSON.stringify(durationResult.error);
+                                if (errorMessage.includes('auditor_email') && 
+                                    (durationResult.error.code === '42703' || durationResult.error.code === 'PGRST116')) {
+                                    console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
+                                    return { audits: [], completed: 0 };
+                                }
+                            }
+                            
+                            if (completedResult.error) {
+                                const errorMessage = completedResult.error.message || JSON.stringify(completedResult.error);
+                                if (errorMessage.includes('auditor_email') && 
+                                    (completedResult.error.code === '42703' || completedResult.error.code === 'PGRST116')) {
+                                    console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
+                                    return { audits: [], completed: 0 };
+                                }
+                            }
+                            
                             let audits = durationResult.data;
                             let error = durationResult.error;
                             let completedAudits = completedResult.data || [];
-                            let isLegacyTable = false;
-                            
-                            // If completed query failed because audit_status column doesn't exist, retry without it
-                            if (completedResult.error) {
-                                const errorMessage = completedResult.error.message || JSON.stringify(completedResult.error);
-                                // Check if error is about audit_status column not existing
-                                if (errorMessage.includes('audit_status') || completedResult.error.code === 'PGRST116' || completedResult.error.code === '42703') {
-                                    isLegacyTable = true;
-                                    // Retry without audit_status column (legacy tables)
-                                    // Don't apply server-side date filters - fetch all and filter client-side for accuracy
-                                    let retryCompletedQuery = window.supabaseClient
-                                        .from(tableName)
-                                        .select('id, submitted_at')
-                                        .eq('auditor_email', qa.email)
-                                        .not('submitted_at', 'is', null);
-                                    
-                                    const retryResult = await retryCompletedQuery;
-                                    if (retryResult.error) {
-                                        console.warn(`Retry query failed for ${tableName}:`, retryResult.error);
-                                        // If retry also fails, try without any filters at all
-                                        const fallbackQuery = window.supabaseClient
-                                            .from(tableName)
-                                            .select('id, submitted_at')
-                                            .eq('auditor_email', qa.email)
-                                            .not('submitted_at', 'is', null);
-                                        
-                                        const fallbackResult = await fallbackQuery;
-                                        if (fallbackResult.data) {
-                                            // Apply client-side date filtering
-                                            if (period && (period.start || period.end)) {
-                                                fallbackResult.data = fallbackResult.data.filter(audit => {
-                                                    if (!audit.submitted_at) return false;
-                                                    const auditDate = toDhakaTime(audit.submitted_at);
-                                                    return (!period.start || auditDate >= period.start) && 
-                                                           (!period.end || auditDate <= period.end);
-                                                });
-                                            }
-                                            completedAudits = fallbackResult.data;
-                                        }
-                                    } else if (retryResult.data) {
-                                        // Always apply client-side date filtering for legacy tables to ensure accuracy
-                                        // period.start and period.end are already Date objects from getCurrentPeriodDates()
-                                        if (period && (period.start || period.end)) {
-                                            retryResult.data = retryResult.data.filter(audit => {
-                                                if (!audit.submitted_at) return false;
-                                                const auditDate = toDhakaTime(audit.submitted_at);
-                                                return (!period.start || auditDate >= period.start) && 
-                                                       (!period.end || auditDate <= period.end);
-                                            });
-                                        }
-                                        // For legacy tables without audit_status, all audits with submitted_at are considered completed
-                                        completedAudits = retryResult.data;
-                                    }
-                                }
-                            }
-                            
-                            // If completed query succeeded but returned data, still need to check if it's a legacy table
-                            // by checking if audit_status field exists in the data
-                            // If it's a legacy table, re-query without server-side date filters to get ALL audits
-                            if (!isLegacyTable && completedAudits.length > 0) {
-                                // Check if audit_status field exists in any of the returned audits
-                                const hasAuditStatus = completedAudits.some(audit => audit.hasOwnProperty('audit_status'));
-                                if (!hasAuditStatus) {
-                                    isLegacyTable = true;
-                                    // Re-query without server-side date filters to ensure we get all audits
-                                    // Then filter client-side for accuracy
-                                    let legacyRetryQuery = window.supabaseClient
-                                        .from(tableName)
-                                        .select('id, submitted_at')
-                                        .eq('auditor_email', qa.email)
-                                        .not('submitted_at', 'is', null);
-                                    
-                                    const legacyRetryResult = await legacyRetryQuery;
-                                    if (legacyRetryResult.data) {
-                                        // Apply client-side date filtering for accuracy
-                                        if (period && (period.start || period.end)) {
-                                            legacyRetryResult.data = legacyRetryResult.data.filter(audit => {
-                                                if (!audit.submitted_at) return false;
-                                                const auditDate = toDhakaTime(audit.submitted_at);
-                                                return (!period.start || auditDate >= period.start) && 
-                                                       (!period.end || auditDate <= period.end);
-                                            });
-                                        }
-                                        completedAudits = legacyRetryResult.data;
-                                    }
-                                }
-                            }
                             
                             // If server-side date filter fails, try without date filter and filter client-side
-                            // Only retry if we haven't already handled legacy tables and if there's an error
-                            if (error && !isLegacyTable && period && (period.start || period.end)) {
+                            if (error && period && (period.start || period.end)) {
                                 const retryQuery = window.supabaseClient
                                     .from(tableName)
                                     .select('audit_duration, submitted_at')
@@ -1393,7 +1126,7 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                 
                                 const retryCompletedQuery = window.supabaseClient
                                     .from(tableName)
-                                    .select('id, submitted_at, audit_status')
+                                    .select('id, submitted_at')
                                     .eq('auditor_email', qa.email)
                                     .not('submitted_at', 'is', null);
                                 
@@ -1401,6 +1134,24 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                     retryQuery,
                                     retryCompletedQuery
                                 ]);
+                                
+                                // Check if error is due to missing auditor_email column - skip this table if so
+                                if (retryResult.error) {
+                                    const retryErrorMessage = retryResult.error.message || JSON.stringify(retryResult.error);
+                                    if (retryErrorMessage.includes('auditor_email') && 
+                                        (retryResult.error.code === '42703' || retryResult.error.code === 'PGRST116')) {
+                                        console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
+                                        return { audits: [], completed: 0 };
+                                    }
+                                }
+                                if (retryCompletedResult.error) {
+                                    const retryErrorMessage = retryCompletedResult.error.message || JSON.stringify(retryCompletedResult.error);
+                                    if (retryErrorMessage.includes('auditor_email') && 
+                                        (retryCompletedResult.error.code === '42703' || retryCompletedResult.error.code === 'PGRST116')) {
+                                        console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
+                                        return { audits: [], completed: 0 };
+                                    }
+                                }
                                 
                                 if (retryResult.data && period.start) {
                                     retryResult.data = retryResult.data.filter(audit => {
@@ -1411,28 +1162,13 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                     });
                                 }
                                 
-                                if (retryCompletedResult.data) {
-                                    // Check if this is a legacy table (no audit_status in result)
-                                    const isRetryLegacyTable = retryCompletedResult.data.length > 0 && !retryCompletedResult.data[0].hasOwnProperty('audit_status');
-                                    
-                                    if (period.start) {
-                                        retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
-                                            if (!audit.submitted_at) return false;
-                                            const auditDate = toDhakaTime(audit.submitted_at);
-                                            return (!period.start || auditDate >= period.start) && 
-                                                   (!period.end || auditDate <= period.end);
-                                        });
-                                    }
-                                    
-                                    // Filter by audit_status only if not a legacy table
-                                    if (!isRetryLegacyTable) {
+                                if (retryCompletedResult.data && period.start) {
                                     retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
-                                        const auditStatus = audit.audit_status;
-                                            const isComplete = !auditStatus || auditStatus === 'completed';
-                                            return isComplete;
+                                        if (!audit.submitted_at) return false;
+                                        const auditDate = toDhakaTime(audit.submitted_at);
+                                        return (!period.start || auditDate >= period.start) && 
+                                               (!period.end || auditDate <= period.end);
                                     });
-                                    }
-                                    // For legacy tables, all audits with submitted_at are considered completed
                                 }
                                 
                                 audits = retryResult.data;
@@ -1443,27 +1179,18 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                             if (error) {
                                 // If duration query failed, still try to get completed count
                                 if (completedResult.data) {
-                                    // Filter by audit_status (matching expert-audits.html logic exactly)
-                                    // Only include completed audits or audits without audit_status (legacy completed audits)
-                                    const filteredCompleted = completedResult.data.filter(audit => {
-                                        const auditStatus = audit.audit_status;
-                                        const isComplete = !auditStatus || auditStatus === 'completed';
-                                        return isComplete;
-                                    });
-                                    return { audits: [], completed: filteredCompleted.length };
+                                    // All audits in scorecard tables are completed by default (they have submitted_at)
+                                    return { audits: [], completed: completedResult.data.length };
                                 }
                                 return { audits: [], completed: 0 };
                             }
                             
-                            // Fallback client-side filtering if needed (only if not already filtered for legacy tables)
+                            // Fallback client-side filtering if needed
                             let filteredAudits = audits || [];
                             let filteredCompleted = completedAudits || [];
                             
-                            // Apply client-side date filtering if not already done (for legacy tables) or if period exists
-                            // period.start and period.end are already Date objects from getCurrentPeriodDates()
+                            // Apply client-side date filtering if period exists
                             if (period && (period.start || period.end)) {
-                                // Only filter if not already filtered (legacy tables are already filtered)
-                                if (!isLegacyTable) {
                                 filteredAudits = filteredAudits.filter(audit => {
                                     if (!audit.submitted_at) return false;
                                     const auditDate = toDhakaTime(audit.submitted_at);
@@ -1477,20 +1204,9 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
                                     return (!period.start || auditDate >= period.start) && 
                                            (!period.end || auditDate <= period.end);
                                 });
-                                }
                             }
                             
-                            // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
-                            // Only include completed audits or audits without audit_status (legacy completed audits)
-                            // For legacy tables, all audits with submitted_at are already considered completed
-                            if (!isLegacyTable) {
-                            filteredCompleted = filteredCompleted.filter(audit => {
-                                const auditStatus = audit.audit_status;
-                                    const isComplete = !auditStatus || auditStatus === 'completed';
-                                    return isComplete;
-                            });
-                            }
-                            // For legacy tables, filteredCompleted already contains only completed audits (all with submitted_at)
+                            // All audits in scorecard tables are completed by default (they have submitted_at)
                             
                             return { audits: filteredAudits, completed: filteredCompleted.length };
                         } catch (err) {
@@ -1658,7 +1374,7 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
         // Recalculate percentage based on same-day completed count
         const adjustedPercentage = totalAssigned > 0 ? Math.round((sameDayCompleted / totalAssigned) * 100) : 0;
         
-        // Cache the computed stats
+        // Prepare the stats data
         const statsData = {
             totalAssigned,
             completed: sameDayCompleted,
@@ -1673,33 +1389,13 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
             auditorStats,
             qualityAnalystsCount: qualityAnalysts.length
         };
-        setCachedData(cacheKey, statsData);
         
         // Update UI with fresh data (only if still on Team Stats tab)
         if (currentTab === 0) {
-            // Only update if data actually changed or we didn't have cached data
-            if (!hasCachedData || isInitialLoad) {
-                console.log('Updating UI with fresh team stats');
-                renderTeamStats(statsData);
-                // Update online status indicators after rendering
-                setTimeout(() => updateOnlineStatusIndicators(), 100);
-            } else {
-                // Silently update in background without visual jump
-                // Only update if there's a significant difference
-                const cachedStats = getCachedData(cacheKey);
-                if (cachedStats) {
-                    const hasSignificantChange = 
-                        Math.abs((cachedStats.totalAssigned || 0) - (statsData.totalAssigned || 0)) > 0 ||
-                        Math.abs((cachedStats.completed || 0) - (statsData.completed || 0)) > 0;
-                    
-                    if (hasSignificantChange) {
-                        // Smooth update with fade effect
-                        renderTeamStatsWithFade(statsData);
-                    }
-                } else {
-                    renderTeamStats(statsData);
-                }
-            }
+            console.log('Updating UI with fresh team stats');
+            renderTeamStats(statsData);
+            // Update online status indicators after rendering
+            setTimeout(() => updateOnlineStatusIndicators(), 100);
             hideLoadingState();
         } else {
             console.log('Skipping team stats render - user switched to tab', currentTab);
@@ -1707,6 +1403,33 @@ async function fetchAndCacheTeamStats(cacheKey, period, hasCachedData = false) {
         
     } catch (error) {
         console.error('Error loading team stats:', error);
+        hideLoadingState();
+        
+        // Show error message in table
+        const tableBody = document.getElementById('performanceTableBody');
+        if (tableBody && currentTab === 0) {
+            tableBody.innerHTML = `
+                <div style="text-align: center; padding: 1.5rem; color: #ef4444;">
+                    Error loading data. Please refresh the page.
+                </div>
+            `;
+        }
+        
+        // Reset stats to default values
+        try {
+            document.getElementById('stat1Label').textContent = 'ASSIGNED';
+            document.getElementById('stat1Count').textContent = '0';
+            document.getElementById('completedCount').textContent = '0';
+            document.getElementById('targetAchieved').textContent = '-';
+            document.getElementById('remainingCount').textContent = '0';
+            document.getElementById('stat4Label').textContent = 'IN PROGRESS';
+            document.getElementById('stat4Count').textContent = '0';
+            document.getElementById('stat4Subtitle').textContent = '-';
+            document.getElementById('stat5Label').textContent = 'REVERSAL RATE';
+            document.getElementById('stat5Count').textContent = '0';
+        } catch (e) {
+            // Ignore errors if elements don't exist
+        }
     }
 }
 
@@ -1878,21 +1601,14 @@ async function updateStandupView() {
     renderStandupViewStructure();
     
     const period = getCurrentPeriodDates();
-    const cacheKey = getCacheKey('standupView', currentUserEmail, period);
     
-    // Check cache first and render immediately (only if still on Standup View tab)
-    const cachedStandupData = getCachedData(cacheKey);
-    if (cachedStandupData && currentTab === 1) {
-        console.log('Rendering cached standup view immediately');
-        renderStandupViewData(cachedStandupData);
-        hideLoadingState();
-    } else if (isInitialLoad) {
-        // Show loading if no cache and initial load
+    // Show loading if initial load
+    if (isInitialLoad) {
         showLoadingState();
     }
     
-    // Always fetch fresh data in background (but don't show loading if we have cache)
-    fetchAndCacheStandupView(cacheKey, !!cachedStandupData);
+    // Always fetch fresh data
+    await fetchAndCacheStandupView(period);
 }
 
 // Render the UI structure immediately (cards, table headers) - no data needed
@@ -2052,7 +1768,7 @@ function renderStandupViewData(standupData) {
     }
 }
 
-async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
+async function fetchAndCacheStandupView(period) {
     // Only proceed if we're still on Standup View tab
     if (currentTab !== 1) {
         return;
@@ -2061,7 +1777,6 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
     try {
         // Load all audit assignments with date filtering
         // Filter to only Quality Analysts (auditors) to match Team Stats calculation
-        const period = getCurrentPeriodDates();
         
         // Get all Quality Analysts (auditors) - matching Team Stats logic
         const qualityAnalysts = allUsers.filter(u => u.role === 'Quality Analyst');
@@ -2134,15 +1849,20 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
         let completedAuditsByChannel = {};
         
         try {
+            // Ensure scorecards are loaded
+            if (!cachedScorecardTables || cachedScorecardTables.length === 0) {
+                await loadScorecards();
+            }
+            
             // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
             let standupTablesToQuery = [];
             try {
                 const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
                 
                 if (!tablesError && allTables && allTables.length > 0) {
-                    // Filter out ai_analysis_results and map to table names
+                    // Filter out ai_analysis_results and calibration_results and map to table names
                     standupTablesToQuery = allTables
-                        .filter(t => t.table_name !== 'ai_analysis_results')
+                        .filter(t => t.table_name !== 'ai_analysis_results' && t.table_name !== 'calibration_results')
                         .map(t => t.table_name);
                 } else {
                     // Fallback: use scorecard tables
@@ -2178,10 +1898,10 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                             .not('audit_duration', 'is', null);
                         
                         // Query to count completed audits (submitted in the period) - all audits regardless of auditor
-                        // Need to select audit_status to filter client-side (some tables may not have this column)
+                        // All audits in scorecard tables are completed by default (they have submitted_at)
                         let completedQuery = window.supabaseClient
                             .from(tableName)
-                            .select('id, submitted_at, audit_status, employee_email')
+                            .select('id, submitted_at, employee_email')
                             .not('submitted_at', 'is', null);
                         
                         // Apply date filters server-side if possible (convert Dhaka to UTC)
@@ -2296,36 +2016,6 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                                 try {
                                     let result = await completedQuery;
                                     
-                                    // If query failed because audit_status column doesn't exist, retry without it
-                                    if (result.error) {
-                                        const errorMessage = result.error.message || JSON.stringify(result.error);
-                                        if (errorMessage.includes('audit_status') || result.error.code === 'PGRST116' || result.error.code === '42703') {
-                                            // Retry without audit_status column (legacy tables)
-                                            // Don't apply server-side date filters - fetch all and filter client-side for accuracy
-                                            // This matches Team Stats logic exactly
-                                            const retryQuery = window.supabaseClient
-                                                .from(tableName)
-                                                .select('id, submitted_at, employee_email')
-                                                .not('submitted_at', 'is', null);
-                                            
-                                            const retryResult = await retryQuery;
-                                            if (retryResult.data) {
-                                                // Always apply client-side date filtering for legacy tables to ensure accuracy
-                                                // period.start and period.end are already Date objects from getCurrentPeriodDates()
-                                                if (period && (period.start || period.end)) {
-                                                    retryResult.data = retryResult.data.filter(audit => {
-                                                        if (!audit.submitted_at) return false;
-                                                        const auditDate = toDhakaTime(audit.submitted_at);
-                                                        return (!period.start || auditDate >= period.start) && 
-                                                               (!period.end || auditDate <= period.end);
-                                                    });
-                                                }
-                                                // For legacy tables without audit_status, all audits with submitted_at are considered completed
-                                                return retryResult;
-                                            }
-                                        }
-                                    }
-                                    
                                     // Fallback client-side filtering if server-side filter fails or data has no date
                                     if (result.data && period.start) {
                                         result.data = result.data.filter(audit => {
@@ -2340,11 +2030,11 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                                     // If server-side date filter fails, try without date filter and filter client-side
                                     const retryResult = await window.supabaseClient
                                         .from(tableName)
-                                        .select('id, submitted_at, audit_status, employee_email')
+                                        .select('id, submitted_at, employee_email')
                                         .not('submitted_at', 'is', null);
                                     
                                     if (retryResult.data) {
-                                        if (period.start) {
+                                        if (period && (period.start || period.end)) {
                                             retryResult.data = retryResult.data.filter(audit => {
                                                 if (!audit.submitted_at) return false;
                                                 const auditDate = toDhakaTime(audit.submitted_at);
@@ -2352,17 +2042,6 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                                                        (!period.end || auditDate <= period.end);
                                             });
                                         }
-                                        // Filter by audit_status (matching expert-audits.html logic exactly)
-                                        // If audit_status field doesn't exist in the result (legacy tables), include all audits
-                                        retryResult.data = retryResult.data.filter(audit => {
-                                            if (!('audit_status' in audit)) {
-                                                // Legacy table without audit_status column - all audits with submitted_at are completed
-                                                return true;
-                                            }
-                                            const auditStatus = audit.audit_status;
-                                            const isComplete = !auditStatus || auditStatus === 'completed';
-                                            return isComplete;
-                                        });
                                     }
                                     return retryResult;
                                 }
@@ -2401,13 +2080,8 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
                     // Count reversals
                     standupReversalCount += result.reversals.length;
                     
-                    // Filter completed audits by audit_status (matching expert-audits.html logic exactly)
-                    // Only include completed audits or audits without audit_status (legacy completed audits)
-                    const completedAudits = result.completed.filter(audit => {
-                        const auditStatus = audit.audit_status;
-                        const isComplete = !auditStatus || auditStatus === 'completed';
-                        return isComplete;
-                    });
+                    // All audits in scorecard tables are completed by default (they have submitted_at)
+                    const completedAudits = result.completed;
                     
                     // Count completed audits and group by channel
                     completedAudits.forEach(audit => {
@@ -2612,7 +2286,7 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
             stats.percentage = stats.assigned > 0 ? Math.round((stats.completed / stats.assigned) * 100) : 0;
         });
         
-        // Cache the computed data (using sameDayCompleted to match Team Stats)
+        // Prepare the standup data (using sameDayCompleted to match Team Stats)
         const standupData = {
             totalAssigned,
             completed: sameDayCompleted, // Use same-day completed count (excluding backlog)
@@ -2622,29 +2296,11 @@ async function fetchAndCacheStandupView(cacheKey, hasCachedData = false) {
             standupReversalCount,
             channelStats
         };
-        setCachedData(cacheKey, standupData);
         
         // Update UI with fresh data (only if still on Standup View tab)
         if (currentTab === 1) {
-            // Only update if data actually changed or we didn't have cached data
-            if (!hasCachedData || isInitialLoad) {
-                console.log('Updating UI with fresh standup view data');
-                renderStandupViewData(standupData);
-            } else {
-                // Silently update in background without visual jump
-                const cachedData = getCachedData(cacheKey);
-                if (cachedData) {
-                    const hasSignificantChange = 
-                        Math.abs((cachedData.totalAssigned || 0) - (standupData.totalAssigned || 0)) > 0 ||
-                        Math.abs((cachedData.completed || 0) - (standupData.completed || 0)) > 0;
-                    
-                    if (hasSignificantChange) {
-                        renderStandupViewData(standupData);
-                    }
-                } else {
-                    renderStandupViewData(standupData);
-                }
-            }
+            console.log('Updating UI with fresh standup view data');
+            renderStandupViewData(standupData);
             hideLoadingState();
         } else {
             console.log('Skipping standup view render - user switched to tab', currentTab);
