@@ -6836,8 +6836,12 @@ async function saveAuditChanges() {
             auditData[fieldId] = errorValue;
         });
         
-        // Calculate total errors count from current form values
+        // Calculate total errors count and error category counts from current form values
         let totalErrorsCount = 0;
+        let criticalFailTotal = 0;
+        let criticalTotal = 0;
+        let significantTotal = 0;
+        
         if (currentErrorFields && currentErrorFields.length > 0) {
             currentErrorFields.forEach(field => {
                 // Only count error parameters (not achievements/bonuses)
@@ -6858,8 +6862,82 @@ async function saveAuditChanges() {
                     }
                     
                     totalErrorsCount += errorCount;
+                    
+                    // Count by severity/error_category
+                    if (errorCount > 0) {
+                        // Use severity if available, otherwise map from error_category
+                        let severity = field.severity;
+                        if (!severity && field.error_category) {
+                            const category = field.error_category || '';
+                            if (category.includes('Fail')) {
+                                severity = 'Critical Fail';
+                            } else if (category.includes('Critical')) {
+                                severity = 'Critical';
+                            } else if (category.includes('Significant') || category.includes('Major') || category.includes('Minor')) {
+                                severity = 'Significant';
+                            } else {
+                                severity = 'Significant'; // default
+                            }
+                        }
+                        
+                        if (severity === 'Critical Fail') {
+                            criticalFailTotal += errorCount;
+                        } else if (severity === 'Critical') {
+                            criticalTotal += errorCount;
+                        } else if (severity === 'Significant' || severity === 'Major' || severity === 'Minor') {
+                            significantTotal += errorCount;
+                        }
+                    }
                 }
             });
+        }
+        
+        // Calculate average score
+        const calculatedAverageScore = calculateNewScore();
+        
+        // Calculate passing status
+        const scorecard = currentAuditScorecard || {};
+        const passingThreshold = parseFloat(scorecard.passing_threshold) || 85;
+        
+        // Check if any "fail all" parameters have errors
+        let hasFailAllError = false;
+        if (currentErrorFields && currentErrorFields.length > 0) {
+            currentErrorFields.forEach(field => {
+                if (field.is_fail_all) {
+                    let errorCount = 0;
+                    
+                    if (field.field_type === 'radio') {
+                        const selectedRadio = document.querySelector(`input[name="${field.key}"]:checked`);
+                        if (selectedRadio) {
+                            const value = parseInt(selectedRadio.value) || 0;
+                            if (field.parameter_type === 'achievement' || field.parameter_type === 'bonus') {
+                                errorCount = value === 0 ? 1 : 0;
+                            } else {
+                                errorCount = value;
+                            }
+                        }
+                    } else {
+                        const fieldInput = document.getElementById(field.key);
+                        if (fieldInput) {
+                            errorCount = parseInt(fieldInput.value) || 0;
+                        }
+                    }
+                    
+                    if (errorCount > 0) {
+                        hasFailAllError = true;
+                    }
+                }
+            });
+        }
+        
+        // Determine passing status
+        let passingStatus = 'Not Passing';
+        if (hasFailAllError) {
+            passingStatus = 'Not Passing';
+        } else if (calculatedAverageScore >= passingThreshold) {
+            passingStatus = 'Passing';
+        } else {
+            passingStatus = 'Not Passing';
         }
         
         // Build update payload
@@ -6874,16 +6952,17 @@ async function saveAuditChanges() {
             }
         });
         
-        // Add calculated total_errors_count
+        // Add calculated fields
         updatePayload.total_errors_count = totalErrorsCount;
-        
-        // Calculate and add average_score based on current form values
-        // Use the same calculation logic as the display
-        const calculatedAverageScore = calculateNewScore();
-        // Ensure it's saved as a number (not string) and rounded to 2 decimal places
+        updatePayload.critical_errors = criticalTotal;
+        updatePayload.critical_fail_error = criticalFailTotal;
+        updatePayload.significant_error = significantTotal;
         updatePayload.average_score = parseFloat(calculatedAverageScore.toFixed(2));
+        updatePayload.passing_status = passingStatus;
         
         console.log('Calculated average score:', calculatedAverageScore, 'Will save as:', updatePayload.average_score);
+        console.log('Calculated passing status:', passingStatus);
+        console.log('Calculated error counts - Critical:', criticalTotal, 'Critical Fail:', criticalFailTotal, 'Significant:', significantTotal);
         
         // Add parameter comments (always include, even if empty, to ensure comments are saved)
         // Comments should be saved even if error count is 0
