@@ -23,6 +23,7 @@
     <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
+    <script src="dark-mode.js"></script>
     <script src="search.js"></script>
     <script src="audit-template.js"></script>
     <script src="keyboard-shortcuts.js"></script>
@@ -46,8 +47,159 @@
             width: 100% !important;
             max-width: 100% !important;
         }
+
+        /* Dark Mode Styles */
+        [data-theme="dark"] body {
+            background-color: var(--background-color) !important;
+        }
+
+        [data-theme="dark"] .full-width-container {
+            background-color: var(--background-color) !important;
+        }
+
+        [data-theme="dark"] [style*="background: #f9fafb"],
+        [data-theme="dark"] [style*="background:#f9fafb"],
+        [data-theme="dark"] [style*="background-color: #f9fafb"],
+        [data-theme="dark"] [style*="background-color:#f9fafb"] {
+            background: var(--background-white) !important;
+            background-color: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] [style*="background: white"],
+        [data-theme="dark"] [style*="background:white"],
+        [data-theme="dark"] [style*="background-color: white"],
+        [data-theme="dark"] [style*="background-color:white"] {
+            background: var(--background-white) !important;
+            background-color: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #374151"],
+        [data-theme="dark"] [style*="color:#374151"],
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"] {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #6b7280"],
+        [data-theme="dark"] [style*="color:#6b7280"] {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] [style*="border:"] [style*="#e5e7eb"],
+        [data-theme="dark"] [style*="border-color: #e5e7eb"],
+        [data-theme="dark"] [style*="border-color:#e5e7eb"],
+        [data-theme="dark"] [style*="border:"] [style*="#d1d5db"],
+        [data-theme="dark"] [style*="border-color: #d1d5db"],
+        [data-theme="dark"] [style*="border-color:#d1d5db"] {
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] select,
+        [data-theme="dark"] input[type="text"],
+        [data-theme="dark"] input[type="date"],
+        [data-theme="dark"] textarea {
+            background-color: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* Error Details Header - Make dark */
+        [data-theme="dark"] [style*="background-color: #f8f9fa"],
+        [data-theme="dark"] [style*="background-color:#f8f9fa"] {
+            background-color: var(--background-white) !important;
+        }
+
+        /* Dividers - Reduce contrast */
+        [data-theme="dark"] [style*="border-bottom"][style*="#f3f4f6"],
+        [data-theme="dark"] [style*="border-bottom"][style*="#e5e7eb"] {
+            border-bottom-color: var(--border-light) !important;
+            opacity: 0.5;
+        }
+
+        /* Font visibility improvements */
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"] {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #4b5563"],
+        [data-theme="dark"] [style*="color:#4b5563"] {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #9ca3af"],
+        [data-theme="dark"] [style*="color:#9ca3af"] {
+            color: var(--text-muted) !important;
+        }
+
         
     </style>
+    <script>
+    // Update inline styles on theme change
+    document.addEventListener('themeChange', function(e) {
+        const isDark = e.detail.theme === 'dark';
+        const root = document.documentElement;
+        const bgWhite = getComputedStyle(root).getPropertyValue('--background-white').trim();
+        const textColor = getComputedStyle(root).getPropertyValue('--text-color').trim();
+        const textSecondary = getComputedStyle(root).getPropertyValue('--text-secondary').trim();
+        const textMuted = getComputedStyle(root).getPropertyValue('--text-muted').trim();
+        const borderLight = getComputedStyle(root).getPropertyValue('--border-light').trim();
+        
+        // Update elements with hardcoded colors
+        document.querySelectorAll('[style*="background: #f9fafb"], [style*="background:#f9fafb"], [style*="background-color: #f9fafb"], [style*="background-color:#f9fafb"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background', bgWhite, 'important');
+                el.style.setProperty('background-color', bgWhite, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="background: white"], [style*="background:white"], [style*="background-color: white"], [style*="background-color:white"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background', bgWhite, 'important');
+                el.style.setProperty('background-color', bgWhite, 'important');
+            }
+        });
+        
+        // Error details header - make dark
+        document.querySelectorAll('[style*="background-color: #f8f9fa"], [style*="background-color:#f8f9fa"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background-color', bgWhite, 'important');
+            }
+        });
+        
+        // Dividers - reduce contrast
+        document.querySelectorAll('[style*="border-bottom"][style*="#f3f4f6"], [style*="border-bottom"][style*="#e5e7eb"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('border-bottom-color', borderLight, 'important');
+                el.style.setProperty('opacity', '0.5', 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #374151"], [style*="color:#374151"], [style*="color: #1f2937"], [style*="color:#1f2937"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textColor, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #6b7280"], [style*="color:#6b7280"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textSecondary, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #4b5563"], [style*="color:#4b5563"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textSecondary, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #9ca3af"], [style*="color:#9ca3af"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textMuted, 'important');
+            }
+        });
+    });
+    </script>
 </head>
 
 <body style="margin: 0; padding: 0;">
@@ -936,6 +1088,12 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
     }
     const showCommentsColumn = window.showCommentsColumn;
     
+    // Cache dark mode values once (outside the loop for performance)
+    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    const root = document.documentElement;
+    const dividerColor = isDarkMode ? getComputedStyle(root).getPropertyValue('--border-light').trim() : '#f3f4f6';
+    const dividerOpacity = isDarkMode ? '0.5' : '1';
+    
     const errorRows = errorFields.map(field => {
         const rawValue = audit[field.key];
         let displayValue = '';
@@ -1065,7 +1223,7 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
             : '2fr 1fr 1fr 1fr 2fr';
         
         return `
-            <div style="display: grid; grid-template-columns: ${gridColumns}; gap: 0.6469rem; align-items: start; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6; width: 100%; min-width: 0;">
+            <div style="display: grid; grid-template-columns: ${gridColumns}; gap: 0.6469rem; align-items: start; padding: 0.3234rem 0; border-bottom: 0.0405rem solid ${dividerColor}; opacity: ${dividerOpacity}; width: 100%; min-width: 0;">
                 <div style="font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif; min-width: 0; overflow: hidden;">
                     ${field.label}
                 </div>
@@ -1153,9 +1311,9 @@ function generateErrorDetails(audit, errorFields, mode = 'view') {
                 </div>
             </div>
             
-            <div style="background: white; border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
-                <div style="background-color: #f8f9fa; padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid #e5e7eb;">
-                    <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : '2fr 1fr 1fr 1fr 2fr'}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
+            <div style="background: var(--background-white); border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+                <div style="background-color: var(--background-white); padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid var(--border-light);">
+                    <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : '2fr 1fr 1fr 1fr 2fr'}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
                         <div style="min-width: 0;">Error Type</div>
                         <div style="text-align: center; min-width: 0;">Points</div>
                         <div style="text-align: center; min-width: 0;">Severity</div>

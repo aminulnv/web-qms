@@ -38,6 +38,7 @@
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
+    <script src="dark-mode.js"></script>
     <script src="search.js"></script>
     <script src="form-validation.js"></script>
     <script src="keyboard-shortcuts.js"></script>
@@ -332,6 +333,82 @@
         .control-select:focus {
             outline: none;
             border-color: var(--primary-color);
+        }
+
+        /* Dark Mode Styles */
+        [data-theme="dark"] .controls-section {
+            background: var(--background-white);
+            border-color: var(--border-light);
+        }
+
+        [data-theme="dark"] .control-label {
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .control-select {
+            background-color: var(--background-white);
+            border-color: var(--border-light);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .error-table-container {
+            background: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] .error-table-header {
+            background-color: var(--background-white) !important;
+            border-bottom-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] .error-table-header > div {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] .error-table-body {
+            background: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] .audit-card {
+            background: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] .audit-card:hover {
+            background: var(--gray-100) !important;
+        }
+
+        /* Pagination Dark Mode Styles */
+        [data-theme="dark"] #paginationContainer {
+            background: var(--background-white) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] #paginationContainer > div {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] #paginationContainer span {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] #paginationContainer select {
+            background-color: var(--background-white) !important;
+            border-color: var(--border-light) !important;
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] #paginationContainer button {
+            background-color: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] #paginationContainer button:hover:not(:disabled) {
+            background-color: var(--gray-100) !important;
+        }
+
+        [data-theme="dark"] #paginationContainer button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
     </style>
@@ -736,11 +813,11 @@
     </div>
 
     <!-- Pagination Controls -->
-    <div id="paginationContainer" style="display: none; margin-top: 1.125rem; padding: 0.75rem; background: #ffffff; border-radius: 0.375rem; border: 0.0469rem solid #e5e7eb; width: 100%;">
+    <div id="paginationContainer" style="display: none; margin-top: 1.125rem; padding: 0.75rem; background: var(--background-white); border-radius: 0.375rem; border: 0.0469rem solid var(--border-light); width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6562rem; color: #374151; font-family: 'Poppins', sans-serif;">
+            <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6562rem; color: var(--text-color); font-family: 'Poppins', sans-serif;">
                 <span>Showing</span>
-                <select id="itemsPerPageSelect" style="padding: 0.1875rem 0.375rem; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; cursor: pointer;">
+                <select id="itemsPerPageSelect" style="padding: 0.1875rem 0.375rem; border: 0.0469rem solid var(--border-light); border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; cursor: pointer; background-color: var(--background-white); color: var(--text-color);">
                     <option value="10">10</option>
                     <option value="25" selected>25</option>
                     <option value="50">50</option>
@@ -748,17 +825,17 @@
                 </select>
                 <span>items per page</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6562rem; color: #374151; font-family: 'Poppins', sans-serif;">
+            <div style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6562rem; color: var(--text-color); font-family: 'Poppins', sans-serif;">
                 <span id="paginationInfo">Page 1 of 1</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.375rem;">
-                <button id="firstPageBtn" onclick="goToPage(1)" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="First Page">
+                <button id="firstPageBtn" onclick="goToPage(1)" disabled style="padding: 0.375rem 0.5625rem; background-color: var(--background-white); color: var(--text-color); border: 0.0469rem solid var(--border-light); border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="First Page">
                     <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="11 17 6 12 11 7"></polyline>
                         <polyline points="18 17 13 12 18 7"></polyline>
                     </svg>
                 </button>
-                <button id="prevPageBtn" onclick="goToPreviousPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Previous Page">
+                <button id="prevPageBtn" onclick="goToPreviousPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: var(--background-white); color: var(--text-color); border: 0.0469rem solid var(--border-light); border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Previous Page">
                     <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="15 18 9 12 15 6"></polyline>
                     </svg>
@@ -767,13 +844,13 @@
                 <div id="pageNumbers" style="display: flex; align-items: center; gap: 0.1875rem;">
                     <!-- Page numbers will be dynamically generated here -->
                 </div>
-                <button id="nextPageBtn" onclick="goToNextPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Next Page">
+                <button id="nextPageBtn" onclick="goToNextPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: var(--background-white); color: var(--text-color); border: 0.0469rem solid var(--border-light); border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Next Page">
                     <span>Next</span>
                     <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="9 18 15 12 9 6"></polyline>
                     </svg>
                 </button>
-                <button id="lastPageBtn" onclick="goToLastPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Last Page">
+                <button id="lastPageBtn" onclick="goToLastPage()" disabled style="padding: 0.375rem 0.5625rem; background-color: var(--background-white); color: var(--text-color); border: 0.0469rem solid var(--border-light); border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.1875rem;" title="Last Page">
                     <svg style="width: 0.75rem; height: 0.75rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="13 17 18 12 13 7"></polyline>
                         <polyline points="6 17 11 12 6 7"></polyline>
@@ -1924,6 +2001,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const nextPageBtn = document.getElementById('nextPageBtn');
         const lastPageBtn = document.getElementById('lastPageBtn');
         
+        // Get CSS variable values for dark mode support
+        const root = document.documentElement;
+        const bgColor = getComputedStyle(root).getPropertyValue('--background-white').trim() || '#ffffff';
+        const textColor = getComputedStyle(root).getPropertyValue('--text-color').trim() || '#374151';
+        const borderColor = getComputedStyle(root).getPropertyValue('--border-light').trim() || '#d1d5db';
+        const hoverBg = getComputedStyle(root).getPropertyValue('--gray-100').trim() || '#f3f4f6';
+        
         if (filteredAudits.length === 0) {
             if (paginationContainer) paginationContainer.style.display = 'none';
             return;
@@ -1979,13 +2063,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 const firstBtn = document.createElement('button');
                 firstBtn.textContent = '1';
                 firstBtn.onclick = () => goToPage(1);
-                firstBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                firstBtn.style.cssText = `padding: 0.375rem 0.5625rem; background-color: ${bgColor}; color: ${textColor}; border: 0.0469rem solid ${borderColor}; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;`;
+                firstBtn.onmouseover = function() {
+                    this.style.backgroundColor = hoverBg;
+                };
+                firstBtn.onmouseout = function() {
+                    this.style.backgroundColor = bgColor;
+                };
                 pageNumbers.appendChild(firstBtn);
                 
                 if (startPage > 2) {
                     const ellipsis = document.createElement('span');
                     ellipsis.textContent = '...';
-                    ellipsis.style.cssText = 'padding: 0.375rem 0.1875rem; color: #6b7280; font-size: 0.6562rem;';
+                    ellipsis.style.cssText = `padding: 0.375rem 0.1875rem; color: ${textColor}; font-size: 0.6562rem; opacity: 0.7;`;
                     pageNumbers.appendChild(ellipsis);
                 }
             }
@@ -1998,16 +2088,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (i === currentPage) {
                     pageBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #1A733E; color: #ffffff; border: 0.0469rem solid #1A733E; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
                 } else {
-                    pageBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
+                    pageBtn.style.cssText = `padding: 0.375rem 0.5625rem; background-color: ${bgColor}; color: ${textColor}; border: 0.0469rem solid ${borderColor}; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;`;
                 }
                 pageBtn.onmouseover = function() {
                     if (i !== currentPage) {
-                        this.style.backgroundColor = '#f3f4f6';
+                        this.style.backgroundColor = hoverBg;
                     }
                 };
                 pageBtn.onmouseout = function() {
                     if (i !== currentPage) {
-                        this.style.backgroundColor = '#ffffff';
+                        this.style.backgroundColor = bgColor;
                     }
                 };
                 pageNumbers.appendChild(pageBtn);
@@ -2018,13 +2108,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (endPage < totalPages - 1) {
                     const ellipsis = document.createElement('span');
                     ellipsis.textContent = '...';
-                    ellipsis.style.cssText = 'padding: 0.375rem 0.1875rem; color: #6b7280; font-size: 0.6562rem;';
+                    ellipsis.style.cssText = `padding: 0.375rem 0.1875rem; color: ${textColor}; font-size: 0.6562rem; opacity: 0.7;`;
                     pageNumbers.appendChild(ellipsis);
                 }
                 
                 const lastBtn = document.createElement('button');
                 lastBtn.textContent = totalPages.toString();
                 lastBtn.onclick = () => goToPage(totalPages);
+                lastBtn.style.cssText = `padding: 0.375rem 0.5625rem; background-color: ${bgColor}; color: ${textColor}; border: 0.0469rem solid ${borderColor}; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;`;
+                lastBtn.onmouseover = function() {
+                    this.style.backgroundColor = hoverBg;
+                };
+                lastBtn.onmouseout = function() {
+                    this.style.backgroundColor = bgColor;
+                };
                 lastBtn.style.cssText = 'padding: 0.375rem 0.5625rem; background-color: #ffffff; color: #374151; border: 0.0469rem solid #d1d5db; border-radius: 0.1875rem; font-size: 0.6562rem; font-family: \'Poppins\', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;';
                 pageNumbers.appendChild(lastBtn);
             }
@@ -2223,11 +2320,14 @@ document.addEventListener('DOMContentLoaded', function() {
         ` : '';
         
         // Create card element
+        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+        const cardBgColor = isDarkMode ? 'var(--background-white)' : '#f9fafb';
+        const cardHoverBgColor = isDarkMode ? 'var(--gray-100)' : '#ffffff';
         const cardHtml = `
-            <div class="audit-card" style="background: #f9fafb; border: 0.0469rem solid ${isReversalPending ? '#fbbf24' : '#e5e7eb'}; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer; position: relative;" 
+            <div class="audit-card" style="background: ${cardBgColor}; border: 0.0469rem solid ${isReversalPending ? '#fbbf24' : (isDarkMode ? 'var(--border-light)' : '#e5e7eb')}; border-radius: 0.1875rem; padding: 0.5625rem; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; gap: 0.5625rem; cursor: pointer; position: relative;" 
                  onclick="viewAuditDetails('${audit.id}')"
-                 onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='#ffffff';"
-                 onmouseleave="this.style.borderColor='${isReversalPending ? '#fbbf24' : '#e5e7eb'}'; this.style.backgroundColor='#f9fafb';">
+                 onmouseenter="this.style.borderColor='#1A733E'; this.style.backgroundColor='${cardHoverBgColor}';"
+                 onmouseleave="this.style.borderColor='${isReversalPending ? '#fbbf24' : (isDarkMode ? 'var(--border-light)' : '#e5e7eb')}'; this.style.backgroundColor='${cardBgColor}';">
                 
                 <div style="flex: 1; display: flex; align-items: center; gap: 0.5625rem; pointer-events: none;">
                     <!-- Avatar with initials -->
@@ -2238,7 +2338,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Employee info -->
                     <div style="flex: 1; min-width: 0;">
                         <div style="display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.1875rem; flex-wrap: wrap;">
-                            <h4 style="margin: 0; font-size: 0.6562rem; font-weight: 600; color: #1f2937;">
+                            <h4 style="margin: 0; font-size: 0.6562rem; font-weight: 600; color: ${isDarkMode ? 'var(--text-color)' : '#1f2937'};">
                                 ${escapeHtml(audit.employeeName || 'Unknown Employee')}
                             </h4>
                             ${isReversalPending ? `
@@ -3195,6 +3295,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Generate error details HTML
         function generateErrorDetails() {
+            const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
             
             // Calculate actual totals from individual error counts
             let criticalFailTotal = 0;
@@ -3253,22 +3354,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 return `
-                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid #f3f4f6;">
-                        <div style="font-size: 0.6562rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; padding: 0.375rem 0; border-bottom: 0.0469rem solid ${isDarkMode ? 'var(--border-light)' : '#f3f4f6'};">
+                        <div style="font-size: 0.6562rem; color: ${isDarkMode ? 'var(--text-color)' : '#1f2937'}; font-weight: 600; font-family: 'Poppins', sans-serif;">
                             <span style="font-weight: 700; color: ${field.parameter_type === 'error' ? '#dc2626' : '#10b981'};">${paramIcon}</span> ${field.label}
-                            <span style="font-size: 0.5156rem; color: #6b7280; font-weight: 400;"> (${field.points} pts)</span>
+                            <span style="font-size: 0.5156rem; color: ${isDarkMode ? 'var(--text-muted)' : '#6b7280'}; font-weight: 400;"> (${field.points} pts)</span>
                         </div>
                         <div style="display: flex; justify-content: center;">
                             <span style="background: ${severityBg}; color: ${severityColor}; padding: 0.1875rem 0.5625rem; border-radius: 0.2812rem; font-size: 0.5625rem; font-weight: 600; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0175rem;">${(field.parameter_type === 'achievement' || field.parameter_type === 'bonus') && field.field_type !== 'radio' ? 'ACHIEVEMENT' : field.severity}</span>
                         </div>
-                        <div style="font-size: 0.6562rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
-                        <div style="font-size: 0.6562rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
+                        <div style="font-size: 0.6562rem; color: ${isDarkMode ? 'var(--text-color)' : '#1f2937'}; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
+                        <div style="font-size: 0.6562rem; color: ${isDarkMode ? 'var(--text-secondary)' : '#4b5563'}; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${feedback}</div>
                     </div>
                 `;
             }).join('');
             
             return `
-                <div style="background: #f9fafb; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid #e5e7eb;">
+                <div style="background: ${isDarkMode ? 'var(--background-white)' : '#f9fafb'}; border-radius: 0.375rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 0.0352rem solid ${isDarkMode ? 'var(--border-light)' : '#e5e7eb'};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5625rem;">
                         <h3 style="font-size: 0.7031rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem;">
                             <svg style="width: 0.8438rem; height: 0.8438rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
@@ -3281,16 +3382,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     
-                    <div style="background: white; border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; margin-bottom: 0.75rem;">
-                        <div style="background-color: #f8f9fa; padding: 0.5625rem 0.75rem; border-bottom: 0.0469rem solid #e5e7eb;">
-                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; font-weight: 700; font-size: 0.6562rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div class="error-table-container" style="background: ${isDarkMode ? 'var(--background-white)' : 'white'}; border-radius: 0.5625rem; box-shadow: 0 0.0469rem 0.1406rem 0 rgba(0, 0, 0, 0.1); overflow: hidden; margin-bottom: 0.75rem;">
+                        <div class="error-table-header" style="background-color: ${isDarkMode ? 'var(--background-white)' : '#f8f9fa'}; padding: 0.5625rem 0.75rem; border-bottom: 0.0469rem solid ${isDarkMode ? 'var(--border-light)' : '#e5e7eb'};">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 3fr; gap: 0.75rem; align-items: center; font-weight: 700; font-size: 0.6562rem; color: ${isDarkMode ? 'var(--text-color)' : '#1f2937'}; text-transform: uppercase; letter-spacing: 0.05em;">
                                 <div>Error Type</div>
                                 <div style="text-align: center;">Severity</div>
                                 <div style="text-align: center;">Status</div>
                                 <div>Feedback</div>
                             </div>
                         </div>
-                        <div style="padding: 0 0.75rem 0.75rem 0.75rem; box-shadow: 0 -0.0703rem 0.1406rem rgba(0, 0, 0, 0.05);">
+                        <div class="error-table-body" style="padding: 0 0.75rem 0.75rem 0.75rem; box-shadow: 0 -0.0703rem 0.1406rem rgba(0, 0, 0, 0.05); background: ${isDarkMode ? 'var(--background-white)' : 'transparent'};">
                             ${errorRows}
                         </div>
                     </div>

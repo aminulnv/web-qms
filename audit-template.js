@@ -347,17 +347,17 @@ window.generateTranscriptSection = function(options = {}) {
                     </div>
                 </div>
                 <!-- Chat Interface View -->
-                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: #f0f2f5; overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: #9ca3af #f0f2f5; position: relative; min-height: 0; width: 100%; box-sizing: border-box;">
+                <div id="transcriptChatView" style="display: ${chatViewDefaultDisplay}; padding: 0.4852rem; background: var(--background-white); overflow-y: auto; overflow-x: hidden; flex: 1; flex-direction: column; scrollbar-width: thin; scrollbar-color: var(--gray-400) var(--gray-100); position: relative; min-height: 0; width: 100%; box-sizing: border-box;">
                     <!-- Chat messages will be dynamically inserted here -->
                     <div id="chatMessagesContainer" style="display: flex; flex-direction: column; min-height: 0; width: 100%; box-sizing: border-box; overflow-x: hidden;">
                         ${isEdit 
-                            ? '<div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;"><p>Enter an Interaction ID to automatically load conversation from Intercom</p></div>'
+                            ? '<div style="text-align: center; padding: 1.2937rem; color: var(--text-muted); font-size: 0.5659rem;"><p>Enter an Interaction ID to automatically load conversation from Intercom</p></div>'
                             : '<!-- Loading state will be shown here initially, then replaced with messages or error -->'
                         }
                     </div>
                 </div>
                 <!-- Text Area View -->
-                <div id="transcriptTextView" style="padding: 0.6469rem; background: white; overflow-y: auto; flex: 1; display: ${textViewDefaultDisplay}; position: relative;">
+                <div id="transcriptTextView" style="padding: 0.6469rem; background: var(--background-white); overflow-y: auto; flex: 1; display: ${textViewDefaultDisplay}; position: relative;">
                     ${isEdit
                         ? '<textarea id="transcript" name="transcript" placeholder="Paste the interaction transcript here..." style="width: 100%; height: 100%; padding: 0; border: none; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: \'Poppins\', sans-serif; background-color: transparent; resize: none; box-sizing: border-box; outline: none; transition: padding-top 0.3s ease;"></textarea>'
                         : `<div style="white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif; width: 100%;">${escapeHtml(audit.transcript || '<span style="color: #9ca3af; font-style: italic;">No transcript available</span>')}</div>`

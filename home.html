@@ -38,6 +38,7 @@
     <script src="auth-check.js"></script>
     <script src="confirmation-dialog.js" defer></script>
     <script src="load-sidebar.js" defer></script>
+    <script src="dark-mode.js" defer></script>
     <script src="search.js" defer></script>
     <script src="form-validation.js" defer></script>
     <script src="keyboard-shortcuts.js" defer></script>
@@ -164,6 +165,155 @@
 
   .date-dropdown-menu.active {
     display: block;
+  }
+
+  /* Dark Mode Styles */
+  [data-theme="dark"] .main-content {
+    background-color: var(--background-color);
+  }
+
+  [data-theme="dark"] .action-btn {
+    background-color: var(--background-white);
+    color: var(--text-color);
+    border-color: var(--border-light);
+  }
+
+  [data-theme="dark"] .action-btn:hover {
+    background-color: var(--gray-100);
+    border-color: var(--primary-color);
+  }
+
+  [data-theme="dark"] .action-btn.active {
+    background-color: #1a733e !important;
+    color: white !important;
+    border-color: #1a733e !important;
+  }
+
+  [data-theme="dark"] .filter-panel {
+    background: var(--gray-100);
+    border-color: var(--border-light);
+  }
+
+  [data-theme="dark"] .filter-label {
+    color: var(--text-secondary);
+  }
+
+  [data-theme="dark"] .filter-input,
+  [data-theme="dark"] .filter-select {
+    background-color: var(--background-white);
+    color: var(--text-color);
+    border-color: var(--border-light);
+  }
+
+  [data-theme="dark"] .date-dropdown-menu {
+    background: var(--background-white);
+    border-color: var(--border-light);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Dark Mode Overrides for Tailwind Classes */
+  [data-theme="dark"] .bg-white {
+    background-color: var(--background-white) !important;
+  }
+
+  [data-theme="dark"] .border-gray-200 {
+    border-color: var(--border-light) !important;
+  }
+
+  [data-theme="dark"] .text-gray-900 {
+    color: var(--text-color) !important;
+  }
+
+  [data-theme="dark"] .text-gray-800 {
+    color: var(--text-color) !important;
+  }
+
+  [data-theme="dark"] .text-gray-600 {
+    color: var(--text-secondary) !important;
+  }
+
+  [data-theme="dark"] .text-gray-500 {
+    color: var(--text-muted) !important;
+  }
+
+  [data-theme="dark"] .bg-gray-200 {
+    background-color: var(--gray-200) !important;
+  }
+
+  [data-theme="dark"] .bg-gray-100 {
+    background-color: var(--gray-100) !important;
+  }
+
+  [data-theme="dark"] .border-gray-200 {
+    border-color: var(--border-light) !important;
+  }
+
+  [data-theme="dark"] .divide-gray-200 > * {
+    border-color: var(--border-light) !important;
+  }
+
+  [data-theme="dark"] .divide-gray-200 > * + * {
+    border-top-color: var(--border-light) !important;
+  }
+
+  [data-theme="dark"] .hover\:bg-gray-100:hover {
+    background-color: var(--gray-100) !important;
+  }
+
+  [data-theme="dark"] .hover\:text-gray-900:hover {
+    color: var(--text-color) !important;
+  }
+
+  [data-theme="dark"] .text-gray-400 {
+    color: var(--text-muted) !important;
+  }
+
+  [data-theme="dark"] .hover\:text-gray-600:hover {
+    color: var(--text-secondary) !important;
+  }
+
+  [data-theme="dark"] .text-gray-300 {
+    color: var(--text-muted) !important;
+  }
+
+  [data-theme="dark"] .text-gray-700 {
+    color: var(--text-secondary) !important;
+  }
+
+  [data-theme="dark"] .border-gray-100 {
+    border-color: var(--border-light) !important;
+  }
+
+  [data-theme="dark"] .hover\:bg-gray-50:hover {
+    background-color: var(--gray-100) !important;
+  }
+
+  [data-theme="dark"] .bg-gray-50 {
+    background-color: var(--gray-100) !important;
+  }
+
+  [data-theme="dark"] .bg-yellow-100 {
+    background-color: rgba(251, 191, 36, 0.2) !important;
+  }
+
+  [data-theme="dark"] .text-yellow-800 {
+    color: #fbbf24 !important;
+  }
+
+  [data-theme="dark"] .bg-green-100 {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+  }
+
+  [data-theme="dark"] .text-green-800 {
+    color: #10b981 !important;
+  }
+
+  [data-theme="dark"] .bg-red-100 {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+  }
+
+  [data-theme="dark"] .text-red-800 {
+    color: #ef4444 !important;
   }
 </style>
 </head>

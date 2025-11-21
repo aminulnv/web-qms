@@ -22,6 +22,7 @@
     <script src="access-control.js"></script>
     <script src="confirmation-dialog.js"></script>
     <script src="load-sidebar.js"></script>
+    <script src="dark-mode.js"></script>
     <script src="search.js"></script>
     <script src="audit-template.js"></script>
     <script src="keyboard-shortcuts.js"></script>
@@ -45,8 +46,213 @@
             width: 100% !important;
             max-width: 100% !important;
         }
+
+        /* Dark Mode Styles */
+        [data-theme="dark"] body {
+            background-color: var(--background-color) !important;
+        }
+
+        [data-theme="dark"] .full-width-container {
+            background-color: var(--background-color) !important;
+        }
+
+        [data-theme="dark"] [style*="background: #f9fafb"],
+        [data-theme="dark"] [style*="background:#f9fafb"],
+        [data-theme="dark"] [style*="background-color: #f9fafb"],
+        [data-theme="dark"] [style*="background-color:#f9fafb"] {
+            background: var(--background-white) !important;
+            background-color: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] [style*="background: white"],
+        [data-theme="dark"] [style*="background:white"],
+        [data-theme="dark"] [style*="background-color: white"],
+        [data-theme="dark"] [style*="background-color:white"] {
+            background: var(--background-white) !important;
+            background-color: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #374151"],
+        [data-theme="dark"] [style*="color:#374151"],
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"] {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #6b7280"],
+        [data-theme="dark"] [style*="color:#6b7280"] {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] [style*="border:"] [style*="#e5e7eb"],
+        [data-theme="dark"] [style*="border-color: #e5e7eb"],
+        [data-theme="dark"] [style*="border-color:#e5e7eb"],
+        [data-theme="dark"] [style*="border:"] [style*="#d1d5db"],
+        [data-theme="dark"] [style*="border-color: #d1d5db"],
+        [data-theme="dark"] [style*="border-color:#d1d5db"] {
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] select,
+        [data-theme="dark"] input[type="text"],
+        [data-theme="dark"] input[type="date"],
+        [data-theme="dark"] textarea {
+            background-color: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* Error Details Header - Make dark */
+        [data-theme="dark"] [style*="background-color: #f8f9fa"],
+        [data-theme="dark"] [style*="background-color:#f8f9fa"] {
+            background-color: var(--background-white) !important;
+        }
+
+        /* Transcript Chat View Background - Make dark */
+        [data-theme="dark"] #transcriptChatView {
+            background: var(--background-white) !important;
+        }
+
+        [data-theme="dark"] #transcriptChatView::-webkit-scrollbar-track {
+            background: var(--gray-100) !important;
+        }
+
+        [data-theme="dark"] #transcriptChatView::-webkit-scrollbar-thumb {
+            background: var(--gray-400) !important;
+        }
+
+        [data-theme="dark"] #transcriptChatView::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500) !important;
+        }
+
+        /* Transcript Text View Background - Make dark */
+        [data-theme="dark"] #transcriptTextView {
+            background: var(--background-white) !important;
+        }
+
+        /* Chat Message Bubbles - Adjust for dark mode */
+        [data-theme="dark"] [style*="background: white"][style*="color: #374151"] {
+            background: var(--gray-100) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* User message bubbles in dark mode */
+        [data-theme="dark"] .message-bubble-user {
+            background: var(--gray-100) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* AI message bubbles - use purplish color in dark mode for better visibility */
+        [data-theme="dark"] [style*="background: #1d1d1d"],
+        [data-theme="dark"] [style*="background: #2d2d2d"],
+        [data-theme="dark"] [style*="background:#1d1d1d"],
+        [data-theme="dark"] [style*="background:#2d2d2d"] {
+            background: #6b46c1 !important; /* Purple-600 for better visibility in dark mode */
+        }
+
+        /* Dividers - Reduce contrast */
+        [data-theme="dark"] [style*="border-bottom"][style*="#f3f4f6"],
+        [data-theme="dark"] [style*="border-bottom"][style*="#e5e7eb"] {
+            border-bottom-color: var(--border-light) !important;
+            opacity: 0.5;
+        }
+
+        /* Font visibility improvements */
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"] {
+            color: var(--text-color) !important;
+        }
+
+        [data-theme="dark"] [style*="color: #4b5563"],
+        [data-theme="dark"] [style*="color:#4b5563"] {
+            color: var(--text-secondary) !important;
+        }
+
         
     </style>
+    <script>
+    // Update inline styles on theme change
+    document.addEventListener('themeChange', function(e) {
+        const isDark = e.detail.theme === 'dark';
+        const root = document.documentElement;
+        const bgWhite = getComputedStyle(root).getPropertyValue('--background-white').trim();
+        const gray100 = getComputedStyle(root).getPropertyValue('--gray-100').trim();
+        const textColor = getComputedStyle(root).getPropertyValue('--text-color').trim();
+        const textSecondary = getComputedStyle(root).getPropertyValue('--text-secondary').trim();
+        const borderLight = getComputedStyle(root).getPropertyValue('--border-light').trim();
+        
+        // Update elements with hardcoded colors
+        document.querySelectorAll('[style*="background: #f9fafb"], [style*="background:#f9fafb"], [style*="background-color: #f9fafb"], [style*="background-color:#f9fafb"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background', bgWhite, 'important');
+                el.style.setProperty('background-color', bgWhite, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="background: white"], [style*="background:white"], [style*="background-color: white"], [style*="background-color:white"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background', bgWhite, 'important');
+                el.style.setProperty('background-color', bgWhite, 'important');
+            }
+        });
+        
+        // Error details header - make dark
+        document.querySelectorAll('[style*="background-color: #f8f9fa"], [style*="background-color:#f8f9fa"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background-color', bgWhite, 'important');
+            }
+        });
+        
+        // Transcript chat view background
+        const transcriptChatView = document.getElementById('transcriptChatView');
+        if (transcriptChatView && isDark) {
+            transcriptChatView.style.setProperty('background', bgWhite, 'important');
+        }
+        
+        // Transcript text view background
+        const transcriptTextView = document.getElementById('transcriptTextView');
+        if (transcriptTextView && isDark) {
+            transcriptTextView.style.setProperty('background', bgWhite, 'important');
+        }
+        
+        // Chat message bubbles - user messages (white background)
+        document.querySelectorAll('[style*="background: white"][style*="color: #374151"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('background', gray100, 'important');
+                el.style.setProperty('color', textColor, 'important');
+                el.style.setProperty('border-color', borderLight, 'important');
+            }
+        });
+        
+        // Dividers - reduce contrast
+        document.querySelectorAll('[style*="border-bottom"][style*="#f3f4f6"], [style*="border-bottom"][style*="#e5e7eb"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('border-bottom-color', borderLight, 'important');
+                el.style.setProperty('opacity', '0.5', 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #374151"], [style*="color:#374151"], [style*="color: #1f2937"], [style*="color:#1f2937"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textColor, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #6b7280"], [style*="color:#6b7280"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textSecondary, 'important');
+            }
+        });
+        
+        document.querySelectorAll('[style*="color: #4b5563"], [style*="color:#4b5563"]').forEach(el => {
+            if (isDark) {
+                el.style.setProperty('color', textSecondary, 'important');
+            }
+        });
+    });
+    </script>
 </head>
 
 <body style="margin: 0; padding: 0;">
@@ -895,6 +1101,23 @@ function generateErrorDetails(audit, errorFields) {
     }
     const showCommentsColumn = window.showCommentsColumn;
     
+    // Cache dark mode values once (outside the loop for performance)
+    // Use try-catch to prevent errors from breaking error row rendering
+    let isDarkMode = false;
+    let dividerColor = '#f3f4f6';
+    let dividerOpacity = '1';
+    
+    try {
+        isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDarkMode) {
+            const root = document.documentElement;
+            dividerColor = getComputedStyle(root).getPropertyValue('--border-light').trim() || '#f3f4f6';
+            dividerOpacity = '0.5';
+        }
+    } catch (e) {
+        console.warn('Error getting dark mode values for dividers, using defaults:', e);
+    }
+    
     const errorRows = errorFields.map(field => {
         const rawValue = audit[field.key];
         let displayValue = '';
@@ -1021,7 +1244,7 @@ function generateErrorDetails(audit, errorFields) {
             : '2fr 1fr 1fr 1fr 2fr';
         
         return `
-            <div style="display: grid; grid-template-columns: ${gridColumns}; gap: 0.6469rem; align-items: start; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6; width: 100%; min-width: 0;">
+            <div style="display: grid; grid-template-columns: ${gridColumns}; gap: 0.6469rem; align-items: start; padding: 0.3234rem 0; border-bottom: 0.0405rem solid ${dividerColor}; opacity: ${dividerOpacity}; width: 100%; min-width: 0;">
                 <div style="font-size: 0.5659rem; color: #1f2937; font-weight: 600; font-family: 'Poppins', sans-serif; min-width: 0; overflow: hidden;">
                     ${field.label}
                 </div>
@@ -1060,9 +1283,9 @@ function generateErrorDetails(audit, errorFields) {
                 </div>
             </div>
             
-            <div style="background: white; border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
-                <div style="background-color: #f8f9fa; padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid #e5e7eb;">
-                    <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : '2fr 1fr 1fr 1fr 2fr'}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: #1f2937; text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
+            <div style="background: var(--background-white); border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
+                <div style="background-color: var(--background-white); padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid var(--border-light);">
+                    <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : '2fr 1fr 1fr 1fr 2fr'}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
                         <div style="min-width: 0;">Error Type</div>
                         <div style="text-align: center; min-width: 0;">Points</div>
                         <div style="text-align: center; min-width: 0;">Severity</div>
@@ -1475,13 +1698,32 @@ function renderAudit(audit, auditScorecard, errorFields) {
                 isChatViewActive = true;
             }
         } else {
-            // No database transcript available - auto-fallback to text view
+            // No database transcript available - show empty state in chat view instead of falling back to text view
+            const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+            if (chatMessagesContainer) {
+                chatMessagesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 1.2937rem; color: var(--text-muted); font-size: 0.5659rem;">
+                        <p>No transcript available</p>
+                    </div>
+                `;
+            }
+            // Ensure chat view is active and text view is hidden
             if (transcriptChatView && transcriptTextView) {
-            transcriptChatView.style.display = 'none';
-            transcriptTextView.style.display = 'flex';
-            isChatViewActive = false;
+                transcriptChatView.style.display = 'flex';
+                transcriptTextView.style.display = 'none';
+                isChatViewActive = true;
             }
         }
+        
+        // Double-check that chat view is visible and text view is hidden (in case template defaults are wrong)
+        setTimeout(() => {
+            const transcriptChatView = document.getElementById('transcriptChatView');
+            const transcriptTextView = document.getElementById('transcriptTextView');
+            if (transcriptChatView && transcriptTextView) {
+                transcriptChatView.style.display = 'flex';
+                transcriptTextView.style.display = 'none';
+            }
+        }, 50);
     }
 }
 
@@ -2143,17 +2385,14 @@ async function loadConversationFromIntercom(conversationId) {
                 isChatViewActive = true;
             }
         } else {
-            // No database transcript available - auto-fallback to text view
-            const transcriptChatView = document.getElementById('transcriptChatView');
-            const transcriptTextView = document.getElementById('transcriptTextView');
-            
+            // No database transcript available - show error in chat view instead of falling back to text view
             if (transcriptChatView && transcriptTextView) {
-                transcriptChatView.style.display = 'none';
-                transcriptTextView.style.display = 'flex';
-                isChatViewActive = false;
+                transcriptChatView.style.display = 'flex';
+                transcriptTextView.style.display = 'none';
+                isChatViewActive = true;
             }
             
-            // Show error message in chat container (for debugging, but user will see text view)
+            // Show error message in chat container
             chatMessagesContainer.innerHTML = `
                 <div style="text-align: center; padding: 1.2937rem; color: #ef4444;">
                     <svg style="width: 1.9406rem; height: 1.9406rem; margin: 0 auto 0.6469rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2162,8 +2401,8 @@ async function loadConversationFromIntercom(conversationId) {
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
                     <p style="font-size: 0.5659rem; font-weight: 600; margin-bottom: 0.3234rem;">Failed to load conversation from Intercom</p>
-                    <p style="font-size: 0.4852rem; color: #6b7280;">${escapeHtml(error.message)}</p>
-                    <p style="font-size: 0.4852rem; color: #9ca3af; margin-top: 0.3234rem;">No database transcript available.</p>
+                    <p style="font-size: 0.4852rem; color: var(--text-secondary);">${escapeHtml(error.message)}</p>
+                    <p style="font-size: 0.4852rem; color: var(--text-muted); margin-top: 0.3234rem;">No database transcript available.</p>
                 </div>
             `;
         }
@@ -2173,7 +2412,18 @@ async function loadConversationFromIntercom(conversationId) {
 // Display conversation messages in chat interface
 function displayConversationMessages(conversation) {
     const chatMessagesContainer = document.getElementById('chatMessagesContainer');
-    if (!chatMessagesContainer) return;
+    if (!chatMessagesContainer) {
+        console.error('chatMessagesContainer not found');
+        return;
+    }
+    
+    // Ensure chat view is visible and text view is hidden
+    const transcriptChatView = document.getElementById('transcriptChatView');
+    const transcriptTextView = document.getElementById('transcriptTextView');
+    if (transcriptChatView && transcriptTextView) {
+        transcriptChatView.style.display = 'flex';
+        transcriptTextView.style.display = 'none';
+    }
     
     // Helper function to generate avatar with initials
     function generateAvatar(name, type) {
@@ -2268,7 +2518,7 @@ function displayConversationMessages(conversation) {
     
     if (parts.length === 0) {
         chatMessagesContainer.innerHTML = `
-            <div style="text-align: center; padding: 1.2937rem; color: #9ca3af;">
+            <div style="text-align: center; padding: 1.2937rem; color: var(--text-muted); font-size: 0.5659rem;">
                 <p>No messages found in this conversation.</p>
             </div>
         `;
@@ -2288,6 +2538,29 @@ function displayConversationMessages(conversation) {
     
     // Reset images array
     allConversationImages = [];
+
+    // Cache dark mode values once (outside the loop for performance)
+    // Use try-catch to prevent errors from breaking message rendering
+    let isDarkMode = false;
+    let cachedTextSecondary = '#6b7280';
+    let cachedGray100 = '#f3f4f6';
+    let cachedBgWhite = '#ffffff';
+    let cachedTextColor = '#374151';
+    let cachedBorderLight = '#e5e7eb';
+    
+    try {
+        isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+        const root = document.documentElement;
+        if (isDarkMode) {
+            cachedTextSecondary = getComputedStyle(root).getPropertyValue('--text-secondary').trim() || '#6b7280';
+            cachedGray100 = getComputedStyle(root).getPropertyValue('--gray-100').trim() || '#f3f4f6';
+            cachedBgWhite = getComputedStyle(root).getPropertyValue('--background-white').trim() || '#ffffff';
+            cachedTextColor = getComputedStyle(root).getPropertyValue('--text-color').trim() || '#374151';
+            cachedBorderLight = getComputedStyle(root).getPropertyValue('--border-light').trim() || '#e5e7eb';
+        }
+    } catch (e) {
+        console.warn('Error getting dark mode values, using defaults:', e);
+    }
 
     sortedParts.forEach(part => {
         const message = part.body || '';
@@ -2504,10 +2777,10 @@ function displayConversationMessages(conversation) {
         if (contentTypes.length > 0 || partType) {
             contentInfoBadge = `<div style="
                 font-size: 0.3639rem;
-                color: ${isUser ? '#6b7280' : 'rgba(255,255,255,0.7)'};
+                color: ${isUser ? cachedTextSecondary : 'rgba(255,255,255,0.7)'};
                 margin-bottom: 0.1617rem;
                 padding: 0.1213rem 0.2426rem;
-                background: ${isUser ? '#f3f4f6' : 'rgba(255,255,255,0.1)'};
+                background: ${isUser ? cachedGray100 : 'rgba(255,255,255,0.1)'};
                 border-radius: 0.1617rem;
                 display: inline-block;
             ">
@@ -2522,13 +2795,13 @@ function displayConversationMessages(conversation) {
         
         // Create message bubble container (avatar will be added in innerHTML)
         const messageDiv = document.createElement('div');
-
-        // Colors: User = white, Agent = #1A733E, AI = #1d1d1d (dark gray)
+        
+        // Colors: User = white/gray-100 (dark mode), Agent = #1A733E, AI = #1d1d1d (light mode) / #6b46c1 (purple in dark mode)
         const bubbleStyle = isUser 
             ? `
-                background: white;
-                color: #374151;
-                border: 0.0304rem solid #e5e7eb;
+                background: ${isDarkMode ? cachedGray100 : 'white'};
+                color: ${isDarkMode ? cachedTextColor : '#374151'};
+                border: 0.0304rem solid ${cachedBorderLight};
                 border-radius: 0.4852rem 0.4852rem 0.4852rem 0.1617rem;
                 max-width: 100%;
                 width: fit-content;
@@ -2537,7 +2810,7 @@ function displayConversationMessages(conversation) {
             `
             : isAI
             ? `
-                background: #1d1d1d;
+                background: ${isDarkMode ? '#6b46c1' : '#1d1d1d'};
                 color: white;
                 border-radius: 0.4852rem 0.4852rem 0.1617rem 0.4852rem;
                 max-width: 100%;
@@ -2584,16 +2857,17 @@ function displayConversationMessages(conversation) {
             const replyToStr = formatEmailAddress(replyToHeader);
             
             // For agent emails, use a more prominent blue background that stands out from green
-            // For user emails, use a light blue background
-            // For AI emails, use dark gray background matching chat bubble
-            const emailBgColor = isUser ? '#e0f2fe' : (isAI ? '#2d2d2d' : '#1e40af');
-            const emailBorderColor = isUser ? '#0284c7' : (isAI ? '#1d1d1d' : '#3b82f6');
-            const emailIconColor = isUser ? '#0284c7' : (isAI ? '#ffffff' : '#93c5fd');
-            const emailTextColor = isUser ? '#0369a1' : (isAI ? '#ffffff' : '#bfdbfe');
-            const emailLabelColor = isUser ? '#0369a1' : (isAI ? '#ffffff' : '#bfdbfe');
-            const emailSubjectColor = isUser ? '#0c4a6e' : (isAI ? '#ffffff' : '#dbeafe');
-            const emailFieldColor = isUser ? '#075985' : (isAI ? '#e5e7eb' : '#bfdbfe');
-            const emailBorderBottomColor = isUser ? 'rgba(2, 132, 199, 0.2)' : (isAI ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.2)');
+            // For user emails, use a light blue background (adjust for dark mode)
+            // For AI emails, use purplish background in dark mode to match chat bubble
+            // Use cached values from outer scope
+            const emailBgColor = isUser ? (isDarkMode ? cachedGray100 : '#e0f2fe') : (isAI ? (isDarkMode ? '#6b46c1' : '#2d2d2d') : '#1e40af');
+            const emailBorderColor = isUser ? (isDarkMode ? cachedBorderLight : '#0284c7') : (isAI ? '#1d1d1d' : '#3b82f6');
+            const emailIconColor = isUser ? (isDarkMode ? cachedTextSecondary : '#0284c7') : (isAI ? '#ffffff' : '#93c5fd');
+            const emailTextColor = isUser ? (isDarkMode ? cachedTextColor : '#0369a1') : (isAI ? '#ffffff' : '#bfdbfe');
+            const emailLabelColor = isUser ? (isDarkMode ? cachedTextSecondary : '#0369a1') : (isAI ? '#ffffff' : '#bfdbfe');
+            const emailSubjectColor = isUser ? (isDarkMode ? cachedTextColor : '#0c4a6e') : (isAI ? '#ffffff' : '#dbeafe');
+            const emailFieldColor = isUser ? (isDarkMode ? cachedTextSecondary : '#075985') : (isAI ? '#e5e7eb' : '#bfdbfe');
+            const emailBorderBottomColor = isUser ? (isDarkMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(2, 132, 199, 0.2)') : (isAI ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.2)');
             
             emailHeaderHTML = `
                 <div style="
@@ -3555,7 +3829,7 @@ function parseTranscriptToChat(transcriptText, interactionDate) {
     
     if (!transcriptText || !transcriptText.trim()) {
         chatContainer.innerHTML = `
-            <div style="text-align: center; padding: 1.2937rem; color: #9ca3af; font-size: 0.5659rem;">
+            <div style="text-align: center; padding: 1.2937rem; color: var(--text-muted); font-size: 0.5659rem;">
                 <p>No transcript available</p>
             </div>
         `;
