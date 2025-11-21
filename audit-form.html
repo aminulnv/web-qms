@@ -11737,6 +11737,10 @@ async function loadAssignmentFromURL(assignmentId) {
                                 }
                                 field.dispatchEvent(new Event('input', { bubbles: true }));
                                 field.dispatchEvent(new Event('change', { bubbles: true }));
+                                
+                                // Explicitly update feedback boxes based on error count
+                                updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', param.parameter_type || 'error');
+                                
                                 console.log(`✅ Set counter ${param.field_id} (${param.error_name}) to ${fieldValue}`);
                                 populatedCount++;
                             }
@@ -14883,8 +14887,19 @@ async function loadConversationDataIntoForm(conversationData) {
                             } else {
                                 // For counter fields
                                 field.value = fieldValue;
+                                
+                                // Update display span if it exists
+                                const displaySpan = document.getElementById(`${param.field_id}_display`);
+                                if (displaySpan) {
+                                    displaySpan.textContent = fieldValue;
+                                }
+                                
                                 field.dispatchEvent(new Event('input', { bubbles: true }));
                                 field.dispatchEvent(new Event('change', { bubbles: true }));
+                                
+                                // Explicitly update feedback boxes based on error count
+                                updateFeedbackBoxesForParameter(param.field_id, param.field_type || 'counter', param.parameter_type || 'error');
+                                
                                 console.log(`✅ Set counter ${param.field_id} to ${fieldValue}`);
                             }
                         } else {
