@@ -554,6 +554,28 @@ body {
   order: 3;
 }
 
+/* Coming Soon Chip Styles */
+.coming-soon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem 0.375rem;
+  background-color: rgba(255, 193, 7, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+  border: 0.0625rem solid rgba(255, 193, 7, 0.3);
+  border-radius: 0.375rem;
+  font-size: 0.4375rem;
+  font-weight: 600;
+  line-height: 1;
+  margin-left: auto;
+  margin-right: 0;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  font-family: var(--font-family);
+  order: 3;
+  white-space: nowrap;
+}
+
 .menu-item {
   position: relative;
 }
@@ -561,6 +583,13 @@ body {
 .menu-item:hover .notification-badge,
 .menu-item.active .notification-badge {
   background-color: #dc2626;
+  transform: scale(1.05);
+}
+
+.menu-item:hover .coming-soon-chip,
+.menu-item.active .coming-soon-chip {
+  background-color: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.4);
   transform: scale(1.05);
 }
 
@@ -585,6 +614,27 @@ body {
   font-size: 0.5rem;
   padding: 0 0.375rem;
   order: 3;
+}
+
+.sidebar.collapsed .coming-soon-chip {
+  opacity: 0;
+  width: 0;
+  max-width: 0;
+  transform: translateX(-0.625rem);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.sidebar.collapsed:hover .coming-soon-chip {
+  opacity: 1;
+  width: auto;
+  max-width: 4rem;
+  transform: translateX(0);
+  margin-left: auto;
+  margin-right: 0;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.4375rem;
 }
 
 .status-chip-coming-soon {

@@ -225,6 +225,7 @@ class SidebarLoader {
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
                 <span>Performance</span>
+                <span class="coming-soon-chip">Coming Soon</span>
             </button>
         </li>
 
@@ -700,34 +701,7 @@ class SidebarLoader {
    * Navigate to appropriate page based on menu item
    */
   async navigateToPage(label) {
-    // Check if user is an agent trying to access Performance
-    if (label === "Performance") {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}")
-        const currentUserRole = userInfo.role || ""
-        const isAgent = currentUserRole === "Employee"
-        
-        if (isAgent) {
-          // Show "coming soon" message for agents
-          if (window.confirmationDialog) {
-            await window.confirmationDialog.show({
-              title: "Coming Soon",
-              message: "This feature is coming soon. Stay tuned for updates!",
-              confirmText: "OK",
-              type: "info",
-            })
-          } else {
-            // Fallback to alert if confirmationDialog is not available
-            alert("This feature is coming soon. Stay tuned for updates!")
-          }
-          return // Prevent navigation
-        }
-      } catch (error) {
-        console.error("Error checking user role:", error)
-        // If error, allow navigation to proceed normally
-      }
-    }
-    
+    // Allow navigation to Performance page - agents will see the "Coming Soon" message on the page
     const pageMap = {
       Search: "search.html",
       Home: "home.html",

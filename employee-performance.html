@@ -598,6 +598,25 @@
     <div style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 0;">
     <p class="page-heading">Performance Report</p>
 
+    <!-- Under Construction Notice for Agents -->
+    <div id="constructionNotice" style="display: none; text-align: center; padding: 4rem 2rem; max-width: 600px; margin: 3rem auto;">
+        <div style="margin-bottom: 1.5rem;">
+            <svg style="width: 4rem; height: 4rem; margin: 0 auto; color: var(--primary-color);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+            </svg>
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 600; color: var(--text-color); margin-bottom: 0.75rem;">Page Under Construction</h2>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
+            We're working hard to bring you an enhanced Performance Report experience. This page is currently being developed and will be available soon.
+        </p>
+        <p style="font-size: 0.75rem; color: var(--text-muted);">
+            Thank you for your patience!
+        </p>
+    </div>
+
+    <!-- Dashboard Content (Hidden for Agents) -->
+    <div id="dashboardContent">
+
     <!-- Action Buttons -->
     <div class="header-actions" style="margin-top: 3rem; margin-bottom: 1.125rem;">
         <!-- Week Navigation -->
@@ -872,6 +891,8 @@
             </div>
         </div>
     </div>
+    </div>
+    <!-- End Dashboard Content -->
 
 </main>
 
@@ -977,6 +998,23 @@ function clearCache() {
 // Initialization
 // ============================================================================
 document.addEventListener('DOMContentLoaded', async () => {
+    // Check if user is an agent (Employee role)
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const isAgent = userInfo.role === 'Employee';
+    
+    if (isAgent) {
+        // Hide dashboard content and show construction notice
+        const dashboardContent = document.getElementById('dashboardContent');
+        const constructionNotice = document.getElementById('constructionNotice');
+        
+        if (dashboardContent) dashboardContent.style.display = 'none';
+        if (constructionNotice) constructionNotice.style.display = 'block';
+        
+        // Don't load data or initialize charts for agents
+        return;
+    }
+    
+    // For admins and other roles, show full dashboard
     await waitForSupabase();
     initializeMonthFilter();
     await loadAllData();
