@@ -2728,30 +2728,29 @@ async function fetchAndCacheStats(period) {
               }
               
               return audits.map(audit => {
-                // Handle duration conversion (new format: seconds, legacy format: minutes)
+                // Handle duration conversion
+                // NEW FORMAT: All numeric values are in SECONDS (as of timer update)
+                // LEGACY FORMAT: String time formats (MM:SS or HH:MM:SS) or very old numeric values in minutes
                 let durationInMinutes = 0;
                 if (typeof audit.audit_duration === 'number') {
-                  const value = audit.audit_duration;
-                  if (value >= 1440) {
-                    durationInMinutes = value / 60; // Convert seconds to minutes
-                  } else {
-                    durationInMinutes = value; // Already in minutes
-                  }
+                  // All numeric audit_duration values are now in seconds, convert to minutes
+                  durationInMinutes = audit.audit_duration / 60;
                 } else if (typeof audit.audit_duration === 'string') {
+                  // Try parsing as integer first
                   const asInt = parseInt(audit.audit_duration);
                   if (!isNaN(asInt)) {
-                    if (asInt >= 1440) {
-                      durationInMinutes = asInt / 60;
-                    } else {
-                      durationInMinutes = asInt;
-                    }
+                    // If it's a numeric string, treat as seconds (new format)
+                    durationInMinutes = asInt / 60; // Convert seconds to minutes
                   } else {
+                    // Legacy format: time string (MM:SS or HH:MM:SS)
                     const timeParts = audit.audit_duration.split(':');
                     if (timeParts.length === 2) {
+                      // MM:SS format
                       const minutes = parseInt(timeParts[0]) || 0;
                       const seconds = parseInt(timeParts[1]) || 0;
                       durationInMinutes = minutes + (seconds / 60);
                     } else if (timeParts.length === 3) {
+                      // HH:MM:SS format
                       const hours = parseInt(timeParts[0]) || 0;
                       const minutes = parseInt(timeParts[1]) || 0;
                       const seconds = parseInt(timeParts[2]) || 0;

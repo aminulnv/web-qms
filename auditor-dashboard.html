@@ -465,25 +465,35 @@ function getCurrentPeriodDates() {
 // Helper Functions for Parallelized Queries
 // ============================================================================
 // Helper to convert audit duration to minutes
+// NEW FORMAT: All numeric values are in SECONDS (as of timer update)
+// LEGACY FORMAT: String time formats (MM:SS or HH:MM:SS) or very old numeric values in minutes
 function convertDurationToMinutes(duration) {
     if (!duration) return 0;
     
     let durationInMinutes = 0;
     if (typeof duration === 'number') {
-        // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
-        // Otherwise, assume it's already in minutes (legacy format)
-        if (duration >= 1440) {
-            durationInMinutes = duration / 60; // Convert seconds to minutes
-        } else {
-            durationInMinutes = duration; // Already in minutes
-        }
+        // All numeric audit_duration values are now in seconds, convert to minutes
+        durationInMinutes = duration / 60;
     } else if (typeof duration === 'string') {
+        // Try parsing as integer first
         const asInt = parseInt(duration);
         if (!isNaN(asInt)) {
-            if (asInt >= 1440) {
-                durationInMinutes = asInt / 60; // Convert seconds to minutes
-            } else {
-                durationInMinutes = asInt; // Already in minutes
+            // If it's a numeric string, treat as seconds (new format)
+            durationInMinutes = asInt / 60; // Convert seconds to minutes
+        } else {
+            // Legacy format: time string (MM:SS or HH:MM:SS)
+            const timeParts = duration.split(':');
+            if (timeParts.length === 2) {
+                // MM:SS format
+                const minutes = parseInt(timeParts[0]) || 0;
+                const seconds = parseInt(timeParts[1]) || 0;
+                durationInMinutes = minutes + (seconds / 60);
+            } else if (timeParts.length === 3) {
+                // HH:MM:SS format
+                const hours = parseInt(timeParts[0]) || 0;
+                const minutes = parseInt(timeParts[1]) || 0;
+                const seconds = parseInt(timeParts[2]) || 0;
+                durationInMinutes = (hours * 60) + minutes + (seconds / 60);
             }
         }
     }
@@ -800,13 +810,13 @@ async function fetchAndCacheTeamStats(period) {
         const totalAssigned = teamAssignments.length;
         const inProgress = teamAssignments.filter(a => a.status === 'in_progress').length;
         const pending = teamAssignments.filter(a => a.status === 'pending').length;
+        const completed = teamAssignments.filter(a => a.status === 'completed').length;
         const remaining = pending + inProgress;
         
         // Calculate team average audit duration and reversal count in parallel
         let avgDurationText = '-';
         let avgDurationSubtitle = 'per audit';
         let teamReversalCount = 0;
-        let completed = 0; // Will be calculated from scorecard tables
         
         try {
             // Ensure scorecards are loaded
@@ -853,27 +863,19 @@ async function fetchAndCacheTeamStats(period) {
                             .select('id, submitted_at')
                             .not('reversal_requested_at', 'is', null);
                         
-                        // Query to count completed audits (submitted in the period) - all audits regardless of auditor
-                        // All audits in scorecard tables are completed by default (they have submitted_at)
-                        let completedQuery = window.supabaseClient
-                            .from(tableName)
-                            .select('id, submitted_at')
-                            .not('submitted_at', 'is', null);
-                        
                         // Apply date filters server-side if possible (convert Dhaka to UTC)
                         if (period.start) {
                             durationQuery = durationQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                             reversalQuery = reversalQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
-                            completedQuery = completedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                         }
                         if (period.end) {
                             durationQuery = durationQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                             reversalQuery = reversalQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
-                            completedQuery = completedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                         }
                         
-                        // Query for duration, reversals, and completed audits in parallel for each table
-                        const [durationResult, reversalResult, completedResult] = await Promise.all([
+                        // Query for duration and reversals in parallel for each table
+                        // Note: completed count is now from assignments table, not scorecard tables
+                        const [durationResult, reversalResult] = await Promise.all([
                             (async () => {
                                 try {
                                     let result = await durationQuery;
@@ -935,51 +937,16 @@ async function fetchAndCacheTeamStats(period) {
                                     }
                                     return retryResult;
                                 }
-                            })(),
-                            (async () => {
-                                try {
-                                    let result = await completedQuery;
-                                    
-                                    // Fallback client-side filtering if server-side filter fails or data has no date
-                                    if (result.data && period.start) {
-                                        result.data = result.data.filter(audit => {
-                                            if (!audit.submitted_at) return false;
-                                            const auditDate = toDhakaTime(audit.submitted_at);
-                                            return (!period.start || auditDate >= period.start) && 
-                                                   (!period.end || auditDate <= period.end);
-                                        });
-                                    }
-                                    return result;
-                                } catch (err) {
-                                    // If server-side date filter fails, try without date filter and filter client-side
-                                    const retryResult = await window.supabaseClient
-                                        .from(tableName)
-                                        .select('id, submitted_at')
-                                        .not('submitted_at', 'is', null);
-                                    
-                                    if (retryResult.data) {
-                                        if (period && (period.start || period.end)) {
-                                            retryResult.data = retryResult.data.filter(audit => {
-                                                if (!audit.submitted_at) return false;
-                                                const auditDate = toDhakaTime(audit.submitted_at);
-                                                return (!period.start || auditDate >= period.start) && 
-                                                       (!period.end || auditDate <= period.end);
-                                            });
-                                        }
-                                    }
-                                    return retryResult;
-                                }
                             })()
                         ]);
                         
                         return {
                             durations: durationResult.data || [],
-                            reversals: reversalResult.data || [],
-                            completed: completedResult.data || []
+                            reversals: reversalResult.data || []
                         };
                     } catch (err) {
                         console.warn(`Error querying ${tableName}:`, err);
-                        return { durations: [], reversals: [], completed: [] };
+                        return { durations: [], reversals: [] };
                     }
                 });
                 
@@ -998,8 +965,6 @@ async function fetchAndCacheTeamStats(period) {
                         }
                     });
                     teamReversalCount += result.reversals.length;
-                    // All audits in scorecard tables are completed by default (they have submitted_at)
-                    completed += result.completed.length;
                 });
                 
                 if (auditCount > 0) {
@@ -1007,14 +972,27 @@ async function fetchAndCacheTeamStats(period) {
                     avgDurationText = formatDurationText(avgDuration);
                 }
             }
-            // Note: completed count is always from scorecard tables, not assignments
-            // If no scorecards exist, completed will remain 0
+            // Note: completed count is from assignments table (assignments created in period with status='completed')
+            // This ensures consistency with totalAssigned which is also filtered by created_at
         } catch (error) {
             console.error('Error calculating team stats:', error);
             // completed count remains 0 if there's an error (always use scorecard tables)
         }
         
-        const percentage = totalAssigned > 0 ? Math.round((completed / totalAssigned) * 100) : 0;
+        // Calculate same-day completed (assignments created and completed on the same day)
+        // Exclude backlog audits from completed count for team stats
+        let sameDayCompleted = completed;
+        const completedAssignments = teamAssignments.filter(a => a.status === 'completed');
+        sameDayCompleted = completedAssignments.filter(a => {
+            if (!a.created_at || !a.completed_at) return true; // Include if dates are missing
+            const createdDate = toDhakaTime(a.created_at);
+            const completedDate = toDhakaTime(a.completed_at);
+            const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+            return createdDay === completedDay;
+        }).length;
+        
+        const percentage = totalAssigned > 0 ? Math.round((sameDayCompleted / totalAssigned) * 100) : 0;
         console.log('Team Stats - Reversal count:', teamReversalCount);
         console.log('Team Stats - Completed count:', completed);
         
@@ -1052,10 +1030,10 @@ async function fetchAndCacheTeamStats(period) {
             const qaAssignments = teamAssignments.filter(a => a.auditor_email === qa.email);
             const qaInProgress = qaAssignments.filter(a => a.status === 'in_progress').length;
             const qaPending = qaAssignments.filter(a => a.status === 'pending').length;
+            const qaCompleted = qaAssignments.filter(a => a.status === 'completed').length;
             const qaRemaining = qaPending + qaInProgress;
             
-            // Calculate completed audits by querying scorecard tables (based on submitted_at, not created_at)
-            let qaCompleted = 0;
+            // Calculate average duration by querying scorecard tables (based on submitted_at)
             let avgDurationText = '-';
             try {
                 if (auditorTablesToQuery.length > 0) {
@@ -1068,29 +1046,16 @@ async function fetchAndCacheTeamStats(period) {
                                 .eq('auditor_email', qa.email)
                                 .not('audit_duration', 'is', null);
                             
-                            // Build query for completed audits count
-                            // All audits in scorecard tables are completed by default (they have submitted_at)
-                            let completedQuery = window.supabaseClient
-                                .from(tableName)
-                                .select('id, submitted_at')
-                                .eq('auditor_email', qa.email)
-                                .not('submitted_at', 'is', null);
-                            
                             // Apply date filters server-side if possible (convert Dhaka to UTC)
                             if (period.start) {
                                 query = query.gte('submitted_at', dhakaDateToUTCISO(period.start));
-                                completedQuery = completedQuery.gte('submitted_at', dhakaDateToUTCISO(period.start));
                             }
                             if (period.end) {
                                 query = query.lte('submitted_at', dhakaDateToUTCISO(period.end));
-                                completedQuery = completedQuery.lte('submitted_at', dhakaDateToUTCISO(period.end));
                             }
                             
-                            // Query both duration and completed audits in parallel
-                            const [durationResult, completedResult] = await Promise.all([
-                                query,
-                                completedQuery
-                            ]);
+                            // Query duration (we use assignments table for completed count, not scorecard tables)
+                            const durationResult = await query;
                             
                             // Check if error is due to missing auditor_email column - skip this table if so
                             // Only skip if error message specifically mentions auditor_email
@@ -1099,22 +1064,12 @@ async function fetchAndCacheTeamStats(period) {
                                 if (errorMessage.includes('auditor_email') && 
                                     (durationResult.error.code === '42703' || durationResult.error.code === 'PGRST116')) {
                                     console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
-                                    return { audits: [], completed: 0 };
-                                }
-                            }
-                            
-                            if (completedResult.error) {
-                                const errorMessage = completedResult.error.message || JSON.stringify(completedResult.error);
-                                if (errorMessage.includes('auditor_email') && 
-                                    (completedResult.error.code === '42703' || completedResult.error.code === 'PGRST116')) {
-                                    console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
-                                    return { audits: [], completed: 0 };
+                                    return { audits: [] };
                                 }
                             }
                             
                             let audits = durationResult.data;
                             let error = durationResult.error;
-                            let completedAudits = completedResult.data || [];
                             
                             // If server-side date filter fails, try without date filter and filter client-side
                             if (error && period && (period.start || period.end)) {
@@ -1124,16 +1079,7 @@ async function fetchAndCacheTeamStats(period) {
                                     .eq('auditor_email', qa.email)
                                     .not('audit_duration', 'is', null);
                                 
-                                const retryCompletedQuery = window.supabaseClient
-                                    .from(tableName)
-                                    .select('id, submitted_at')
-                                    .eq('auditor_email', qa.email)
-                                    .not('submitted_at', 'is', null);
-                                
-                                const [retryResult, retryCompletedResult] = await Promise.all([
-                                    retryQuery,
-                                    retryCompletedQuery
-                                ]);
+                                const retryResult = await retryQuery;
                                 
                                 // Check if error is due to missing auditor_email column - skip this table if so
                                 if (retryResult.error) {
@@ -1141,15 +1087,7 @@ async function fetchAndCacheTeamStats(period) {
                                     if (retryErrorMessage.includes('auditor_email') && 
                                         (retryResult.error.code === '42703' || retryResult.error.code === 'PGRST116')) {
                                         console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
-                                        return { audits: [], completed: 0 };
-                                    }
-                                }
-                                if (retryCompletedResult.error) {
-                                    const retryErrorMessage = retryCompletedResult.error.message || JSON.stringify(retryCompletedResult.error);
-                                    if (retryErrorMessage.includes('auditor_email') && 
-                                        (retryCompletedResult.error.code === '42703' || retryCompletedResult.error.code === 'PGRST116')) {
-                                        console.warn(`Table ${tableName} does not have auditor_email column, skipping`);
-                                        return { audits: [], completed: 0 };
+                                        return { audits: [] };
                                     }
                                 }
                                 
@@ -1162,32 +1100,16 @@ async function fetchAndCacheTeamStats(period) {
                                     });
                                 }
                                 
-                                if (retryCompletedResult.data && period.start) {
-                                    retryCompletedResult.data = retryCompletedResult.data.filter(audit => {
-                                        if (!audit.submitted_at) return false;
-                                        const auditDate = toDhakaTime(audit.submitted_at);
-                                        return (!period.start || auditDate >= period.start) && 
-                                               (!period.end || auditDate <= period.end);
-                                    });
-                                }
-                                
                                 audits = retryResult.data;
                                 error = retryResult.error;
-                                completedAudits = retryCompletedResult.data || [];
                             }
                             
                             if (error) {
-                                // If duration query failed, still try to get completed count
-                                if (completedResult.data) {
-                                    // All audits in scorecard tables are completed by default (they have submitted_at)
-                                    return { audits: [], completed: completedResult.data.length };
-                                }
-                                return { audits: [], completed: 0 };
+                                return { audits: [] };
                             }
                             
                             // Fallback client-side filtering if needed
                             let filteredAudits = audits || [];
-                            let filteredCompleted = completedAudits || [];
                             
                             // Apply client-side date filtering if period exists
                             if (period && (period.start || period.end)) {
@@ -1197,31 +1119,19 @@ async function fetchAndCacheTeamStats(period) {
                                     return (!period.start || auditDate >= period.start) && 
                                            (!period.end || auditDate <= period.end);
                                 });
-                                
-                                filteredCompleted = filteredCompleted.filter(audit => {
-                                    if (!audit.submitted_at) return false;
-                                    const auditDate = toDhakaTime(audit.submitted_at);
-                                    return (!period.start || auditDate >= period.start) && 
-                                           (!period.end || auditDate <= period.end);
-                                });
                             }
                             
-                            // All audits in scorecard tables are completed by default (they have submitted_at)
-                            
-                            return { audits: filteredAudits, completed: filteredCompleted.length };
+                            return { audits: filteredAudits };
                         } catch (err) {
                             console.warn(`Error getting duration from ${tableName} for ${qa.email}:`, err);
-                            return { audits: [], completed: 0 };
+                            return { audits: [] };
                         }
                     });
                     
                     const allResults = await Promise.all(durationPromises);
                     const flatAudits = allResults.flatMap(r => r.audits);
-                    const completedCounts = allResults.map(r => r.completed);
                     
-                    // Sum up completed audits from all scorecard tables
-                    qaCompleted = completedCounts.reduce((sum, count) => sum + count, 0);
-                    
+                    // Calculate average duration from audits submitted in the period
                     let totalDuration = 0;
                     let auditCount = 0;
                     
@@ -1238,87 +1148,20 @@ async function fetchAndCacheTeamStats(period) {
                         avgDurationText = formatDurationText(avgDuration);
                     }
                 }
-                // Note: qaCompleted count is always from scorecard tables, not assignments
-                // If no scorecards exist, qaCompleted will remain 0
+                // Note: qaCompleted count is from assignments table (assignments created in period with status='completed')
+                // This ensures consistency with qaAssignments which is also filtered by created_at
             } catch (error) {
                 console.error(`Error calculating stats for ${qa.email}:`, error);
                 // qaCompleted count remains 0 if there's an error (always use scorecard tables)
             }
             
-            // Calculate backlog coverage (assignments created on one day but completed on another)
-            // Filter by completed_at date (not created_at) to show backlog work completed in the selected period
+            // Calculate backlog coverage (assignments created in the period but completed on a different day)
+            // Use qaAssignments which are already filtered by created_at (assignments created in the period)
             // Use Dhaka timezone for date comparison to match the rest of the dashboard
             let backlogCount = 0;
             let backlogDates = []; // Store dates when backlog audits were created
             try {
-                // Fetch all completed assignments for this auditor, filtered by completed_at date
-                let backlogQuery = window.supabaseClient
-                    .from('audit_assignments')
-                    .select('*')
-                    .eq('auditor_email', qa.email)
-                    .eq('status', 'completed')
-                    .not('completed_at', 'is', null)
-                    .not('created_at', 'is', null);
-                
-                // Filter by completed_at date (when the audit was completed, not when it was assigned)
-                if (period.start) {
-                    backlogQuery = backlogQuery.gte('completed_at', dhakaDateToUTCISO(period.start));
-                }
-                if (period.end) {
-                    backlogQuery = backlogQuery.lte('completed_at', dhakaDateToUTCISO(period.end));
-                }
-                
-                const { data: completedAssignments, error: backlogError } = await backlogQuery;
-                
-                if (!backlogError && completedAssignments) {
-                    // Filter client-side to ensure accuracy with Dhaka timezone
-                    const filteredCompleted = completedAssignments.filter(a => {
-                        if (!a.completed_at) return false;
-                        const completedDate = toDhakaTime(a.completed_at);
-                        // Check if completed date falls within the period
-                        const inPeriod = (!period.start || completedDate >= period.start) && 
-                                        (!period.end || completedDate <= period.end);
-                        if (!inPeriod) return false;
-                        
-                        // Check if created on a different day than completed (in Dhaka timezone)
-                        if (!a.created_at) return false;
-                        const createdDate = toDhakaTime(a.created_at);
-                        const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                        const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                        return createdDay !== completedDay;
-                    });
-                    
-                    backlogCount = filteredCompleted.length;
-                    // Collect unique dates when backlog audits were created
-                    backlogDates = [...new Set(filteredCompleted.map(a => {
-                        const createdDate = toDhakaTime(a.created_at);
-                        return formatDhakaDate(createdDate, { year: 'numeric', month: 'short', day: 'numeric' });
-                    }))].sort();
-                } else if (backlogError) {
-                    // Fallback: filter from all assignments if query fails
-                    const allCompleted = qaAssignments.filter(a => {
-                        if (a.status !== 'completed' || !a.completed_at || !a.created_at) return false;
-                        const completedDate = toDhakaTime(a.completed_at);
-                        // Check if completed date falls within the period
-                        const inPeriod = (!period.start || completedDate >= period.start) && 
-                                        (!period.end || completedDate <= period.end);
-                        if (!inPeriod) return false;
-                        
-                        // Check if created on a different day than completed
-                        const createdDate = toDhakaTime(a.created_at);
-                        const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                        const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                        return createdDay !== completedDay;
-                    });
-                    backlogCount = allCompleted.length;
-                    backlogDates = [...new Set(allCompleted.map(a => {
-                        const createdDate = toDhakaTime(a.created_at);
-                        return formatDhakaDate(createdDate, { year: 'numeric', month: 'short', day: 'numeric' });
-                    }))].sort();
-                }
-            } catch (error) {
-                console.warn(`Error calculating backlog for ${qa.email}:`, error);
-                // Fallback to simple calculation from qaAssignments
+                // Filter from assignments created in the period (qaAssignments) that were completed on a different day
                 const backlogItems = qaAssignments.filter(a => {
                     if (a.status !== 'completed' || !a.completed_at || !a.created_at) return false;
                     const createdDate = toDhakaTime(a.created_at);
@@ -1332,11 +1175,27 @@ async function fetchAndCacheTeamStats(period) {
                     const createdDate = toDhakaTime(a.created_at);
                     return formatDhakaDate(createdDate, { year: 'numeric', month: 'short', day: 'numeric' });
                 }))].sort();
+            } catch (error) {
+                console.warn(`Error calculating backlog for ${qa.email}:`, error);
+                backlogCount = 0;
+                backlogDates = [];
             }
             
+            // Calculate same-day completed (assignments created and completed on the same day)
             // Exclude backlog audits from completed count
-            // Completed count should only show same-day completions (not backlog)
-            const sameDayCompleted = Math.max(0, qaCompleted - backlogCount);
+            let sameDayCompleted = qaCompleted;
+            if (backlogCount > 0) {
+                // Filter completed assignments to exclude backlog (created on different day than completed)
+                const completedAssignments = qaAssignments.filter(a => a.status === 'completed');
+                sameDayCompleted = completedAssignments.filter(a => {
+                    if (!a.created_at || !a.completed_at) return true; // Include if dates are missing
+                    const createdDate = toDhakaTime(a.created_at);
+                    const completedDate = toDhakaTime(a.completed_at);
+                    const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    return createdDay === completedDay;
+                }).length;
+            }
             
             const qaPercentage = qaAssignments.length > 0 ? Math.round((sameDayCompleted / qaAssignments.length) * 100) : 0;
             
@@ -1367,17 +1226,14 @@ async function fetchAndCacheTeamStats(period) {
         // Calculate total backlog count from all auditors
         const totalBacklogCount = auditorStats.reduce((sum, auditor) => sum + (auditor.backlogCovered || 0), 0);
         
-        // Exclude backlog audits from team completed count
-        // Completed count should only show same-day completions (not backlog)
-        const sameDayCompleted = Math.max(0, completed - totalBacklogCount);
-        
-        // Recalculate percentage based on same-day completed count
-        const adjustedPercentage = totalAssigned > 0 ? Math.round((sameDayCompleted / totalAssigned) * 100) : 0;
+        // Note: sameDayCompleted is already calculated above, excluding backlog
+        // Recalculate percentage based on same-day completed count (already done above)
+        const adjustedPercentage = percentage;
         
         // Prepare the stats data
         const statsData = {
             totalAssigned,
-            completed: sameDayCompleted,
+            completed: sameDayCompleted, // Same-day completed count (excluding backlog)
             inProgress,
             pending,
             remaining,
