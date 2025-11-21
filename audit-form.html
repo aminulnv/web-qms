@@ -361,6 +361,15 @@
             color: #374151 !important;
         }
 
+        /* Timer status indicator pulse animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2075,10 +2084,17 @@ window.createManualAudit = async function() {
         if (window.attachTimerEventListeners) {
             window.attachTimerEventListeners();
         }
+        // Refresh display when timer becomes visible
+        if (window.refreshTimerDisplay) {
+            setTimeout(() => window.refreshTimerDisplay(), 50);
+        }
     }
     
-    // Reset and start the timer
-    if (window.resetTimer && window.startTimer) {
+    // Initialize timer with persistence (will restore if exists, otherwise start fresh)
+    if (window.initializeTimerWithPersistence) {
+        window.initializeTimerWithPersistence();
+    } else if (window.resetTimer && window.startTimer) {
+        // Fallback to old method
         window.resetTimer();
         window.startTimer();
     }
@@ -7883,26 +7899,83 @@ function clearErrorParameters() {
 }
 
 // ============================================================================
-// Audit Timer Functionality
+// ============================================================================
+// ENHANCED Audit Timer Functionality with Persistent State
+// ============================================================================
 (function() {
+    // Core timer state
     let timerInterval = null;
     let startTime = null;
     let elapsedTime = 0;
     let isRunning = false;
     let auditStartTimestamp = null; // Store the absolute audit start timestamp
+    let lastPauseTime = null; // Track when timer was paused
+    let sessionId = null; // Unique identifier for this audit session
     
+    // UI elements
     let timerDisplay = null;
     let timerControlBtn = null;
+    let timerStatusIndicator = null; // Visual status indicator
+    
+    // Storage keys
+    const STORAGE_PREFIX = 'audit_timer_';
+    const DRAFT_PREFIX = 'audit_draft_';
+    const SESSION_LIST_KEY = 'audit_active_sessions';
+    
+    // Auto-save interval (save every 5 seconds)
+    let autoSaveInterval = null;
+    const AUTO_SAVE_INTERVAL = 5000;
     
     // Initialize timer elements (will be set when timer is shown)
     function initializeTimerElements() {
         if (!timerDisplay) {
-            timerDisplay = document.querySelector('#auditTimer span');
+            const timerEl = document.querySelector('#auditTimer');
+            if (timerEl) {
+                timerDisplay = timerEl.querySelector('span');
+                if (!timerDisplay) {
+                    // Try to find any span in the timer
+                    const spans = timerEl.querySelectorAll('span');
+                    if (spans.length > 0) {
+                        timerDisplay = spans[0];
+                    }
+                }
+            }
+            // If still not found, try again after a short delay (in case timer is hidden)
+            if (!timerDisplay) {
+                setTimeout(() => {
+                    const timerEl = document.querySelector('#auditTimer');
+                    if (timerEl) {
+                        timerDisplay = timerEl.querySelector('span');
+                        if (timerDisplay && elapsedTime >= 0) {
+                            timerDisplay.textContent = formatTime(elapsedTime);
+                            console.log('Timer display found and updated:', timerDisplay);
+                        }
+                    }
+                }, 100);
+            } else {
+                console.log('Timer display element found:', timerDisplay);
+            }
         }
         if (!timerControlBtn) {
             timerControlBtn = document.querySelector('#timerControlBtn');
+            if (timerControlBtn) {
+                console.log('Timer control button found');
+            }
+        }
+        // Create status indicator if it doesn't exist
+        if (!timerStatusIndicator) {
+            const timerEl = document.querySelector('#auditTimer');
+            if (timerEl && !timerEl.querySelector('.timer-status')) {
+                timerStatusIndicator = document.createElement('div');
+                timerStatusIndicator.className = 'timer-status';
+                timerStatusIndicator.style.cssText = 'width: 0.3234rem; height: 0.3234rem; border-radius: 50%; background: #10b981; margin-left: 0.1617rem; display: inline-block; animation: pulse 2s infinite;';
+                timerEl.appendChild(timerStatusIndicator);
+            } else {
+                timerStatusIndicator = timerEl?.querySelector('.timer-status');
+            }
         }
     }
+    
     const playIcon = '<path d="M8 5v14l11-7z"/>';
     const pauseIcon = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>';
     const resetIcon = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>';
@@ -7916,6 +7989,211 @@ function clearErrorParameters() {
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         } else {
             return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+    }
+    
+    // Generate or get session ID for this audit
+    function getSessionId() {
+        if (sessionId) return sessionId;
+        
+        // Try to get from form fields (interactionId or assignmentId)
+        const interactionIdField = document.getElementById('interactionId');
+        const interactionId = interactionIdField?.value?.trim();
+        
+        // Check for assignment ID (from global variable)
+        const assignmentId = typeof currentAssignmentId !== 'undefined' ? currentAssignmentId : null;
+        
+        // Check for editing existing audit
+        const editingAuditId = typeof currentEditingAuditId !== 'undefined' ? currentEditingAuditId : null;
+        
+        // Generate unique session ID
+        if (editingAuditId) {
+            sessionId = `edit_${editingAuditId}`;
+        } else if (assignmentId) {
+            sessionId = `assignment_${assignmentId}`;
+        } else if (interactionId) {
+            sessionId = `interaction_${interactionId}`;
+        } else {
+            // Generate unique ID based on timestamp and random
+            sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
+        return sessionId;
+    }
+    
+    // Get storage key for this session
+    function getStorageKey() {
+        return STORAGE_PREFIX + getSessionId();
+    }
+    
+    // Get draft storage key
+    function getDraftKey() {
+        return DRAFT_PREFIX + getSessionId();
+    }
+    
+    // Save timer state to localStorage
+    function saveTimerState() {
+        try {
+            const currentElapsed = getCurrentElapsedTime();
+            const state = {
+                elapsedTime: currentElapsed,
+                auditStartTimestamp: auditStartTimestamp,
+                lastPauseTime: isRunning ? null : Date.now(),
+                isRunning: false, // Always save as paused (will resume on load if needed)
+                sessionId: sessionId,
+                savedAt: Date.now(),
+                interactionId: document.getElementById('interactionId')?.value?.trim() || null,
+                assignmentId: typeof currentAssignmentId !== 'undefined' ? currentAssignmentId : null
+            };
+            
+            localStorage.setItem(getStorageKey(), JSON.stringify(state));
+            
+            // Update active sessions list
+            updateActiveSessionsList();
+            
+            // Update status indicator
+            updateStatusIndicator('saved');
+            
+            console.log('💾 Timer state saved:', state);
+        } catch (error) {
+            console.error('Error saving timer state:', error);
+        }
+    }
+    
+    // Restore timer state from localStorage
+    function restoreTimerState() {
+        try {
+            const savedState = localStorage.getItem(getStorageKey());
+            if (!savedState) {
+                console.log('📭 No saved timer state found');
+                return false;
+            }
+            
+            const state = JSON.parse(savedState);
+            console.log('📂 Restoring timer state:', state);
+            
+            // Restore elapsed time
+            elapsedTime = state.elapsedTime || 0;
+            
+            // Restore audit start timestamp
+            if (state.auditStartTimestamp) {
+                auditStartTimestamp = state.auditStartTimestamp;
+            }
+            
+            // If timer was running when saved, account for time passed
+            if (state.lastPauseTime) {
+                // Timer was paused, use saved elapsed time
+                // No adjustment needed
+            } else if (state.savedAt) {
+                // Timer was running, add time that passed since save
+                const timeSinceSave = Math.floor((Date.now() - state.savedAt) / 1000);
+                elapsedTime += timeSinceSave;
+            }
+            
+            // Update display
+            if (timerDisplay) {
+                timerDisplay.textContent = formatTime(elapsedTime);
+            }
+            
+            // Update hidden field
+            updateAuditDuration();
+            
+            // Auto-start if it was running before (optional - you might want to keep it paused)
+            // For now, we'll keep it paused and let user resume manually
+            
+            updateStatusIndicator('restored');
+            
+            return true;
+        } catch (error) {
+            console.error('Error restoring timer state:', error);
+            return false;
+        }
+    }
+    
+    // Update active sessions list
+    function updateActiveSessionsList() {
+        try {
+            const sessions = JSON.parse(localStorage.getItem(SESSION_LIST_KEY) || '[]');
+            const sessionId = getSessionId();
+            
+            // Remove this session if it exists
+            const index = sessions.findIndex(s => s.sessionId === sessionId);
+            if (index > -1) {
+                sessions.splice(index, 1);
+            }
+            
+            // Add current session
+            sessions.push({
+                sessionId: sessionId,
+                interactionId: document.getElementById('interactionId')?.value?.trim() || null,
+                assignmentId: typeof currentAssignmentId !== 'undefined' ? currentAssignmentId : null,
+                lastUpdated: Date.now()
+            });
+            
+            // Keep only last 50 sessions
+            if (sessions.length > 50) {
+                sessions.sort((a, b) => b.lastUpdated - a.lastUpdated);
+                sessions.splice(50);
+            }
+            
+            localStorage.setItem(SESSION_LIST_KEY, JSON.stringify(sessions));
+        } catch (error) {
+            console.error('Error updating active sessions list:', error);
+        }
+    }
+    
+    // Clear timer state from localStorage
+    function clearTimerState() {
+        try {
+            localStorage.removeItem(getStorageKey());
+            localStorage.removeItem(getDraftKey());
+            
+            // Remove from active sessions
+            const sessions = JSON.parse(localStorage.getItem(SESSION_LIST_KEY) || '[]');
+            const filtered = sessions.filter(s => s.sessionId !== getSessionId());
+            localStorage.setItem(SESSION_LIST_KEY, JSON.stringify(filtered));
+            
+            console.log('🗑️ Timer state cleared');
+        } catch (error) {
+            console.error('Error clearing timer state:', error);
+        }
+    }
+    
+    // Update status indicator
+    function updateStatusIndicator(status) {
+        if (!timerStatusIndicator) return;
+        
+        switch(status) {
+            case 'running':
+                timerStatusIndicator.style.background = '#10b981'; // Green
+                timerStatusIndicator.title = 'Timer running';
+                break;
+            case 'paused':
+                timerStatusIndicator.style.background = '#f59e0b'; // Amber
+                timerStatusIndicator.title = 'Timer paused';
+                break;
+            case 'saved':
+                timerStatusIndicator.style.background = '#3b82f6'; // Blue
+                timerStatusIndicator.title = 'State saved';
+                setTimeout(() => {
+                    if (isRunning) {
+                        updateStatusIndicator('running');
+                    } else {
+                        updateStatusIndicator('paused');
+                    }
+                }, 1000);
+                break;
+            case 'restored':
+                timerStatusIndicator.style.background = '#8b5cf6'; // Purple
+                timerStatusIndicator.title = 'State restored';
+                setTimeout(() => {
+                    if (isRunning) {
+                        updateStatusIndicator('running');
+                    } else {
+                        updateStatusIndicator('paused');
+                    }
+                }, 2000);
+                break;
         }
     }
     
@@ -8027,50 +8305,109 @@ function clearErrorParameters() {
     }
     
     
+    // Enhanced startTimer with state saving
     function startTimer() {
         initializeTimerElements();
+        
+        // Clear any existing interval first (fix memory leak)
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        
+        // If timer is "running" but interval is null, we need to restart it
+        if (isRunning && !timerInterval) {
+            console.log('Timer marked as running but interval is null, restarting interval...');
+            // Recalculate startTime based on current elapsed time
+            startTime = Date.now() - (elapsedTime * 1000);
+        }
+        
         if (!isRunning) {
-            // If this is the first time starting (no elapsed time), capture the audit start timestamp
+            // If this is the first time starting, capture the audit start timestamp
             if (elapsedTime === 0 && auditStartTimestamp === null) {
                 auditStartTimestamp = new Date().toISOString();
             }
+            
             startTime = Date.now() - (elapsedTime * 1000);
             isRunning = true;
-            timerInterval = setInterval(updateDisplay, 1000);
+            lastPauseTime = null;
+        }
+        
+        // Always set up the interval if we're running (whether just started or restarted)
+        if (isRunning && !timerInterval) {
+            // Update display immediately
+            updateDisplay();
+            
+            // Then set up interval for continuous updates
+            timerInterval = setInterval(() => {
+                updateDisplay();
+            }, 1000);
+            
+            console.log('Timer started, interval set:', timerInterval, 'isRunning:', isRunning, 'startTime:', startTime, 'elapsedTime:', elapsedTime);
+            
             if (timerControlBtn) {
-            timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
-            timerControlBtn.title = "Pause Timer";
+                timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${pauseIcon}</svg>`;
+                timerControlBtn.title = "Pause Timer";
             }
+            
+            updateStatusIndicator('running');
+            saveTimerState(); // Save state when starting
+        } else if (isRunning && timerInterval) {
+            console.log('Timer already running with active interval');
         }
     }
     
+    // Enhanced pauseTimer with state saving and elapsed time update
     function pauseTimer() {
         initializeTimerElements();
+        
         if (isRunning) {
+            // Update elapsed time before pausing (fix pause bug)
+            elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            
             isRunning = false;
+            lastPauseTime = Date.now();
             clearInterval(timerInterval);
+            timerInterval = null;
+            
             if (timerControlBtn) {
-            timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
-            timerControlBtn.title = "Resume Timer";
+                timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+                timerControlBtn.title = "Resume Timer";
             }
+            
+            updateStatusIndicator('paused');
+            updateAuditDuration(); // Update hidden field
+            saveTimerState(); // Save state when pausing
         }
     }
     
+    // Enhanced resetTimer with state clearing
     function resetTimer() {
         initializeTimerElements();
+        
         isRunning = false;
-        clearInterval(timerInterval);
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        
         elapsedTime = 0;
         startTime = null;
-        auditStartTimestamp = null; // Reset audit start timestamp
+        auditStartTimestamp = null;
+        lastPauseTime = null;
+        
         if (timerDisplay) {
-        timerDisplay.textContent = '00:00';
+            timerDisplay.textContent = '00:00';
         }
+        
         if (timerControlBtn) {
-        timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
-        timerControlBtn.title = "Start Timer";
+            timerControlBtn.innerHTML = `<svg style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 0 24 24" fill="currentColor">${playIcon}</svg>`;
+            timerControlBtn.title = "Start Timer";
         }
+        
         updateAuditDuration();
+        clearTimerState(); // Clear saved state
+        updateStatusIndicator('paused');
     }
     
     // Function to get the audit start timestamp
@@ -8311,18 +8648,203 @@ function clearErrorParameters() {
         updateAuditDuration();
     }
     
-    // Modified updateDisplay to also update audit duration
+    // Enhanced updateDisplay with null checks
     function updateDisplay() {
+        // Calculate elapsed time first
         if (isRunning && startTime) {
             elapsedTime = Math.floor((Date.now() - startTime) / 1000);
         }
-        timerDisplay.textContent = formatTime(elapsedTime);
+        
+        // Always try to find and update the element directly (more reliable)
+        const timerEl = document.querySelector('#auditTimer');
+        if (!timerEl) {
+            return; // Timer element doesn't exist
+        }
+        
+        // Find the span that displays the time - it's a direct child, not in button
+        // The structure is: <div id="auditTimer"><button>...</button><span>Time</span></div>
+        let displaySpan = null;
+        
+        // Method 1: Get all direct children and find the span
+        const children = Array.from(timerEl.children);
+        for (let child of children) {
+            if (child.tagName === 'SPAN' && child.id !== 'timerControlBtn') {
+                displaySpan = child;
+                break;
+            }
+        }
+        
+        // Method 2: If not found, try querySelector
+        if (!displaySpan) {
+            displaySpan = timerEl.querySelector('span:not(#timerControlBtn)');
+        }
+        
+        // Method 3: Last resort - get all spans and find one not in button
+        if (!displaySpan) {
+            const allSpans = timerEl.querySelectorAll('span');
+            for (let span of allSpans) {
+                if (!span.closest('button')) {
+                    displaySpan = span;
+                    break;
+                }
+            }
+        }
+        
+        if (displaySpan) {
+            const timeString = formatTime(elapsedTime);
+            displaySpan.textContent = timeString;
+            displaySpan.innerText = timeString; // Backup method
+            // Cache it for next time
+            timerDisplay = displaySpan;
+        } else {
+            console.error('Timer display span not found! Timer element:', timerEl);
+        }
+        
         updateAuditDuration();
+    }
+    
+    // Auto-save timer state periodically
+    function startAutoSave() {
+        if (autoSaveInterval) {
+            clearInterval(autoSaveInterval);
+        }
+        
+        autoSaveInterval = setInterval(() => {
+            if (sessionId) {
+                saveTimerState();
+            }
+        }, AUTO_SAVE_INTERVAL);
+    }
+    
+    // Stop auto-save
+    function stopAutoSave() {
+        if (autoSaveInterval) {
+            clearInterval(autoSaveInterval);
+            autoSaveInterval = null;
+        }
+    }
+    
+    // Initialize timer with persistence
+    function initializeTimerWithPersistence() {
+        console.log('Initializing timer with persistence...');
+        initializeTimerElements();
+        
+        // Get session ID
+        getSessionId();
+        console.log('Session ID:', sessionId);
+        
+        // Try to restore previous state
+        const restored = restoreTimerState();
+        console.log('Timer state restored:', restored, 'elapsedTime:', elapsedTime);
+        
+        if (!restored) {
+            // No saved state, start fresh
+            if (auditStartTimestamp === null) {
+                auditStartTimestamp = new Date().toISOString();
+            }
+            // Initialize display to 00:00
+            if (timerDisplay) {
+                timerDisplay.textContent = '00:00';
+                console.log('Timer display initialized to 00:00');
+            } else {
+                console.warn('Timer display not found during initialization');
+            }
+        }
+        
+        // Start auto-save
+        startAutoSave();
+        
+        // Always start the timer (it will resume from saved elapsed time if restored)
+        // The timer should always be running when the form is open
+        console.log('Starting timer...');
+        startTimer();
+        
+        // Verify timer is running after a short delay and fix if needed
+        setTimeout(() => {
+            console.log('Timer check - isRunning:', isRunning, 'interval:', timerInterval, 'elapsedTime:', elapsedTime);
+            if (timerDisplay) {
+                console.log('Timer display text:', timerDisplay.textContent);
+            }
+            // If timer should be running but interval is null, restart it
+            if (isRunning && !timerInterval) {
+                console.warn('⚠️ Timer is marked as running but interval is null! Restarting...');
+                // Force restart by temporarily clearing isRunning
+                isRunning = false;
+                startTimer();
+            }
+        }, 2000);
+    }
+    
+    // Save state before page unload
+    function handleBeforeUnload() {
+        // Pause timer if running
+        if (isRunning) {
+            pauseTimer();
+        } else {
+            // Just save current state
+            saveTimerState();
+        }
+        
+        // Stop auto-save
+        stopAutoSave();
+    }
+    
+    // Handle page visibility change (tab switch)
+    function handleVisibilityChange() {
+        if (document.hidden) {
+            // Tab is hidden, save state
+            if (isRunning) {
+                // Don't pause, but save current state
+                saveTimerState();
+            }
+        } else {
+            // Tab is visible again, restore and account for time passed
+            if (isRunning && startTime) {
+                // Recalculate elapsed time based on actual time passed
+                const actualElapsed = Math.floor((Date.now() - startTime) / 1000);
+                elapsedTime = actualElapsed;
+                updateDisplay();
+            }
+        }
+    }
+    
+    // Setup event listeners for persistence
+    function setupPersistenceListeners() {
+        // Before page unload
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        // Page visibility (tab switch)
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        // Storage event (cross-tab sync)
+        window.addEventListener('storage', (e) => {
+            if (e.key && e.key.startsWith(STORAGE_PREFIX)) {
+                // Another tab updated timer state
+                // Optionally sync or show notification
+                console.log('📡 Timer state updated in another tab');
+            }
+        });
+    }
+    
+    // Initialize on load
+    setupPersistenceListeners();
+    
+    // Refresh timer display (call when timer becomes visible)
+    function refreshTimerDisplay() {
+        initializeTimerElements();
+        if (timerDisplay) {
+            const currentTime = getCurrentElapsedTime();
+            timerDisplay.textContent = formatTime(currentTime);
+            console.log('Timer display refreshed:', formatTime(currentTime));
+        } else {
+            console.warn('Cannot refresh timer display - element not found');
+        }
     }
     
     // Make functions globally accessible
     window.resetTimer = resetTimer;
     window.startTimer = startTimer;
+    window.pauseTimer = pauseTimer;
     window.loadUserData = loadUserData;
     window.updateWeekAndQuarter = updateWeekAndQuarter;
     window.restoreTimerFromDuration = restoreTimerFromDuration;
@@ -8332,6 +8854,10 @@ function clearErrorParameters() {
     window.updateAuditDuration = updateAuditDuration;
     window.getAuditStartTimestamp = getAuditStartTimestamp;
     window.restoreAuditStartTimestamp = restoreAuditStartTimestamp;
+    window.initializeTimerWithPersistence = initializeTimerWithPersistence;
+    window.saveTimerState = saveTimerState;
+    window.clearTimerState = clearTimerState;
+    window.refreshTimerDisplay = refreshTimerDisplay;
     
     // Timer will start when user clicks "Start Audit" button
     // Don't auto-start on page load
@@ -8459,6 +8985,16 @@ function populateErrorDescription() {
 // Close Audit Form Function
 // ============================================================================
 window.closeAuditForm = async function() {
+    // Save timer state before closing
+    if (window.saveTimerState) {
+        window.saveTimerState();
+    }
+    
+    // Pause timer
+    if (window.pauseTimer) {
+        window.pauseTimer();
+    }
+    
     // Navigate back to create-audit.html instead of closing modal
     window.location.href = 'create-audit.html';
 };
@@ -8600,13 +9136,18 @@ async function loadAuditForEditing() {
         }
         
         // Restore timer from saved duration if editing existing audit
+        // Clear any localStorage state for this audit since we're using database duration
+        if (window.clearTimerState) {
+            window.clearTimerState();
+        }
+        
         if (window.restoreTimerFromDuration && data.audit_duration !== null && data.audit_duration !== undefined) {
             window.restoreTimerFromDuration(data.audit_duration);
         } else {
             // Start fresh timer if no saved duration
-        if (window.resetTimer && window.startTimer) {
-            window.resetTimer();
-            window.startTimer();
+            if (window.resetTimer && window.startTimer) {
+                window.resetTimer();
+                window.startTimer();
             }
         }
         
@@ -10362,6 +10903,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Show success message
+                // Clear timer state after successful submission
+                if (window.clearTimerState) {
+                    window.clearTimerState();
+                }
+                
                 const message = wasEditingExistingAudit ? 'Audit updated successfully!' : 'Audit submitted successfully!';
                 const confirmed = await window.confirmationDialog.show({
                     title: 'Success!',
@@ -10470,6 +11016,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const auditTimer = document.getElementById('auditTimer');
                 if (auditTimer) {
                     auditTimer.style.display = 'none';
+                }
+                
+                // Clear saved timer state
+                if (window.clearTimerState) {
+                    window.clearTimerState();
                 }
                 
                 if (window.resetTimer) {
@@ -13625,8 +14176,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    // Reset and start the timer
-    if (window.resetTimer && window.startTimer) {
+    // Initialize timer with persistence (will restore if exists, otherwise start fresh)
+    if (window.initializeTimerWithPersistence) {
+        window.initializeTimerWithPersistence();
+    } else if (window.resetTimer && window.startTimer) {
+        // Fallback to old method
         window.resetTimer();
         window.startTimer();
     }

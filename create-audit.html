@@ -1892,26 +1892,28 @@ async function updateYourStats() {
                             });
                             
                             filteredAudits.forEach(audit => {
-                                // Handle duration conversion (new format: seconds, legacy format: minutes)
+                                // Handle duration conversion
+                                // NEW FORMAT: All numeric values are in SECONDS (as of timer update)
+                                // LEGACY FORMAT: String time formats (MM:SS or HH:MM:SS) or very old numeric values in minutes
                                 let durationInMinutes = 0;
+                                
                                 if (typeof audit.audit_duration === 'number') {
                                     const value = audit.audit_duration;
-                                    // If value is >= 1440 (24 hours in minutes), assume it's in seconds (new format)
-                                    // Otherwise, assume it's already in minutes (legacy format)
-                                    if (value >= 1440) {
-                                        durationInMinutes = value / 60; // Convert seconds to minutes
-                                    } else {
-                                        durationInMinutes = value; // Already in minutes
-                                    }
+                                    // Check if this might be legacy format (very old audits saved in minutes)
+                                    // If value is > 86400 (24 hours in seconds), it's definitely seconds
+                                    // If value is between 1440-86400, it could be either, but we default to seconds (new format)
+                                    // If value is < 1440, it could be:
+                                    //   - Seconds (new format): e.g., 125 seconds = 2 minutes
+                                    //   - Minutes (legacy format): e.g., 125 minutes = 2 hours
+                                    // Since we're now saving in seconds, we'll treat all numeric values as seconds
+                                    // and convert to minutes
+                                    durationInMinutes = value / 60; // Convert seconds to minutes
                                 } else if (typeof audit.audit_duration === 'string') {
                                     // Try parsing as integer first
                                     const asInt = parseInt(audit.audit_duration);
                                     if (!isNaN(asInt)) {
-                                        if (asInt >= 1440) {
-                                            durationInMinutes = asInt / 60; // Convert seconds to minutes
-                                        } else {
-                                            durationInMinutes = asInt; // Already in minutes
-                                        }
+                                        // If it's a numeric string, treat as seconds (new format)
+                                        durationInMinutes = asInt / 60; // Convert seconds to minutes
                                     } else {
                                         // Legacy format: time string (MM:SS or HH:MM:SS)
                                         const timeParts = audit.audit_duration.split(':');
