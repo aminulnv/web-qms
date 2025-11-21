@@ -106,7 +106,7 @@ class AccessControl {
         minRoleLevel: 2 // Quality Analyst and above
       },
       'user-management.html': {
-        minRoleLevel: 4 // Admin and above
+        minRoleLevel: 2 // Quality Analyst and above
       },
       'profile.html': {
         allowedRoles: ['*'] // All authenticated users
