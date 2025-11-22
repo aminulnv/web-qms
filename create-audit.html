@@ -312,7 +312,7 @@
         }
 
         #comingSoonModalContent {
-            background: white;
+            background: var(--background-white);
             border-radius: 0.6469rem;
             padding: 1.9406rem;
             max-width: 25.875rem;
@@ -320,6 +320,7 @@
             box-shadow: 0 0.8086rem 2.4258rem rgba(0, 0, 0, 0.15);
             animation: modalSlideIn 0.3s ease-out;
             text-align: center;
+            color: var(--text-color);
         }
 
         /* AI Audit Status Animations */
@@ -359,9 +360,9 @@
             align-items: center;
             gap: 0.375rem;
             padding: 0.5rem 0.75rem;
-            background-color: white;
-            color: #374151;
-            border: 1px solid #e5e7eb;
+            background-color: var(--background-white);
+            color: var(--text-color);
+            border: 1px solid var(--border-light);
             border-radius: 0.375rem;
             font-size: 0.75rem;
             font-weight: 500;
@@ -371,7 +372,7 @@
         }
 
         .action-btn:hover {
-            background-color: #f9fafb;
+            background-color: var(--gray-100);
             border-color: #1a733e;
         }
 
@@ -389,8 +390,8 @@
         /* Filter Panel */
         .filter-panel {
             display: none;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: var(--background-white);
+            border: 1px solid var(--border-light);
             border-radius: 0.375rem;
             padding: 1rem;
             margin-bottom: 1rem;
@@ -416,12 +417,12 @@
 
         .filter-input, .filter-select {
             padding: 0.375rem 0.5rem;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-light);
             border-radius: 0.25rem;
             font-size: 0.75rem;
             font-family: 'Poppins', sans-serif;
-            background-color: white;
-            color: #374151;
+            background-color: var(--background-white);
+            color: var(--text-color);
         }
 
         .filter-input:focus, .filter-select:focus {
@@ -441,17 +442,213 @@
             top: 100%;
             left: 0;
             margin-top: 0.375rem;
-            background: white;
-            border: 1px solid #e5e7eb;
+            background: var(--background-white);
+            border: 1px solid var(--border-light);
             border-radius: 0.375rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             padding: 0.75rem;
             z-index: 1000;
             min-width: 250px;
+            color: var(--text-color);
         }
 
         .date-dropdown-menu.active {
             display: block;
+        }
+
+        /* ========== DARK MODE STYLES ========== */
+        [data-theme="dark"] body {
+            background-color: var(--background-color) !important;
+        }
+
+        [data-theme="dark"] .main-content {
+            background-color: var(--background-color) !important;
+        }
+
+        /* White backgrounds -> dark backgrounds */
+        [data-theme="dark"] [style*="background: white"],
+        [data-theme="dark"] [style*="background:white"],
+        [data-theme="dark"] [style*="background-color: white"],
+        [data-theme="dark"] [style*="background-color:white"],
+        [data-theme="dark"] [style*="background: #ffffff"],
+        [data-theme="dark"] [style*="background:#ffffff"] {
+            background: var(--background-white) !important;
+            background-color: var(--background-white) !important;
+        }
+
+        /* Light gray backgrounds -> dark backgrounds */
+        [data-theme="dark"] [style*="background: #f9fafb"],
+        [data-theme="dark"] [style*="background:#f9fafb"],
+        [data-theme="dark"] [style*="background-color: #f9fafb"],
+        [data-theme="dark"] [style*="background-color:#f9fafb"],
+        [data-theme="dark"] [style*="background: #f8f9fa"],
+        [data-theme="dark"] [style*="background:#f8f9fa"] {
+            background: var(--background-white) !important;
+            background-color: var(--background-white) !important;
+        }
+
+        /* Text colors - dark gray -> white */
+        [data-theme="dark"] [style*="color: #374151"],
+        [data-theme="dark"] [style*="color:#374151"],
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"],
+        [data-theme="dark"] [style*="color: #000000"],
+        [data-theme="dark"] [style*="color:#000000"] {
+            color: var(--text-color) !important;
+        }
+
+        /* Border colors */
+        [data-theme="dark"] [style*="border:"] [style*="#e5e7eb"],
+        [data-theme="dark"] [style*="border-color: #e5e7eb"],
+        [data-theme="dark"] [style*="border-color:#e5e7eb"],
+        [data-theme="dark"] [style*="border:"] [style*="#d1d5db"],
+        [data-theme="dark"] [style*="border-color: #d1d5db"],
+        [data-theme="dark"] [style*="border-color:#d1d5db"] {
+            border-color: var(--border-light) !important;
+        }
+
+        /* Form inputs and selects */
+        [data-theme="dark"] input[type="text"],
+        [data-theme="dark"] input[type="date"],
+        [data-theme="dark"] input[type="number"],
+        [data-theme="dark"] select,
+        [data-theme="dark"] textarea {
+            background-color: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] input[type="text"]:focus,
+        [data-theme="dark"] input[type="date"]:focus,
+        [data-theme="dark"] select:focus,
+        [data-theme="dark"] textarea:focus {
+            border-color: var(--primary-color) !important;
+        }
+
+        /* Action buttons */
+        [data-theme="dark"] .action-btn {
+            background-color: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] .action-btn:hover {
+            background-color: var(--gray-100) !important;
+        }
+
+        /* Filter panel */
+        [data-theme="dark"] .filter-panel {
+            background: var(--background-white) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] .filter-label {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .filter-input,
+        [data-theme="dark"] .filter-select {
+            background-color: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* Date dropdown menu */
+        [data-theme="dark"] .date-dropdown-menu {
+            background: var(--background-white) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* Modal content */
+        [data-theme="dark"] #comingSoonModalContent {
+            background: var(--background-white) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Cards with bg-white class */
+        [data-theme="dark"] .bg-white {
+            background-color: var(--background-white) !important;
+        }
+
+        /* Copy button */
+        [data-theme="dark"] .copy-button {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .copy-button:hover {
+            background-color: var(--gray-100) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Stats section and cards */
+        [data-theme="dark"] #yourStatsSection,
+        [data-theme="dark"] [style*="background: #ffffff"][style*="border-radius"] {
+            background: var(--background-white) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* Page heading */
+        [data-theme="dark"] .page-heading {
+            color: var(--text-color) !important;
+        }
+
+        /* Text colors in stat cards and other elements */
+        [data-theme="dark"] [style*="color: #111827"],
+        [data-theme="dark"] [style*="color:#111827"],
+        [data-theme="dark"] [style*="color: #374151"],
+        [data-theme="dark"] [style*="color:#374151"],
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"] {
+            color: var(--text-color) !important;
+        }
+
+        /* Gray text colors */
+        [data-theme="dark"] [style*="color: #6b7280"],
+        [data-theme="dark"] [style*="color:#6b7280"],
+        [data-theme="dark"] [style*="color: #4b5563"],
+        [data-theme="dark"] [style*="color:#4b5563"] {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Table headers and rows */
+        [data-theme="dark"] thead,
+        [data-theme="dark"] th {
+            background: var(--background-white) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] tbody tr {
+            background: var(--background-white) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        [data-theme="dark"] tbody tr:hover {
+            background: var(--gray-100) !important;
+        }
+
+        /* Button backgrounds with #f3f4f6 */
+        [data-theme="dark"] [style*="background: #f3f4f6"],
+        [data-theme="dark"] [style*="background:#f3f4f6"],
+        [data-theme="dark"] [style*="background-color: #f3f4f6"],
+        [data-theme="dark"] [style*="background-color:#f3f4f6"] {
+            background: var(--gray-100) !important;
+            background-color: var(--gray-100) !important;
+        }
+
+        /* Ensure all borders use CSS variables */
+        [data-theme="dark"] [style*="border-bottom"][style*="#e5e7eb"],
+        [data-theme="dark"] [style*="border-top"][style*="#e5e7eb"],
+        [data-theme="dark"] [style*="border:"][style*="#e5e7eb"] {
+            border-color: var(--border-light) !important;
+        }
+
+        /* Ensure all text in buttons and labels is visible */
+        [data-theme="dark"] button[style*="color: #374151"],
+        [data-theme="dark"] button[style*="color:#374151"],
+        [data-theme="dark"] label[style*="color: #374151"],
+        [data-theme="dark"] label[style*="color:#374151"] {
+            color: var(--text-color) !important;
         }
 
     </style>
@@ -491,7 +688,7 @@
 <!-- End of Audit Timer Chip -->
 
     <!-- Your Stats Section -->
-    <div id="yourStatsSection" style="background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.9704rem; margin-top: 2rem; width: 100%;">
+    <div id="yourStatsSection" style="background: var(--background-white); border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid var(--border-light); margin-bottom: 0.9704rem; margin-top: 2rem; width: 100%;">
         <div id="yourStatsHeader" onclick="toggleYourStatsSection()" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6469rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E; cursor: pointer; user-select: none;">
             <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
                 <svg id="yourStatsExpandIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s ease; transform: rotate(0deg);">
@@ -592,7 +789,7 @@
         <!-- Stats Cards -->
         <div id="yourStatsCards" class="flex flex-nowrap gap-3 mb-4 overflow-x-auto" style="display: none; flex-wrap: nowrap; gap: 0.75rem; margin-bottom: 1rem; overflow-x: auto; transition: all 0.3s ease;">
             <!-- Audits Conducted Card -->
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0;">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: var(--background-white); border-radius: 0.75rem; border: 1px solid var(--border-light); padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0; color: var(--text-color);">
                 <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors" style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: rgba(26, 115, 62, 0.1); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; color: #1a733e;">
@@ -616,7 +813,7 @@
             </div>
 
             <!-- Average Quality Score Card -->
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0;">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: var(--background-white); border-radius: 0.75rem; border: 1px solid var(--border-light); padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0; color: var(--text-color);">
                 <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors" style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">
                         <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; color: #10b981;">
@@ -652,7 +849,7 @@
             </div>
 
             <!-- Remaining Card -->
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0;">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: var(--background-white); border-radius: 0.75rem; border: 1px solid var(--border-light); padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0; color: var(--text-color);">
                 <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <div class="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition-colors" style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">
                         <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; color: #f59e0b;">
@@ -667,7 +864,7 @@
             </div>
 
             <!-- In Progress Card -->
-            <div id="inProgressCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0;">
+            <div id="inProgressCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: var(--background-white); border-radius: 0.75rem; border: 1px solid var(--border-light); padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0; color: var(--text-color);">
                 <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors" style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: rgba(26, 115, 62, 0.1); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; color: #1a733e;">
@@ -685,7 +882,7 @@
             </div>
 
             <!-- Reversal Card -->
-            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0;">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: var(--background-white); border-radius: 0.75rem; border: 1px solid var(--border-light); padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0; color: var(--text-color);">
                 <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <div class="w-10 h-10 rounded-lg bg-error/10 flex items-center justify-center group-hover:bg-error/20 transition-colors" style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">
                         <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; color: #ef4444;">
@@ -714,7 +911,7 @@
             </div>
 
             <!-- Avg Duration Card -->
-            <div id="avgDurationCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: white; border-radius: 0.75rem; border: 1px solid #e5e7eb; padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0;">
+            <div id="avgDurationCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0" style="background: var(--background-white); border-radius: 0.75rem; border: 1px solid var(--border-light); padding: 1rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: box-shadow 0.2s; flex: 1; min-width: 0; color: var(--text-color);">
                 <div class="flex items-center justify-between mb-2" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors" style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; background: rgba(26, 115, 62, 0.1); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem; color: #1a733e;">
@@ -732,7 +929,7 @@
     </div>
 
     <!-- Pending Audits Section -->
-    <div id="pendingAuditsSection" style="background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #e5e7eb; margin-bottom: 0.6469rem; width: 100%; display: block;">
+    <div id="pendingAuditsSection" style="background: var(--background-white); border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid var(--border-light); margin-bottom: 0.6469rem; width: 100%; display: block;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4852rem; padding-bottom: 0.3234rem; border-bottom: 0.0405rem solid #1A733E;">
             <h3 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; text-transform: uppercase; letter-spacing: 0.0122rem; display: flex; align-items: center; gap: 0.3234rem;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -748,7 +945,7 @@
                                 <path d="M3 6h18M7 12h10M11 18h2"/>
                             </svg>
                         </button>
-                        <div id="sortMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.1617rem; background: white; border: 0.0405rem solid #e5e7eb; border-radius: 0.2425rem; box-shadow: 0 0.1617rem 0.3234rem rgba(0,0,0,0.1); z-index: 1000; min-width: 7.7625rem; padding: 0.3234rem 0;">
+                        <div id="sortMenu" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 0.1617rem; background: var(--background-white); border: 0.0405rem solid var(--border-light); border-radius: 0.2425rem; box-shadow: 0 0.1617rem 0.3234rem rgba(0,0,0,0.1); z-index: 1000; min-width: 7.7625rem; padding: 0.3234rem 0;">
                             <select id="auditSortBy" onchange="sortPendingAudits(); toggleSortMenu();" style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; background-color: #ffffff; color: #374151; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23374151\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.3234rem center; background-size: 0.5659rem; padding-right: 1.2937rem;">
                                 <option value="name_asc">Name (A-Z)</option>
                                 <option value="name_desc">Name (Z-A)</option>
@@ -775,7 +972,7 @@
                     </svg>
                     <span>Create Manual Audit</span>
                 </button>
-                <button id="toggleAllAuditsBtn" onclick="toggleAllAuditsView()" style="padding: 0.2425rem 0.4852rem; background-color: #f9fafb; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.2425rem;" title="Toggle between viewing assigned/pending audits and completed audits">
+                <button id="toggleAllAuditsBtn" onclick="toggleAllAuditsView()" style="padding: 0.2425rem 0.4852rem; background-color: var(--gray-100); color: var(--text-color); border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; display: flex; align-items: center; gap: 0.2425rem;" title="Toggle between viewing assigned/pending audits and completed audits">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
@@ -788,21 +985,21 @@
         </div>
         
         <!-- Filters Section -->
-        <div id="filtersSection" style="display: none; background: #f9fafb; border: 0.0405rem solid #e5e7eb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem;">
+        <div id="filtersSection" style="display: none; background: var(--background-white); border: 0.0405rem solid var(--border-light); border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.6469rem; margin-bottom: 0.6469rem;">
                 <!-- Date Range Filter -->
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
                     <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Start Date</label>
-                    <input type="date" id="filterStartDate" class="filter-input" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151;">
+                    <input type="date" id="filterStartDate" class="filter-input" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: var(--background-white); color: var(--text-color);">
                 </div>
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
                     <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">End Date</label>
-                    <input type="date" id="filterEndDate" class="filter-input" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151;">
+                    <input type="date" id="filterEndDate" class="filter-input" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: var(--background-white); color: var(--text-color);">
                 </div>
                 <!-- Status Filter -->
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
                     <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Status</label>
-                    <select id="filterStatus" class="filter-select" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151; cursor: pointer;">
+                    <select id="filterStatus" class="filter-select" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: var(--background-white); color: var(--text-color); cursor: pointer;">
                         <option value="">All Statuses</option>
                         <option value="pending">Pending</option>
                         <option value="in_progress">In Progress</option>
@@ -812,18 +1009,18 @@
                 <!-- Scorecard Filter -->
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
                     <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Scorecard</label>
-                    <select id="filterScorecard" class="filter-select" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151; cursor: pointer;">
+                    <select id="filterScorecard" class="filter-select" onchange="applyFilters()" style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: var(--background-white); color: var(--text-color); cursor: pointer;">
                         <option value="">All Scorecards</option>
                     </select>
                 </div>
                 <!-- Search Filter -->
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 0.2425rem;">
                     <label class="filter-label" style="font-size: 0.4852rem; font-weight: 600; color: #6b7280;">Search</label>
-                    <input type="text" id="filterSearch" class="filter-input" placeholder="Search by name..." style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid #e5e7eb; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: white; color: #374151;">
+                    <input type="text" id="filterSearch" class="filter-input" placeholder="Search by name..." style="padding: 0.2425rem 0.3234rem; border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background-color: var(--background-white); color: var(--text-color);">
                 </div>
             </div>
             <div style="display: flex; gap: 0.3234rem; align-items: center; justify-content: flex-end;">
-                <button onclick="clearFilters()" style="padding: 0.2425rem 0.4852rem; background-color: #f9fafb; color: #374151; border: 0.0405rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='#f9fafb'">
+                <button onclick="clearFilters()" style="padding: 0.2425rem 0.4852rem; background-color: var(--gray-100); color: var(--text-color); border: 0.0405rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='var(--gray-200)'" onmouseout="this.style.backgroundColor='var(--gray-100)'">
                     Clear
                 </button>
             </div>
@@ -843,7 +1040,7 @@
         </div>
         
         <!-- Pagination Controls -->
-        <div id="pendingAuditsPagination" style="display: none; margin-top: 0.6469rem; padding-top: 0.6469rem; border-top: 0.0405rem solid #e5e7eb;">
+        <div id="pendingAuditsPagination" style="display: none; margin-top: 0.6469rem; padding-top: 0.6469rem; border-top: 0.0405rem solid var(--border-light);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6469rem;">
                 <div style="display: flex; align-items: center; gap: 0.3234rem; font-size: 0.5659rem; color: #374151; font-family: 'Poppins', sans-serif;">
                     <span id="pendingPaginationInfo">Page 1 of 1</span>
@@ -882,7 +1079,7 @@
     </div>
 
     <!-- Pull Conversations from Intercom Section -->
-    <div id="pullConversationsSection" style="display: none; background: #ffffff; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #d1fae5; margin-top: 0.6469rem; margin-bottom: 0.6469rem; width: 100%;">
+    <div id="pullConversationsSection" style="display: none; background: var(--background-white); border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0405rem solid #d1fae5; margin-top: 0.6469rem; margin-bottom: 0.6469rem; width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6469rem; flex-wrap: wrap; gap: 0.6469rem;">
             <div style="display: flex; align-items: center; gap: 0.6469rem; flex-wrap: wrap; flex: 1;">
             <h3 id="pullConversationsHeader" style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem; flex-wrap: wrap;">
@@ -958,8 +1155,8 @@
         </div>
         
         <!-- AI Audit Controls Section (Inline) -->
-        <div id="aiAuditControlsSection" style="display: none; background: #f9fafb; border-radius: 0.2425rem; padding: 0.4852rem; margin-bottom: 0.4852rem; border: 1px solid #e5e7eb;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4043rem; flex-wrap: wrap; gap: 0.4043rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.4043rem;">
+        <div id="aiAuditControlsSection" style="display: none; background: var(--background-white); border-radius: 0.2425rem; padding: 0.4852rem; margin-bottom: 0.4852rem; border: 1px solid var(--border-light);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4043rem; flex-wrap: wrap; gap: 0.4043rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.4043rem;">
                 <div style="display: flex; align-items: center; gap: 0.4043rem; flex-wrap: wrap; flex: 1;">
                     <h4 style="font-size: 0.5659rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.2425rem;">
                         <svg style="width: 0.6469rem; height: 0.6469rem;" viewBox="0 0 24 24" fill="#1A733E">
@@ -1064,11 +1261,11 @@
         
         <!-- Conversations List -->
         <div id="pullConversationsList" style="display: none;">
-            <div style="background: white; border-radius: 0 0 0.3234rem 0.3234rem; border: 0.0304rem solid #e5e7eb; border-top: none; max-height: 60vh; overflow-x: auto; overflow-y: auto; position: relative;">
+            <div style="background: var(--background-white); border-radius: 0 0 0.3234rem 0.3234rem; border: 0.0304rem solid var(--border-light); border-top: none; max-height: 60vh; overflow-x: auto; overflow-y: auto; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; min-width: fit-content; font-size: 0.6069rem;">
-                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
-                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
-                            <th colspan="12" style="padding: 0.3234rem 0.4852rem; text-align: right; font-weight: normal; border-bottom: 0.0625rem solid #e5e7eb;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: var(--background-white); overflow: visible;">
+                        <tr style="background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light);">
+                            <th colspan="12" style="padding: 0.3234rem 0.4852rem; text-align: right; font-weight: normal; border-bottom: 0.0625rem solid var(--border-light);">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.2425rem; position: relative; justify-content: flex-end;">
                                     <span style="font-size: 0.4852rem; color: #6b7280; font-weight: 500;">Audit Recommendation Logic</span>
                                     <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s; width: 0.8086rem; height: 0.8086rem; border-radius: 50%; background: #e5e7eb; color: #6b7280;" onmouseover="this.style.background='#d1d5db'; this.style.color='#374151';" onmouseout="this.style.background='#e5e7eb'; this.style.color='#6b7280';">
@@ -1109,7 +1306,7 @@
                                 </div>
                             </th>
                         </tr>
-                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                        <tr style="background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light);">
                             <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; width: 3rem;">
                                 <input type="checkbox" id="selectAllPullConversations" style="cursor: pointer;" title="Select all conversations">
                             </th>
@@ -1322,8 +1519,8 @@
 
     <!-- AI Audit Modal -->
     <div id="aiAuditModal" onclick="if(event.target === this) closeAIAuditSection();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;">
-        <div id="aiAuditSection" onclick="event.stopPropagation();" style="background: #ffffff; border-radius: 0.5rem; padding: 1rem; max-width: 75rem; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15); position: relative;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem;">
+        <div id="aiAuditSection" onclick="event.stopPropagation();" style="background: var(--background-white); border-radius: 0.5rem; padding: 1rem; max-width: 75rem; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem; border-bottom: 1px solid var(--border-light); padding-bottom: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1;">
                     <h3 id="aiAuditHeader" style="font-size: 0.875rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
                         <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="#1A733E">
@@ -1400,10 +1597,10 @@
             
             <!-- Conversations List -->
             <div id="aiAuditConversationsList" style="display: none;">
-                <div style="background: white; border-radius: 0.375rem; border: 1px solid #e5e7eb; max-height: 45vh; overflow-x: auto; overflow-y: auto; position: relative;">
+                <div style="background: var(--background-white); border-radius: 0.375rem; border: 1px solid var(--border-light); max-height: 45vh; overflow-x: auto; overflow-y: auto; position: relative;">
                 <table style="width: 100%; border-collapse: collapse; min-width: fit-content; font-size: 0.6069rem;">
-                    <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb; overflow: visible;">
-                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                    <thead style="position: sticky; top: 0; z-index: 10; background: var(--background-white); overflow: visible;">
+                        <tr style="background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light);">
                             <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; width: 3rem;">
                                 <input type="checkbox" id="selectAllAIAuditConversations" style="cursor: pointer;" title="Select all conversations" onclick="selectAllAIAuditConversations(this.checked)">
                             </th>
@@ -1442,8 +1639,8 @@
 
     <!-- Pull Conversations Filter Modal -->
     <div id="pullConversationsFilterModal" onclick="if(event.target === this) closePullConversationsFilterDialog();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center; padding: 1.2937rem;">
-        <div onclick="event.stopPropagation();" style="background: white; border-radius: 0.6469rem; max-width: 48rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.8086rem 2.4258rem rgba(0, 0, 0, 0.15);">
-            <div style="position: sticky; top: 0; background: white; border-bottom: 0.0625rem solid #e5e7eb; padding: 1.2937rem; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
+        <div onclick="event.stopPropagation();" style="background: var(--background-white); border-radius: 0.6469rem; max-width: 48rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.8086rem 2.4258rem rgba(0, 0, 0, 0.15);">
+            <div style="position: sticky; top: 0; background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light); padding: 1.2937rem; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
                 <h2 style="font-size: 0.8086rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif;">Advanced Filters</h2>
                 <button onclick="closePullConversationsFilterDialog()" style="background: #f3f4f6; border: none; border-radius: 50%; width: 1.9406rem; height: 1.9406rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6b7280; font-size: 1.2937rem; line-height: 1; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">×</button>
             </div>
@@ -1452,7 +1649,7 @@
                     <!-- State Filter -->
                     <div>
                         <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">State</label>
-                        <select id="pullFilterState" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer;">
+                        <select id="pullFilterState" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: var(--background-white); color: var(--text-color); cursor: pointer;">
                             <option value="">All States</option>
                             <option value="open">Open</option>
                             <option value="closed">Closed</option>
@@ -1462,7 +1659,7 @@
                     <!-- Priority Filter -->
                     <div>
                         <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">Priority</label>
-                        <select id="pullFilterPriority" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer;">
+                        <select id="pullFilterPriority" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: var(--background-white); color: var(--text-color); cursor: pointer;">
                             <option value="">All Priorities</option>
                             <option value="priority">Priority</option>
                             <option value="not_priority">Not Priority</option>
@@ -1472,7 +1669,7 @@
                     <!-- Rating Filter -->
                     <div>
                         <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">Rating</label>
-                        <select id="pullFilterRatingType" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; margin-bottom: 0.3234rem;">
+                        <select id="pullFilterRatingType" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: var(--background-white); color: var(--text-color); cursor: pointer; margin-bottom: 0.3234rem;">
                             <option value="">All Ratings</option>
                             <option value="hasRating">Has Rating (Any Star)</option>
                             <option value="unrated">Unrated</option>
@@ -1481,7 +1678,7 @@
                         </select>
                         
                         <!-- Exact Rating Input (shown when "exact" is selected) -->
-                        <select id="pullFilterRatingExact" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; display: none; margin-bottom: 0.3234rem;">
+                        <select id="pullFilterRatingExact" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: var(--background-white); color: var(--text-color); cursor: pointer; display: none; margin-bottom: 0.3234rem;">
                             <option value="">Select Rating</option>
                             <option value="5">5 Stars</option>
                             <option value="4">4 Stars</option>
@@ -1507,7 +1704,7 @@
                     <!-- CX Score Filter -->
                     <div>
                         <label style="display: block; font-size: 0.5659rem; font-weight: 600; color: #374151; margin-bottom: 0.3234rem;">CX Score</label>
-                        <select id="pullFilterCxScoreType" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: white; color: #374151; cursor: pointer; margin-bottom: 0.3234rem;">
+                        <select id="pullFilterCxScoreType" style="width: 100%; padding: 0.3234rem 0.4852rem; border: 0.0304rem solid var(--border-light); border-radius: 0.1617rem; font-size: 0.4852rem; font-family: 'Poppins', sans-serif; background: var(--background-white); color: var(--text-color); cursor: pointer; margin-bottom: 0.3234rem;">
                             <option value="">All CX Scores</option>
                             <option value="hasScore">Has CX Score</option>
                             <option value="noScore">No CX Score</option>
@@ -1579,7 +1776,7 @@
     <!-- Admin Search Modal (for when admin ID is not found) -->
     <div id="adminSearchModal" onclick="if(event.target === this) closeAdminSearchModal();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10001; align-items: center; justify-content: center; padding: 1.2937rem;">
         <div onclick="event.stopPropagation();" style="background: white; border-radius: 0.6469rem; max-width: 40rem; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.8086rem 2.4258rem rgba(0, 0, 0, 0.15);">
-            <div style="position: sticky; top: 0; background: white; border-bottom: 0.0625rem solid #e5e7eb; padding: 1.2937rem; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
+            <div style="position: sticky; top: 0; background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light); padding: 1.2937rem; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
                 <h2 style="font-size: 0.8086rem; font-weight: 600; color: #1A733E; margin: 0; font-family: 'Poppins', sans-serif;">Admin Not Found - Search & Link</h2>
                 <button onclick="closeAdminSearchModal()" style="background: #f3f4f6; border: none; border-radius: 50%; width: 1.9406rem; height: 1.9406rem; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6b7280; font-size: 1.2937rem; line-height: 1; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">×</button>
             </div>
@@ -1720,7 +1917,7 @@
             <div style="background: white; border-radius: 0.3234rem; overflow: hidden; border: 0.0304rem solid #e5e7eb; max-height: 60vh; overflow-y: auto; position: relative;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead style="position: sticky; top: 0; z-index: 10; background: #f9fafb;">
-                        <tr style="background: #f9fafb; border-bottom: 0.0625rem solid #e5e7eb;">
+                        <tr style="background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light);">
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Client</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Conversation ID</th>
                             <th style="padding: 0.5rem 0.75rem; text-align: left; font-weight: 600; color: #374151; font-size: 0.75rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;">Subject</th>
@@ -1782,7 +1979,7 @@
     <!-- Conversations Filter Dialog Modal -->
     <div id="conversationsFilterModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif;">
         <div id="conversationsFilterModalContent" onclick="event.stopPropagation();" style="background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 32rem; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 0.625rem 1.5625rem rgba(0, 0, 0, 0.2); animation: modalSlideIn 0.3s ease-out;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 0.0625rem solid #e5e7eb; padding-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 0.0625rem solid var(--border-light); padding-bottom: 1rem;">
                 <h2 style="font-size: 1.25rem; font-weight: 600; color: #111827; margin: 0;">Filter Conversations</h2>
                 <button onclick="closeConversationsFilterDialog()" style="background: transparent; border: none; cursor: pointer; padding: 0.25rem; color: #6b7280; transition: color 0.2s;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#6b7280'" title="Close">
                     <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

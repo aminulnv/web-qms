@@ -79,9 +79,17 @@
             color: var(--text-color) !important;
         }
 
-        [data-theme="dark"] [style*="color: #6b7280"],
-        [data-theme="dark"] [style*="color:#6b7280"] {
-            color: var(--text-secondary) !important;
+        /* Text colors - ensure maximum contrast */
+        [data-theme="dark"] [style*="color: #000000"],
+        [data-theme="dark"] [style*="color:#000000"] {
+            color: #ffffff !important; /* Pure white for maximum contrast in dark mode */
+        }
+
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color:#1f2937"],
+        [data-theme="dark"] [style*="color: #374151"],
+        [data-theme="dark"] [style*="color:#374151"] {
+            color: #ffffff !important; /* Pure white for maximum contrast in dark mode */
         }
 
         [data-theme="dark"] [style*="border:"] [style*="#e5e7eb"],
@@ -98,13 +106,20 @@
         [data-theme="dark"] input[type="date"],
         [data-theme="dark"] textarea {
             background-color: var(--background-white) !important;
-            color: var(--text-color) !important;
+            color: #ffffff !important; /* Pure white text for maximum contrast */
             border-color: var(--border-light) !important;
         }
 
-        /* Error Details Header - Make dark */
+        /* Error Details Header and containers - Make dark */
         [data-theme="dark"] [style*="background-color: #f8f9fa"],
         [data-theme="dark"] [style*="background-color:#f8f9fa"] {
+            background-color: var(--background-white) !important;
+        }
+
+        /* Error Details table container - ensure dark background */
+        [data-theme="dark"] [style*="background: #f9fafb"][style*="Error Details"],
+        [data-theme="dark"] div[style*="background: #f9fafb"] {
+            background: var(--background-white) !important;
             background-color: var(--background-white) !important;
         }
 
@@ -133,14 +148,14 @@
         /* Chat Message Bubbles - Adjust for dark mode */
         [data-theme="dark"] [style*="background: white"][style*="color: #374151"] {
             background: var(--gray-100) !important;
-            color: var(--text-color) !important;
+            color: #ffffff !important; /* Pure white for maximum contrast */
             border-color: var(--border-light) !important;
         }
 
         /* User message bubbles in dark mode */
         [data-theme="dark"] .message-bubble-user {
             background: var(--gray-100) !important;
-            color: var(--text-color) !important;
+            color: #ffffff !important; /* Pure white for maximum contrast */
             border-color: var(--border-light) !important;
         }
 
@@ -159,35 +174,29 @@
             opacity: 0.5;
         }
 
-        /* Font visibility improvements */
-        [data-theme="dark"] [style*="color: #1f2937"],
-        [data-theme="dark"] [style*="color:#1f2937"] {
-            color: var(--text-color) !important;
-        }
-
-        [data-theme="dark"] [style*="color: #4b5563"],
-        [data-theme="dark"] [style*="color:#4b5563"] {
-            color: var(--text-secondary) !important;
-        }
-
         
     </style>
     <script>
-    // Update inline styles on theme change
+    // Update inline styles on theme change - single unified handler
     document.addEventListener('themeChange', function(e) {
         const isDark = e.detail.theme === 'dark';
         const root = document.documentElement;
         const bgWhite = getComputedStyle(root).getPropertyValue('--background-white').trim();
         const gray100 = getComputedStyle(root).getPropertyValue('--gray-100').trim();
-        const textColor = getComputedStyle(root).getPropertyValue('--text-color').trim();
-        const textSecondary = getComputedStyle(root).getPropertyValue('--text-secondary').trim();
         const borderLight = getComputedStyle(root).getPropertyValue('--border-light').trim();
         
-        // Update elements with hardcoded colors
+        // Text colors - use pure white in dark mode, pure black in light mode for maximum contrast
+        const textColorDark = '#ffffff'; // Pure white for maximum contrast
+        const textColorLight = '#000000'; // Pure black for maximum contrast
+        
+        // Update background colors
         document.querySelectorAll('[style*="background: #f9fafb"], [style*="background:#f9fafb"], [style*="background-color: #f9fafb"], [style*="background-color:#f9fafb"]').forEach(el => {
             if (isDark) {
                 el.style.setProperty('background', bgWhite, 'important');
                 el.style.setProperty('background-color', bgWhite, 'important');
+            } else {
+                el.style.setProperty('background', '#f9fafb', 'important');
+                el.style.setProperty('background-color', '#f9fafb', 'important');
             }
         });
         
@@ -195,61 +204,80 @@
             if (isDark) {
                 el.style.setProperty('background', bgWhite, 'important');
                 el.style.setProperty('background-color', bgWhite, 'important');
+            } else {
+                el.style.setProperty('background', 'white', 'important');
+                el.style.setProperty('background-color', 'white', 'important');
             }
         });
         
-        // Error details header - make dark
+        // Error details header and containers
         document.querySelectorAll('[style*="background-color: #f8f9fa"], [style*="background-color:#f8f9fa"]').forEach(el => {
             if (isDark) {
                 el.style.setProperty('background-color', bgWhite, 'important');
+            } else {
+                el.style.setProperty('background-color', '#f8f9fa', 'important');
             }
         });
         
         // Transcript chat view background
         const transcriptChatView = document.getElementById('transcriptChatView');
-        if (transcriptChatView && isDark) {
-            transcriptChatView.style.setProperty('background', bgWhite, 'important');
+        if (transcriptChatView) {
+            transcriptChatView.style.setProperty('background', isDark ? bgWhite : '#f0f2f5', 'important');
         }
         
         // Transcript text view background
         const transcriptTextView = document.getElementById('transcriptTextView');
-        if (transcriptTextView && isDark) {
-            transcriptTextView.style.setProperty('background', bgWhite, 'important');
+        if (transcriptTextView) {
+            transcriptTextView.style.setProperty('background', isDark ? bgWhite : '#ffffff', 'important');
         }
         
-        // Chat message bubbles - user messages (white background)
+        // Chat message bubbles - user messages
         document.querySelectorAll('[style*="background: white"][style*="color: #374151"]').forEach(el => {
             if (isDark) {
                 el.style.setProperty('background', gray100, 'important');
-                el.style.setProperty('color', textColor, 'important');
+                el.style.setProperty('color', textColorDark, 'important');
                 el.style.setProperty('border-color', borderLight, 'important');
+            } else {
+                el.style.setProperty('background', 'white', 'important');
+                el.style.setProperty('color', textColorLight, 'important');
             }
         });
         
-        // Dividers - reduce contrast
+        // Dividers - reduce contrast in dark mode
         document.querySelectorAll('[style*="border-bottom"][style*="#f3f4f6"], [style*="border-bottom"][style*="#e5e7eb"]').forEach(el => {
             if (isDark) {
                 el.style.setProperty('border-bottom-color', borderLight, 'important');
                 el.style.setProperty('opacity', '0.5', 'important');
+            } else {
+                el.style.setProperty('border-bottom-color', '#e5e7eb', 'important');
+                el.style.setProperty('opacity', '1', 'important');
             }
         });
         
-        document.querySelectorAll('[style*="color: #374151"], [style*="color:#374151"], [style*="color: #1f2937"], [style*="color:#1f2937"]').forEach(el => {
-            if (isDark) {
-                el.style.setProperty('color', textColor, 'important');
-            }
-        });
+        // Update all text colors - single unified handler
+        const textColorSelectors = [
+            '[style*="color: #000000"]',
+            '[style*="color:#000000"]',
+            '[style*="color: #374151"]',
+            '[style*="color:#374151"]',
+            '[style*="color: #1f2937"]',
+            '[style*="color:#1f2937"]'
+        ];
         
-        document.querySelectorAll('[style*="color: #6b7280"], [style*="color:#6b7280"]').forEach(el => {
-            if (isDark) {
-                el.style.setProperty('color', textSecondary, 'important');
-            }
-        });
-        
-        document.querySelectorAll('[style*="color: #4b5563"], [style*="color:#4b5563"]').forEach(el => {
-            if (isDark) {
-                el.style.setProperty('color', textSecondary, 'important');
-            }
+        textColorSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                if (isDark) {
+                    el.style.setProperty('color', textColorDark, 'important');
+                } else {
+                    // Reset to appropriate light mode color based on original
+                    const style = el.getAttribute('style') || '';
+                    if (style.includes('#000000')) {
+                        el.style.setProperty('color', textColorLight, 'important');
+                    } else if (style.includes('#374151') || style.includes('#1f2937')) {
+                        el.style.setProperty('color', textColorLight, 'important');
+                    }
+                }
+            });
         });
     });
     </script>
@@ -335,7 +363,7 @@
         <div id="loadingIndicator" style="display: flex; align-items: center; justify-content: center; padding: 3rem; width: 100%;">
             <div style="text-align: center;">
                 <div style="border: 0.1406rem solid #f3f4f6; border-top: 0.1406rem solid #1A733E; border-radius: 50%; width: 2.25rem; height: 2.25rem; animation: spin 1s linear infinite; margin: 0 auto 0.75rem;"></div>
-                <p style="color: #6b7280; font-family: 'Poppins', sans-serif;">Loading audit details...</p>
+                <p style="color: #000000; font-family: 'Poppins', sans-serif;">Loading audit details...</p>
             </div>
         </div>
 
@@ -1032,12 +1060,91 @@ function editCurrentAudit() {
 
 // Generate error details HTML
 function generateErrorDetails(audit, errorFields) {
-    // Calculate actual totals from individual error counts
+    // Check if current user is the audited employee (for showing comment boxes)
+    const isAuditedEmployee = isCurrentUserAuditedEmployee();
+    
+    // Check if reversal has been submitted (disable inputs if so)
+    const reversalRequestedAt = audit.reversalRequestedAt || audit.reversal_requested_at;
+    const hasReversalSubmitted = !!reversalRequestedAt;
+    
+    // Check if audit is acknowledged (hide comment input boxes if so)
+    const acknowledgementStatus = audit.acknowledgementStatus || audit.acknowledgement_status || '';
+    const isAcknowledged = acknowledgementStatus.toLowerCase() === 'acknowledged';
+    
+    // Load parameter comments from audit data (check both audit parameter and currentAudit global)
+    let parameterComments = audit.parameterComments || audit.parameter_comments || {};
+    
+    // Also check currentAudit for comments (may have real-time updates)
+    if (typeof currentAudit !== 'undefined' && currentAudit) {
+        const currentComments = currentAudit.parameterComments || currentAudit.parameter_comments || {};
+        // Merge: currentAudit takes precedence as it has the latest data
+        parameterComments = { ...parameterComments, ...currentComments };
+    }
+    
+    // Also check inline comment inputs in the DOM (real-time fallback)
+    const inlineComments = {};
+    try {
+        errorFields.forEach(field => {
+            const commentInputs = document.querySelectorAll(`input[data-param-key="${field.key}"]`);
+            const comments = [];
+            commentInputs.forEach(input => {
+                if (input.value && input.value.trim()) {
+                    comments.push(input.value.trim());
+                }
+            });
+            if (comments.length > 0) {
+                inlineComments[field.key] = { comments: comments };
+            }
+        });
+        // Merge inline comments (takes precedence as they're most up-to-date)
+        parameterComments = { ...parameterComments, ...inlineComments };
+    } catch (e) {
+        // If DOM check fails (e.g., function called before DOM is ready), continue with audit data only
+        console.warn('Could not check inline comments from DOM:', e);
+    }
+    
+    // Filter error parameters: only show error parameters that have feedback from the auditor
+    const filteredErrorFields = errorFields.filter(field => {
+        // If it's not an error parameter, always show it
+        if (field.parameter_type !== 'error') {
+            return true;
+        }
+        
+        // For error parameters, only show if they have feedback from the auditor
+        // Check feedback field (stored in audit[field.feedback])
+        const feedbackData = audit[field.feedback];
+        if (!feedbackData) return false;
+        
+        // Handle feedback - support both old format (string) and new format (JSON array)
+        let feedbackArray = [];
+        if (typeof feedbackData === 'string') {
+            // Try to parse as JSON array, fallback to single string
+            try {
+                const parsed = JSON.parse(feedbackData);
+                feedbackArray = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+            } catch (e) {
+                // If not valid JSON, treat as single string (backward compatibility)
+                feedbackArray = feedbackData.trim() ? [feedbackData] : [];
+            }
+        } else if (Array.isArray(feedbackData)) {
+            feedbackArray = feedbackData;
+        } else {
+            feedbackArray = feedbackData ? [feedbackData] : [];
+        }
+        
+        // Filter out empty feedbacks
+        feedbackArray = feedbackArray.filter(f => f && f.trim());
+        
+        // Only show if there's at least one non-empty feedback
+        return feedbackArray.length > 0;
+    });
+    
+    // Calculate actual totals from filtered error counts (only visible error parameters)
     let criticalFailTotal = 0;
     let criticalTotal = 0;
     let significantTotal = 0;
     
-    errorFields.forEach(field => {
+    filteredErrorFields.forEach(field => {
         const count = audit[field.key] ? parseInt(audit[field.key]) : 0;
         if (count > 0) {
             if (field.severity === 'Critical Fail') {
@@ -1052,9 +1159,9 @@ function generateErrorDetails(audit, errorFields) {
     
     // Determine column header based on field types
     let statusColumnHeader = 'Status';
-    if (errorFields.length > 0) {
-        const allCounters = errorFields.every(field => field.field_type === 'counter');
-        const allRadio = errorFields.every(field => field.field_type === 'radio');
+    if (filteredErrorFields.length > 0) {
+        const allCounters = filteredErrorFields.every(field => field.field_type === 'counter');
+        const allRadio = filteredErrorFields.every(field => field.field_type === 'radio');
         
         if (allCounters) {
             statusColumnHeader = 'Counts';
@@ -1063,22 +1170,8 @@ function generateErrorDetails(audit, errorFields) {
         }
     }
     
-    // Check if current user is the audited employee (for showing comment boxes)
-    const isAuditedEmployee = isCurrentUserAuditedEmployee();
-    
-    // Check if reversal has been submitted (disable inputs if so)
-    const reversalRequestedAt = audit.reversalRequestedAt || audit.reversal_requested_at;
-    const hasReversalSubmitted = !!reversalRequestedAt;
-    
-    // Check if audit is acknowledged (hide comment input boxes if so)
-    const acknowledgementStatus = audit.acknowledgementStatus || audit.acknowledgement_status || '';
-    const isAcknowledged = acknowledgementStatus.toLowerCase() === 'acknowledged';
-    
-    // Load parameter comments from audit data
-    const parameterComments = audit.parameterComments || audit.parameter_comments || {};
-    
     // Check if any parameter has a comment (handle both single comment and comments array format)
-    const hasAnyComments = errorFields.some(field => {
+    const hasAnyComments = filteredErrorFields.some(field => {
         const comment = parameterComments[field.key];
         if (!comment) return false;
         // Check for single comment format
@@ -1118,7 +1211,7 @@ function generateErrorDetails(audit, errorFields) {
         console.warn('Error getting dark mode values for dividers, using defaults:', e);
     }
     
-    const errorRows = errorFields.map(field => {
+    const errorRows = filteredErrorFields.map(field => {
         const rawValue = audit[field.key];
         let displayValue = '';
         let count = 0;
@@ -1193,12 +1286,12 @@ function generateErrorDetails(audit, errorFields) {
                     const commentInputId = `comment_${field.key}_${index}`;
                     return `
                         <div style="margin-bottom: ${index < feedbackArray.length - 1 ? '0.6469rem' : '0'};">
-                            ${feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Comment ${index + 1}:</div>` : ''}
+                            ${feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #000000; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Comment ${index + 1}:</div>` : ''}
                             ${!isAuditedEmployee || hasReversalSubmitted || isAcknowledged ? 
                                 // For auditors, after reversal submitted, or after acknowledgment, show as read-only text
                                 (existingComment ? 
-                                    `<div style="font-size: 0.5659rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(existingComment)}</div>` :
-                                    '<span style="color: #9ca3af; font-style: italic; font-size: 0.5659rem;">-</span>'
+                                    `<div style="font-size: 0.5659rem; color: #000000; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(existingComment)}</div>` :
+                                    '<span style="color: #000000; font-style: italic; font-size: 0.5659rem;">-</span>'
                                 ) :
                                 // For audited employees (before reversal and before acknowledgment), show input box
                                 `<input type="text" id="${commentInputId}" data-param-key="${field.key}" data-feedback-index="${index}" value="${escapeHtml(existingComment)}" placeholder="Enter your comment..." style="width: 100%; padding: 0.2425rem 0.3234rem; border: 0.0625rem solid #d1d5db; border-radius: 0.1617rem; font-size: 0.5659rem; font-family: 'Poppins', sans-serif;" onchange="saveParameterComment('${field.key}', ${index}, this.value)" onblur="saveParameterComment('${field.key}', ${index}, this.value)">`
@@ -1215,14 +1308,14 @@ function generateErrorDetails(audit, errorFields) {
                         if (!comment || !comment.trim()) return '';
                         return `
                             <div style="margin-bottom: ${index < commentsArray.length - 1 ? '0.6469rem' : '0'};">
-                                ${commentsArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Comment ${index + 1}:</div>` : ''}
-                                <div style="font-size: 0.5659rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(comment)}</div>
+                                ${commentsArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #000000; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Comment ${index + 1}:</div>` : ''}
+                                <div style="font-size: 0.5659rem; color: #000000; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">${escapeHtml(comment)}</div>
                             </div>
                         `;
                     }).filter(html => html).join('');
                 } else {
                     // No comments and no feedback - show dash
-                    commentHtml = '<span style="color: #9ca3af; font-style: italic;">-</span>';
+                    commentHtml = '<span style="color: #000000; font-style: italic;">-</span>';
                 }
             }
         }
@@ -1232,8 +1325,8 @@ function generateErrorDetails(audit, errorFields) {
         if (hasFeedback) {
             // Plain display - multiple feedbacks separated by line breaks
             feedbackHtml = feedbackArray.map((feedbackText, index) => {
-                const label = feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Feedback ${index + 1}:</div>` : '';
-                return `${label}<div style="font-size: 0.5659rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; margin-bottom: ${index < feedbackArray.length - 1 ? '0.6469rem' : '0'};">${escapeHtml(feedbackText)}</div>`;
+                const label = feedbackArray.length > 1 ? `<div style="font-size: 0.4043rem; color: #000000; font-weight: 600; margin-bottom: 0.1617rem; font-family: 'Poppins', sans-serif;">Feedback ${index + 1}:</div>` : '';
+                return `${label}<div style="font-size: 0.5659rem; color: #000000; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; margin-bottom: ${index < feedbackArray.length - 1 ? '0.6469rem' : '0'};">${escapeHtml(feedbackText)}</div>`;
             }).join('');
         }
         
@@ -1257,12 +1350,12 @@ function generateErrorDetails(audit, errorFields) {
                 <div style="display: flex; justify-content: center; min-width: 0;">
                     <div style="font-size: 0.5659rem; color: #1f2937; text-align: center; font-weight: 700; font-family: 'Poppins', sans-serif;">${displayValue}</div>
                 </div>
-                <div style="font-size: 0.5659rem; color: #4b5563; font-family: 'Poppins', sans-serif; min-width: 0; word-wrap: break-word; overflow-wrap: break-word;">
+                <div style="font-size: 0.5659rem; color: #000000; font-family: 'Poppins', sans-serif; min-width: 0; word-wrap: break-word; overflow-wrap: break-word;">
                     ${feedbackHtml}
                 </div>
                 ${showCommentsColumn ? `
-                    <div style="font-size: 0.5659rem; color: #4b5563; font-family: 'Poppins', sans-serif; min-width: 0; overflow: hidden;">
-                        ${commentHtml || '<span style="color: #9ca3af; font-style: italic;">-</span>'}
+                    <div style="font-size: 0.5659rem; color: #000000; font-family: 'Poppins', sans-serif; min-width: 0; overflow: hidden;">
+                        ${commentHtml || '<span style="color: #000000; font-style: italic;">-</span>'}
                     </div>
                 ` : ''}
             </div>
@@ -1307,11 +1400,11 @@ function generateErrorDetails(audit, errorFields) {
         <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                 <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Avg Score</p>
+                    <p style="font-size: 0.4447rem; color: #000000; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Avg Score</p>
                     <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.averageScore || '0'}%</div>
                 </div>
                 <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
+                    <p style="font-size: 0.4447rem; color: #000000; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Status</p>
                     <div style="font-size: 0.5659rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.passingStatus || 'N/A'}</div>
                 </div>
             </div>
@@ -1321,19 +1414,19 @@ function generateErrorDetails(audit, errorFields) {
         <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; margin-bottom: 0.6469rem; border: 0.0304rem solid #e5e7eb;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr)); gap: 0.6469rem;">
                 <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Total Errors</p>
+                    <p style="font-size: 0.4447rem; color: #000000; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Total Errors</p>
                     <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${audit.totalErrorsCount || '0'}</div>
                 </div>
                 <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
+                    <p style="font-size: 0.4447rem; color: #000000; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical Fail</p>
                     <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalFailTotal}</div>
                 </div>
                 <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical</p>
+                    <p style="font-size: 0.4447rem; color: #000000; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Critical</p>
                     <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${criticalTotal}</div>
                 </div>
                 <div>
-                    <p style="font-size: 0.4447rem; color: #6b7280; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
+                    <p style="font-size: 0.4447rem; color: #000000; margin: 0 0 0.3234rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0151rem; font-weight: 600;">Significant Error</p>
                     <div style="font-size: 0.6469rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; background: white; border: 0.0304rem solid #d1d5db; border-radius: 0.1617rem; color: #374151; width: 100%; padding: 0.2425rem 0.3234rem; text-align: center;">${significantTotal}</div>
                 </div>
             </div>
@@ -1504,7 +1597,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
     // Determine footer background color based on acknowledgement status
     // Green: Acknowledged | Gray: Default (not acknowledged)
     let footerBackgroundColor = '#f9fafb'; // Default gray
-    let footerTextColor = '#6b7280'; // Default gray text
+    let footerTextColor = '#000000'; // Default black text
     
     // Normalize acknowledgement status (case-insensitive)
     const acknowledgementStatusLower = acknowledgementStatus.toLowerCase();
@@ -1673,7 +1766,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
         const chatMessagesContainer = document.getElementById('chatMessagesContainer');
         if (chatMessagesContainer) {
             chatMessagesContainer.innerHTML = `
-                <div style="text-align: center; padding: 1.2937rem; color: #6b7280;">
+                <div style="text-align: center; padding: 1.2937rem; color: #000000;">
                     <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.091rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                     <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversation from Intercom...</p>
                 </div>
@@ -1998,7 +2091,7 @@ function displaySubmittedReversalForm(audit) {
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5625rem;">
                     <!-- Reversal Type -->
                     <div>
-                        <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #000000; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
                             Reversal Type
                         </label>
                         <div style="padding: 0.375rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151;">
@@ -2009,7 +2102,7 @@ function displaySubmittedReversalForm(audit) {
                     <!-- Reversal Reason -->
                     ${reversalReason ? `
                         <div>
-                            <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #000000; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
                                 Reversal Reason
                             </label>
                             <div style="padding: 0.375rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151;">
@@ -2022,7 +2115,7 @@ function displaySubmittedReversalForm(audit) {
                 <!-- Affected Error Parameters with Justifications -->
                 ${selectedParameters.length > 0 ? `
                     <div>
-                        <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #000000; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
                             Parameter Justifications
                         </label>
                         <div style="padding: 0.5625rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151; max-height: 18.75rem; overflow-y: auto;">
@@ -2083,10 +2176,10 @@ function displaySubmittedReversalForm(audit) {
                                             ${escapeHtml(param)}
                                         </div>
                                         ${paramComment ? `
-                                            <div style="font-size: 0.5625rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; padding-left: 1.125rem;">
+                                            <div style="font-size: 0.5625rem; color: #000000; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6; padding-left: 1.125rem;">
                                                 ${escapeHtml(paramComment)}
                                             </div>
-                                        ` : '<div style="font-size: 0.5625rem; color: #9ca3af; font-family: \'Poppins\', sans-serif; padding-left: 1.125rem; font-style: italic;">No justification provided</div>'}
+                                        ` : '<div style="font-size: 0.5625rem; color: #000000; font-family: \'Poppins\', sans-serif; padding-left: 1.125rem; font-style: italic;">No justification provided</div>'}
                                     </div>
                                 `;
                             }).join('')}
@@ -2096,7 +2189,7 @@ function displaySubmittedReversalForm(audit) {
                 
                 <!-- Within Auditor Scope -->
                 <div>
-                    <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #000000; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
                         Within Auditor Scope
                     </label>
                     <div style="padding: 0.375rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f9fafb; color: #374151; display: flex; align-items: center; gap: 0.375rem;">
@@ -2106,7 +2199,7 @@ function displaySubmittedReversalForm(audit) {
                             </svg>
                             <span>Yes - I believe this can be resolved by the original auditor</span>
                         ` : `
-                            <svg style="width: 0.75rem; height: 0.75rem; color: #6b7280;" viewBox="0 0 24 24" fill="currentColor">
+                            <svg style="width: 0.75rem; height: 0.75rem; color: #000000;" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                             </svg>
                             <span>No</span>
@@ -2124,7 +2217,7 @@ function displaySubmittedReversalForm(audit) {
                     
                     return `
                         <div>
-                            <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <label style="display: block; font-size: 0.5625rem; font-weight: 600; color: #000000; margin-bottom: 0.2812rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
                                 Response From Auditor
                             </label>
                             <div style="padding: 0.5625rem; border: 0.0352rem solid #e5e7eb; border-radius: 0.2812rem; font-size: 0.6094rem; font-family: 'Poppins', sans-serif; background-color: #f0f9ff; border-left: 0.1875rem solid #3b82f6; color: #1e40af; white-space: pre-wrap; line-height: 1.6;">
@@ -2193,7 +2286,7 @@ function startReversalTimer(auditSubmissionTime) {
         let timerColor = '#374151';
         let timerAnimation = 'none';
         let elementAnimation = 'none';
-        let elementColor = '#6b7280';
+        let elementColor = '#000000';
         let elementFontWeight = '500';
         let iconColor = '';
         let iconAnimation = 'none';
@@ -2234,7 +2327,7 @@ function startReversalTimer(auditSubmissionTime) {
         // Get current footer to determine text color
         const footerBar = document.getElementById('footerBar');
         let defaultTimerColor = '#374151';
-        let defaultTextColor = '#6b7280';
+        let defaultTextColor = '#000000';
         
         if (footerBar) {
             const bgColor = footerBar.style.backgroundColor || window.getComputedStyle(footerBar).backgroundColor;
@@ -2299,7 +2392,7 @@ async function loadConversationFromIntercom(conversationId) {
     
     // Show loading state
     chatMessagesContainer.innerHTML = `
-        <div style="text-align: center; padding: 1.2937rem; color: #6b7280;">
+        <div style="text-align: center; padding: 1.2937rem; color: #000000;">
             <div style="display: inline-block; width: 1.2937rem; height: 1.2937rem; border: 0.091rem solid #e5e7eb; border-top-color: #1A733E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             <p style="margin-top: 0.6469rem; font-size: 0.5659rem;">Loading conversation from Intercom...</p>
         </div>
@@ -2542,7 +2635,7 @@ function displayConversationMessages(conversation) {
     // Cache dark mode values once (outside the loop for performance)
     // Use try-catch to prevent errors from breaking message rendering
     let isDarkMode = false;
-    let cachedTextSecondary = '#6b7280';
+    let cachedTextSecondary = '#000000';
     let cachedGray100 = '#f3f4f6';
     let cachedBgWhite = '#ffffff';
     let cachedTextColor = '#374151';
@@ -2552,7 +2645,7 @@ function displayConversationMessages(conversation) {
         isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
         const root = document.documentElement;
         if (isDarkMode) {
-            cachedTextSecondary = getComputedStyle(root).getPropertyValue('--text-secondary').trim() || '#6b7280';
+            cachedTextSecondary = getComputedStyle(root).getPropertyValue('--text-secondary').trim() || '#000000';
             cachedGray100 = getComputedStyle(root).getPropertyValue('--gray-100').trim() || '#f3f4f6';
             cachedBgWhite = getComputedStyle(root).getPropertyValue('--background-white').trim() || '#ffffff';
             cachedTextColor = getComputedStyle(root).getPropertyValue('--text-color').trim() || '#374151';
@@ -2660,22 +2753,22 @@ function displayConversationMessages(conversation) {
                     max-width: 80%;
                     text-align: center;
                     font-size: 0.4447rem;
-                    color: #6b7280;
+                    color: #000000;
                     line-height: 1.5;
                 ">
                     <div style="
                         font-weight: 600;
-                        color: #4b5563;
+                        color: #000000;
                         margin-bottom: 0.1213rem;
                         text-transform: uppercase;
                         letter-spacing: 0.0405rem;
                         font-size: 0.4043rem;
                     ">${partTypeLabel.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}</div>
-                    ${commentContent ? `<div style="margin-top: 0.1617rem; color: #6b7280; font-size: 0.4447rem;">${commentContent}</div>` : ''}
+                    ${commentContent ? `<div style="margin-top: 0.1617rem; color: #000000; font-size: 0.4447rem;">${commentContent}</div>` : ''}
                     <div style="
                         margin-top: 0.1617rem;
                         font-size: 0.3639rem;
-                        color: #9ca3af;
+                        color: #000000;
                         opacity: 0.8;
                     ">${timeStr} • ${dateStr}</div>
                 </div>
@@ -2986,7 +3079,7 @@ function displayConversationMessages(conversation) {
                 <span style="
                     font-size: 0.3639rem;
                     font-weight: 600;
-                    color: ${isUser ? '#6b7280' : (isAI ? '#1d1d1d' : '#1A733E')};
+                    color: ${isUser ? '#000000' : (isAI ? '#1d1d1d' : '#1A733E')};
                     margin-top: 0.0808rem;
                     text-transform: uppercase;
                     letter-spacing: 0.0203rem;
@@ -3016,7 +3109,7 @@ function displayConversationMessages(conversation) {
                 <span style="
                     font-size: 0.3639rem;
                     font-weight: 600;
-                    color: ${isUser ? '#6b7280' : (isAI ? '#1d1d1d' : '#1A733E')};
+                    color: ${isUser ? '#000000' : (isAI ? '#1d1d1d' : '#1A733E')};
                     margin-top: 0.0808rem;
                     text-transform: uppercase;
                     letter-spacing: 0.0203rem;
@@ -3039,7 +3132,7 @@ function displayConversationMessages(conversation) {
             ${isUser ? avatarHTML : ''}
             <div style="flex: 1; display: flex; flex-direction: column; align-items: ${isUser ? 'flex-start' : 'flex-end'}; order: ${isUser ? '2' : '1'}; min-width: 0; max-width: calc(100% - 3.5rem);">
                 <div style="${bubbleStyle} padding: 0.4043rem 0.5659rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08); ${emailBorderStyle} word-wrap: break-word; overflow-wrap: break-word;">
-                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
+                ${isUser ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #000000;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #000000; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${isEmail ? '0' : '0.1213rem'}; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(authorName)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
                 ${emailHeaderHTML}
                 ${contentInfoBadge}
                 ${formattedHtml ? renderMessageWithInlineImages(formattedHtml, images, imageStartIndex, part.id, isUser) : 
@@ -3691,7 +3784,7 @@ function displayConversationAttributes(conversation) {
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 0.4043rem; height: 0.4043rem; color: ${color}; flex-shrink: 0;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path>
                     </svg>
-                    <span style="font-size: 0.3639rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.0092rem;">${escapeHtml(label)}</span>
+                    <span style="font-size: 0.3639rem; font-weight: 600; color: #000000; text-transform: uppercase; letter-spacing: 0.0092rem;">${escapeHtml(label)}</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <span style="font-size: 0.4447rem; font-weight: 600; color: #1f2937; word-break: break-word; flex: 1;">${key.toLowerCase().includes('link') ? value : escapeHtml(String(value))}</span>
@@ -4025,7 +4118,7 @@ function parseTranscriptToChat(transcriptText, interactionDate) {
         messageDiv.innerHTML = `
             <div style="${bubbleStyle} padding: 0.3234rem 0.4852rem; box-shadow: 0 0.0304rem 0.0606rem rgba(0,0,0,0.08);">
                 ${msg.isUser 
-                    ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #6b7280;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #6b7280; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` 
+                    ? `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: #000000;">User</span><span style="font-size: 0.3639rem; opacity: 0.7; color: #000000; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>` 
                     : `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.1213rem; gap: 0.3234rem;"><span style="font-size: 0.4447rem; font-weight: 600; color: white;">${escapeHtml(msg.author)}</span><span style="font-size: 0.3639rem; opacity: 0.8; color: white; white-space: nowrap;">${timeStr} • ${dateStr}</span></div>`}
                 <div style="font-size: 0.5257rem; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; max-width: 100%; box-sizing: border-box;">${escapeHtml(msg.text)}</div>
             </div>
@@ -4219,7 +4312,7 @@ function populateParametersWithComments() {
     if (!container) return;
     
     if (currentErrorFields.length === 0) {
-        container.innerHTML = '<p style="margin: 0; font-size: 0.5625rem; color: #6b7280; font-family: \'Poppins\', sans-serif;">No parameters available</p>';
+        container.innerHTML = '<p style="margin: 0; font-size: 0.5625rem; color: #000000; font-family: \'Poppins\', sans-serif;">No parameters available</p>';
         return;
     }
     
@@ -4300,7 +4393,7 @@ function populateParametersWithComments() {
                     <div style="font-size: 0.6094rem; font-weight: 600; color: #1f2937; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif;">
                     ${escapeHtml(field.label)}
                     </div>
-                    <div style="font-size: 0.5625rem; color: #4b5563; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">
+                    <div style="font-size: 0.5625rem; color: #000000; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">
                     ${escapeHtml(commentText)}
                     </div>
                 </div>
@@ -4354,11 +4447,11 @@ function showParameterCommentModal(fieldId, fieldLabel, auditorFeedback) {
                 <h3 style="font-size: 0.8438rem; font-weight: 700; color: #1f2937; margin: 0; font-family: 'Poppins', sans-serif;">
                     Add Your Comment - ${escapeHtml(fieldLabel)}
                 </h3>
-                <button onclick="closeParameterCommentModal()" style="background: none; border: none; font-size: 1.5rem; color: #6b7280; cursor: pointer; padding: 0; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
+                <button onclick="closeParameterCommentModal()" style="background: none; border: none; font-size: 1.5rem; color: #000000; cursor: pointer; padding: 0; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
             </div>
             
             <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.2812rem; border: 0.0352rem solid #e5e7eb;">
-                <div style="font-size: 0.5625rem; font-weight: 600; color: #6b7280; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
+                <div style="font-size: 0.5625rem; font-weight: 600; color: #000000; margin-bottom: 0.375rem; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.05em;">
                     Auditor Feedback
                 </div>
                 <div style="font-size: 0.6562rem; color: #374151; font-family: 'Poppins', sans-serif; white-space: pre-wrap; line-height: 1.6;">
@@ -4640,7 +4733,7 @@ function toggleCommentsColumn() {
                         
                         // Create comment column
                         const commentCell = document.createElement('div');
-                        commentCell.style.cssText = 'font-size: 0.5659rem; color: #4b5563; font-family: Poppins, sans-serif; min-width: 0; overflow: hidden;';
+                        commentCell.style.cssText = 'font-size: 0.5659rem; color: #000000; font-family: Poppins, sans-serif; min-width: 0; overflow: hidden;';
                         
                         if (feedbackArray.length > 0) {
                             feedbackArray.forEach((feedbackText, index) => {
@@ -4652,7 +4745,7 @@ function toggleCommentsColumn() {
                                 if (feedbackArray.length > 1) {
                                     const label = document.createElement('div');
                                     label.textContent = `Comment ${index + 1}:`;
-                                    label.style.cssText = 'font-size: 0.4043rem; color: #6b7280; font-weight: 600; margin-bottom: 0.1617rem; font-family: Poppins, sans-serif;';
+                                    label.style.cssText = 'font-size: 0.4043rem; color: #000000; font-weight: 600; margin-bottom: 0.1617rem; font-family: Poppins, sans-serif;';
                                     commentDiv.appendChild(label);
                                 }
                                 
@@ -4661,12 +4754,12 @@ function toggleCommentsColumn() {
                                     if (existingComment && existingComment.trim()) {
                                         const textDiv = document.createElement('div');
                                         textDiv.textContent = existingComment;
-                                        textDiv.style.cssText = 'font-size: 0.5659rem; color: #4b5563; font-family: Poppins, sans-serif; white-space: pre-wrap; line-height: 1.6;';
+                                        textDiv.style.cssText = 'font-size: 0.5659rem; color: #000000; font-family: Poppins, sans-serif; white-space: pre-wrap; line-height: 1.6;';
                                         commentDiv.appendChild(textDiv);
                                     } else {
                                         const dash = document.createElement('span');
                                         dash.textContent = '-';
-                                        dash.style.cssText = 'color: #9ca3af; font-style: italic; font-size: 0.5659rem;';
+                                        dash.style.cssText = 'color: #000000; font-style: italic; font-size: 0.5659rem;';
                                         commentDiv.appendChild(dash);
                                     }
                                 } else {
@@ -4694,7 +4787,7 @@ function toggleCommentsColumn() {
                         } else {
                             const dash = document.createElement('span');
                             dash.textContent = '-';
-                            dash.style.cssText = 'color: #9ca3af; font-style: italic;';
+                            dash.style.cssText = 'color: #000000; font-style: italic;';
                             commentCell.appendChild(dash);
                         }
                         
