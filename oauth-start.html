@@ -261,15 +261,19 @@
                 
                 messageEl.textContent = 'Redirecting to Google Sign-In...';
                 
-                // Get the proper redirect URL based on current environment
+                // Get the parent window's origin to determine correct redirect URL
                 let baseUrl;
                 
-                // Check if SITE_URL is configured in env-config.js
-                if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
-                    baseUrl = window.env.SITE_URL.replace(/\/$/, ''); // Remove trailing slash
-                    console.log('Using configured SITE_URL:', baseUrl);
-                } else {
-                    // Auto-detect from current location
+                try {
+                    // Try to get the parent (opener) window's origin
+                    if (window.opener && window.opener.location && window.opener.location.origin) {
+                        baseUrl = window.opener.location.origin;
+                        console.log('Using parent window origin:', baseUrl);
+                    } else {
+                        throw new Error('Cannot access parent origin');
+                    }
+                } catch (e) {
+                    // If we can't access parent origin (CORS), use current window origin
                     const protocol = window.location.protocol;
                     const hostname = window.location.hostname;
                     const port = window.location.port;
@@ -279,7 +283,7 @@
                     } else {
                         baseUrl = `${protocol}//${hostname}`;
                     }
-                    console.log('Auto-detected base URL:', baseUrl);
+                    console.log('Using current window origin (CORS fallback):', baseUrl);
                 }
                 
                 const redirectUrl = `${baseUrl}/auth-callback.html`;
