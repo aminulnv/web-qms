@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticating... | QMS</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMWY5ZTRiIj48cGF0aCBkPSJNMjAwLTEyMHEtMzMgMC01Ni41LTIzLjVUMTIwLTIwMHYtNTYwcTAtMzMgMjMuNS01Ni41VDIwMC04NDBoNTYwcTMzIDAgNTYuNSAyMy41VDg0MC03NjB2NTYwcTAgMzMtMjMuNSA1Ni41VDc2MC0xMjBIMjAwWm00OTEtODBoNjl2LTY5bC02OSA2OVptLTQ1NyAwaDczbDEyMC0xMjBoODVMNDUyLTIwMGg2NGwxMjAtMTIwaDg1TDU0MS0yMDBoNjVsMTIwLTEyMGgzNHYtNDQwSDIwMHY1MDlsNjktNjloODVMNDM0LTIwMFptNzItMjAwLTU2LTU2IDE3Ny0xNzcgODAgODAgMTQ3LTE0NyA1NiA1Ni0yMDMgMjA0LTgwLTgwLTEyMSAxMjBaIi8+PC9zdmc+">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 { font-size: 1.5rem; color: #333; margin-bottom: 0.5rem; }
+        p { color: #666; font-size: 0.875rem; }
+        .error { color: #dc2626; margin-top: 1rem; }
+        
+        /* Profile Sync Modal */
+        .sync-modal {
+            display: none;
+            text-align: left;
+        }
+        .sync-modal.show {
+            display: block;
+        }
+        .sync-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .sync-header h2 {
+            font-size: 1.25rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .sync-header p {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        .sync-changes {
+            background: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #e5e7eb;
+        }
+        .sync-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .sync-item:last-child {
+            border-bottom: none;
+        }
+        .sync-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        .sync-old {
+            color: #dc2626;
+            font-size: 0.8125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sync-new {
+            color: #059669;
+            font-size: 0.8125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sync-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .sync-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .sync-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .sync-btn.skip {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .sync-btn.skip:hover {
+            background: #e5e7eb;
+        }
+        .sync-btn.update {
+            background: #667eea;
+            color: white;
+        }
+        .sync-btn.update:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Loading State -->
+        <div id="loadingState">
+            <div class="spinner"></div>
+            <h1>Authenticating...</h1>
+            <p id="message">Please wait while we sign you in</p>
+        </div>
+
+        <!-- Profile Sync Modal -->
+        <div id="syncModal" class="sync-modal">
+            <div class="sync-header">
+                <h2>🔄 Update Your Profile?</h2>
+                <p>We found some differences between your Google account and our records.</p>
+            </div>
+            <div class="sync-changes" id="syncChanges">
+                <!-- Changes will be populated here -->
+            </div>
+            <div class="sync-buttons">
+                <button class="sync-btn skip" onclick="skipSync()">Keep Current</button>
+                <button class="sync-btn update" onclick="updateProfile()">Update Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="env-config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        let googleUserData = null;
+        let dbUserData = null;
+        let changes = [];
+
+        async function handleAuthCallback() {
+            const messageEl = document.getElementById('message');
+            const loadingState = document.getElementById('loadingState');
+            const syncModal = document.getElementById('syncModal');
+            
+            try {
+                // Get the session from Supabase
+                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (!session) {
+                    throw new Error('No session found');
+                }
+                
+                // Get user info from Google OAuth
+                const user = session.user;
+                
+                if (!user || !user.email) {
+                    throw new Error('User information not found');
+                }
+                
+                messageEl.textContent = 'Verifying your account...';
+                
+                // Get user from your database
+                dbUserData = await window.SupabaseUsers.getUserByEmail(user.email);
+                
+                if (!dbUserData) {
+                    throw new Error('User not found in system. Please contact administrator.');
+                }
+                
+                if (!dbUserData.is_active) {
+                    throw new Error('Your account has been deactivated. Please contact administrator.');
+                }
+                
+                // Extract Google user data
+                googleUserData = {
+                    email: user.email,
+                    name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                    avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+                    google_id: user.id
+                };
+                
+                // Compare and find differences
+                changes = compareUserData(dbUserData, googleUserData);
+                
+                if (changes.length > 0) {
+                    // Show sync modal
+                    messageEl.textContent = 'Profile update available...';
+                    showSyncModal(changes);
+                } else {
+                    // No changes, proceed to login
+                    await completeLogin();
+                }
+                
+            } catch (error) {
+                console.error('Auth callback error:', error);
+                loadingState.innerHTML = `
+                    <p class="error">❌ ${error.message}</p>
+                    <a href="login.html" style="color: #667eea; margin-top: 1rem; display: inline-block; text-decoration: none; font-weight: 600;">← Back to Login</a>
+                `;
+            }
+        }
+        
+        function compareUserData(dbUser, googleUser) {
+            const differences = [];
+            
+            // Compare name
+            if (googleUser.name && dbUser.name !== googleUser.name) {
+                differences.push({
+                    field: 'name',
+                    label: 'Name',
+                    oldValue: dbUser.name || 'Not set',
+                    newValue: googleUser.name,
+                    type: 'text'
+                });
+            }
+            
+            // Compare avatar
+            if (googleUser.avatar_url && dbUser.avatar_url !== googleUser.avatar_url) {
+                differences.push({
+                    field: 'avatar_url',
+                    label: 'Profile Picture',
+                    oldValue: dbUser.avatar_url || null,
+                    newValue: googleUser.avatar_url,
+                    type: 'image'
+                });
+            }
+            
+            // Compare Google ID (should be stored for reference)
+            if (googleUser.google_id && dbUser.google_id !== googleUser.google_id) {
+                differences.push({
+                    field: 'google_id',
+                    label: 'Google Account',
+                    oldValue: dbUser.google_id || 'Not linked',
+                    newValue: 'Linked',
+                    type: 'text'
+                });
+            }
+            
+            return differences;
+        }
+        
+        function showSyncModal(changes) {
+            const loadingState = document.getElementById('loadingState');
+            const syncModal = document.getElementById('syncModal');
+            const syncChanges = document.getElementById('syncChanges');
+            
+            // Build changes HTML
+            let changesHtml = '';
+            
+            changes.forEach(change => {
+                if (change.type === 'image') {
+                    changesHtml += `
+                        <div class="sync-item">
+                            <div style="flex: 1;">
+                                <div class="sync-label">${change.label}</div>
+                                <div class="sync-old">
+                                    ${change.oldValue ? `<img src="${change.oldValue}" class="sync-avatar" alt="Current">` : '<span>No profile picture</span>'}
+                                    <span>Current</span>
+                                </div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="sync-label">&nbsp;</div>
+                                <div class="sync-new">
+                                    <img src="${change.newValue}" class="sync-avatar" alt="New">
+                                    <span>From Google</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    changesHtml += `
+                        <div class="sync-item">
+                            <div style="flex: 1;">
+                                <div class="sync-label">${change.label}</div>
+                                <div class="sync-old">
+                                    <span>❌</span>
+                                    <span>${change.oldValue}</span>
+                                </div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="sync-label">&nbsp;</div>
+                                <div class="sync-new">
+                                    <span>✅</span>
+                                    <span>${change.newValue}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            syncChanges.innerHTML = changesHtml;
+            
+            // Hide loading, show modal
+            loadingState.style.display = 'none';
+            syncModal.classList.add('show');
+        }
+        
+        async function updateProfile() {
+            const syncModal = document.getElementById('syncModal');
+            const loadingState = document.getElementById('loadingState');
+            const messageEl = document.getElementById('message');
+            
+            try {
+                // Show loading
+                syncModal.classList.remove('show');
+                loadingState.style.display = 'block';
+                messageEl.textContent = 'Updating your profile...';
+                
+                // Build update object from changes
+                const updates = {};
+                changes.forEach(change => {
+                    updates[change.field] = change.newValue;
+                });
+                
+                // Update user in database
+                await window.SupabaseUsers.updateUser(dbUserData.email, updates);
+                
+                // Update dbUserData to reflect changes
+                Object.assign(dbUserData, updates);
+                
+                messageEl.textContent = 'Profile updated successfully!';
+                
+                // Complete login
+                await completeLogin();
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Failed to update profile. Proceeding with login anyway.');
+                await completeLogin();
+            }
+        }
+        
+        async function skipSync() {
+            // User chose to keep current data
+            await completeLogin();
+        }
+        
+        async function completeLogin() {
+            const messageEl = document.getElementById('message');
+            
+            try {
+                messageEl.textContent = 'Completing sign in...';
+                
+                // Update last login
+                await window.SupabaseUsers.updateLastLogin(dbUserData.email);
+                
+                // Store user info in localStorage
+                localStorage.setItem('userInfo', JSON.stringify({
+                    id: dbUserData.email,
+                    email: dbUserData.email,
+                    name: dbUserData.name,
+                    role: dbUserData.role,
+                    department: dbUserData.department,
+                    designation: dbUserData.designation,
+                    employee_id: dbUserData.employee_id,
+                    avatar_url: dbUserData.avatar_url,
+                    avatar: dbUserData.avatar_url,
+                    picture: dbUserData.avatar_url,
+                    provider: 'google'
+                }));
+                
+                messageEl.textContent = 'Success! Redirecting...';
+                
+                // Redirect to home page
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error completing login:', error);
+                alert('Login successful, but there was an error. Redirecting...');
+                window.location.href = 'home.html';
+            }
+        }
+        
+        // Wait for Supabase to be initialized
+        function checkSupabase() {
+            if (window.supabaseClient) {
+                handleAuthCallback();
+            } else {
+                setTimeout(checkSupabase, 100);
+            }
+        }
+        
+        checkSupabase();
+    </script>
+</body>
+</html>
+
