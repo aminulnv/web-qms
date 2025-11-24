@@ -265,21 +265,29 @@
                 let baseUrl;
                 
                 // Check if SITE_URL is configured in env-config.js
-                if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
-                    baseUrl = window.env.SITE_URL.replace(/\/$/, ''); // Remove trailing slash
-                    console.log('Using configured SITE_URL:', baseUrl);
+                const configuredSiteUrl = window.env?.SITE_URL?.trim();
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                
+                // Use configured SITE_URL only if:
+                // 1. It exists and is not empty
+                // 2. It's not localhost when we're NOT running on localhost
+                // 3. OR it IS localhost when we ARE running on localhost
+                if (configuredSiteUrl && configuredSiteUrl !== '') {
+                    const isConfiguredLocalhost = configuredSiteUrl.includes('localhost') || configuredSiteUrl.includes('127.0.0.1');
+                    
+                    // If we're in production but SITE_URL points to localhost, ignore it
+                    if (!isLocalhost && isConfiguredLocalhost) {
+                        console.warn('Ignoring localhost SITE_URL in production environment');
+                        baseUrl = window.location.origin;
+                        console.log('Using window.location.origin for production:', baseUrl);
+                    } else {
+                        baseUrl = configuredSiteUrl.replace(/\/$/, ''); // Remove trailing slash
+                        console.log('Using configured SITE_URL:', baseUrl);
+                    }
                 } else {
                     // Auto-detect from current location
-                    const protocol = window.location.protocol;
-                    const hostname = window.location.hostname;
-                    const port = window.location.port;
-                    
-                    if (port && port !== '80' && port !== '443') {
-                        baseUrl = `${protocol}//${hostname}:${port}`;
-                    } else {
-                        baseUrl = `${protocol}//${hostname}`;
-                    }
-                    console.log('Auto-detected base URL:', baseUrl);
+                    baseUrl = window.location.origin;
+                    console.log('Auto-detected base URL from window.location.origin:', baseUrl);
                 }
                 
                 const redirectUrl = `${baseUrl}/auth-callback.html`;
