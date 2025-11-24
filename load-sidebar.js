@@ -229,6 +229,16 @@ class SidebarLoader {
         </li>
 
         <li role="none">
+            <button class="menu-item" role="menuitem" tabindex="0" aria-label="Coaching & Remediation">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span>Coaching & Remediation</span>
+                <span class="coming-soon-chip">Coming Soon</span>
+            </button>
+        </li>
+
+        <li role="none">
             <button class="menu-item" role="menuitem" tabindex="0" aria-label="Reversal">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
@@ -709,6 +719,7 @@ class SidebarLoader {
       "Audit Distribution": "audit-distribution.html",
       "Audit Reports": "expert-audits.html",
       Performance: "employee-performance.html",
+      "Coaching & Remediation": "coaching-remediation.html",
       Reversal: "reversal.html",
       "Improvement Corner": "improvement-corner.html",
       Calibration: "calibration.html",
@@ -742,6 +753,7 @@ class SidebarLoader {
       "expert-audits.html": "Audit Reports",
       "scorecards.html": "Scorecards",
       "employee-performance.html": "Performance",
+      "coaching-remediation.html": "Coaching & Remediation",
       "reversal.html": "Reversal",
       "improvement-corner.html": "Improvement Corner",
       "calibration.html": "Calibration",
