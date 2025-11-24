@@ -300,10 +300,33 @@
                 
                 messageEl.textContent = 'Retrieving authentication session...';
                 
-                // Get the session from Supabase
-                const { data: { session }, error } = await window.supabaseClient.auth.getSession();
-                
-                if (error) throw error;
+                // Wait for Supabase to process the OAuth callback from URL hash
+                // Supabase automatically processes hash fragments and establishes the session
+                const session = await new Promise((resolve, reject) => {
+                    // Set a timeout in case something goes wrong
+                    const timeout = setTimeout(() => {
+                        reject(new Error('Session timeout - authentication took too long'));
+                    }, 10000);
+
+                    // Listen for auth state change which fires when session is established
+                    const { data: { subscription } } = window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                        console.log('Auth state changed:', event, session);
+                        if (event === 'SIGNED_IN' && session) {
+                            clearTimeout(timeout);
+                            subscription.unsubscribe();
+                            resolve(session);
+                        }
+                    });
+                    
+                    // Also check if session already exists (in case the event already fired)
+                    window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                        if (session) {
+                            clearTimeout(timeout);
+                            subscription.unsubscribe();
+                            resolve(session);
+                        }
+                    });
+                });
                 
                 if (!session) {
                     throw new Error('Authentication session not found. Please try again.');
