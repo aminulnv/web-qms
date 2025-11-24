@@ -437,6 +437,269 @@
 #transcriptChatView::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
     }
+
+/* Rating Modal Styles */
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.rating-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+}
+
+.rating-modal {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.3s ease-out;
+}
+
+[data-theme="dark"] .rating-modal {
+    background: var(--background-white);
+}
+
+.star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.star {
+    font-size: 3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #d1d5db;
+    user-select: none;
+}
+
+.star:hover,
+.star.active {
+    color: #fbbf24;
+    transform: scale(1.1);
+}
+
+.star:active {
+    transform: scale(0.95);
+}
+
+.rating-title {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+[data-theme="dark"] .rating-title {
+    color: #ffffff;
+}
+
+.rating-subtitle {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+[data-theme="dark"] .rating-subtitle {
+    color: #9ca3af;
+}
+
+.rating-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.rating-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.rating-btn.cancel {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.rating-btn.cancel:hover {
+    background: #e5e7eb;
+}
+
+[data-theme="dark"] .rating-btn.cancel {
+    background: #374151;
+    color: #f3f4f6;
+}
+
+[data-theme="dark"] .rating-btn.cancel:hover {
+    background: #4b5563;
+}
+
+.rating-btn.submit {
+    background: #1A733E;
+    color: white;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.rating-btn.submit.enabled {
+    opacity: 1;
+    cursor: pointer;
+}
+
+.rating-btn.submit.enabled:hover {
+    background: #15592f;
+}
+
+/* Feedback Modal Styles */
+.feedback-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+[data-theme="dark"] .feedback-title {
+    color: #ffffff;
+}
+
+.feedback-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+[data-theme="dark"] .feedback-subtitle {
+    color: #9ca3af;
+}
+
+.feedback-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-family: 'Poppins', sans-serif;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: #1A733E;
+}
+
+[data-theme="dark"] .feedback-textarea {
+    background: var(--background-color);
+    border-color: var(--border-light);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .feedback-textarea:focus {
+    border-color: #1A733E;
+}
+
+.feedback-option {
+    transition: all 0.2s ease;
+}
+
+.feedback-option:hover {
+    transform: translateX(4px);
+}
+
+.feedback-option input[type="checkbox"] {
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .feedback-option {
+    background: var(--background-white) !important;
+    border-color: var(--border-light) !important;
+}
+
+[data-theme="dark"] .feedback-option span {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .feedback-option:hover {
+    background: var(--gray-100) !important;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.feedback-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.feedback-btn.skip {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.feedback-btn.skip:hover {
+    background: #e5e7eb;
+}
+
+[data-theme="dark"] .feedback-btn.skip {
+    background: #374151;
+    color: #f3f4f6;
+}
+
+[data-theme="dark"] .feedback-btn.skip:hover {
+    background: #4b5563;
+}
+
+.feedback-btn.submit {
+    background: #1A733E;
+    color: white;
+}
+
+.feedback-btn.submit:hover {
+    background: #15592f;
+}
 </style>
 
 <script>
@@ -954,6 +1217,10 @@ async function loadAuditFromURL() {
             // Acknowledgement tracking fields
             acknowledgementStatus: data.acknowledgement_status,
             acknowledgementStatusUpdatedAt: data.acknowledgement_status_updated_at,
+            // Rating fields
+            audit_rating: data.audit_rating,
+            audit_rating_feedback: data.audit_rating_feedback,
+            audit_rated_at: data.audit_rated_at,
             // Parameter comments
             parameterComments: data.parameter_comments || {},
             parameter_comments: data.parameter_comments || {},
@@ -1505,6 +1772,35 @@ function renderAudit(audit, auditScorecard, errorFields) {
         ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.5659rem; border-radius: 0.2425rem; border: 0.0304rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>`
         : '';
 
+    // Generate audit rating HTML if rating exists
+    let ratingHtml = '';
+    if (audit.audit_rating && audit.audit_rating > 0) {
+        const rating = audit.audit_rating;
+        const ratingStars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        const ratingColor = rating >= 4 ? '#fbbf24' : rating >= 3 ? '#f59e0b' : '#ef4444';
+        
+        ratingHtml = `
+            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;">
+                <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
+                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                    Audit Rating
+                </h3>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: ${audit.audit_rating_feedback ? '0.5rem' : '0'};">
+                    <span style="font-size: 1.5rem; color: ${ratingColor};">${ratingStars}</span>
+                    <span style="font-size: 0.7278rem; font-weight: 600; color: #1f2937; font-family: 'Poppins', sans-serif;">${rating}/5</span>
+                </div>
+                ${audit.audit_rating_feedback ? `
+                    <div style="padding: 0.5rem; background: white; border-radius: 0.25rem; border-left: 3px solid ${ratingColor};">
+                        <div style="font-size: 0.4852rem; color: #6b7280; font-family: 'Poppins', sans-serif; margin-bottom: 0.25rem; font-weight: 600;">Feedback:</div>
+                        <div style="font-size: 0.5257rem; color: #374151; font-family: 'Poppins', sans-serif; line-height: 1.5;">${escapeHtml(audit.audit_rating_feedback)}</div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
     // Check if current user is the audited employee (for showing acknowledge button)
     const showAcknowledgeButton = isCurrentUserAuditedEmployee();
     
@@ -1696,6 +1992,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
         interactionIdHtml: interactionIdHtml,
         errorDetailsHtml: errorDetailsHtml,
         recommendationsHtml: recommendationsHtml,
+        ratingHtml: ratingHtml,
         actionButtonsHtml: actionButtonsHtml
     });
 
@@ -4899,6 +5196,260 @@ window.saveParameterCommentFromModal = saveParameterCommentFromModal;
 window.toggleCommentsColumn = toggleCommentsColumn;
 window.saveParameterComment = saveParameterComment;
 
+// Show Uber-style rating dialog with integrated feedback
+async function showRatingDialog() {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'rating-overlay';
+        
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'rating-modal';
+        modal.style.maxWidth = '600px';
+        modal.style.maxHeight = '90vh';
+        modal.style.overflowY = 'auto';
+        
+        let selectedRating = 0;
+        
+        // Define feedback options for different ratings
+        const feedbackOptionsByRating = {
+            1: [
+                'Feedback was too harsh or unfair',
+                'Errors identified were not accurate',
+                'Lacked constructive suggestions',
+                'Did not understand the context',
+                'Poor communication of expectations',
+                'Scoring criteria unclear'
+            ],
+            2: [
+                'Feedback was too harsh or unfair',
+                'Errors identified were not accurate',
+                'Lacked constructive suggestions',
+                'Did not understand the context',
+                'Poor communication of expectations',
+                'Scoring criteria unclear'
+            ],
+            3: [
+                'Could provide more specific examples',
+                'Feedback could be more constructive',
+                'Some points were unclear',
+                'Expected more detailed analysis',
+                'Missing actionable recommendations',
+                'Scoring could be explained better'
+            ],
+            4: [
+                'Minor points could be improved',
+                'Could include more examples',
+                'Some feedback could be clearer',
+                'Would appreciate more details',
+                'Good overall, but room for improvement'
+            ]
+        };
+        
+        modal.innerHTML = `
+            <div class="rating-title">Rate this Audit</div>
+            <div class="rating-subtitle">How would you rate your audit experience?</div>
+            
+            <div class="star-rating" id="starRating">
+                <span class="star" data-rating="1">★</span>
+                <span class="star" data-rating="2">★</span>
+                <span class="star" data-rating="3">★</span>
+                <span class="star" data-rating="4">★</span>
+                <span class="star" data-rating="5">★</span>
+            </div>
+            
+            <!-- Feedback Section (Hidden by default) -->
+            <div id="feedbackSection" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
+                <div class="feedback-title" style="font-size: 1rem; margin-bottom: 0.5rem;">Help us improve</div>
+                <div class="feedback-subtitle" style="margin-bottom: 1rem;">What could we do better? Select all that apply (Optional)</div>
+                
+                <div id="feedbackOptions" style="max-height: 250px; overflow-y: auto; margin-bottom: 1rem; padding-right: 0.5rem;">
+                    <!-- Options will be populated dynamically -->
+                </div>
+                
+                <div>
+                    <textarea class="feedback-textarea" id="additionalComments" placeholder="Additional comments (optional)..." style="min-height: 60px; width: 100%;"></textarea>
+                </div>
+            </div>
+            
+            <div class="rating-buttons">
+                <button class="rating-btn cancel" id="cancelRating">Cancel</button>
+                <button class="rating-btn submit" id="submitRating">Submit Rating</button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Use setTimeout to ensure DOM is fully rendered before attaching events
+        setTimeout(() => {
+            // Star click handlers
+            const stars = modal.querySelectorAll('.star');
+            const submitBtn = modal.querySelector('#submitRating');
+            const feedbackSection = modal.querySelector('#feedbackSection');
+            const feedbackOptionsContainer = modal.querySelector('#feedbackOptions');
+            
+            console.log('Stars found:', stars.length); // Debug log
+            
+            // Function to update feedback options based on rating
+            function updateFeedbackOptions(rating) {
+                if (rating >= 5) {
+                    feedbackSection.style.display = 'none';
+                    return;
+                }
+                
+                // Show feedback section
+                feedbackSection.style.display = 'block';
+                
+                // Get options for this rating
+                const options = feedbackOptionsByRating[rating] || feedbackOptionsByRating[4];
+                
+                // Generate checkbox options
+                const optionsHtml = options.map((option, index) => `
+                    <label class="feedback-option" for="feedback_${index}" style="display: flex; align-items: start; gap: 0.75rem; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background: white; margin-bottom: 0.5rem;">
+                        <input type="checkbox" id="feedback_${index}" class="feedback-checkbox" value="${option}" style="margin-top: 0.25rem; width: 1.25rem; height: 1.25rem; cursor: pointer; flex-shrink: 0; accent-color: #1A733E;">
+                        <span style="font-size: 0.875rem; color: #374151; font-family: 'Poppins', sans-serif; line-height: 1.4; flex: 1;">${option}</span>
+                    </label>
+                `).join('');
+                
+                feedbackOptionsContainer.innerHTML = optionsHtml;
+                
+                // Add hover effects to newly created labels
+                const labels = feedbackOptionsContainer.querySelectorAll('.feedback-option');
+                const checkboxes = feedbackOptionsContainer.querySelectorAll('.feedback-checkbox');
+                
+                labels.forEach((label, index) => {
+                    label.addEventListener('mouseenter', () => {
+                        label.style.borderColor = '#1A733E';
+                        label.style.backgroundColor = '#f9fafb';
+                    });
+                    label.addEventListener('mouseleave', () => {
+                        if (!checkboxes[index].checked) {
+                            label.style.borderColor = '#e5e7eb';
+                            label.style.backgroundColor = 'white';
+                        }
+                    });
+                    
+                    checkboxes[index].addEventListener('change', () => {
+                        if (checkboxes[index].checked) {
+                            label.style.borderColor = '#1A733E';
+                            label.style.backgroundColor = '#f0fdf4';
+                        } else {
+                            label.style.borderColor = '#e5e7eb';
+                            label.style.backgroundColor = 'white';
+                        }
+                    });
+                });
+            }
+            
+            stars.forEach((star, idx) => {
+                // Add pointer cursor explicitly
+                star.style.cursor = 'pointer';
+                
+                star.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    selectedRating = parseInt(star.dataset.rating);
+                    console.log('Star clicked, rating:', selectedRating); // Debug log
+                    
+                    // Update star display
+                    stars.forEach((s, index) => {
+                        if (index < selectedRating) {
+                            s.classList.add('active');
+                            s.style.color = '#fbbf24';
+                        } else {
+                            s.classList.remove('active');
+                            s.style.color = '#d1d5db';
+                        }
+                    });
+                    
+                    // Update feedback section based on rating
+                    updateFeedbackOptions(selectedRating);
+                    
+                    // Enable submit button
+                    submitBtn.classList.add('enabled');
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }, true); // Use capture phase
+                
+                // Hover effect
+                star.addEventListener('mouseenter', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.style.color = '#fbbf24';
+                        }
+                    });
+                });
+            });
+            
+            const starRatingContainer = modal.querySelector('#starRating');
+            if (starRatingContainer) {
+                starRatingContainer.addEventListener('mouseleave', () => {
+                    stars.forEach((s, index) => {
+                        if (index < selectedRating) {
+                            s.style.color = '#fbbf24';
+                        } else {
+                            s.style.color = '#d1d5db';
+                        }
+                    });
+                });
+            }
+            
+            // Button handlers
+            const cancelBtn = modal.querySelector('#cancelRating');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                    resolve({ rating: null, feedback: '' });
+                });
+            }
+            
+            if (submitBtn) {
+                submitBtn.addEventListener('click', () => {
+                    if (selectedRating > 0) {
+                        let feedback = '';
+                        
+                        // Collect feedback if rating < 5
+                        if (selectedRating < 5) {
+                            const checkboxes = modal.querySelectorAll('.feedback-checkbox');
+                            const selectedOptions = Array.from(checkboxes)
+                                .filter(cb => cb.checked)
+                                .map(cb => cb.value);
+                            
+                            const additionalComments = modal.querySelector('#additionalComments');
+                            const additionalText = additionalComments ? additionalComments.value.trim() : '';
+                            
+                            if (selectedOptions.length > 0) {
+                                feedback = 'Selected issues:\n• ' + selectedOptions.join('\n• ');
+                            }
+                            if (additionalText) {
+                                feedback += (feedback ? '\n\nAdditional comments:\n' : '') + additionalText;
+                            }
+                        }
+                        
+                        console.log('Submitting - Rating:', selectedRating, 'Feedback:', feedback);
+                        document.body.removeChild(overlay);
+                        resolve({ rating: selectedRating, feedback: feedback });
+                    }
+                });
+            }
+            
+            // ESC key to cancel
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    document.body.removeChild(overlay);
+                    document.removeEventListener('keydown', escHandler);
+                    resolve({ rating: null, feedback: '' });
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }, 50); // Small delay to ensure DOM is ready
+    });
+}
+
 // Acknowledge audit
 async function acknowledgeAudit() {
     // Verify that current user is the audited employee
@@ -4917,60 +5468,73 @@ async function acknowledgeAudit() {
         }
     }
     
-    const result = await window.confirmationDialog.show({
+    // Step 1: Initial acknowledgment confirmation
+    const confirmResult = await window.confirmationDialog.show({
         title: 'Acknowledge Audit',
         message: 'By acknowledging this audit, you confirm that you have reviewed the results and do not wish to submit a reversal request. Continue?',
         confirmText: 'Acknowledge',
         cancelText: 'Cancel'
     });
     
-    if (result) {
-        if (!currentAudit || !currentTableName) {
-            alert('Error: Audit data not available');
-            return;
+    if (!confirmResult) return;
+    
+    // Step 2: Show rating dialog (Uber-style) with integrated feedback
+    const ratingResult = await showRatingDialog();
+    
+    if (ratingResult.rating === null) return; // User cancelled rating
+    
+    const rating = ratingResult.rating;
+    const feedback = ratingResult.feedback;
+    
+    // Step 4: Save acknowledgment and rating to database
+    if (!currentAudit || !currentTableName) {
+        alert('Error: Audit data not available');
+        return;
+    }
+    
+    try {
+        // Record acknowledgment and rating in the database
+        const acknowledgementTime = new Date().toISOString();
+        const { data, error } = await window.supabaseClient
+            .from(currentTableName)
+            .update({
+                acknowledgement_status: 'Acknowledged',
+                acknowledgement_status_updated_at: acknowledgementTime,
+                audit_rating: rating,
+                audit_rating_feedback: feedback || null,
+                audit_rated_at: acknowledgementTime
+            })
+            .eq('id', currentAudit.id)
+            .select();
+        
+        if (error) throw error;
+        
+        // Show success message
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Success',
+                message: `✓ Audit acknowledged and rated ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your feedback!`,
+                confirmText: 'OK',
+                type: 'success'
+            });
+        } else {
+            alert(`✓ Audit acknowledged and rated ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your feedback!`);
         }
         
-        try {
-            // Record acknowledgment in the database with correct fields
-            const acknowledgementTime = new Date().toISOString();
-            const { data, error } = await window.supabaseClient
-                .from(currentTableName)
-                .update({
-                    acknowledgement_status: 'Acknowledged',
-                    acknowledgement_status_updated_at: acknowledgementTime
-                })
-                .eq('id', currentAudit.id)
-                .select();
-            
-            if (error) throw error;
-            
-            // Show success message
-            if (window.confirmationDialog) {
-                await window.confirmationDialog.show({
-                    title: 'Success',
-                    message: '✓ Audit acknowledged. Thank you for your confirmation.',
-                    confirmText: 'OK',
-                    type: 'success'
-                });
-            } else {
-            alert('✓ Audit acknowledged. Thank you for your confirmation.');
-            }
-            
-            // Reload audit data to reflect changes
-            loadAuditFromURL();
-            
-        } catch (error) {
-            console.error('Error acknowledging audit:', error);
-            if (window.confirmationDialog) {
-                await window.confirmationDialog.show({
-                    title: 'Error',
-                    message: 'Failed to record acknowledgment. Please try again.',
-                    confirmText: 'OK',
-                    type: 'error'
-                });
-            } else {
-            alert('Failed to record acknowledgment. Please try again.');
-            }
+        // Reload audit data to reflect changes
+        loadAuditFromURL();
+        
+    } catch (error) {
+        console.error('Error acknowledging audit:', error);
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to record acknowledgment and rating. Please try again.',
+                confirmText: 'OK',
+                type: 'error'
+            });
+        } else {
+            alert('Failed to record acknowledgment and rating. Please try again.');
         }
     }
 }

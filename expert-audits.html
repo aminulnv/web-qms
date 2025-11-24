@@ -53,6 +53,7 @@
             padding: 0;
             width: 100%;
             margin: 0;
+            margin-top: 1rem;
         }
 
         .stats-grid {
@@ -69,9 +70,12 @@
             grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
             gap: 0.75rem;
             margin-bottom: 1.125rem;
+            margin-top: 1.5rem;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
+            position: relative;
+            padding-top: 1rem;
         }
         
         @media (min-width: 1200px) {
@@ -176,6 +180,76 @@
         .kpi-chart-container {
             height: 1.6875rem;
             margin-top: 0.5rem;
+        }
+
+        /* Tooltip Styles */
+        .kpi-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-0.5rem);
+            background: #1f2937;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.6562rem;
+            line-height: 1.5;
+            white-space: normal;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            min-width: 15rem;
+            max-width: 20rem;
+            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Ensure tooltip stays within viewport */
+        .kpi-grid {
+            position: relative;
+        }
+        
+        .kpi-card {
+            overflow: visible;
+        }
+
+        .kpi-card:hover .kpi-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-0.75rem);
+        }
+
+        .kpi-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 0.375rem solid transparent;
+            border-top-color: #1f2937;
+        }
+
+        .kpi-tooltip-title {
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+            color: #10b981;
+            font-size: 0.6562rem;
+        }
+
+        .kpi-tooltip-desc {
+            margin-bottom: 0.5rem;
+            color: #e5e7eb;
+            font-size: 0.5625rem;
+        }
+
+        .kpi-tooltip-calculation {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.5625rem;
+            color: #fbbf24;
+            border-left: 0.1875rem solid #10b981;
         }
 
         .header-actions {
@@ -704,6 +778,11 @@
         <div class="kpi-grid">
             <!-- Total Audits -->
             <div class="kpi-card" id="kpiCardTotal" data-filter-type="total">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Total Audits</div>
+                    <div class="kpi-tooltip-desc">The total count of all completed audits in the selected time period.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc0">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Total Audits</div>
                     <div class="kpi-date" id="kpi0Date" style="display: none;">-</div>
@@ -717,6 +796,11 @@
 
             <!-- Average Quality Score -->
             <div class="kpi-card" id="kpiCardAvgScore" data-filter-type="avgScore">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Average Quality Score</div>
+                    <div class="kpi-tooltip-desc">The mean quality score across all audits with valid scores.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc1">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Avg Quality Score</div>
                     <div class="kpi-date" id="kpi1Date" style="display: none;">-</div>
@@ -730,6 +814,11 @@
 
             <!-- Pass Rate -->
             <div class="kpi-card" id="kpiCardPassRate" data-filter-type="passed">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Pass Rate</div>
+                    <div class="kpi-tooltip-desc">Percentage of audits that received a "Passed" status.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc2">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Pass Rate</div>
                     <div class="kpi-date" id="kpi2Date" style="display: none;">-</div>
@@ -743,6 +832,11 @@
 
             <!-- Critical Error Rate -->
             <div class="kpi-card" id="kpiCardCritical" data-filter-type="critical">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Critical Error Rate</div>
+                    <div class="kpi-tooltip-desc">Percentage of critical errors (Critical Fail + Critical) out of all errors found.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc3">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Critical Error Rate</div>
                     <div class="kpi-date" id="kpi3Date" style="display: none;">-</div>
@@ -756,6 +850,11 @@
 
             <!-- Average Errors per Audit -->
             <div class="kpi-card" id="kpiCardAvgErrors" data-filter-type="errors">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Average Errors per Audit</div>
+                    <div class="kpi-tooltip-desc">The mean number of errors found per audit across all audits.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc4">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Avg Errors/Audit</div>
                     <div class="kpi-date" id="kpi4Date" style="display: none;">-</div>
@@ -769,6 +868,11 @@
 
             <!-- Reversal Rate -->
             <div class="kpi-card" id="kpiCardReversal" data-filter-type="reversal">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Reversal Rate</div>
+                    <div class="kpi-tooltip-desc">Percentage of audits that have had a reversal requested by employees.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc5">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Reversal Rate</div>
                     <div class="kpi-date" id="kpi5Date" style="display: none;">-</div>
@@ -782,6 +886,11 @@
 
             <!-- Acknowledgement Pending Count -->
             <div class="kpi-card" id="kpiCardAcknowledgment" data-filter-type="acknowledgment">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Acknowledgement Pending Count</div>
+                    <div class="kpi-tooltip-desc">Total number of audits awaiting acknowledgement from employees.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc6">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Acknowledgement Pending Count</div>
                     <div class="kpi-date" id="kpi6Date" style="display: none;">-</div>
@@ -795,6 +904,11 @@
 
             <!-- Not Passed -->
             <div class="kpi-card" id="kpiCardNotPassed" data-filter-type="notPassed">
+                <div class="kpi-tooltip">
+                    <div class="kpi-tooltip-title">Not Passed</div>
+                    <div class="kpi-tooltip-desc">Total number of audits that received a "Not Passed" status.</div>
+                    <div class="kpi-tooltip-calculation" id="tooltipCalc7">Calculation: -</div>
+                </div>
                 <div class="kpi-header">
                     <div class="kpi-label">Not Passed</div>
                     <div class="kpi-date" id="kpi7Date" style="display: none;">-</div>
@@ -1763,8 +1877,98 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (notPassingAuditsEl) notPassingAuditsEl.textContent = notPassing.toLocaleString();
         
+        // Update tooltip calculations with real numbers
+        updateTooltipCalculations({
+            total: total,
+            avgScore: avgScore,
+            auditsWithScores: auditsWithScores.length,
+            totalScores: auditsWithScores.reduce((sum, a) => sum + (parseFloat(a.averageScore) || 0), 0),
+            passing: passing,
+            passRate: passRate,
+            totalCriticalErrors: totalCriticalErrors,
+            totalErrors: totalErrors,
+            criticalErrorRate: criticalErrorRate,
+            avgErrorsPerAudit: avgErrorsPerAudit,
+            reversals: reversals.length,
+            reversalRate: reversalRate,
+            acknowledged: acknowledged.length,
+            pendingAcknowledgments: pendingAcknowledgments,
+            notPassing: notPassing
+        });
+        
         // Update trend charts using the same audits for consistency
         await updateTrendCharts(statsAudits);
+    }
+    
+    // Update tooltip calculations with real numbers
+    function updateTooltipCalculations(stats) {
+        // Total Audits
+        const tooltipCalc0 = document.getElementById('tooltipCalc0');
+        if (tooltipCalc0) {
+            tooltipCalc0.innerHTML = `<strong>Calculation:</strong><br>Total Audits = ${stats.total.toLocaleString()}`;
+        }
+        
+        // Average Quality Score
+        const tooltipCalc1 = document.getElementById('tooltipCalc1');
+        if (tooltipCalc1) {
+            if (stats.auditsWithScores > 0) {
+                tooltipCalc1.innerHTML = `<strong>Calculation:</strong><br>Sum of All Scores: ${stats.totalScores.toLocaleString()}<br>÷ Audits with Scores: ${stats.auditsWithScores.toLocaleString()}<br>= Average: ${stats.avgScore}%`;
+            } else {
+                tooltipCalc1.textContent = `Calculation: No scored audits available`;
+            }
+        }
+        
+        // Pass Rate
+        const tooltipCalc2 = document.getElementById('tooltipCalc2');
+        if (tooltipCalc2) {
+            if (stats.total > 0) {
+                tooltipCalc2.innerHTML = `<strong>Calculation:</strong><br>Passed Audits: ${stats.passing.toLocaleString()}<br>÷ Total Audits: ${stats.total.toLocaleString()}<br>× 100 = ${stats.passRate}%`;
+            } else {
+                tooltipCalc2.textContent = `Calculation: No audits available`;
+            }
+        }
+        
+        // Critical Error Rate
+        const tooltipCalc3 = document.getElementById('tooltipCalc3');
+        if (tooltipCalc3) {
+            if (stats.totalErrors > 0) {
+                tooltipCalc3.innerHTML = `<strong>Calculation:</strong><br>Critical Errors: ${stats.totalCriticalErrors.toLocaleString()}<br>÷ Total Errors: ${stats.totalErrors.toLocaleString()}<br>× 100 = ${stats.criticalErrorRate}%`;
+            } else {
+                tooltipCalc3.textContent = `Calculation: No errors found`;
+            }
+        }
+        
+        // Average Errors per Audit
+        const tooltipCalc4 = document.getElementById('tooltipCalc4');
+        if (tooltipCalc4) {
+            if (stats.total > 0) {
+                tooltipCalc4.innerHTML = `<strong>Calculation:</strong><br>Total Errors: ${stats.totalErrors.toLocaleString()}<br>÷ Total Audits: ${stats.total.toLocaleString()}<br>= Average: ${stats.avgErrorsPerAudit}`;
+            } else {
+                tooltipCalc4.textContent = `Calculation: No audits available`;
+            }
+        }
+        
+        // Reversal Rate
+        const tooltipCalc5 = document.getElementById('tooltipCalc5');
+        if (tooltipCalc5) {
+            if (stats.total > 0) {
+                tooltipCalc5.innerHTML = `<strong>Calculation:</strong><br>Audits with Reversals: ${stats.reversals.toLocaleString()}<br>÷ Total Audits: ${stats.total.toLocaleString()}<br>× 100 = ${stats.reversalRate}%`;
+            } else {
+                tooltipCalc5.textContent = `Calculation: No audits available`;
+            }
+        }
+        
+        // Acknowledgement Pending Count
+        const tooltipCalc6 = document.getElementById('tooltipCalc6');
+        if (tooltipCalc6) {
+            tooltipCalc6.innerHTML = `<strong>Calculation:</strong><br>Total Audits: ${stats.total.toLocaleString()}<br>− Acknowledged: ${stats.acknowledged.toLocaleString()}<br>= Pending: ${stats.pendingAcknowledgments.toLocaleString()}`;
+        }
+        
+        // Not Passed
+        const tooltipCalc7 = document.getElementById('tooltipCalc7');
+        if (tooltipCalc7) {
+            tooltipCalc7.innerHTML = `<strong>Calculation:</strong><br>Audits with "Not Passed" Status = ${stats.notPassing.toLocaleString()}`;
+        }
     }
     
     // Calculate and update trend charts for all metrics

@@ -407,6 +407,7 @@ window.generateAuditFormHTML = function(options = {}) {
         interactionIdHtml = '',
         errorDetailsHtml = '',
         recommendationsHtml = '',
+        ratingHtml = '',
         actionButtonsHtml = ''
     } = options;
 
@@ -444,6 +445,7 @@ window.generateAuditFormHTML = function(options = {}) {
                 <div id="rightColumn" style="flex: 1; min-width: 9.0967rem; padding-left: 0.3234rem; display: flex; flex-direction: column; min-height: 0; overflow-y: auto;">
                     ${errorDetailsHtml}
                     ${recommendationsHtml}
+                    ${ratingHtml}
                 </div>
             </div>
             
