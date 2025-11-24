@@ -861,6 +861,23 @@
             }, 10);
         }
         
+        // Get the proper base URL for redirects
+        function getBaseUrl() {
+            // Check if SITE_URL is configured in env-config.js
+            if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
+                return window.env.SITE_URL.replace(/\/$/, ''); // Remove trailing slash
+            }
+            // Fallback to current origin
+            return window.location.origin;
+        }
+        
+        // Build full URL for internal pages
+        function buildUrl(path) {
+            const baseUrl = getBaseUrl();
+            const cleanPath = path.startsWith('/') ? path : `/${path}`;
+            return `${baseUrl}${cleanPath}`;
+        }
+        
         // Hash password using SHA-256 (same as profile page)
         async function hashPassword(password) {
             const encoder = new TextEncoder();
@@ -1013,8 +1030,8 @@
                     return; // Don't redirect yet
                 }
                 
-                // Redirect to home page
-                window.location.href = 'home.html';
+                // Redirect to home page using configured base URL
+                window.location.href = buildUrl('home.html');
                 
             } catch (error) {
                 console.error('Login error:', error);
@@ -1438,8 +1455,8 @@
             if (laterBtn) {
                 laterBtn.addEventListener('click', () => {
                     hideWeakPasswordWarning();
-                    // Continue to home page
-                    window.location.href = 'home.html';
+                    // Continue to home page using configured base URL
+                    window.location.href = buildUrl('home.html');
                 });
             }
             
@@ -1447,7 +1464,7 @@
                 changeBtn.addEventListener('click', () => {
                     hideWeakPasswordWarning();
                     // Redirect to profile page where user can change password
-                    window.location.href = 'profile.html';
+                    window.location.href = buildUrl('profile.html');
                 });
             }
         });
@@ -1473,13 +1490,13 @@
                     provider: 'google'
                 }));
                 
-                // Redirect to home page
-                window.location.href = 'home.html';
+                // Redirect to home page using configured base URL
+                window.location.href = buildUrl('home.html');
                 
             } catch (error) {
                 console.error('Error completing login:', error);
                 alert('Login successful, but there was an error. Redirecting...');
-                window.location.href = 'home.html';
+                window.location.href = buildUrl('home.html');
             }
         }
     </script>
