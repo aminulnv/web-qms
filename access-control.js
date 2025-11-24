@@ -84,7 +84,7 @@ class AccessControl {
       'audit-view.html': {
         allowedRoles: ['*'] // All authenticated users can view (with resource-level checks)
       },
-      'expert-audits.html': {
+      'audit-reports.html': {
         allowedRoles: ['*'] // All authenticated users
       },
       'employee-performance.html': {

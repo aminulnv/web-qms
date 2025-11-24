@@ -209,7 +209,7 @@ class SidebarLoader {
         </li>
 
         <li role="none">
-            <a href="expert-audits.html" class="menu-item" role="menuitem" tabindex="0" aria-label="Audit Reports">
+            <a href="audit-reports.html" class="menu-item" role="menuitem" tabindex="0" aria-label="Audit Reports">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                 </svg>
@@ -717,7 +717,7 @@ class SidebarLoader {
       "Create New Audit": "create-audit.html",
       "Auditor's Dashboard": "auditor-dashboard.html",
       "Audit Distribution": "audit-distribution.html",
-      "Audit Reports": "expert-audits.html",
+      "Audit Reports": "audit-reports.html",
       Performance: "employee-performance.html",
       "Coaching & Remediation": "coaching-remediation.html",
       Reversal: "reversal.html",
@@ -750,7 +750,7 @@ class SidebarLoader {
       "create-audit.html": "Create New Audit",
       "auditor-dashboard.html": "Auditor's Dashboard",
       "audit-distribution.html": "Audit Distribution",
-      "expert-audits.html": "Audit Reports",
+      "audit-reports.html": "Audit Reports",
       "scorecards.html": "Scorecards",
       "employee-performance.html": "Performance",
       "coaching-remediation.html": "Coaching & Remediation",
