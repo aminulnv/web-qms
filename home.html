@@ -2035,15 +2035,13 @@ async function fetchAndCacheRecentUpdates(period) {
               });
               
               return filteredAudits.map(audit => {
-                const auditorEmail = (audit.auditor_email || '').toLowerCase().trim();
-                const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
-                const auditorName = auditorUser?.name || audit.auditor_name || audit.auditor_email?.split('@')[0] || 'Unknown';
+                // Don't fetch auditor info for agents - they shouldn't see it
                 
                 return {
                   id: `audit-${audit.id}`,
                   type: 'audit_completed',
-                  displayName: auditorName,
-                  displayEmail: audit.auditor_email,
+                  displayName: null, // Don't show auditor name for agents
+                  displayEmail: null, // Don't show auditor email for agents
                   timestamp: audit.submitted_at,
                   status: 'completed',
                   interactionId: audit.interaction_id,
@@ -2134,9 +2132,7 @@ async function fetchAndCacheRecentUpdates(period) {
               
               const updates = [];
               filteredReversals.forEach(reversal => {
-                const auditorEmail = (reversal.auditor_email || '').toLowerCase().trim();
-                const auditorUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
-                const auditorName = auditorUser?.name || reversal.auditor_email?.split('@')[0] || 'Unknown';
+                // Don't fetch auditor info for agents - they shouldn't see it
                 const interactionId = reversal.interaction_id || 'N/A';
                 
                 // Determine reversal status - check if it's been responded to first, then check acknowledgement
@@ -2178,8 +2174,8 @@ async function fetchAndCacheRecentUpdates(period) {
                   updates.push({
                     id: `reversal-request-${reversal.id}`,
                     type: 'reversal_requested',
-                    displayName: auditorName,
-                    displayEmail: reversal.auditor_email,
+                    displayName: null, // Don't show auditor name for agents
+                    displayEmail: null, // Don't show auditor email for agents
                     timestamp: reversal.reversal_requested_at,
                     status: 'reversal_requested',
                     interactionId: interactionId,
@@ -2211,8 +2207,8 @@ async function fetchAndCacheRecentUpdates(period) {
                     updates.push({
                       id: `reversal-status-${reversal.id}`,
                       type: 'reversal_status_update',
-                      displayName: auditorName,
-                      displayEmail: reversal.auditor_email,
+                      displayName: null, // Don't show auditor name for agents
+                      displayEmail: null, // Don't show auditor email for agents
                     timestamp: statusTimestamp,
                       status: status,
                       statusText: statusText,
@@ -2514,8 +2510,8 @@ function renderRecentUpdatesFromData(allUpdates) {
         textColor = 'text-success';
       }
 
-      // For employees viewing audit_completed updates, use generic icon instead of auditor initials
-      const useGenericIcon = isAgent && update.type === 'audit_completed';
+      // For employees viewing any updates, use generic icon instead of auditor initials/names
+      const useGenericIcon = isAgent && (update.type === 'audit_completed' || update.type === 'reversal_requested' || update.type === 'reversal_status_update');
       const iconContent = useGenericIcon 
         ? `<svg class="w-4 h-4 ${textColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -2540,7 +2536,9 @@ function renderRecentUpdatesFromData(allUpdates) {
               <p class="text-xs text-gray-900 leading-snug">
                 ${isAgent && (update.type === 'reversal_requested' || update.type === 'reversal_status_update' || update.type === 'audit_completed')
                   ? statusText
-                  : `<span class="font-medium">${escapeHtml(update.displayName)}</span> ${statusText}`
+                  : update.displayName 
+                    ? `<span class="font-medium">${escapeHtml(update.displayName)}</span> ${statusText}`
+                    : statusText
                 }
               </p>
               <p class="text-[10px] text-gray-500 mt-0.5">${timestamp}</p>
@@ -2885,14 +2883,12 @@ function renderAssignedAudits() {
         }
       }
       
-      // For agents, show auditor info; for auditors, show employee info
+      // For agents, don't show auditor info; for auditors, show employee info
       let displayUser, displayName, displayEmail;
       if (isAgent) {
-        // For employees, show who audited them (the auditor)
-        const auditorEmail = (audit.auditor_email || '').toLowerCase().trim();
-        displayUser = allUsers.find(u => (u.email || '').toLowerCase().trim() === auditorEmail);
-        displayName = displayUser?.name || audit.auditor_name || audit.auditor_email?.split('@')[0] || 'Unknown';
-        displayEmail = audit.auditor_email || '';
+        // For employees, don't show auditor info - use generic icon instead
+        displayName = null; // Don't show auditor name
+        displayEmail = null; // Don't show auditor email
       } else {
         // For auditors, show who they audited (the employee)
         const employeeEmail = (audit.employee_email || '').toLowerCase().trim();
@@ -2902,7 +2898,8 @@ function renderAssignedAudits() {
       }
       
       const scorecardName = audit._scorecard_name || 'Unknown Scorecard';
-      const initials = getInitials(displayName);
+      // For agents, use generic icon instead of initials; for auditors, use employee initials
+      const initials = isAgent ? null : getInitials(displayName);
       
       // Get passing status
       const passingStatus = audit.passing_status || audit.passingStatus || 'Unknown';
@@ -2935,9 +2932,19 @@ function renderAssignedAudits() {
         <div class="px-4 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-0" onclick="viewAuditDetails('${audit.id}', '${audit._scorecard_id || ''}', '${audit._scorecard_table || ''}')">
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
-              <div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                ${initials}
-              </div>
+              ${isAgent ? `
+                <!-- For agents: Use generic icon instead of auditor avatar -->
+                <div class="w-8 h-8 rounded bg-success/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+              ` : `
+                <!-- For auditors: Show employee avatar -->
+                <div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                  ${initials}
+                </div>
+              `}
               <div class="flex-1 min-w-0">
                 ${isAgent ? `
                   <!-- For employees: 2 rows, info compact -->
