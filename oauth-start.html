@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connecting to Google...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 { font-size: 1.25rem; color: #333; margin-bottom: 0.5rem; }
+        p { color: #666; font-size: 0.875rem; }
+        .error { color: #dc2626; margin-top: 1rem; font-size: 0.875rem; }
+        .close-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.875rem;
+        }
+        .close-btn:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h1>Connecting to Google</h1>
+        <p id="message">Please wait...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="env-config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script>
+        async function startOAuth() {
+            const messageEl = document.getElementById('message');
+            
+            try {
+                // Check if opened from parent window
+                if (!window.opener) {
+                    messageEl.innerHTML = '<span class="error">This page must be opened from the login page.</span><br><button class="close-btn" onclick="window.close()">Close</button>';
+                    return;
+                }
+                
+                messageEl.textContent = 'Initializing...';
+                
+                // Wait for Supabase to be initialized
+                let attempts = 0;
+                const maxAttempts = 50;
+                while (attempts < maxAttempts) {
+                    if (window.supabaseClient) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.supabaseClient) {
+                    throw new Error('Failed to initialize. Please try again.');
+                }
+                
+                messageEl.textContent = 'Redirecting to Google...';
+                
+                // Start OAuth flow - this will redirect THIS window (the popup)
+                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth-callback.html`,
+                        skipBrowserRedirect: false,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        }
+                    }
+                });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                // The popup will be redirected to Google OAuth
+                // After consent, it will redirect to auth-callback.html
+                
+            } catch (error) {
+                console.error('OAuth start error:', error);
+                messageEl.innerHTML = `
+                    <span class="error">${error.message}</span>
+                    <br>
+                    <button class="close-btn" onclick="notifyParentAndClose('${error.message}')">Close</button>
+                `;
+            }
+        }
+        
+        function notifyParentAndClose(errorMessage) {
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'AUTH_ERROR',
+                    error: errorMessage
+                }, window.location.origin);
+            }
+            window.close();
+        }
+        
+        // Wait for Supabase to be ready
+        function checkSupabase() {
+            if (window.supabaseClient) {
+                startOAuth();
+            } else {
+                setTimeout(checkSupabase, 100);
+            }
+        }
+        
+        checkSupabase();
+    </script>
+</body>
+</html>
+

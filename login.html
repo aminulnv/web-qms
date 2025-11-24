@@ -976,38 +976,23 @@
         let authPopup = null;
         
         // Handle Supabase Google Sign-In via Popup
-        async function handleSupabaseGoogleSignIn() {
+        function handleSupabaseGoogleSignIn() {
             const googleError = document.getElementById('googleError');
             const googleBtn = document.getElementById('googleSignInBtn');
             
             try {
                 googleError.textContent = '';
                 googleBtn.disabled = true;
-                googleBtn.textContent = 'Opening Google...';
+                googleBtn.textContent = 'Opening popup...';
                 
-                // Wait for Supabase to be initialized
-                let attempts = 0;
-                const maxAttempts = 50;
-                while (attempts < maxAttempts) {
-                    if (window.supabaseClient) {
-                        break;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
-                }
-                
-                if (!window.supabaseClient) {
-                    throw new Error('Supabase client not initialized. Please refresh the page.');
-                }
-                
-                // Open popup for OAuth
+                // Open popup to oauth-start.html which will handle the OAuth flow
                 const width = 500;
                 const height = 600;
                 const left = window.screen.width / 2 - width / 2;
                 const top = window.screen.height / 2 - height / 2;
                 
                 authPopup = window.open(
-                    'about:blank',
+                    'oauth-start.html',
                     'Google Sign In',
                     `width=${width},height=${height},left=${left},top=${top}`
                 );
@@ -1016,32 +1001,9 @@
                     throw new Error('Popup was blocked. Please allow popups for this site.');
                 }
                 
-                googleBtn.textContent = 'Waiting for Google...';
+                googleBtn.textContent = 'Waiting for authentication...';
                 
-                // Sign in with Supabase Google OAuth
-                const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: `${window.location.origin}/auth-callback.html`,
-                        skipBrowserRedirect: false,
-                        queryParams: {
-                            access_type: 'offline',
-                            prompt: 'consent',
-                        }
-                    }
-                });
-                
-                if (error) {
-                    authPopup.close();
-                    throw error;
-                }
-                
-                // Redirect popup to OAuth URL
-                if (data?.url) {
-                    authPopup.location.href = data.url;
-                }
-                
-                // Check if popup was closed
+                // Check if popup was closed manually
                 const popupCheckInterval = setInterval(() => {
                     if (authPopup && authPopup.closed) {
                         clearInterval(popupCheckInterval);
@@ -1056,7 +1018,7 @@
                             Sign in with Google
                         `;
                         if (!pendingAuthData) {
-                            googleError.textContent = 'Sign-in was cancelled';
+                            googleError.textContent = 'Sign-in was cancelled or closed';
                         }
                     }
                 }, 500);
