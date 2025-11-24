@@ -349,6 +349,26 @@
                 // Compare and find differences
                 const changes = compareUserData(dbUserData, googleUserData);
                 
+                // Get the parent window's origin for postMessage
+                // Try to get configured SITE_URL, or use wildcard for cross-origin
+                let parentOrigin = '*'; // Wildcard for cross-origin communication
+                
+                try {
+                    // Try to get configured site URL
+                    if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
+                        parentOrigin = window.env.SITE_URL;
+                    } else if (window.opener && window.opener.location) {
+                        // Try to get opener's origin (might be blocked by CORS)
+                        parentOrigin = window.opener.location.origin;
+                    }
+                } catch (e) {
+                    // CORS blocked, use wildcard
+                    console.log('Using wildcard for postMessage due to CORS');
+                    parentOrigin = '*';
+                }
+                
+                console.log('Sending auth success to parent origin:', parentOrigin);
+                
                 // Send success message to parent window
                 window.opener.postMessage({
                     type: 'AUTH_SUCCESS',
@@ -357,7 +377,7 @@
                         googleUser: googleUserData,
                         changes: changes
                     }
-                }, window.location.origin);
+                }, parentOrigin);
                 
                 // Show success state
                 loadingState.innerHTML = `
@@ -380,10 +400,25 @@
                 
                 // Send error message to parent window
                 if (window.opener) {
+                    // Get the parent window's origin for postMessage
+                    let parentOrigin = '*';
+                    
+                    try {
+                        if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
+                            parentOrigin = window.env.SITE_URL;
+                        } else if (window.opener && window.opener.location) {
+                            parentOrigin = window.opener.location.origin;
+                        }
+                    } catch (e) {
+                        parentOrigin = '*';
+                    }
+                    
+                    console.log('Sending auth error to parent origin:', parentOrigin);
+                    
                     window.opener.postMessage({
                         type: 'AUTH_ERROR',
                         error: error.message
-                    }, window.location.origin);
+                    }, parentOrigin);
                     
                     showError(error.message);
                     
