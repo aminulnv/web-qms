@@ -261,11 +261,35 @@
                 
                 messageEl.textContent = 'Redirecting to Google Sign-In...';
                 
+                // Get the proper redirect URL based on current environment
+                let baseUrl;
+                
+                // Check if SITE_URL is configured in env-config.js
+                if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
+                    baseUrl = window.env.SITE_URL.replace(/\/$/, ''); // Remove trailing slash
+                    console.log('Using configured SITE_URL:', baseUrl);
+                } else {
+                    // Auto-detect from current location
+                    const protocol = window.location.protocol;
+                    const hostname = window.location.hostname;
+                    const port = window.location.port;
+                    
+                    if (port && port !== '80' && port !== '443') {
+                        baseUrl = `${protocol}//${hostname}:${port}`;
+                    } else {
+                        baseUrl = `${protocol}//${hostname}`;
+                    }
+                    console.log('Auto-detected base URL:', baseUrl);
+                }
+                
+                const redirectUrl = `${baseUrl}/auth-callback.html`;
+                console.log('OAuth redirect URL:', redirectUrl);
+                
                 // Start OAuth flow - this will redirect THIS window (the popup)
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}/auth-callback.html`,
+                        redirectTo: redirectUrl,
                         skipBrowserRedirect: false,
                         queryParams: {
                             access_type: 'offline',
