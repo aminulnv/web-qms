@@ -818,7 +818,7 @@
       </div>
 
       <!-- Average Quality Score Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
+      <div id="avgQualityScoreCard" class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow group flex-1 min-w-0">
         <div class="flex items-center justify-between mb-2">
           <div class="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition-colors">
             <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1688,6 +1688,9 @@ async function initializeDashboard() {
       if (auditsConductedCard) auditsConductedCard.style.display = 'none';
       const remainingCard = document.getElementById('remainingCard');
       if (remainingCard) remainingCard.style.display = 'none';
+      // Hide average quality score card for agents
+      const avgQualityScoreCard = document.getElementById('avgQualityScoreCard');
+      if (avgQualityScoreCard) avgQualityScoreCard.style.display = 'none';
       // Show pass rate card for agents
       const passRateCard = document.getElementById('passRateCard');
       if (passRateCard) passRateCard.style.display = 'block';
@@ -1704,6 +1707,9 @@ async function initializeDashboard() {
       // Ensure avgDuration card is visible for auditors
       const avgDurationCard = document.getElementById('avgDurationCard');
       if (avgDurationCard) avgDurationCard.style.display = 'block';
+      // Ensure average quality score card is visible for auditors
+      const avgQualityScoreCard = document.getElementById('avgQualityScoreCard');
+      if (avgQualityScoreCard) avgQualityScoreCard.style.display = 'block';
       const auditsConductedCard = document.getElementById('auditsConductedCard');
       if (auditsConductedCard) auditsConductedCard.style.display = 'block';
       const remainingCard = document.getElementById('remainingCard');
