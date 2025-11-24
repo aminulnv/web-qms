@@ -11,6 +11,7 @@ require('dotenv').config();
 const envConfig = {
   SUPABASE_URL: process.env.SUPABASE_URL || '',
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
+  SITE_URL: process.env.SITE_URL || '',
   INTERCOM_ACCESS_TOKEN: process.env.INTERCOM_ACCESS_TOKEN || '',
   INTERCOM_API_BASE_URL: process.env.INTERCOM_API_BASE_URL || 'https://api.intercom.io',
   INTERCOM_APP_ID: process.env.INTERCOM_APP_ID || ''
@@ -26,6 +27,7 @@ const configContent = `/**
 window.env = {
   SUPABASE_URL: '${envConfig.SUPABASE_URL}',
   SUPABASE_ANON_KEY: '${envConfig.SUPABASE_ANON_KEY}',
+  SITE_URL: '${envConfig.SITE_URL}',
   INTERCOM_ACCESS_TOKEN: '${envConfig.INTERCOM_ACCESS_TOKEN}',
   INTERCOM_API_BASE_URL: '${envConfig.INTERCOM_API_BASE_URL}',
   INTERCOM_APP_ID: '${envConfig.INTERCOM_APP_ID}'
