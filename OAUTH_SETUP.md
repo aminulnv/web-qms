@@ -41,9 +41,9 @@ window.env = {
 http://localhost:3000/auth-callback.html
 ```
 
-**For Production:**
+**For Production (Vercel):**
 ```
-https://your-domain.com/auth-callback.html
+https://web-qms.vercel.app/auth-callback.html
 ```
 
 ### Configure Site URL
@@ -52,8 +52,8 @@ In the same **URL Configuration** section:
 
 **Site URL:**
 ```
-http://localhost:3000    (for development)
-https://your-domain.com  (for production)
+http://localhost:3000              (for development)
+https://web-qms.vercel.app         (for production on Vercel)
 ```
 
 ## 3. Configure Google Cloud Console
@@ -71,16 +71,16 @@ https://xijmkmvsumeoqarpmpvi.supabase.co/auth/v1/callback
 
 **Your Application URLs:**
 ```
-http://localhost:3000/auth-callback.html    (for development)
-https://your-domain.com/auth-callback.html  (for production)
+http://localhost:3000/auth-callback.html                (for development)
+https://web-qms.vercel.app/auth-callback.html           (for production)
 ```
 
 ### Authorized JavaScript Origins
 
 Add these origins:
 ```
-http://localhost:3000    (for development)
-https://your-domain.com  (for production)
+http://localhost:3000                                    (for development)
+https://web-qms.vercel.app                               (for production)
 https://xijmkmvsumeoqarpmpvi.supabase.co
 ```
 
@@ -139,9 +139,9 @@ SITE_URL: 'http://localhost:3000'
 SITE_URL: 'https://staging.your-domain.com'
 ```
 
-### Production
+### Production (Vercel)
 ```javascript
-SITE_URL: 'https://your-domain.com'
+SITE_URL: 'https://web-qms.vercel.app'
 ```
 
 ## Auto-Detection (Default)
