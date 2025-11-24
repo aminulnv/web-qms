@@ -854,7 +854,8 @@
                     <div id="errorParametersContainer" style="padding: 0 0.6469rem 0.6469rem 0.6469rem; box-shadow: 0 -0.0606rem 0.1213rem rgba(0, 0, 0, 0.05);">
                         <!-- Error parameters will be dynamically loaded based on selected scorecard -->
                         <div style="padding: 1.2937rem; text-align: center; color: #000000; font-size: 0.5659rem;">
-                            <p>Please select a scorecard above to load error parameters.</p>
+                            <p style="margin: 0 0 0.3234rem 0; font-weight: 500;">All scorecards are available. Please select a scorecard above to load error parameters.</p>
+                            <p style="margin: 0; color: #6b7280; font-size: 0.4852rem;">💡 Tip: Select an employee first to filter scorecards by channel, or choose any scorecard from the list.</p>
                         </div>
                     </div>
                 </div>
@@ -949,8 +950,28 @@ let currentParameters = [];
 let allAvailableScorecards = [];
 
 // Load available scorecards
-async function loadScorecards(channelFilter = null, preselectedScorecardId = null) {
+async function loadScorecards(channelFilter = null, preselectedScorecardId = null, skipAutoSelect = false) {
     const scorecardSelect = document.getElementById('scorecardSelect');
+    
+    if (!scorecardSelect) {
+        console.error('Scorecard select element not found');
+        return;
+    }
+    
+    // Wait for Supabase client if not ready
+    if (!window.supabaseClient) {
+        let attempts = 0;
+        while (!window.supabaseClient && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+    }
+    
+    if (!window.supabaseClient) {
+        console.error('Supabase client not initialized');
+        scorecardSelect.innerHTML = '<option value="">Error: Database not ready</option>';
+        return;
+    }
     
     try {
         let query = window.supabaseClient
@@ -991,7 +1012,11 @@ async function loadScorecards(channelFilter = null, preselectedScorecardId = nul
             });
         }
         
-        scorecardSelect.innerHTML = '<option value="">Select a scorecard...</option>';
+        // Update placeholder text based on context
+        const placeholderText = skipAutoSelect 
+            ? 'Select a scorecard...' 
+            : 'Select a scorecard...';
+        scorecardSelect.innerHTML = `<option value="">${placeholderText}</option>`;
         
         if (filteredScorecards && filteredScorecards.length > 0) {
             filteredScorecards.forEach(scorecard => {
@@ -1014,8 +1039,8 @@ async function loadScorecards(channelFilter = null, preselectedScorecardId = nul
                 scorecardSelect.appendChild(option);
             });
             
-            // Auto-select scorecard: use preselected ID if provided, otherwise use first available
-            if (filteredScorecards.length > 0) {
+            // Auto-select scorecard: use preselected ID if provided, otherwise use first available (unless skipAutoSelect is true)
+            if (filteredScorecards.length > 0 && !skipAutoSelect) {
                 if (preselectedScorecardId) {
                     // Check if the preselected scorecard exists in the filtered list
                     const preselectedExists = filteredScorecards.some(sc => sc.id === preselectedScorecardId);
@@ -1061,6 +1086,10 @@ async function loadScorecards(channelFilter = null, preselectedScorecardId = nul
                     scorecardSelect.value = filteredScorecards[0].id;
                     await loadScorecardParameters(filteredScorecards[0].id);
                 }
+            } else if (skipAutoSelect) {
+                // When skipAutoSelect is true, clear any selected scorecard and show help text
+                scorecardSelect.value = '';
+                clearErrorParameters();
             }
             // If channel is selected but no matching scorecard, show message
             else if (channelFilter && filteredScorecards.length === 0) {
@@ -1080,22 +1109,22 @@ async function loadScorecards(channelFilter = null, preselectedScorecardId = nul
 }
 
 // Auto-select scorecard based on selected channel
-async function autoSelectScorecardByChannel(channelName) {
+async function autoSelectScorecardByChannel(channelName, skipAutoSelect = false) {
     if (!channelName || !channelName.trim()) {
-        // If channel is cleared, reload all scorecards and auto-select first
-        await loadScorecards();
+        // If channel is cleared, reload all scorecards without auto-selecting
+        await loadScorecards(null, null, true);
         return;
     }
     
     // Ensure scorecards are loaded first
     if (allAvailableScorecards.length === 0) {
-        await loadScorecards();
+        await loadScorecards(null, null, skipAutoSelect);
     }
     
-    // Reload scorecards filtered by channel (this will auto-select first matching scorecard)
-    await loadScorecards(channelName.trim());
+    // Reload scorecards filtered by channel (this will auto-select first matching scorecard unless skipAutoSelect is true)
+    await loadScorecards(channelName.trim(), null, skipAutoSelect);
     
-    // The loadScorecards function will already auto-select the first scorecard
+    // The loadScorecards function will already auto-select the first scorecard unless skipAutoSelect is true
     // No additional logic needed here
 }
 
@@ -8164,24 +8193,7 @@ function renderErrorParameters() {
         const paramType = param.parameter_type || 'error';
         const paramIcon = paramType === 'error' ? '-' : (paramType === 'achievement' || paramType === 'bonus' ? '+' : '');
         
-        // Different colors for different parameter types (matching expert-audits.html exactly)
-        let severityColor = '#3b82f6';
-        let severityBg = '#eff6ff';
-        
-        if (paramType === 'error') {
-            if (param.error_category.includes('Fail')) {
-                severityColor = '#ef4444';
-                severityBg = '#fee2e2';
-            } else if (param.error_category.includes('Critical')) {
-                severityColor = '#f59e0b';
-                severityBg = '#fef3c7';
-            }
-        } else if (paramType === 'achievement' || paramType === 'bonus') {
-            severityColor = '#10b981';
-            severityBg = '#d1fae5';
-        }
-        
-        // Map error category to severity label
+        // Map error category to severity label first
         let mappedSeverity = 'Significant'; // default
         const category = param.error_category || '';
         if (category.includes('Fail')) {
@@ -8194,6 +8206,35 @@ function renderErrorParameters() {
             mappedSeverity = 'Major';
         } else if (category.includes('Minor')) {
             mappedSeverity = 'Minor';
+        }
+        
+        // Different colors for different parameter types - all error severities use red shades
+        // Critical Fail: darkest red filled, Critical: medium-dark red filled
+        // Significant, Major, Minor: progressively lighter red backgrounds with different shades
+        let severityColor = '#ef4444'; // Default: medium red text
+        let severityBg = '#fee2e2'; // Default: light red background
+        
+        if (paramType === 'error') {
+            if (mappedSeverity === 'Critical Fail') {
+                severityColor = '#ffffff'; // White text on dark red background
+                severityBg = '#7f1d1d'; // Darkest red filled background for Critical Fail
+            } else if (mappedSeverity === 'Critical') {
+                severityColor = '#ffffff'; // White text on medium-dark red background
+                severityBg = '#dc2626'; // Medium-dark red filled background for Critical
+            } else if (mappedSeverity === 'Significant') {
+                severityColor = '#ffffff'; // White text on lighter red background
+                severityBg = '#f87171'; // Lighter red filled background for Significant (less red than Critical)
+            } else if (mappedSeverity === 'Major') {
+                severityColor = '#dc2626'; // Medium-dark red text
+                severityBg = '#fee2e2'; // Light red background for Major
+            } else if (mappedSeverity === 'Minor') {
+                severityColor = '#ef4444'; // Medium red text
+                severityBg = '#fef2f2'; // Very light red background for Minor (lightest)
+            }
+            // Default (if none match) uses initial values
+        } else if (paramType === 'achievement' || paramType === 'bonus') {
+            severityColor = '#10b981';
+            severityBg = '#d1fae5';
         }
         
         const severityLabel = (paramType === 'achievement' || paramType === 'bonus') && param.field_type !== 'radio' ? 'ACHIEVEMENT' : mappedSeverity;
@@ -8264,7 +8305,21 @@ function renderErrorParameters() {
 // Clear error parameters
 function clearErrorParameters() {
     const container = document.getElementById('errorParametersContainer');
-    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 1.2937rem; color: #000000; font-size: 0.5659rem;"><p>Please select a scorecard above to load error parameters.</p></div>';
+    const employeeSelect = document.getElementById('employeeName');
+    const scorecardSelect = document.getElementById('scorecardSelect');
+    const hasEmployee = employeeSelect && employeeSelect.value && employeeSelect.value !== '';
+    const hasScorecards = scorecardSelect && scorecardSelect.options.length > 1;
+    
+    let helpText = '';
+    if (!hasEmployee && hasScorecards) {
+        helpText = '<p style="margin: 0 0 0.3234rem 0; font-weight: 500;">All scorecards are available. Please select a scorecard above to load error parameters.</p><p style="margin: 0; color: #6b7280; font-size: 0.4852rem;">💡 Tip: Select an employee first to filter scorecards by channel, or choose any scorecard from the list.</p>';
+    } else if (!hasScorecards) {
+        helpText = '<p style="margin: 0;">No scorecards available. Please contact an administrator.</p>';
+    } else {
+        helpText = '<p style="margin: 0;">Please select a scorecard above to load error parameters.</p>';
+    }
+    
+    container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 1.2937rem; color: #000000; font-size: 0.5659rem;">${helpText}</div>`;
 }
 
 // ============================================================================
@@ -9306,21 +9361,29 @@ async function loadChannels() {
             channelSelect.appendChild(option);
         });
         
-        // Set first channel as default if available
-        if (data.length > 0) {
+        // Only auto-select channel and scorecard if an employee is selected
+        const employeeSelect = document.getElementById('employeeName');
+        const hasEmployee = employeeSelect && employeeSelect.value && employeeSelect.value !== '';
+        
+        if (data.length > 0 && hasEmployee) {
             channelSelect.value = data[0].name;
             // Auto-select matching scorecard after a short delay to ensure scorecards are loaded
             setTimeout(async () => {
                 await autoSelectScorecardByChannel(data[0].name);
             }, 500);
+        } else if (data.length > 0 && !hasEmployee) {
+            // Don't auto-select channel or scorecard if no employee is selected
+            channelSelect.value = '';
         } else {
-            // If no channels available, still auto-select first scorecard
-            setTimeout(async () => {
-                const scorecardSelect = document.getElementById('scorecardSelect');
-                if (scorecardSelect && (!scorecardSelect.value || scorecardSelect.value === '')) {
-                    await loadScorecards();
-                }
-            }, 500);
+            // If no channels available, only auto-select first scorecard if employee is selected
+            if (hasEmployee) {
+                setTimeout(async () => {
+                    const scorecardSelect = document.getElementById('scorecardSelect');
+                    if (scorecardSelect && (!scorecardSelect.value || scorecardSelect.value === '')) {
+                        await loadScorecards();
+                    }
+                }, 500);
+            }
         }
         
         console.log('Loaded channels from channels table:', data.map(c => c.name));
@@ -10278,8 +10341,28 @@ document.addEventListener('DOMContentLoaded', function() {
             auditType.value = 'Routine Audit (Recorded)';
         }
         
-        // Load scorecards when page loads
-        loadScorecards();
+        // Load scorecards when page loads - skip auto-selection if no employee is selected
+        // Wait for Supabase to be ready before loading scorecards
+        (async () => {
+            // Wait for Supabase client to be available
+            let attempts = 0;
+            while (!window.supabaseClient && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (window.supabaseClient) {
+                const employeeSelect = document.getElementById('employeeName');
+                const hasEmployee = employeeSelect && employeeSelect.value && employeeSelect.value !== '';
+                await loadScorecards(null, null, !hasEmployee);
+            } else {
+                console.error('Supabase client not initialized, scorecards will not load');
+                const scorecardSelect = document.getElementById('scorecardSelect');
+                if (scorecardSelect) {
+                    scorecardSelect.innerHTML = '<option value="">Error: Database not ready</option>';
+                }
+            }
+        })();
         
         // Initialize sort dropdown
         const sortBy = document.getElementById('auditSortBy');
@@ -10482,21 +10565,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (selectedChannel) {
                     await autoSelectScorecardByChannel(selectedChannel);
                 } else {
-                    // If channel is cleared, reload all scorecards
-                    await loadScorecards();
+                    // If channel is cleared, reload all scorecards without auto-selecting
+                    await loadScorecards(null, null, true);
                 }
             });
             
             // Also trigger on page load if channel is already selected
-            if (channelSelect.value) {
+            // Only auto-select if an employee is selected
+            const employeeSelect = document.getElementById('employeeName');
+            const hasEmployee = employeeSelect && employeeSelect.value && employeeSelect.value !== '';
+            
+            if (channelSelect.value && hasEmployee) {
                 setTimeout(async () => {
                     // Don't auto-select if we're loading an assignment scorecard
                     if (!window.isLoadingAssignmentScorecard) {
                         await autoSelectScorecardByChannel(channelSelect.value);
                     }
                 }, 500);
+            } else if (!hasEmployee && channelSelect.value) {
+                // If channel is selected but no employee, clear the channel and don't auto-select scorecard
+                channelSelect.value = '';
+            } else if (!hasEmployee) {
+                // If no channel selected and no employee, don't auto-select scorecard
+                // Scorecards will be loaded without auto-selection via the page load initialization
             } else {
-                // If no channel selected, ensure first scorecard is auto-selected after a delay
+                // If no channel selected but employee is selected, ensure first scorecard is auto-selected after a delay
                 setTimeout(async () => {
                     // Don't auto-select if we're loading an assignment scorecard
                     if (!window.isLoadingAssignmentScorecard) {
@@ -10510,7 +10603,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Handle employee selection change
-        employeeSelect.addEventListener('change', function() {
+        employeeSelect.addEventListener('change', async function() {
             const selectedOption = this.options[this.selectedIndex];
             
             if (selectedOption && selectedOption.value) {
@@ -10572,8 +10665,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const channelSelect = document.getElementById('channel');
                 if (channelSelect) {
                     channelSelect.value = '';
-                    // Trigger change event to reload scorecards without channel filter
-                    channelSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    // Reload all scorecards without auto-selecting when employee is cleared
+                    await loadScorecards(null, null, true);
                 }
             }
         });
