@@ -121,7 +121,7 @@ class AccessControl {
         minRoleLevel: 2 // Quality Analyst and above
       },
       'search.html': {
-        allowedRoles: ['*'] // All authenticated users
+        minRoleLevel: 2 // Quality Analyst and above
       },
       'help.html': {
         allowedRoles: ['*'] // All authenticated users
