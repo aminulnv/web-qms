@@ -907,7 +907,7 @@ function shouldShowEditButton() {
     return hasPendingReversalRequest() && isCurrentUserQualityAnalyst();
 }
 
-// Check if reversal button should be shown (hide after 48 hours from audit submission)
+// Check if reversal button should be shown (hide after 150 hours from audit submission)
 function checkIfReversalButtonShouldShow(auditSubmissionTime) {
     if (!auditSubmissionTime) {
         return true; // If no timestamp, show button (fallback)
@@ -918,11 +918,11 @@ function checkIfReversalButtonShouldShow(auditSubmissionTime) {
     const diffMs = now - submissionDate;
     const diffHours = diffMs / (1000 * 60 * 60);
     
-    // Hide after 48 hours
-    return diffHours < 48;
+    // Hide after 150 hours
+    return diffHours < 150;
 }
 
-// Get time remaining until 48 hours expires (in seconds)
+// Get time remaining until 150 hours expires (in seconds)
 function getTimeRemainingUntil48Hours(auditSubmissionTime) {
     if (!auditSubmissionTime) {
         return null;
@@ -930,7 +930,7 @@ function getTimeRemainingUntil48Hours(auditSubmissionTime) {
     
     const submissionDate = new Date(auditSubmissionTime);
     const now = new Date();
-    const expirationTime = new Date(submissionDate.getTime() + (48 * 60 * 60 * 1000)); // 48 hours
+    const expirationTime = new Date(submissionDate.getTime() + (150 * 60 * 60 * 1000)); // 150 hours
     const remainingMs = expirationTime - now;
     
     if (remainingMs <= 0) {
@@ -1898,7 +1898,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
     // Check if edit button should be shown (only for Quality Analysts when reversal is pending)
     const showEditButton = shouldShowEditButton();
     
-    // Check if reversal button should be shown (hide after 48 hours from audit submission)
+    // Check if reversal button should be shown (hide after 150 hours from audit submission)
     const auditSubmissionTime = audit.submittedAt || audit.auditTimestamp || audit.submitted_at || audit.audit_timestamp;
     const showReversalButton = checkIfReversalButtonShouldShow(auditSubmissionTime);
     
@@ -1926,7 +1926,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
         // Check if reversal is pending (disables acknowledge button and reversal button)
         const isReversalPending = reversalStatus === 'Pending';
         
-        // Generate reversal button HTML (always show if within 48 hours, regardless of acknowledgement status)
+        // Generate reversal button HTML (always show if within 150 hours, regardless of acknowledgement status)
         // But disable if reversal is already pending
         let reversalButtonHtml = '';
         if (showReversalButton) {
@@ -1960,7 +1960,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
                 </div>
             `;
         } else {
-            // If acknowledged, only show reversal button (if within 48 hours)
+            // If acknowledged, only show reversal button (if within 150 hours)
             if (reversalButtonHtml) {
                 employeeButtonsHtml = reversalButtonHtml;
             }
@@ -2025,7 +2025,7 @@ function renderAudit(audit, auditScorecard, errorFields) {
         `;
     }
     
-    // Generate timer HTML for footer (if reversal button is visible and within 48 hours)
+    // Generate timer HTML for footer (if reversal button is visible and within 150 hours)
     // Don't show timer if reversal is already pending
     let timerHtml = '';
     if (showAcknowledgeButton && showReversalButton && auditSubmissionTime && reversalStatus !== 'Pending') {
