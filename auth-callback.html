@@ -41,101 +41,6 @@
         h1 { font-size: 1.5rem; color: #333; margin-bottom: 0.5rem; }
         p { color: #666; font-size: 0.875rem; }
         .error { color: #dc2626; margin-top: 1rem; }
-        
-        /* Profile Sync Modal */
-        .sync-modal {
-            display: none;
-            text-align: left;
-        }
-        .sync-modal.show {
-            display: block;
-        }
-        .sync-header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .sync-header h2 {
-            font-size: 1.25rem;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        .sync-header p {
-            font-size: 0.875rem;
-            color: #666;
-        }
-        .sync-changes {
-            background: #f9fafb;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border: 2px solid #e5e7eb;
-        }
-        .sync-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .sync-item:last-child {
-            border-bottom: none;
-        }
-        .sync-label {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-        }
-        .sync-old {
-            color: #dc2626;
-            font-size: 0.8125rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .sync-new {
-            color: #059669;
-            font-size: 0.8125rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .sync-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .sync-buttons {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-        .sync-btn {
-            flex: 1;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Poppins', sans-serif;
-        }
-        .sync-btn.skip {
-            background: #f3f4f6;
-            color: #374151;
-        }
-        .sync-btn.skip:hover {
-            background: #e5e7eb;
-        }
-        .sync-btn.update {
-            background: #667eea;
-            color: white;
-        }
-        .sync-btn.update:hover {
-            background: #5568d3;
-        }
     </style>
 </head>
 <body>
@@ -144,22 +49,7 @@
         <div id="loadingState">
             <div class="spinner"></div>
             <h1>Authenticating...</h1>
-            <p id="message">Please wait while we sign you in</p>
-        </div>
-
-        <!-- Profile Sync Modal -->
-        <div id="syncModal" class="sync-modal">
-            <div class="sync-header">
-                <h2>🔄 Update Your Profile?</h2>
-                <p>We found some differences between your Google account and our records.</p>
-            </div>
-            <div class="sync-changes" id="syncChanges">
-                <!-- Changes will be populated here -->
-            </div>
-            <div class="sync-buttons">
-                <button class="sync-btn skip" onclick="skipSync()">Keep Current</button>
-                <button class="sync-btn update" onclick="updateProfile()">Update Profile</button>
-            </div>
+            <p id="message">Please wait while we verify your account</p>
         </div>
     </div>
 
@@ -167,16 +57,21 @@
     <script src="env-config.js"></script>
     <script src="supabase-config.js"></script>
     <script>
-        let googleUserData = null;
-        let dbUserData = null;
-        let changes = [];
-
         async function handleAuthCallback() {
             const messageEl = document.getElementById('message');
-            const loadingState = document.getElementById('loadingState');
-            const syncModal = document.getElementById('syncModal');
             
             try {
+                // Check if this is a popup window
+                if (!window.opener) {
+                    messageEl.textContent = 'Invalid callback. Please use the login page.';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                    return;
+                }
+                
+                messageEl.textContent = 'Authenticating...';
+                
                 // Get the session from Supabase
                 const { data: { session }, error } = await window.supabaseClient.auth.getSession();
                 
@@ -196,7 +91,7 @@
                 messageEl.textContent = 'Verifying your account...';
                 
                 // Get user from your database
-                dbUserData = await window.SupabaseUsers.getUserByEmail(user.email);
+                const dbUserData = await window.SupabaseUsers.getUserByEmail(user.email);
                 
                 if (!dbUserData) {
                     throw new Error('User not found in system. Please contact administrator.');
@@ -207,31 +102,54 @@
                 }
                 
                 // Extract Google user data
-                googleUserData = {
+                const googleUserData = {
                     email: user.email,
                     name: user.user_metadata?.full_name || user.user_metadata?.name || null,
                     avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
                     google_id: user.id
                 };
                 
-                // Compare and find differences
-                changes = compareUserData(dbUserData, googleUserData);
+                messageEl.textContent = 'Checking profile...';
                 
-                if (changes.length > 0) {
-                    // Show sync modal
-                    messageEl.textContent = 'Profile update available...';
-                    showSyncModal(changes);
-                } else {
-                    // No changes, proceed to login
-                    await completeLogin();
-                }
+                // Compare and find differences
+                const changes = compareUserData(dbUserData, googleUserData);
+                
+                // Send success message to parent window
+                window.opener.postMessage({
+                    type: 'AUTH_SUCCESS',
+                    data: {
+                        dbUser: dbUserData,
+                        googleUser: googleUserData,
+                        changes: changes
+                    }
+                }, window.location.origin);
+                
+                messageEl.textContent = 'Success! Closing window...';
+                
+                // Close this popup window
+                setTimeout(() => {
+                    window.close();
+                }, 500);
                 
             } catch (error) {
                 console.error('Auth callback error:', error);
-                loadingState.innerHTML = `
-                    <p class="error">❌ ${error.message}</p>
-                    <a href="login.html" style="color: #667eea; margin-top: 1rem; display: inline-block; text-decoration: none; font-weight: 600;">← Back to Login</a>
-                `;
+                
+                // Send error message to parent window
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'AUTH_ERROR',
+                        error: error.message
+                    }, window.location.origin);
+                    
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                } else {
+                    messageEl.innerHTML = `
+                        <p class="error">❌ ${error.message}</p>
+                        <a href="login.html" style="color: #667eea; margin-top: 1rem; display: inline-block; text-decoration: none; font-weight: 600;">← Back to Login</a>
+                    `;
+                }
             }
         }
         
@@ -274,144 +192,9 @@
             return differences;
         }
         
-        function showSyncModal(changes) {
-            const loadingState = document.getElementById('loadingState');
-            const syncModal = document.getElementById('syncModal');
-            const syncChanges = document.getElementById('syncChanges');
-            
-            // Build changes HTML
-            let changesHtml = '';
-            
-            changes.forEach(change => {
-                if (change.type === 'image') {
-                    changesHtml += `
-                        <div class="sync-item">
-                            <div style="flex: 1;">
-                                <div class="sync-label">${change.label}</div>
-                                <div class="sync-old">
-                                    ${change.oldValue ? `<img src="${change.oldValue}" class="sync-avatar" alt="Current">` : '<span>No profile picture</span>'}
-                                    <span>Current</span>
-                                </div>
-                            </div>
-                            <div style="flex: 1;">
-                                <div class="sync-label">&nbsp;</div>
-                                <div class="sync-new">
-                                    <img src="${change.newValue}" class="sync-avatar" alt="New">
-                                    <span>From Google</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    changesHtml += `
-                        <div class="sync-item">
-                            <div style="flex: 1;">
-                                <div class="sync-label">${change.label}</div>
-                                <div class="sync-old">
-                                    <span>❌</span>
-                                    <span>${change.oldValue}</span>
-                                </div>
-                            </div>
-                            <div style="flex: 1;">
-                                <div class="sync-label">&nbsp;</div>
-                                <div class="sync-new">
-                                    <span>✅</span>
-                                    <span>${change.newValue}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            
-            syncChanges.innerHTML = changesHtml;
-            
-            // Hide loading, show modal
-            loadingState.style.display = 'none';
-            syncModal.classList.add('show');
-        }
-        
-        async function updateProfile() {
-            const syncModal = document.getElementById('syncModal');
-            const loadingState = document.getElementById('loadingState');
-            const messageEl = document.getElementById('message');
-            
-            try {
-                // Show loading
-                syncModal.classList.remove('show');
-                loadingState.style.display = 'block';
-                messageEl.textContent = 'Updating your profile...';
-                
-                // Build update object from changes
-                const updates = {};
-                changes.forEach(change => {
-                    updates[change.field] = change.newValue;
-                });
-                
-                // Update user in database
-                await window.SupabaseUsers.updateUser(dbUserData.email, updates);
-                
-                // Update dbUserData to reflect changes
-                Object.assign(dbUserData, updates);
-                
-                messageEl.textContent = 'Profile updated successfully!';
-                
-                // Complete login
-                await completeLogin();
-                
-            } catch (error) {
-                console.error('Error updating profile:', error);
-                alert('Failed to update profile. Proceeding with login anyway.');
-                await completeLogin();
-            }
-        }
-        
-        async function skipSync() {
-            // User chose to keep current data
-            await completeLogin();
-        }
-        
-        async function completeLogin() {
-            const messageEl = document.getElementById('message');
-            
-            try {
-                messageEl.textContent = 'Completing sign in...';
-                
-                // Update last login
-                await window.SupabaseUsers.updateLastLogin(dbUserData.email);
-                
-                // Store user info in localStorage
-                localStorage.setItem('userInfo', JSON.stringify({
-                    id: dbUserData.email,
-                    email: dbUserData.email,
-                    name: dbUserData.name,
-                    role: dbUserData.role,
-                    department: dbUserData.department,
-                    designation: dbUserData.designation,
-                    employee_id: dbUserData.employee_id,
-                    avatar_url: dbUserData.avatar_url,
-                    avatar: dbUserData.avatar_url,
-                    picture: dbUserData.avatar_url,
-                    provider: 'google'
-                }));
-                
-                messageEl.textContent = 'Success! Redirecting...';
-                
-                // Redirect to home page
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error completing login:', error);
-                alert('Login successful, but there was an error. Redirecting...');
-                window.location.href = 'home.html';
-            }
-        }
-        
         // Wait for Supabase to be initialized
         function checkSupabase() {
-            if (window.supabaseClient) {
+            if (window.supabaseClient && window.SupabaseUsers) {
                 handleAuthCallback();
             } else {
                 setTimeout(checkSupabase, 100);

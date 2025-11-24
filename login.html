@@ -178,6 +178,172 @@
             text-align: center;
         }
         
+        /* Profile Sync Modal Overlay */
+        .profile-sync-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .profile-sync-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .profile-sync-modal {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+        
+        [data-theme="dark"] .profile-sync-modal {
+            background: var(--background-white);
+            border: 1px solid var(--border-light);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .sync-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .sync-header h2 {
+            font-size: 1.25rem;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .sync-header p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .sync-changes {
+            background: var(--gray-50);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--border-light);
+        }
+        
+        [data-theme="dark"] .sync-changes {
+            background: var(--background-dark);
+        }
+        
+        .sync-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .sync-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sync-item-col {
+            flex: 1;
+        }
+        
+        .sync-label {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sync-value {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8125rem;
+        }
+        
+        .sync-old {
+            color: #dc2626;
+        }
+        
+        .sync-new {
+            color: #059669;
+        }
+        
+        .sync-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-light);
+        }
+        
+        .sync-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .sync-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .sync-btn.skip {
+            background: var(--gray-100);
+            color: var(--text-color);
+        }
+        
+        .sync-btn.skip:hover {
+            background: var(--gray-200);
+        }
+        
+        .sync-btn.update {
+            background: #667eea;
+            color: white;
+        }
+        
+        .sync-btn.update:hover {
+            background: #5568d3;
+        }
+        
+        .sync-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
         
         /* Reset Password Form Styles */
         .reset-form {
@@ -456,6 +622,23 @@
                 <button type="submit" class="btn-primary" id="submitReset">Send Reset Link</button>
                 <a href="#" class="link-primary" id="backToLogin" style="margin-top: 0.7031rem;">Back to Login</a>
             </form>
+        </div>
+    </div>
+    
+    <!-- Profile Sync Modal -->
+    <div id="profileSyncOverlay" class="profile-sync-overlay">
+        <div class="profile-sync-modal">
+            <div class="sync-header">
+                <h2>🔄 Update Your Profile?</h2>
+                <p>We found some differences between your Google account and our records.</p>
+            </div>
+            <div class="sync-changes" id="syncChanges">
+                <!-- Changes will be populated here -->
+            </div>
+            <div class="sync-buttons">
+                <button class="sync-btn skip" id="skipSyncBtn">Keep Current</button>
+                <button class="sync-btn update" id="updateProfileBtn">Update Profile</button>
+            </div>
         </div>
     </div>
 
@@ -788,7 +971,11 @@
             });
         }
         
-        // Handle Supabase Google Sign-In
+        // Global variables for profile sync
+        let pendingAuthData = null;
+        let authPopup = null;
+        
+        // Handle Supabase Google Sign-In via Popup
         async function handleSupabaseGoogleSignIn() {
             const googleError = document.getElementById('googleError');
             const googleBtn = document.getElementById('googleSignInBtn');
@@ -796,7 +983,7 @@
             try {
                 googleError.textContent = '';
                 googleBtn.disabled = true;
-                googleBtn.textContent = 'Signing in...';
+                googleBtn.textContent = 'Opening Google...';
                 
                 // Wait for Supabase to be initialized
                 let attempts = 0;
@@ -813,11 +1000,30 @@
                     throw new Error('Supabase client not initialized. Please refresh the page.');
                 }
                 
+                // Open popup for OAuth
+                const width = 500;
+                const height = 600;
+                const left = window.screen.width / 2 - width / 2;
+                const top = window.screen.height / 2 - height / 2;
+                
+                authPopup = window.open(
+                    'about:blank',
+                    'Google Sign In',
+                    `width=${width},height=${height},left=${left},top=${top}`
+                );
+                
+                if (!authPopup) {
+                    throw new Error('Popup was blocked. Please allow popups for this site.');
+                }
+                
+                googleBtn.textContent = 'Waiting for Google...';
+                
                 // Sign in with Supabase Google OAuth
                 const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
                         redirectTo: `${window.location.origin}/auth-callback.html`,
+                        skipBrowserRedirect: false,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent',
@@ -826,11 +1032,34 @@
                 });
                 
                 if (error) {
+                    authPopup.close();
                     throw error;
                 }
                 
-                // User will be redirected to Google OAuth consent screen
-                // After consent, they'll be redirected to auth-callback.html
+                // Redirect popup to OAuth URL
+                if (data?.url) {
+                    authPopup.location.href = data.url;
+                }
+                
+                // Check if popup was closed
+                const popupCheckInterval = setInterval(() => {
+                    if (authPopup && authPopup.closed) {
+                        clearInterval(popupCheckInterval);
+                        googleBtn.disabled = false;
+                        googleBtn.innerHTML = `
+                            <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 12px;">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            Sign in with Google
+                        `;
+                        if (!pendingAuthData) {
+                            googleError.textContent = 'Sign-in was cancelled';
+                        }
+                    }
+                }, 500);
                 
             } catch (error) {
                 console.error('Google Sign-In error:', error);
@@ -848,13 +1077,191 @@
             }
         }
         
-        // Initialize event listener for Google sign-in button
+        // Listen for messages from the auth callback popup
+        window.addEventListener('message', async (event) => {
+            // Security: Verify origin
+            if (event.origin !== window.location.origin) {
+                return;
+            }
+            
+            const { type, data, error } = event.data;
+            
+            if (type === 'AUTH_SUCCESS') {
+                // Close popup
+                if (authPopup && !authPopup.closed) {
+                    authPopup.close();
+                }
+                
+                // Store auth data
+                pendingAuthData = data;
+                
+                const googleBtn = document.getElementById('googleSignInBtn');
+                googleBtn.textContent = 'Processing...';
+                
+                // Check if profile sync is needed
+                if (data.changes && data.changes.length > 0) {
+                    showProfileSyncModal(data);
+                } else {
+                    // No sync needed, complete login
+                    await completeLogin(data.dbUser);
+                }
+            } else if (type === 'AUTH_ERROR') {
+                // Close popup
+                if (authPopup && !authPopup.closed) {
+                    authPopup.close();
+                }
+                
+                const googleError = document.getElementById('googleError');
+                const googleBtn = document.getElementById('googleSignInBtn');
+                
+                googleError.textContent = error || 'Authentication failed';
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 12px;">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign in with Google
+                `;
+            }
+        });
+        
+        // Show profile sync modal
+        function showProfileSyncModal(authData) {
+            const overlay = document.getElementById('profileSyncOverlay');
+            const syncChanges = document.getElementById('syncChanges');
+            
+            // Build changes HTML
+            let changesHtml = '';
+            
+            authData.changes.forEach(change => {
+                if (change.type === 'image') {
+                    changesHtml += `
+                        <div class="sync-item">
+                            <div class="sync-item-col">
+                                <div class="sync-label">${change.label}</div>
+                                <div class="sync-value sync-old">
+                                    ${change.oldValue ? `<img src="${change.oldValue}" class="sync-avatar" alt="Current">` : '<span>No profile picture</span>'}
+                                    <span>Current</span>
+                                </div>
+                            </div>
+                            <div class="sync-item-col">
+                                <div class="sync-label">&nbsp;</div>
+                                <div class="sync-value sync-new">
+                                    <img src="${change.newValue}" class="sync-avatar" alt="New">
+                                    <span>From Google</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    changesHtml += `
+                        <div class="sync-item">
+                            <div class="sync-item-col">
+                                <div class="sync-label">${change.label}</div>
+                                <div class="sync-value sync-old">
+                                    <span>❌</span>
+                                    <span>${change.oldValue}</span>
+                                </div>
+                            </div>
+                            <div class="sync-item-col">
+                                <div class="sync-label">&nbsp;</div>
+                                <div class="sync-value sync-new">
+                                    <span>✅</span>
+                                    <span>${change.newValue}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            syncChanges.innerHTML = changesHtml;
+            overlay.classList.add('show');
+        }
+        
+        // Handle profile update
         document.addEventListener('DOMContentLoaded', function() {
             const googleBtn = document.getElementById('googleSignInBtn');
+            const updateBtn = document.getElementById('updateProfileBtn');
+            const skipBtn = document.getElementById('skipSyncBtn');
+            
             if (googleBtn) {
                 googleBtn.addEventListener('click', handleSupabaseGoogleSignIn);
             }
+            
+            if (updateBtn) {
+                updateBtn.addEventListener('click', async () => {
+                    updateBtn.disabled = true;
+                    skipBtn.disabled = true;
+                    updateBtn.textContent = 'Updating...';
+                    
+                    try {
+                        // Build update object from changes
+                        const updates = {};
+                        pendingAuthData.changes.forEach(change => {
+                            updates[change.field] = change.newValue;
+                        });
+                        
+                        // Update user in database
+                        await window.SupabaseUsers.updateUser(pendingAuthData.dbUser.email, updates);
+                        
+                        // Update dbUser to reflect changes
+                        Object.assign(pendingAuthData.dbUser, updates);
+                        
+                        // Hide modal and complete login
+                        document.getElementById('profileSyncOverlay').classList.remove('show');
+                        await completeLogin(pendingAuthData.dbUser);
+                        
+                    } catch (error) {
+                        console.error('Error updating profile:', error);
+                        alert('Failed to update profile. Proceeding with login anyway.');
+                        document.getElementById('profileSyncOverlay').classList.remove('show');
+                        await completeLogin(pendingAuthData.dbUser);
+                    }
+                });
+            }
+            
+            if (skipBtn) {
+                skipBtn.addEventListener('click', async () => {
+                    document.getElementById('profileSyncOverlay').classList.remove('show');
+                    await completeLogin(pendingAuthData.dbUser);
+                });
+            }
         });
+        
+        // Complete login and redirect
+        async function completeLogin(dbUser) {
+            try {
+                // Update last login
+                await window.SupabaseUsers.updateLastLogin(dbUser.email);
+                
+                // Store user info in localStorage
+                localStorage.setItem('userInfo', JSON.stringify({
+                    id: dbUser.email,
+                    email: dbUser.email,
+                    name: dbUser.name,
+                    role: dbUser.role,
+                    department: dbUser.department,
+                    designation: dbUser.designation,
+                    employee_id: dbUser.employee_id,
+                    avatar_url: dbUser.avatar_url,
+                    avatar: dbUser.avatar_url,
+                    picture: dbUser.avatar_url,
+                    provider: 'google'
+                }));
+                
+                // Redirect to home page
+                window.location.href = 'home.html';
+                
+            } catch (error) {
+                console.error('Error completing login:', error);
+                alert('Login successful, but there was an error. Redirecting...');
+                window.location.href = 'home.html';
+            }
+        }
     </script>
 </body>
 </html>
