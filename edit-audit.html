@@ -6717,6 +6717,7 @@ async function processReversalDecision(decision) {
         
         const updateData = {
             ...auditData,
+            reversal_status: decision === 'approved' ? 'Approved' : 'Rejected',
             reversal_approved: decision === 'approved',
             reversal_responded_at: respondedAt.toISOString(),
             reversal_approved_by: approvedBy,

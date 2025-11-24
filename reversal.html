@@ -765,9 +765,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     } else {
                         // For auditors: Only show unprocessed reversals (pending)
-                        const getStatus = (r) => r.reversal_status || 
-                                            (r.reversal_approved === null ? 'Pending' : 
-                                             (r.reversal_approved ? 'Approved' : 'Rejected'));
+                        const getStatus = (r) => {
+                            // Check reversal_status first, but only if it's a valid non-empty string
+                            if (r.reversal_status && typeof r.reversal_status === 'string' && r.reversal_status.trim() !== '') {
+                                return r.reversal_status;
+                            }
+                            // Fallback to reversal_approved
+                            if (r.reversal_approved === null || r.reversal_approved === undefined) {
+                                return 'Pending';
+                            } else if (r.reversal_approved === false || r.reversal_approved === 0 || r.reversal_approved === 'false' || r.reversal_approved === '0') {
+                                return 'Rejected';
+                            } else if (r.reversal_approved === true || r.reversal_approved === 1 || r.reversal_approved === 'true' || r.reversal_approved === '1') {
+                                return 'Approved';
+                            } else {
+                                // Default to Pending if we can't determine
+                                return 'Pending';
+                            }
+                        };
                         filteredReversals = reversalsForFiltering.filter(r => getStatus(r) === 'Pending');
                     }
                 }
@@ -784,9 +798,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update statistics - use filteredReversals to respect week/date filter
         function updateStatistics() {
             // Use reversal_status with fallback to reversal_approved for backward compatibility
-            const getStatus = (r) => r.reversal_status || 
-                                    (r.reversal_approved === null ? 'Pending' : 
-                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
+            const getStatus = (r) => {
+                // Check reversal_status first, but only if it's a valid non-empty string
+                if (r.reversal_status && typeof r.reversal_status === 'string' && r.reversal_status.trim() !== '') {
+                    return r.reversal_status;
+                }
+                // Fallback to reversal_approved
+                if (r.reversal_approved === null || r.reversal_approved === undefined) {
+                    return 'Pending';
+                } else if (r.reversal_approved === false || r.reversal_approved === 0 || r.reversal_approved === 'false' || r.reversal_approved === '0') {
+                    return 'Rejected';
+                } else if (r.reversal_approved === true || r.reversal_approved === 1 || r.reversal_approved === 'true' || r.reversal_approved === '1') {
+                    return 'Approved';
+                } else {
+                    // Default to Pending if we can't determine
+                    return 'Pending';
+                }
+            };
             
             // Use filteredReversals which already respects week/date filter
             const reversalsForStats = filteredReversals;
@@ -855,9 +883,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const requestedDate = formatCardDate(reversal.reversal_requested_at);
             
             // Use reversal_status column (with fallback to reversal_approved for backward compatibility)
-            const status = reversal.reversal_status || 
-                          (reversal.reversal_approved === null ? 'Pending' : 
-                           (reversal.reversal_approved ? 'Approved' : 'Rejected'));
+            // Check reversal_status first, but only if it's a valid non-empty string
+            let status;
+            if (reversal.reversal_status && typeof reversal.reversal_status === 'string' && reversal.reversal_status.trim() !== '') {
+                status = reversal.reversal_status;
+            } else {
+                // Fallback to reversal_approved
+                if (reversal.reversal_approved === null || reversal.reversal_approved === undefined) {
+                    status = 'Pending';
+                } else if (reversal.reversal_approved === false || reversal.reversal_approved === 0 || reversal.reversal_approved === 'false' || reversal.reversal_approved === '0') {
+                    status = 'Rejected';
+                } else if (reversal.reversal_approved === true || reversal.reversal_approved === 1 || reversal.reversal_approved === 'true' || reversal.reversal_approved === '1') {
+                    status = 'Approved';
+                } else {
+                    // Default to Pending if we can't determine
+                    status = 'Pending';
+                }
+            }
             
             let statusColor, statusBgColor, statusTextColor, statusIcon;
             if (status === 'Pending') {
@@ -1016,9 +1058,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 } else {
                     // For auditors: Only show unprocessed reversals (pending)
-                    const getStatus = (r) => r.reversal_status || 
-                                        (r.reversal_approved === null ? 'Pending' : 
-                                         (r.reversal_approved ? 'Approved' : 'Rejected'));
+                    const getStatus = (r) => {
+                        // Check reversal_status first, but only if it's a valid non-empty string
+                        if (r.reversal_status && typeof r.reversal_status === 'string' && r.reversal_status.trim() !== '') {
+                            return r.reversal_status;
+                        }
+                        // Fallback to reversal_approved
+                        if (r.reversal_approved === null || r.reversal_approved === undefined) {
+                            return 'Pending';
+                        } else if (r.reversal_approved === false || r.reversal_approved === 0 || r.reversal_approved === 'false' || r.reversal_approved === '0') {
+                            return 'Rejected';
+                        } else if (r.reversal_approved === true || r.reversal_approved === 1 || r.reversal_approved === 'true' || r.reversal_approved === '1') {
+                            return 'Approved';
+                        } else {
+                            // Default to Pending if we can't determine
+                            return 'Pending';
+                        }
+                    };
                     filteredReversals = reversalsForFiltering.filter(r => getStatus(r) === 'Pending');
                 }
                 
@@ -1095,9 +1151,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }) :
                 // For auditors: Only show unprocessed reversals (pending)
                 reversalsForFiltering.filter(r => {
-                    const getStatus = (r) => r.reversal_status || 
-                                        (r.reversal_approved === null ? 'Pending' : 
-                                         (r.reversal_approved ? 'Approved' : 'Rejected'));
+                    const getStatus = (r) => {
+                        // Check reversal_status first, but only if it's a valid non-empty string
+                        if (r.reversal_status && typeof r.reversal_status === 'string' && r.reversal_status.trim() !== '') {
+                            return r.reversal_status;
+                        }
+                        // Fallback to reversal_approved
+                        if (r.reversal_approved === null || r.reversal_approved === undefined) {
+                            return 'Pending';
+                        } else if (r.reversal_approved === false || r.reversal_approved === 0 || r.reversal_approved === 'false' || r.reversal_approved === '0') {
+                            return 'Rejected';
+                        } else if (r.reversal_approved === true || r.reversal_approved === 1 || r.reversal_approved === 'true' || r.reversal_approved === '1') {
+                            return 'Approved';
+                        } else {
+                            // Default to Pending if we can't determine
+                            return 'Pending';
+                        }
+                    };
                     return getStatus(r) === 'Pending';
                 })
             );
@@ -1129,9 +1199,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     (reversal.reversal_reason && reversal.reversal_reason.toLowerCase().includes(searchTerm));
                 
                 // Status filter
-                const getStatus = (r) => r.reversal_status || 
-                                    (r.reversal_approved === null ? 'Pending' : 
-                                     (r.reversal_approved ? 'Approved' : 'Rejected'));
+                const getStatus = (r) => {
+                    // Check reversal_status first, but only if it's a valid non-empty string
+                    if (r.reversal_status && typeof r.reversal_status === 'string' && r.reversal_status.trim() !== '') {
+                        return r.reversal_status;
+                    }
+                    // Fallback to reversal_approved
+                    if (r.reversal_approved === null || r.reversal_approved === undefined) {
+                        return 'Pending';
+                    } else if (r.reversal_approved === false || r.reversal_approved === 0 || r.reversal_approved === 'false' || r.reversal_approved === '0') {
+                        return 'Rejected';
+                    } else if (r.reversal_approved === true || r.reversal_approved === 1 || r.reversal_approved === 'true' || r.reversal_approved === '1') {
+                        return 'Approved';
+                    } else {
+                        // Default to Pending if we can't determine
+                        return 'Pending';
+                    }
+                };
                 
                 let matchesStatus = true;
                 if (statusValue === 'pending') {
@@ -1223,6 +1307,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Responded At', 'Interaction ID', 'Scorecard'
             ];
             
+            // Helper function to get status (same logic as elsewhere)
+            const getStatus = (r) => {
+                // Check reversal_status first, but only if it's a valid non-empty string
+                if (r.reversal_status && typeof r.reversal_status === 'string' && r.reversal_status.trim() !== '') {
+                    return r.reversal_status;
+                }
+                // Fallback to reversal_approved
+                if (r.reversal_approved === null || r.reversal_approved === undefined) {
+                    return 'Pending';
+                } else if (r.reversal_approved === false || r.reversal_approved === 0 || r.reversal_approved === 'false' || r.reversal_approved === '0') {
+                    return 'Rejected';
+                } else if (r.reversal_approved === true || r.reversal_approved === 1 || r.reversal_approved === 'true' || r.reversal_approved === '1') {
+                    return 'Approved';
+                } else {
+                    // Default to Pending if we can't determine
+                    return 'Pending';
+                }
+            };
+            
             const csvContent = [
                 headers.join(','),
                 ...filteredReversals.map(r => [
@@ -1232,7 +1335,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     r.score_before_appeal || r.average_score || '',
                     r.reversal_type || '',
                     r.reversal_reason || '',
-                    r.reversal_status || (r.reversal_approved === null ? 'Pending' : (r.reversal_approved ? 'Approved' : 'Rejected')),
+                    getStatus(r),
                     r.reversal_requested_at || '',
                     r.reversal_responded_at || '',
                     r.interaction_id || '',
