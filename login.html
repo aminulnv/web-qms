@@ -365,9 +365,10 @@
             border: 1px solid var(--border-light);
         }
         
-        .sync-btn.skip:hover {
+        .sync-btn.skip:hover:not(:disabled) {
             background: var(--gray-50);
             border-color: var(--border-color);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
         
         .sync-btn.update {
@@ -376,16 +377,21 @@
             box-shadow: 0 2px 4px rgba(31, 158, 75, 0.2);
         }
         
-        .sync-btn.update:hover {
+        .sync-btn.update:hover:not(:disabled) {
             background: var(--primary-hover);
             box-shadow: 0 4px 8px rgba(31, 158, 75, 0.3);
             transform: translateY(-1px);
+        }
+        
+        .sync-btn.update:active:not(:disabled) {
+            transform: translateY(0);
         }
         
         .sync-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
+            box-shadow: none !important;
         }
         
         
@@ -1104,11 +1110,15 @@
                 const googleBtn = document.getElementById('googleSignInBtn');
                 googleBtn.textContent = 'Processing...';
                 
-                // Check if profile sync is needed
+                console.log('Authentication successful. Changes detected:', data.changes?.length || 0);
+                
+                // Check if profile sync is needed - only show modal if there are actual changes
                 if (data.changes && data.changes.length > 0) {
+                    console.log('Showing profile sync modal with changes:', data.changes);
                     showProfileSyncModal(data);
                 } else {
-                    // No sync needed, complete login
+                    // No sync needed, complete login directly
+                    console.log('No profile changes detected. Completing login...');
                     await completeLogin(data.dbUser);
                 }
             } else if (type === 'AUTH_ERROR') {

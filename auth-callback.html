@@ -411,38 +411,59 @@
         function compareUserData(dbUser, googleUser) {
             const differences = [];
             
-            // Compare name
-            if (googleUser.name && dbUser.name !== googleUser.name) {
-                differences.push({
-                    field: 'name',
-                    label: 'Name',
-                    oldValue: dbUser.name || 'Not set',
-                    newValue: googleUser.name,
-                    type: 'text'
-                });
+            console.log('Comparing user data:', {
+                dbUser: { name: dbUser.name, avatar_url: dbUser.avatar_url, google_id: dbUser.google_id },
+                googleUser: { name: googleUser.name, avatar_url: googleUser.avatar_url, google_id: googleUser.google_id }
+            });
+            
+            // Compare name - only if there's a meaningful difference
+            if (googleUser.name && googleUser.name.trim() !== '') {
+                const dbName = (dbUser.name || '').trim();
+                const googleName = googleUser.name.trim();
+                
+                if (dbName !== googleName) {
+                    console.log('Name difference detected:', { old: dbName, new: googleName });
+                    differences.push({
+                        field: 'name',
+                        label: 'Name',
+                        oldValue: dbName || 'Not set',
+                        newValue: googleName,
+                        type: 'text'
+                    });
+                }
             }
             
-            // Compare avatar
-            if (googleUser.avatar_url && dbUser.avatar_url !== googleUser.avatar_url) {
-                differences.push({
-                    field: 'avatar_url',
-                    label: 'Profile Picture',
-                    oldValue: dbUser.avatar_url || null,
-                    newValue: googleUser.avatar_url,
-                    type: 'image'
-                });
+            // Compare avatar - only if there's a meaningful difference
+            if (googleUser.avatar_url && googleUser.avatar_url.trim() !== '') {
+                const dbAvatar = (dbUser.avatar_url || '').trim();
+                const googleAvatar = googleUser.avatar_url.trim();
+                
+                if (dbAvatar !== googleAvatar) {
+                    console.log('Avatar difference detected:', { old: dbAvatar, new: googleAvatar });
+                    differences.push({
+                        field: 'avatar_url',
+                        label: 'Profile Picture',
+                        oldValue: dbAvatar || null,
+                        newValue: googleAvatar,
+                        type: 'image'
+                    });
+                }
             }
             
-            // Compare Google ID (should be stored for reference)
-            if (googleUser.google_id && dbUser.google_id !== googleUser.google_id) {
+            // Compare Google ID - only if not already linked
+            // Don't update if already linked to avoid unnecessary updates
+            if (googleUser.google_id && !dbUser.google_id) {
+                console.log('Google ID linking needed');
                 differences.push({
                     field: 'google_id',
                     label: 'Google Account',
-                    oldValue: dbUser.google_id || 'Not linked',
+                    oldValue: 'Not linked',
                     newValue: 'Linked',
                     type: 'text'
                 });
             }
+            
+            console.log('Total differences found:', differences.length);
             
             return differences;
         }
