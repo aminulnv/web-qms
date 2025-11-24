@@ -467,11 +467,20 @@
 .rating-modal {
     background: white;
     border-radius: 1rem;
-    padding: 2rem;
+    padding: 0.75rem;
     max-width: 500px;
     width: 90%;
+    max-height: 85vh;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     animation: slideUp 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.rating-modal.compact {
+    padding: 0.625rem;
+    max-height: 80vh;
 }
 
 [data-theme="dark"] .rating-modal {
@@ -481,16 +490,22 @@
 .star-rating {
     display: flex;
     justify-content: center;
-    gap: 0.5rem;
-    margin: 1.5rem 0;
+    gap: 0.25rem;
+    margin: 0.375rem 0;
+    flex-shrink: 0;
+}
+
+.rating-modal.compact .star-rating {
+    margin: 0.25rem 0;
 }
 
 .star {
-    font-size: 3rem;
+    font-size: 1.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
     color: #d1d5db;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .star:hover,
@@ -505,11 +520,17 @@
 
 .rating-title {
     text-align: center;
-    font-size: 1.25rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.125rem;
     font-family: 'Poppins', sans-serif;
+    flex-shrink: 0;
+}
+
+.rating-modal.compact .rating-title {
+    font-size: 0.75rem;
+    margin-bottom: 0.0625rem;
 }
 
 [data-theme="dark"] .rating-title {
@@ -518,10 +539,16 @@
 
 .rating-subtitle {
     text-align: center;
-    font-size: 0.875rem;
+    font-size: 0.625rem;
     color: #6b7280;
-    margin-bottom: 1rem;
+    margin-bottom: 0.375rem;
     font-family: 'Poppins', sans-serif;
+    flex-shrink: 0;
+}
+
+.rating-modal.compact .rating-subtitle {
+    font-size: 0.5625rem;
+    margin-bottom: 0.25rem;
 }
 
 [data-theme="dark"] .rating-subtitle {
@@ -530,16 +557,23 @@
 
 .rating-buttons {
     display: flex;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+    flex-shrink: 0;
+    padding-top: 0.375rem;
+}
+
+.rating-modal.compact .rating-buttons {
+    margin-top: 0.375rem;
+    padding-top: 0.25rem;
 }
 
 .rating-btn {
     flex: 1;
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: none;
     border-radius: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -582,10 +616,10 @@
 
 /* Feedback Modal Styles */
 .feedback-title {
-    font-size: 1.25rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.125rem;
     font-family: 'Poppins', sans-serif;
 }
 
@@ -594,9 +628,9 @@
 }
 
 .feedback-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.625rem;
     color: #6b7280;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     font-family: 'Poppins', sans-serif;
 }
 
@@ -606,11 +640,11 @@
 
 .feedback-textarea {
     width: 100%;
-    min-height: 120px;
-    padding: 0.75rem;
+    min-height: 40px;
+    padding: 0.375rem;
     border: 2px solid #e5e7eb;
     border-radius: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.6875rem;
     font-family: 'Poppins', sans-serif;
     resize: vertical;
     box-sizing: border-box;
@@ -637,6 +671,86 @@
 
 .feedback-option:hover {
     transform: translateX(4px);
+}
+
+/* Compliment Button Styles */
+.compliment-option-btn {
+    transition: all 0.2s ease;
+}
+
+.compliment-option-btn:hover {
+    transform: scale(1.02);
+}
+
+.compliment-option-btn:active {
+    transform: scale(0.98);
+}
+
+.compliment-option-btn svg {
+    transition: all 0.2s ease;
+}
+
+.compliment-option-btn.selected svg {
+    color: white !important;
+}
+
+[data-theme="dark"] .compliment-option-btn {
+    background: var(--background-color) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .compliment-option-btn:hover:not(.selected) {
+    background: rgba(26, 115, 62, 0.1) !important;
+    border-color: #1A733E !important;
+}
+
+[data-theme="dark"] .compliment-option-btn.selected {
+    background: #1A733E !important;
+    color: white !important;
+    border-color: #1A733E !important;
+}
+
+[data-theme="dark"] .compliment-option-btn.selected svg {
+    color: white !important;
+}
+
+/* Footer Rating Stars Styles - Match modal stars but smaller */
+.footer-star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.footer-star {
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #d1d5db;
+    user-select: none;
+}
+
+.footer-star:hover,
+.footer-star.active {
+    color: #fbbf24;
+    transform: scale(1.1);
+}
+
+.footer-star:active {
+    transform: scale(0.95);
+}
+
+/* For acknowledged footer (green background) */
+#footerBar[style*="065f46"] .footer-star,
+#footerBar[style*="rgb(6, 95, 70)"] .footer-star {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+#footerBar[style*="065f46"] .footer-star:hover,
+#footerBar[style*="rgb(6, 95, 70)"] .footer-star:hover,
+#footerBar[style*="065f46"] .footer-star.active,
+#footerBar[style*="rgb(6, 95, 70)"] .footer-star.active {
+    color: #fbbf24;
 }
 
 .feedback-option input[type="checkbox"] {
@@ -703,6 +817,9 @@
 </style>
 
 <script>
+// Feature flag: Enable/disable rating system
+const ENABLE_RATING_SYSTEM = false; // Set to true to enable rating features
+
 // Global audit data
 let currentAudit = null;
 let currentScorecardId = null;
@@ -1644,22 +1761,22 @@ function generateErrorDetails(audit, errorFields) {
             </div>
             
             <div style="background: var(--background-white); border-radius: 0.4852rem; box-shadow: 0 0.0405rem 0.1213rem 0 rgba(0, 0, 0, 0.1); overflow: hidden;">
-                <div style="background-color: var(--background-white); padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid var(--border-light);">
-                    <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : '2fr 1fr 1fr 1fr 2fr'}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
-                        <div style="min-width: 0;">Error Type</div>
-                        <div style="text-align: center; min-width: 0;">Points</div>
-                        <div style="text-align: center; min-width: 0;">Severity</div>
-                        <div style="text-align: center; min-width: 0;">${statusColumnHeader}</div>
-                        <div style="min-width: 0;">Feedback</div>
-                        ${showCommentsColumn ? 
-                            `<div style="min-width: 0;">${escapeHtml(commentColumnHeader)}</div>` : 
-                            ''
-                        }
+                    <div style="background-color: var(--background-white); padding: 0.4852rem 0.6469rem; border-bottom: 0.0405rem solid var(--border-light);">
+                        <div style="display: grid; grid-template-columns: ${showCommentsColumn ? '2fr 1fr 1fr 1fr 2fr 2.5fr' : '2fr 1fr 1fr 1fr 2fr'}; gap: 0.6469rem; align-items: center; font-weight: 700; font-size: 0.5659rem; color: var(--text-color); text-transform: uppercase; letter-spacing: 0.05em; width: 100%; min-width: 0;">
+                            <div style="min-width: 0;">Error Type</div>
+                            <div style="text-align: center; min-width: 0;">Points</div>
+                            <div style="text-align: center; min-width: 0;">Severity</div>
+                            <div style="text-align: center; min-width: 0;">${statusColumnHeader}</div>
+                            <div style="min-width: 0;">Feedback</div>
+                            ${showCommentsColumn ? 
+                                `<div style="min-width: 0;">${escapeHtml(commentColumnHeader)}</div>` : 
+                                ''
+                            }
+                        </div>
                     </div>
-                </div>
-                <div style="padding: 0 0.6469rem 0.6469rem 0.6469rem; box-shadow: 0 -0.0606rem 0.1213rem rgba(0, 0, 0, 0.05);">
-                    ${errorRows}
-                </div>
+                    <div style="padding: 0 0.6469rem 0.6469rem 0.6469rem; box-shadow: 0 -0.0606rem 0.1213rem rgba(0, 0, 0, 0.05);">
+                        ${errorRows}
+                    </div>
                 </div>
             </div>
             
@@ -1772,34 +1889,8 @@ function renderAudit(audit, auditScorecard, errorFields) {
         ? `<div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;"><h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;"><svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>Recommendations / Next Steps</h3><div style="background: white; padding: 0.5659rem; border-radius: 0.2425rem; border: 0.0304rem solid #e5e7eb; white-space: pre-wrap; font-size: 0.5257rem; line-height: 1.6; color: #374151; font-family: 'Poppins', sans-serif;">${audit.recommendations}</div></div>`
         : '';
 
-    // Generate audit rating HTML if rating exists
-    let ratingHtml = '';
-    if (audit.audit_rating && audit.audit_rating > 0) {
-        const rating = audit.audit_rating;
-        const ratingStars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
-        const ratingColor = rating >= 4 ? '#fbbf24' : rating >= 3 ? '#f59e0b' : '#ef4444';
-        
-        ratingHtml = `
-            <div style="background: #f9fafb; border-radius: 0.3234rem; padding: 0.6469rem; border: 0.0304rem solid #e5e7eb; margin-bottom: 0.6469rem;">
-                <h3 style="font-size: 0.6064rem; font-weight: 600; color: #1A733E; margin: 0 0 0.4852rem 0; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 0.3234rem;">
-                    <svg style="width: 0.7278rem; height: 0.7278rem;" viewBox="0 0 24 24" fill="#1A733E">
-                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                    Audit Rating
-                </h3>
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: ${audit.audit_rating_feedback ? '0.5rem' : '0'};">
-                    <span style="font-size: 1.5rem; color: ${ratingColor};">${ratingStars}</span>
-                    <span style="font-size: 0.7278rem; font-weight: 600; color: #1f2937; font-family: 'Poppins', sans-serif;">${rating}/5</span>
-                </div>
-                ${audit.audit_rating_feedback ? `
-                    <div style="padding: 0.5rem; background: white; border-radius: 0.25rem; border-left: 3px solid ${ratingColor};">
-                        <div style="font-size: 0.4852rem; color: #6b7280; font-family: 'Poppins', sans-serif; margin-bottom: 0.25rem; font-weight: 600;">Feedback:</div>
-                        <div style="font-size: 0.5257rem; color: #374151; font-family: 'Poppins', sans-serif; line-height: 1.5;">${escapeHtml(audit.audit_rating_feedback)}</div>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }
+    // Set ratingHtml to empty string so it doesn't appear in the right column
+    const ratingHtml = '';
 
     // Check if current user is the audited employee (for showing acknowledge button)
     const showAcknowledgeButton = isCurrentUserAuditedEmployee();
@@ -1903,6 +1994,37 @@ function renderAudit(audit, auditScorecard, errorFields) {
         footerTextColor = 'white';
     }
     
+    // Generate interactive feedback rating HTML for footer
+    // Always show stars (outlined if no rating, filled if rating exists)
+    // Only show if errors were detected (agents rate how helpful the feedback was)
+    let footerRatingHtml = '';
+    const totalErrorsCount = audit.totalErrorsCount || audit.total_errors_count || 0;
+    const existingRating = audit.audit_rating || 0;
+    const hasRating = existingRating > 0;
+    
+    if (ENABLE_RATING_SYSTEM && totalErrorsCount > 0) {
+        // Use white text for green footer, dark text for gray footer
+        const ratingTextColor = footerTextColor;
+        const ratingIconColor = acknowledgementStatusLower === 'acknowledged' ? 'white' : '#1A733E';
+        const starColor = hasRating 
+            ? (existingRating >= 4 ? '#fbbf24' : existingRating >= 3 ? '#f59e0b' : '#ef4444')
+            : (acknowledgementStatusLower === 'acknowledged' ? 'rgba(255,255,255,0.5)' : '#9ca3af');
+        
+        footerRatingHtml = `
+            <div id="footerRatingContainer" style="display: flex; align-items: center; gap: 0.5rem; margin-right: 0.75rem;">
+                <span style="font-size: 0.6875rem; font-weight: 500; color: ${ratingTextColor}; font-family: 'Poppins', sans-serif; white-space: nowrap;">How helpful was the feedback?</span>
+                <div id="footerRatingStars" class="footer-star-rating" style="display: flex; align-items: center; gap: 0.25rem;" data-rating="${existingRating}">
+                    ${Array.from({ length: 5 }, (_, i) => {
+                        const starId = `footerStar${i + 1}`;
+                        const isActive = i < existingRating;
+                        return `<span id="${starId}" class="footer-star" data-rating="${i + 1}" style="color: ${isActive ? (existingRating >= 4 ? '#fbbf24' : existingRating >= 3 ? '#f59e0b' : '#ef4444') : '#d1d5db'}; transition: all 0.2s ease; user-select: none; cursor: pointer;">★</span>`;
+                    }).join('')}
+                </div>
+                ${hasRating ? `<span style="font-size: 0.6875rem; font-weight: 600; color: ${ratingTextColor}; font-family: 'Poppins', sans-serif;">${existingRating}/5</span>` : ''}
+            </div>
+        `;
+    }
+    
     // Generate timer HTML for footer (if reversal button is visible and within 48 hours)
     // Don't show timer if reversal is already pending
     let timerHtml = '';
@@ -1969,7 +2091,10 @@ function renderAudit(audit, auditScorecard, errorFields) {
             <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1;">
                 ${acknowledgementStatusHtml}
             </div>
-            <div style="display: flex; align-items: center; gap: 0.4852rem; margin-left: auto;">
+            <div style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
+                ${footerRatingHtml}
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4852rem; flex-shrink: 0;">
                 ${timerHtml}
                 ${employeeButtonsHtml}
                 ${editButtonHtml}
@@ -2041,6 +2166,11 @@ function renderAudit(audit, auditScorecard, errorFields) {
     // Start timer countdown if reversal button is visible and reversal is not pending
     if (showAcknowledgeButton && showReversalButton && auditSubmissionTime && reversalStatus !== 'Pending') {
         startReversalTimer(auditSubmissionTime);
+    }
+    
+    // Setup footer rating star hover effects (only if rating system is enabled)
+    if (ENABLE_RATING_SYSTEM) {
+        setupFooterRatingHover();
     }
 
     // Make splitter draggable
@@ -5197,7 +5327,7 @@ window.toggleCommentsColumn = toggleCommentsColumn;
 window.saveParameterComment = saveParameterComment;
 
 // Show Uber-style rating dialog with integrated feedback
-async function showRatingDialog() {
+async function showRatingDialog(initialRating = 0) {
     return new Promise((resolve) => {
         // Create modal overlay
         const overlay = document.createElement('div');
@@ -5210,7 +5340,7 @@ async function showRatingDialog() {
         modal.style.maxHeight = '90vh';
         modal.style.overflowY = 'auto';
         
-        let selectedRating = 0;
+        let selectedRating = initialRating || 0;
         
         // Define feedback options for different ratings
         const feedbackOptionsByRating = {
@@ -5247,9 +5377,53 @@ async function showRatingDialog() {
             ]
         };
         
+        // Define compliment options for 5-star ratings (auditor-focused)
+        const complimentOptions = [
+            { 
+                text: '6-Star', 
+                icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+                color: '#fbbf24'
+            },
+            { 
+                text: 'Clear Communication', 
+                icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+                color: '#3b82f6'
+            },
+            { 
+                text: 'Constructive Feedback', 
+                icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                color: '#10b981'
+            },
+            { 
+                text: 'Professional Approach', 
+                icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+                color: '#8b5cf6'
+            },
+            { 
+                text: 'Thorough Analysis', 
+                icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                color: '#6366f1'
+            },
+            { 
+                text: 'Fair Assessment', 
+                icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
+                color: '#06b6d4'
+            },
+            { 
+                text: 'Quick Response', 
+                icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                color: '#f59e0b'
+            },
+            { 
+                text: 'Helpful Guidance', 
+                icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                color: '#ec4899'
+            }
+        ];
+        
         modal.innerHTML = `
-            <div class="rating-title">Rate this Audit</div>
-            <div class="rating-subtitle">How would you rate your audit experience?</div>
+            <div class="rating-title">Rate the Feedback</div>
+            <div class="rating-subtitle">How helpful was the feedback provided in this audit?</div>
             
             <div class="star-rating" id="starRating">
                 <span class="star" data-rating="1">★</span>
@@ -5260,16 +5434,26 @@ async function showRatingDialog() {
             </div>
             
             <!-- Feedback Section (Hidden by default) -->
-            <div id="feedbackSection" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e5e7eb;">
-                <div class="feedback-title" style="font-size: 1rem; margin-bottom: 0.5rem;">Help us improve</div>
-                <div class="feedback-subtitle" style="margin-bottom: 1rem;">What could we do better? Select all that apply (Optional)</div>
+            <div id="feedbackSection" style="display: none; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e5e7eb;">
+                <div class="feedback-title">Help us improve the feedback</div>
+                <div class="feedback-subtitle">What could we improve about the feedback? Select all that apply (Optional)</div>
                 
-                <div id="feedbackOptions" style="max-height: 250px; overflow-y: auto; margin-bottom: 1rem; padding-right: 0.5rem;">
+                <div id="feedbackOptions" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.375rem; margin-bottom: 0.5rem;">
                     <!-- Options will be populated dynamically -->
                 </div>
                 
                 <div>
-                    <textarea class="feedback-textarea" id="additionalComments" placeholder="Additional comments (optional)..." style="min-height: 60px; width: 100%;"></textarea>
+                    <textarea class="feedback-textarea" id="additionalComments" placeholder="Additional comments (optional)..." style="min-height: 40px; width: 100%;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Compliment Section (Hidden by default, shown for 5-star ratings) -->
+            <div id="complimentSection" style="display: none; margin-top: 0.375rem; padding-top: 0.375rem; border-top: 2px solid #e5e7eb; flex: 1; min-height: 0;">
+                <div class="feedback-title" style="font-size: 0.6875rem; margin-bottom: 0.1875rem;">Give a compliment</div>
+                <div class="feedback-subtitle" style="font-size: 0.5625rem; margin-bottom: 0.375rem;">Select all that apply (Optional)</div>
+                
+                <div id="complimentOptions" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.375rem; margin-bottom: 0;">
+                    <!-- Compliments will be populated dynamically -->
                 </div>
             </div>
             
@@ -5294,53 +5478,142 @@ async function showRatingDialog() {
             
             // Function to update feedback options based on rating
             function updateFeedbackOptions(rating) {
+                const complimentSection = modal.querySelector('#complimentSection');
+                const complimentOptionsContainer = modal.querySelector('#complimentOptions');
+                
                 if (rating >= 5) {
+                    // Hide feedback section, show compliment section
                     feedbackSection.style.display = 'none';
+                    complimentSection.style.display = 'block';
+                    
+                    // Add compact class to modal for better fit
+                    modal.classList.add('compact');
+                    
+                    // Generate compliment buttons with SVG icons
+                    const complimentsHtml = complimentOptions.map((compliment, index) => `
+                        <button type="button" class="compliment-option-btn" data-option="${index}" data-value="${compliment.text}" style="padding: 0.5rem 0.25rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background: #f9fafb; color: #374151; font-size: 0.625rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-height: 3.25rem; justify-content: center;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: ${compliment.color}; flex-shrink: 0;">
+                                <path d="${compliment.icon}"/>
+                            </svg>
+                            <span style="line-height: 1.2; word-break: break-word; font-size: 0.5625rem;">${compliment.text}</span>
+                        </button>
+                    `).join('');
+                    
+                    complimentOptionsContainer.innerHTML = complimentsHtml;
+                    
+                    // Add click handlers for compliment buttons
+                    const complimentButtons = complimentOptionsContainer.querySelectorAll('.compliment-option-btn');
+                    
+                    complimentButtons.forEach((button) => {
+                        button.addEventListener('click', () => {
+                            const isSelected = button.classList.contains('selected');
+                            
+                            if (isSelected) {
+                                // Deselect
+                                button.classList.remove('selected');
+                                button.style.background = '#f9fafb';
+                                button.style.color = '#374151';
+                                button.style.borderColor = '#e5e7eb';
+                            } else {
+                                // Select
+                                button.classList.add('selected');
+                                button.style.background = '#1A733E';
+                                button.style.color = 'white';
+                                button.style.borderColor = '#1A733E';
+                            }
+                        });
+                        
+                        button.addEventListener('mouseenter', () => {
+                            if (!button.classList.contains('selected')) {
+                                button.style.borderColor = '#1A733E';
+                                button.style.background = '#f0fdf4';
+                            }
+                        });
+                        
+                        button.addEventListener('mouseleave', () => {
+                            if (!button.classList.contains('selected')) {
+                                button.style.borderColor = '#e5e7eb';
+                                button.style.background = '#f9fafb';
+                            }
+                        });
+                    });
+                    
                     return;
                 }
                 
-                // Show feedback section
+                // Show feedback section, hide compliment section
                 feedbackSection.style.display = 'block';
+                complimentSection.style.display = 'none';
+                
+                // Remove compact class when showing feedback
+                modal.classList.remove('compact');
                 
                 // Get options for this rating
                 const options = feedbackOptionsByRating[rating] || feedbackOptionsByRating[4];
                 
-                // Generate checkbox options
+                // Generate Uber-style button options (no checkboxes)
                 const optionsHtml = options.map((option, index) => `
-                    <label class="feedback-option" for="feedback_${index}" style="display: flex; align-items: start; gap: 0.75rem; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background: white; margin-bottom: 0.5rem;">
-                        <input type="checkbox" id="feedback_${index}" class="feedback-checkbox" value="${option}" style="margin-top: 0.25rem; width: 1.25rem; height: 1.25rem; cursor: pointer; flex-shrink: 0; accent-color: #1A733E;">
-                        <span style="font-size: 0.875rem; color: #374151; font-family: 'Poppins', sans-serif; line-height: 1.4; flex: 1;">${option}</span>
-                    </label>
+                    <button type="button" class="feedback-option-btn" data-option="${index}" data-value="${option}" style="padding: 0.375rem 0.5rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; background: #f9fafb; color: #374151; font-size: 0.6875rem; font-family: 'Poppins', sans-serif; text-align: center; font-weight: 500;">
+                        ${option}
+                    </button>
                 `).join('');
                 
                 feedbackOptionsContainer.innerHTML = optionsHtml;
                 
-                // Add hover effects to newly created labels
-                const labels = feedbackOptionsContainer.querySelectorAll('.feedback-option');
-                const checkboxes = feedbackOptionsContainer.querySelectorAll('.feedback-checkbox');
+                // Add click handlers for button-style options
+                const optionButtons = feedbackOptionsContainer.querySelectorAll('.feedback-option-btn');
                 
-                labels.forEach((label, index) => {
-                    label.addEventListener('mouseenter', () => {
-                        label.style.borderColor = '#1A733E';
-                        label.style.backgroundColor = '#f9fafb';
-                    });
-                    label.addEventListener('mouseleave', () => {
-                        if (!checkboxes[index].checked) {
-                            label.style.borderColor = '#e5e7eb';
-                            label.style.backgroundColor = 'white';
+                optionButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const isSelected = button.classList.contains('selected');
+                        
+                        if (isSelected) {
+                            // Deselect
+                            button.classList.remove('selected');
+                            button.style.background = '#f9fafb';
+                            button.style.color = '#374151';
+                            button.style.borderColor = '#e5e7eb';
+                        } else {
+                            // Select
+                            button.classList.add('selected');
+                            button.style.background = '#1A733E';
+                            button.style.color = 'white';
+                            button.style.borderColor = '#1A733E';
                         }
                     });
                     
-                    checkboxes[index].addEventListener('change', () => {
-                        if (checkboxes[index].checked) {
-                            label.style.borderColor = '#1A733E';
-                            label.style.backgroundColor = '#f0fdf4';
-                        } else {
-                            label.style.borderColor = '#e5e7eb';
-                            label.style.backgroundColor = 'white';
+                    button.addEventListener('mouseenter', () => {
+                        if (!button.classList.contains('selected')) {
+                            button.style.borderColor = '#1A733E';
+                            button.style.background = '#f0fdf4';
+                        }
+                    });
+                    
+                    button.addEventListener('mouseleave', () => {
+                        if (!button.classList.contains('selected')) {
+                            button.style.borderColor = '#e5e7eb';
+                            button.style.background = '#f9fafb';
                         }
                     });
                 });
+            }
+            
+            // If initial rating is provided, set it up (after updateFeedbackOptions is defined)
+            if (initialRating > 0) {
+                selectedRating = initialRating;
+                stars.forEach((s, index) => {
+                    if (index < initialRating) {
+                        s.classList.add('active');
+                        s.style.color = '#fbbf24';
+                    } else {
+                        s.classList.remove('active');
+                        s.style.color = '#d1d5db';
+                    }
+                });
+                updateFeedbackOptions(initialRating);
+                submitBtn.classList.add('enabled');
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
             }
             
             stars.forEach((star, idx) => {
@@ -5414,10 +5687,9 @@ async function showRatingDialog() {
                         
                         // Collect feedback if rating < 5
                         if (selectedRating < 5) {
-                            const checkboxes = modal.querySelectorAll('.feedback-checkbox');
-                            const selectedOptions = Array.from(checkboxes)
-                                .filter(cb => cb.checked)
-                                .map(cb => cb.value);
+                            const selectedButtons = modal.querySelectorAll('.feedback-option-btn.selected');
+                            const selectedOptions = Array.from(selectedButtons)
+                                .map(btn => btn.dataset.value);
                             
                             const additionalComments = modal.querySelector('#additionalComments');
                             const additionalText = additionalComments ? additionalComments.value.trim() : '';
@@ -5427,6 +5699,15 @@ async function showRatingDialog() {
                             }
                             if (additionalText) {
                                 feedback += (feedback ? '\n\nAdditional comments:\n' : '') + additionalText;
+                            }
+                        } else if (selectedRating >= 5) {
+                            // Collect compliments if rating is 5 stars
+                            const selectedCompliments = modal.querySelectorAll('.compliment-option-btn.selected');
+                            const complimentValues = Array.from(selectedCompliments)
+                                .map(btn => btn.dataset.value);
+                            
+                            if (complimentValues.length > 0) {
+                                feedback = 'Compliments:\n• ' + complimentValues.join('\n• ');
                             }
                         }
                         
@@ -5478,13 +5759,31 @@ async function acknowledgeAudit() {
     
     if (!confirmResult) return;
     
-    // Step 2: Show rating dialog (Uber-style) with integrated feedback
-    const ratingResult = await showRatingDialog();
+    // Step 2: Calculate total errors to determine if rating system should be shown
+    let totalErrorsCount = 0;
+    if (currentAudit && currentErrorFields && currentErrorFields.length > 0) {
+        currentErrorFields.forEach(field => {
+            const count = currentAudit[field.key] ? parseInt(currentAudit[field.key]) : 0;
+            // Only count error parameters (not achievements/bonuses) in total
+            if (field.parameter_type === 'error' || !field.parameter_type) {
+                totalErrorsCount += count;
+            }
+        });
+    }
     
-    if (ratingResult.rating === null) return; // User cancelled rating
+    // Step 3: Show rating dialog (Uber-style) with integrated feedback
+    // Only show rating dialog if errors were detected and rating system is enabled
+    let rating = null;
+    let feedback = null;
     
-    const rating = ratingResult.rating;
-    const feedback = ratingResult.feedback;
+    if (ENABLE_RATING_SYSTEM && totalErrorsCount > 0) {
+        const ratingResult = await showRatingDialog();
+        
+        if (ratingResult.rating === null) return; // User cancelled rating
+        
+        rating = ratingResult.rating;
+        feedback = ratingResult.feedback;
+    }
     
     // Step 4: Save acknowledgment and rating to database
     if (!currentAudit || !currentTableName) {
@@ -5495,15 +5794,21 @@ async function acknowledgeAudit() {
     try {
         // Record acknowledgment and rating in the database
         const acknowledgementTime = new Date().toISOString();
+        const updateData = {
+            acknowledgement_status: 'Acknowledged',
+            acknowledgement_status_updated_at: acknowledgementTime
+        };
+        
+        // Only include rating fields if rating was collected (errors were detected)
+        if (rating !== null) {
+            updateData.audit_rating = rating;
+            updateData.audit_rating_feedback = feedback || null;
+            updateData.audit_rated_at = acknowledgementTime;
+        }
+        
         const { data, error } = await window.supabaseClient
             .from(currentTableName)
-            .update({
-                acknowledgement_status: 'Acknowledged',
-                acknowledgement_status_updated_at: acknowledgementTime,
-                audit_rating: rating,
-                audit_rating_feedback: feedback || null,
-                audit_rated_at: acknowledgementTime
-            })
+            .update(updateData)
             .eq('id', currentAudit.id)
             .select();
         
@@ -5511,14 +5816,20 @@ async function acknowledgeAudit() {
         
         // Show success message
         if (window.confirmationDialog) {
+            const successMessage = rating !== null 
+                ? `✓ Audit acknowledged and feedback rated ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your input!`
+                : '✓ Audit acknowledged. Thank you for your confirmation.';
             await window.confirmationDialog.show({
                 title: 'Success',
-                message: `✓ Audit acknowledged and rated ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your feedback!`,
+                message: successMessage,
                 confirmText: 'OK',
                 type: 'success'
             });
         } else {
-            alert(`✓ Audit acknowledged and rated ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your feedback!`);
+            const successMessage = rating !== null 
+                ? `✓ Audit acknowledged and feedback rated ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your input!`
+                : '✓ Audit acknowledged. Thank you for your confirmation.';
+            alert(successMessage);
         }
         
         // Reload audit data to reflect changes
@@ -5535,6 +5846,164 @@ async function acknowledgeAudit() {
             });
         } else {
             alert('Failed to record acknowledgment and rating. Please try again.');
+        }
+    }
+}
+
+// Setup footer rating star hover and click effects
+function setupFooterRatingHover() {
+    const footerRatingContainer = document.getElementById('footerRatingContainer');
+    if (!footerRatingContainer) return;
+    
+    const stars = footerRatingContainer.querySelectorAll('.footer-star');
+    if (stars.length === 0) return;
+    
+    // Get current rating
+    const currentRating = parseInt(footerRatingContainer.querySelector('#footerRatingStars')?.dataset.rating || '0');
+    
+    // Check if footer is acknowledged (green) or not (gray)
+    const footerBar = document.getElementById('footerBar');
+    const isAcknowledged = footerBar && (footerBar.style.backgroundColor.includes('rgb(6, 95, 70)') || footerBar.style.backgroundColor.includes('#065f46'));
+    
+    // Default colors based on footer state
+    const defaultUnfilledColor = isAcknowledged ? 'rgba(255,255,255,0.3)' : '#d1d5db';
+    const hoverColor = '#fbbf24';
+    
+    stars.forEach((star, index) => {
+        const starNumber = index + 1;
+        const isFilled = starNumber <= currentRating;
+        
+        // Set initial color and active state
+        if (isFilled) {
+            const ratingColor = currentRating >= 4 ? '#fbbf24' : currentRating >= 3 ? '#f59e0b' : '#ef4444';
+            star.style.color = ratingColor;
+            star.classList.add('active');
+        } else {
+            star.style.color = defaultUnfilledColor;
+            star.classList.remove('active');
+        }
+        
+        // Click handler - open modal with this rating pre-selected
+        star.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const clickedRating = parseInt(star.dataset.rating);
+            handleFooterRatingClick(clickedRating);
+        });
+        
+        // Mouse enter - fill this star and all before it
+        star.addEventListener('mouseenter', () => {
+            stars.forEach((s, i) => {
+                if (i <= index) {
+                    s.style.color = hoverColor;
+                } else {
+                    s.style.color = defaultUnfilledColor;
+                }
+            });
+        });
+        
+        // Mouse leave - restore original state
+        const starRatingContainer = footerRatingContainer.querySelector('#footerRatingStars');
+        starRatingContainer.addEventListener('mouseleave', () => {
+            stars.forEach((s, i) => {
+                const starNum = i + 1;
+                const wasFilled = starNum <= currentRating;
+                if (wasFilled) {
+                    const ratingColor = currentRating >= 4 ? '#fbbf24' : currentRating >= 3 ? '#f59e0b' : '#ef4444';
+                    s.style.color = ratingColor;
+                } else {
+                    s.style.color = defaultUnfilledColor;
+                }
+            });
+        });
+    });
+}
+
+// Handle footer rating click - opens rating dialog
+async function handleFooterRatingClick(clickedRating = 0) {
+    // Check if rating system is enabled
+    if (!ENABLE_RATING_SYSTEM) {
+        return;
+    }
+    
+    if (!currentAudit || !currentTableName) {
+        alert('Error: Audit data not available');
+        return;
+    }
+    
+    // Check if errors were detected
+    const totalErrorsCount = currentAudit.totalErrorsCount || currentAudit.total_errors_count || 0;
+    if (totalErrorsCount === 0) {
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'No Rating Available',
+                message: 'Feedback rating is only available for audits with detected errors.',
+                confirmText: 'OK',
+                type: 'info'
+            });
+        } else {
+            alert('Feedback rating is only available for audits with detected errors.');
+        }
+        return;
+    }
+    
+    // Wait for confirmation dialog to be available
+    if (!window.confirmationDialog) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (!window.confirmationDialog) {
+            alert('Error: Confirmation dialog not available. Please refresh the page.');
+            return;
+        }
+    }
+    
+    // Show rating dialog with pre-selected rating if clicked from footer
+    const ratingResult = await showRatingDialog(clickedRating);
+    
+    if (ratingResult.rating === null) return; // User cancelled rating
+    
+    const rating = ratingResult.rating;
+    const feedback = ratingResult.feedback;
+    
+    // Save rating to database
+    try {
+        const ratedAt = new Date().toISOString();
+        const { data, error } = await window.supabaseClient
+            .from(currentTableName)
+            .update({
+                audit_rating: rating,
+                audit_rating_feedback: feedback || null,
+                audit_rated_at: ratedAt
+            })
+            .eq('id', currentAudit.id)
+            .select();
+        
+        if (error) throw error;
+        
+        // Show success message
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Success',
+                message: `✓ Feedback rating submitted: ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your input!`,
+                confirmText: 'OK',
+                type: 'success'
+            });
+        } else {
+            alert(`✓ Feedback rating submitted: ${rating} star${rating !== 1 ? 's' : ''}. Thank you for your input!`);
+        }
+        
+        // Reload audit data to reflect changes
+        loadAuditFromURL();
+        
+    } catch (error) {
+        console.error('Error saving rating:', error);
+        if (window.confirmationDialog) {
+            await window.confirmationDialog.show({
+                title: 'Error',
+                message: 'Failed to save rating. Please try again.',
+                confirmText: 'OK',
+                type: 'error'
+            });
+        } else {
+            alert('Failed to save rating. Please try again.');
         }
     }
 }
