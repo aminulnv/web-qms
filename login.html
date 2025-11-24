@@ -1237,10 +1237,24 @@
         
         // Listen for messages from the auth callback popup
         window.addEventListener('message', async (event) => {
-            // Security: Verify origin
-            if (event.origin !== window.location.origin) {
+            // Security: Verify origin - allow messages from same origin or configured SITE_URL
+            const allowedOrigins = [window.location.origin];
+            
+            // Add configured SITE_URL if present
+            if (window.env?.SITE_URL && window.env.SITE_URL.trim() !== '') {
+                const siteUrl = window.env.SITE_URL.replace(/\/$/, '');
+                if (!allowedOrigins.includes(siteUrl)) {
+                    allowedOrigins.push(siteUrl);
+                }
+            }
+            
+            // Check if message is from an allowed origin
+            if (!allowedOrigins.includes(event.origin)) {
+                console.warn('Rejected message from unauthorized origin:', event.origin);
                 return;
             }
+            
+            console.log('Received message from authorized origin:', event.origin);
             
             const { type, data, error } = event.data;
             

@@ -4,7 +4,7 @@ This guide explains how to configure Google OAuth for your QMS application.
 
 ## 1. Configure Site URL in env-config.js
 
-Update the `SITE_URL` in `env-config.js`:
+**IMPORTANT:** Update the `SITE_URL` in `env-config.js` to match your domain:
 
 ```javascript
 window.env = {
@@ -13,13 +13,19 @@ window.env = {
   // For local development:
   SITE_URL: 'http://localhost:3000'
   
-  // For production (update with your actual domain):
-  // SITE_URL: 'https://your-domain.com'
+  // For production (REQUIRED - update with your actual domain):
+  SITE_URL: 'https://your-domain.com'
   
-  // Leave empty for auto-detection:
-  // SITE_URL: ''
+  // ⚠️ DO NOT leave empty in production - this is used for:
+  //   - OAuth redirect URLs
+  //   - Secure postMessage communication between popup and parent window
 };
 ```
+
+**Why is this important?**
+- Ensures OAuth redirects to the correct domain (not localhost)
+- Enables secure cross-origin communication for popup-based authentication
+- Prevents authentication failures when using non-localhost domains
 
 ## 2. Configure Supabase Dashboard
 
@@ -101,6 +107,19 @@ https://xijmkmvsumeoqarpmpvi.supabase.co
 - Update `SITE_URL` in `env-config.js` to your production domain
 - Update Supabase Dashboard Site URL
 - Add production redirect URL to Google Cloud Console
+
+### Issue: "Rejected message from unauthorized origin" in console
+
+**Symptoms:**
+- OAuth popup completes successfully
+- Popup closes but login doesn't complete
+- Console shows: "Rejected message from unauthorized origin"
+
+**Solution:**
+- Set `SITE_URL` in `env-config.js` to match your production domain
+- Ensure the `SITE_URL` matches exactly (including http/https and port)
+- Example: If accessing site at `https://example.com`, set `SITE_URL: 'https://example.com'`
+- Clear browser cache and try again
 
 ### Issue: Popup blocked
 
