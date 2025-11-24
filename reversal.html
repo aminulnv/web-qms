@@ -231,7 +231,6 @@
                 </svg>
                 Filters
             </button>
-            <button id="viewAllBtn" onclick="toggleViewAll()" style="padding: 0.375rem 0.75rem; background-color: #6b7280; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">View All</button>
         </div>
         <button id="exportBtn" style="padding: 0.375rem 0.75rem; background-color: #1A733E; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">Export</button>
     </div>
@@ -315,8 +314,9 @@
 
     <!-- No Reversals Message -->
     <div id="noReversalsMessage" style="display: none; text-align: center; padding: 1.5rem; color: #6b7280; font-family: 'Poppins', sans-serif;">
-        <p style="font-size: 0.75rem; margin-bottom: 0.375rem;">No reversal requests found</p>
-        <p style="font-size: 0.6562rem;">Reversal requests will appear here once submitted.</p>
+        <p style="font-size: 0.75rem; margin-bottom: 0.375rem;">No pending reversal requests found</p>
+        <p style="font-size: 0.6562rem; margin-bottom: 0.75rem;">Reversal requests will appear here once submitted.</p>
+        <button id="viewAllBtnInMessage" onclick="toggleViewAll()" style="padding: 0.375rem 0.75rem; background-color: #6b7280; color: white; border: none; border-radius: 0.2812rem; font-size: 0.6562rem; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">View All</button>
     </div>
 </main>
 
@@ -973,8 +973,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span>${escapeHtml(reversal.interaction_id || 'No ID')}</span>
                                 <span style="color: #d1d5db;">•</span>
                                 <span style="font-weight: 500;">${reversal.score_before_appeal || reversal.average_score || '0'}%</span>
-                                <span style="color: #d1d5db;">•</span>
-                                <span>${escapeHtml(reversal.reversal_reason || 'No reason provided')}</span>
+                                ${reversal.reversal_reason ? `<span style="color: #d1d5db;">•</span>
+                                <span>${escapeHtml(reversal.reversal_reason)}</span>` : ''}
                                 ${!isAgent ? `<span style="color: #d1d5db;">•</span>
                                 <span style="color: #374151; font-weight: 500;">${escapeHtml(reversal.auditor_name || 'Unknown auditor')}</span>` : ''}
                                 <span style="color: #d1d5db;">•</span>
@@ -1021,15 +1021,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Toggle between viewing all reversals and pending only
         window.toggleViewAll = async function() {
-            const viewAllBtn = document.getElementById('viewAllBtn');
+            const viewAllBtnInMessage = document.getElementById('viewAllBtnInMessage');
             const userInfo = getCurrentUserInfo();
             const isAgent = userInfo.isAgent;
             
             if (viewingAll) {
                 // Switch to pending only view
                 viewingAll = false;
-                viewAllBtn.textContent = 'View All';
-                viewAllBtn.style.backgroundColor = '#6b7280';
+                if (viewAllBtnInMessage) {
+                    viewAllBtnInMessage.textContent = 'View All';
+                    viewAllBtnInMessage.style.backgroundColor = '#6b7280';
+                }
                 
                 // For agents: Ensure only their own reversals are shown
                 let reversalsForFiltering = allReversals;
@@ -1089,8 +1091,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Switch to view all
                 viewingAll = true;
-                viewAllBtn.textContent = 'Show Pending Only';
-                viewAllBtn.style.backgroundColor = '#1A733E';
+                if (viewAllBtnInMessage) {
+                    viewAllBtnInMessage.textContent = 'Show Pending Only';
+                    viewAllBtnInMessage.style.backgroundColor = '#1A733E';
+                }
                 
                 // Load all reversals if not already loaded
                 if (!allReversalsLoaded) {
