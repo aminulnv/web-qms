@@ -1156,21 +1156,57 @@ async function fetchAndCacheTeamStats(period) {
                 // qaCompleted count remains 0 if there's an error (always use scorecard tables)
             }
             
-            // Calculate backlog coverage (assignments created in the period but completed on a different day)
-            // Use qaAssignments which are already filtered by created_at (assignments created in the period)
+            // Calculate backlog coverage: Only count audits completed in the selected period
+            // Backlog = assignments completed in the period but created on a different day
+            // This ensures backlog only shows on the day it was completed, not when it was assigned
             // Use Dhaka timezone for date comparison to match the rest of the dashboard
             let backlogCount = 0;
             let backlogDates = []; // Store dates when backlog audits were created
             try {
-                // Filter from assignments created in the period (qaAssignments) that were completed on a different day
-                const backlogItems = qaAssignments.filter(a => {
-                    if (a.status !== 'completed' || !a.completed_at || !a.created_at) return false;
-                    const createdDate = toDhakaTime(a.created_at);
-                    const completedDate = toDhakaTime(a.completed_at);
-                    const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                    const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                    return createdDay !== completedDay;
-                });
+                // Query for assignments completed in the period but created on a different day
+                // This shows backlog work that was completed in the selected date range
+                let backlogItems = [];
+                if (period && (period.start || period.end)) {
+                    try {
+                        let completedBacklogQuery = window.supabaseClient
+                            .from('audit_assignments')
+                            .select('*')
+                            .eq('auditor_email', qa.email)
+                            .eq('status', 'completed')
+                            .not('completed_at', 'is', null)
+                            .not('created_at', 'is', null);
+                        
+                        // Filter by completed_at date (when the audit was completed)
+                        if (period.start) {
+                            completedBacklogQuery = completedBacklogQuery.gte('completed_at', dhakaDateToUTCISO(period.start));
+                        }
+                        if (period.end) {
+                            completedBacklogQuery = completedBacklogQuery.lte('completed_at', dhakaDateToUTCISO(period.end));
+                        }
+                        
+                        const { data: completedAssignments, error: completedError } = await completedBacklogQuery;
+                        
+                        if (!completedError && completedAssignments) {
+                            // Filter for assignments completed in period but created on different day
+                            backlogItems = completedAssignments.filter(a => {
+                                if (!a.completed_at || !a.created_at) return false;
+                                const completedDate = toDhakaTime(a.completed_at);
+                                // Check if completed date falls within the period
+                                const inPeriod = (!period.start || completedDate >= period.start) && 
+                                                (!period.end || completedDate <= period.end);
+                                if (!inPeriod) return false;
+                                
+                                const createdDate = toDhakaTime(a.created_at);
+                                const createdDay = formatDhakaDate(createdDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                                const completedDay = formatDhakaDate(completedDate, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                                return createdDay !== completedDay;
+                            });
+                        }
+                    } catch (queryError) {
+                        console.warn(`Error querying completed backlog for ${qa.email}:`, queryError);
+                    }
+                }
+                
                 backlogCount = backlogItems.length;
                 backlogDates = [...new Set(backlogItems.map(a => {
                     const createdDate = toDhakaTime(a.created_at);
