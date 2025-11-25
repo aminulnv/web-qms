@@ -941,6 +941,110 @@
 
 <script>
 // ============================================================================
+// Enhanced Logger Utility
+// ============================================================================
+const AuditLogger = {
+    // Enable/disable logging
+    enabled: true,
+    
+    // Log levels
+    levels: {
+        INFO: { emoji: 'ℹ️', color: '#3b82f6', label: 'INFO' },
+        SUCCESS: { emoji: '✅', color: '#10b981', label: 'SUCCESS' },
+        WARNING: { emoji: '⚠️', color: '#f59e0b', label: 'WARNING' },
+        ERROR: { emoji: '❌', color: '#ef4444', label: 'ERROR' },
+        DEBUG: { emoji: '🔍', color: '#8b5cf6', label: 'DEBUG' },
+        DATA: { emoji: '📊', color: '#06b6d4', label: 'DATA' }
+    },
+    
+    // Core logging method
+    log(level, category, message, data = null) {
+        if (!this.enabled) return;
+        
+        const levelInfo = this.levels[level] || this.levels.INFO;
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 });
+        
+        // Build log message
+        const prefix = `${levelInfo.emoji} [${timestamp}] [${category}]`;
+        const style = `color: ${levelInfo.color}; font-weight: bold;`;
+        
+        // Log based on level
+        if (level === 'ERROR') {
+            console.error(prefix, message);
+            if (data) console.error('Data:', data);
+        } else if (level === 'WARNING') {
+            console.warn(prefix, message);
+            if (data) console.warn('Data:', data);
+        } else {
+            console.log(`%c${prefix}`, style, message);
+            if (data) console.log('Data:', data);
+        }
+    },
+    
+    // Convenience methods
+    info(category, message, data) { this.log('INFO', category, message, data); },
+    success(category, message, data) { this.log('SUCCESS', category, message, data); },
+    warn(category, message, data) { this.log('WARNING', category, message, data); },
+    error(category, message, data) { this.log('ERROR', category, message, data); },
+    debug(category, message, data) { this.log('DEBUG', category, message, data); },
+    data(category, message, data) { this.log('DATA', category, message, data); },
+    
+    // Group logging for related operations
+    group(category, title) {
+        if (!this.enabled) return;
+        console.group(`🔹 [${category}] ${title}`);
+    },
+    
+    groupEnd() {
+        if (!this.enabled) return;
+        console.groupEnd();
+    },
+    
+    // Performance timing
+    timers: {},
+    
+    startTimer(name) {
+        this.timers[name] = performance.now();
+        this.debug('TIMER', `Started timer: ${name}`);
+    },
+    
+    endTimer(name) {
+        if (!this.timers[name]) {
+            this.warn('TIMER', `Timer "${name}" was not started`);
+            return;
+        }
+        const elapsed = (performance.now() - this.timers[name]).toFixed(2);
+        delete this.timers[name];
+        this.success('TIMER', `${name} completed in ${elapsed}ms`);
+        return elapsed;
+    },
+    
+    // Log validation errors
+    validationError(field, message) {
+        this.error('VALIDATION', `Field "${field}": ${message}`);
+    },
+    
+    // Log database operations
+    dbOperation(operation, table, details = null) {
+        this.info('DATABASE', `${operation} on table "${table}"`, details);
+    },
+    
+    dbSuccess(operation, table, result = null) {
+        this.success('DATABASE', `${operation} on table "${table}" succeeded`, result);
+    },
+    
+    dbError(operation, table, error) {
+        this.error('DATABASE', `${operation} on table "${table}" failed`, error);
+    }
+};
+
+// Make logger globally accessible
+window.AuditLogger = AuditLogger;
+
+// Log system initialization
+AuditLogger.info('SYSTEM', '🚀 Audit Form Logger initialized');
+
+// ============================================================================
 // Dynamic Scorecard System
 // ============================================================================
 let currentScorecard = null;
@@ -951,15 +1055,22 @@ let allAvailableScorecards = [];
 
 // Load available scorecards
 async function loadScorecards(channelFilter = null, preselectedScorecardId = null, skipAutoSelect = false) {
+    AuditLogger.info('SCORECARD_LOADING', 'Loading scorecards', {
+        channelFilter,
+        preselectedScorecardId,
+        skipAutoSelect
+    });
+    
     const scorecardSelect = document.getElementById('scorecardSelect');
     
     if (!scorecardSelect) {
-        console.error('Scorecard select element not found');
+        AuditLogger.error('SCORECARD_LOADING', 'Scorecard select element not found in DOM');
         return;
     }
     
     // Wait for Supabase client if not ready
     if (!window.supabaseClient) {
+        AuditLogger.warn('SCORECARD_LOADING', 'Waiting for Supabase client initialization...');
         let attempts = 0;
         while (!window.supabaseClient && attempts < 50) {
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -968,12 +1079,13 @@ async function loadScorecards(channelFilter = null, preselectedScorecardId = nul
     }
     
     if (!window.supabaseClient) {
-        console.error('Supabase client not initialized');
+        AuditLogger.error('SCORECARD_LOADING', 'Supabase client not initialized after waiting');
         scorecardSelect.innerHTML = '<option value="">Error: Database not ready</option>';
         return;
     }
     
     try {
+        AuditLogger.startTimer('scorecardLoad');
         let query = window.supabaseClient
             .from('scorecards')
             .select('*')
@@ -981,11 +1093,13 @@ async function loadScorecards(channelFilter = null, preselectedScorecardId = nul
             .order('created_at', { ascending: false });
         
         const { data, error } = await query;
+        AuditLogger.endTimer('scorecardLoad');
         
         if (error) throw error;
         
         // Store all scorecards for filtering
         allAvailableScorecards = data || [];
+        AuditLogger.success('SCORECARD_LOADING', `Loaded ${allAvailableScorecards.length} active scorecard(s)`);
         
         // Filter by channel if provided
         let filteredScorecards = allAvailableScorecards;
@@ -8018,6 +8132,44 @@ function setInitialAverageScore() {
     updatePassingStatus(initialScore);
 }
 
+// Helper function to convert feedback data to array format
+// Handles: JSON arrays, newline-separated strings, single strings
+function convertFeedbackToArray(feedbackData) {
+    if (!feedbackData) {
+        AuditLogger.debug('FEEDBACK_CONVERSION', 'Empty feedback data received');
+        return [];
+    }
+    
+    if (typeof feedbackData === 'string') {
+        // Try to parse as JSON array first
+        try {
+            const parsed = JSON.parse(feedbackData);
+            const result = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
+            AuditLogger.debug('FEEDBACK_CONVERSION', `Parsed JSON feedback: ${result.length} item(s)`);
+            return result;
+        } catch (e) {
+            // If not valid JSON, check if it's newline-separated (new format)
+            if (feedbackData.includes('\n')) {
+                // Split by newlines and filter out empty strings
+                const result = feedbackData.split('\n').map(f => f.trim()).filter(f => f);
+                AuditLogger.debug('FEEDBACK_CONVERSION', `Split newline-separated feedback: ${result.length} item(s)`);
+                return result;
+            } else {
+                // Single string (backward compatibility)
+                const result = feedbackData.trim() ? [feedbackData] : [];
+                AuditLogger.debug('FEEDBACK_CONVERSION', `Single string feedback: ${result.length} item(s)`);
+                return result;
+            }
+        }
+    } else if (Array.isArray(feedbackData)) {
+        AuditLogger.debug('FEEDBACK_CONVERSION', `Array feedback received: ${feedbackData.length} item(s)`);
+        return feedbackData;
+    } else {
+        AuditLogger.warn('FEEDBACK_CONVERSION', `Unexpected feedback data type: ${typeof feedbackData}`);
+        return feedbackData ? [feedbackData] : [];
+    }
+}
+
 // Update feedback boxes for a parameter based on error count (max 10)
 function updateFeedbackBoxesForParameter(fieldId, fieldType, paramType) {
     const feedbackContainer = document.getElementById(`feedback_container_${fieldId}`);
@@ -9593,6 +9745,13 @@ async function loadAuditForEditing() {
 // Populate Form with Audit Data
 // ============================================================================
 async function populateFormWithAuditData(audit) {
+    AuditLogger.group('FORM_LOADING', '📥 Loading audit data into form');
+    AuditLogger.info('FORM_LOADING', 'Populating form with existing audit data', {
+        auditId: audit.id,
+        employeeEmail: audit.employee_email,
+        interactionId: audit.interaction_id
+    });
+    
     try {
         // Populate employee information
         const employeeSelect = document.getElementById('employeeName');
@@ -9710,24 +9869,7 @@ async function populateFormWithAuditData(audit) {
                 
                 // Populate feedback - handle both old format (string) and new format (JSON array)
                 const feedbackData = audit[`feedback_${param.field_id}`];
-                let feedbackArray = [];
-                
-                if (feedbackData) {
-                    if (typeof feedbackData === 'string') {
-                        // Try to parse as JSON array, fallback to single string
-                        try {
-                            const parsed = JSON.parse(feedbackData);
-                            feedbackArray = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
-                        } catch (e) {
-                            // If not valid JSON, treat as single string (backward compatibility)
-                            feedbackArray = feedbackData.trim() ? [feedbackData] : [];
-                        }
-                    } else if (Array.isArray(feedbackData)) {
-                        feedbackArray = feedbackData;
-                    } else {
-                        feedbackArray = feedbackData ? [feedbackData] : [];
-                    }
-                }
+                const feedbackArray = convertFeedbackToArray(feedbackData);
                 
                 // Update feedback boxes based on error count first, then populate values
                 const paramType = param.parameter_type || 'error';
@@ -9758,10 +9900,12 @@ async function populateFormWithAuditData(audit) {
         // Recalculate scores
         calculateAverageScore();
         
-        console.log('Form populated with audit data');
+        AuditLogger.success('FORM_LOADING', 'Form populated with audit data successfully');
+        AuditLogger.groupEnd();
         
     } catch (error) {
-        console.error('Error populating form with audit data:', error);
+        AuditLogger.error('FORM_LOADING', 'Failed to populate form with audit data', error);
+        AuditLogger.groupEnd();
     }
 }
 
@@ -10513,22 +10657,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const scorecardSelect = document.getElementById('scorecardSelect');
         if (scorecardSelect) {
             scorecardSelect.addEventListener('change', async function() {
+                const selectedValue = this.value;
+                AuditLogger.info('SCORECARD_SELECTION', 'Scorecard selection changed', {
+                    scorecardId: selectedValue,
+                    isEditMode: isEditingExistingAudit,
+                    isLoadingAIData: window.isLoadingAIAuditData
+                });
+                
                 // Don't clear form if we're in edit mode
                 if (isEditingExistingAudit) {
+                    AuditLogger.debug('SCORECARD_SELECTION', 'Skipping - in edit mode');
                     return; // Let the edit mode handler manage the scorecard selection
                 }
                 
                 // Don't clear form if we're loading AI audit data
                 if (window.isLoadingAIAuditData) {
-                    console.log('⏸️ Skipping form clear - AI audit data is being loaded');
+                    AuditLogger.debug('SCORECARD_SELECTION', 'Skipping - loading AI audit data');
                     return;
                 }
                 
-                const selectedValue = this.value;
                 // Validate before loading to prevent UUID errors
                 if (selectedValue && selectedValue !== 'null' && selectedValue !== 'undefined' && selectedValue.trim() !== '') {
+                    AuditLogger.info('SCORECARD_SELECTION', `Loading parameters for scorecard: ${selectedValue}`);
                     await loadScorecardParameters(selectedValue);
                 } else {
+                    AuditLogger.warn('SCORECARD_SELECTION', 'Invalid selection - clearing scorecard data');
                     // Clear scorecard info if invalid selection
                     currentScorecard = null;
                     currentParameters = [];
@@ -10704,7 +10857,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Handler function
         const handleSubmit = async function(e) {
-            console.log('DEBUG: Form submit event fired!'); // Debug log only
+            AuditLogger.group('FORM_SUBMISSION', '📝 Form Submit Event Triggered');
+            AuditLogger.startTimer('formSubmission');
             console.log('Submit event fired! Event object:', e);
             e.preventDefault();
             e.stopPropagation();
@@ -10712,22 +10866,32 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Prevent duplicate submissions
             if (isSubmitting) {
-                console.log('Submission already in progress, ignoring duplicate submit event');
+                AuditLogger.warn('FORM_SUBMISSION', 'Duplicate submission attempt blocked - already in progress');
+                AuditLogger.groupEnd();
                 return;
             }
             
             isSubmitting = true;
+            AuditLogger.info('FORM_SUBMISSION', 'Submission lock acquired');
             
             // Show smart loader
             const loader = document.getElementById('auditSubmitLoader');
             if (loader) {
                 loader.classList.add('show');
+                AuditLogger.debug('UI', 'Submission loader displayed');
             }
             
-            console.log('===== FORM SUBMISSION STARTED =====');
+            AuditLogger.info('FORM_SUBMISSION', '='.repeat(50));
+            AuditLogger.info('FORM_SUBMISSION', 'AUDIT FORM SUBMISSION STARTED');
+            AuditLogger.info('FORM_SUBMISSION', '='.repeat(50));
             
             // Validate scorecard selection
+            AuditLogger.debug('VALIDATION', 'Checking scorecard selection');
             if (!currentScorecard || !currentParameters || currentParameters.length === 0) {
+                AuditLogger.error('VALIDATION', 'No scorecard selected', {
+                    currentScorecard: !!currentScorecard,
+                    parametersCount: currentParameters?.length || 0
+                });
                 // Hide loader if validation fails
                 const loader = document.getElementById('auditSubmitLoader');
                 if (loader) {
@@ -10740,8 +10904,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'warning'
                 });
                 isSubmitting = false;
+                AuditLogger.groupEnd();
                 return;
             }
+            AuditLogger.success('VALIDATION', `Scorecard validated: ${currentScorecard.scorecard_name} (${currentParameters.length} parameters)`);
             
             // Wait for Supabase client to be ready (maximum 5 seconds)
             let attempts = 0;
@@ -10829,6 +10995,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Validate feedback fields when error count > 0
+            AuditLogger.debug('VALIDATION', 'Starting feedback field validation');
             let validationErrors = [];
             currentParameters.forEach(param => {
                 // Get error count for this parameter
@@ -10868,6 +11035,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // If there are validation errors, show them and stop submission
             if (validationErrors.length > 0) {
+                AuditLogger.error('VALIDATION', `Found ${validationErrors.length} validation error(s)`, validationErrors);
                 // Hide loader if validation fails
                 const loader = document.getElementById('auditSubmitLoader');
                 if (loader) {
@@ -10880,19 +11048,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'error'
                 });
                 isSubmitting = false;
+                AuditLogger.groupEnd();
                 return;
             }
+            AuditLogger.success('VALIDATION', 'All feedback fields validated successfully');
             
             // Explicitly handle dynamic parameter fields (counters and radio buttons)
+            AuditLogger.info('DATA_COLLECTION', `Collecting data for ${currentParameters.length} parameters`);
+            let totalFeedbacksCollected = 0;
+            
             currentParameters.forEach(param => {
                 if (param.field_type === 'radio') {
                     // For radio buttons, get the selected value
                     const selectedRadio = document.querySelector(`input[name="${param.field_id}"]:checked`);
                     auditData[param.field_id] = selectedRadio ? parseInt(selectedRadio.value) : 0;
+                    AuditLogger.debug('DATA_COLLECTION', `Radio field "${param.error_name}": ${auditData[param.field_id]}`);
                 } else {
                     // For counters, store the numeric value
                     const field = document.getElementById(param.field_id);
                     auditData[param.field_id] = field ? (parseInt(field.value) || 0) : 0;
+                    AuditLogger.debug('DATA_COLLECTION', `Counter field "${param.error_name}": ${auditData[param.field_id]}`);
                 }
                 
                 // Collect all feedback boxes for this parameter as an array
@@ -10906,7 +11081,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 }
-                auditData[`feedback_${param.field_id}`] = feedbacks.length > 0 ? feedbacks : null;
+                
+                // Convert feedback array to string (join with newlines for multiple feedbacks)
+                auditData[`feedback_${param.field_id}`] = feedbacks.length > 0 ? feedbacks.join('\n') : null;
+                
+                if (feedbacks.length > 0) {
+                    totalFeedbacksCollected += feedbacks.length;
+                    AuditLogger.data('FEEDBACK_COLLECTION', `"${param.error_name}": collected ${feedbacks.length} feedback(s)`, {
+                        fieldId: param.field_id,
+                        feedbackCount: feedbacks.length,
+                        feedbackPreview: feedbacks[0].substring(0, 50) + (feedbacks[0].length > 50 ? '...' : '')
+                    });
+                }
                 
                 // Collect parameter comments from comment input fields
                 // Comments should be saved even if error count is 0
@@ -11118,11 +11304,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     auditPayload.parameter_comments = {};
                 }
                 
-                console.log('Payload to save:', auditPayload);
-                console.log('Target table:', currentScorecard.table_name);
-                console.log('Is editing pending audit:', isEditingPendingAudit);
-                console.log('Current editing audit ID:', currentEditingAuditId);
-                console.log('Is calibration mode:', isCalibrationMode);
+                AuditLogger.success('DATA_COLLECTION', `Total feedbacks collected: ${totalFeedbacksCollected}`);
+                AuditLogger.info('PAYLOAD_PREPARATION', 'Audit payload prepared successfully');
+                AuditLogger.data('PAYLOAD_PREPARATION', 'Payload summary:', {
+                    table: currentScorecard.table_name,
+                    scorecardName: currentScorecard.scorecard_name,
+                    employeeEmail: auditPayload.employee_email,
+                    interactionId: auditPayload.interaction_id,
+                    averageScore: auditPayload.average_score,
+                    passingStatus: auditPayload.passing_status,
+                    isEditing: isEditingPendingAudit || isEditingExistingAudit,
+                    editingAuditId: currentEditingAuditId,
+                    isCalibration: isCalibrationMode,
+                    payloadKeys: Object.keys(auditPayload).length
+                });
+                
+                // Log full payload for debugging (can be disabled in production)
+                console.log('Full payload:', auditPayload);
                 
                 // If in calibration mode, save to calibration_results instead
                 if (isCalibrationMode) {
@@ -11178,7 +11376,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Check if we're editing an existing audit from audit reports
                 if (isEditingExistingAudit && currentEditingAuditId && currentEditingTableName) {
                     // UPDATE existing audit record
-                    console.log('Updating existing audit from reports...');
+                    AuditLogger.info('DATABASE', '📝 Updating existing audit from reports');
+                    AuditLogger.dbOperation('UPDATE', currentEditingTableName, {
+                        auditId: currentEditingAuditId,
+                        operation: 'Edit Existing Audit'
+                    });
                     
                     // Keep the original ID and submitted_at
                     auditPayload.id = currentEditingAuditId;
@@ -11193,6 +11395,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     // Always update end time and duration when editing
                     
+                    AuditLogger.startTimer('dbUpdate');
                     const result = await retryOnSchemaCacheError(async () => {
                         return await window.supabaseClient
                             .from(currentEditingTableName)
@@ -11200,12 +11403,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             .eq('id', currentEditingAuditId)
                             .select();
                     });
+                    AuditLogger.endTimer('dbUpdate');
                     
                     data = result.data;
                     error = result.error;
                     
                     if (!error) {
-                        console.log('Successfully updated audit from reports:', data);
+                        AuditLogger.dbSuccess('UPDATE', currentEditingTableName, {
+                            auditId: currentEditingAuditId,
+                            recordsUpdated: data?.length || 0
+                        });
                         
                         // Reset editing mode
                         isEditingExistingAudit = false;
@@ -11215,12 +11422,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                 } else if (isEditingPendingAudit && currentEditingAuditId) {
                     // UPDATE existing pending audit record
-                    console.log('Updating existing pending audit...');
+                    AuditLogger.info('DATABASE', '📝 Updating existing pending audit');
+                    AuditLogger.dbOperation('UPDATE', currentScorecard.table_name, {
+                        auditId: currentEditingAuditId,
+                        operation: 'Complete Pending Audit'
+                    });
                     
                     // Update validation status to 'Validated' when completing the audit
                     auditPayload.validation_status = 'Validated';
                     auditPayload.submitted_at = new Date().toISOString();
                     
+                    AuditLogger.startTimer('dbUpdate');
                     const result = await retryOnSchemaCacheError(async () => {
                         return await window.supabaseClient
                             .from(currentScorecard.table_name)
@@ -11228,12 +11440,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             .eq('id', currentEditingAuditId)
                             .select();
                     });
+                    AuditLogger.endTimer('dbUpdate');
                     
                     data = result.data;
                     error = result.error;
                     
                     if (!error) {
-                        console.log('Successfully updated pending audit:', data);
+                        AuditLogger.dbSuccess('UPDATE', currentScorecard.table_name, {
+                            auditId: currentEditingAuditId,
+                            validationStatus: 'Validated',
+                            recordsUpdated: data?.length || 0
+                        });
                         
                         // If this was from an audit assignment, mark it as completed
                         if (isEditingPendingAudit && currentEditingAuditId) {
@@ -11266,20 +11483,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                 } else {
                     // INSERT new audit record
-                    console.log('Inserting new audit...');
+                    AuditLogger.info('DATABASE', '✨ Inserting new audit record');
+                    AuditLogger.dbOperation('INSERT', currentScorecard.table_name, {
+                        operation: 'New Audit Submission',
+                        employeeEmail: auditPayload.employee_email,
+                        interactionId: auditPayload.interaction_id
+                    });
                     
+                    AuditLogger.startTimer('dbInsert');
                     const result = await retryOnSchemaCacheError(async () => {
                         return await window.supabaseClient
                             .from(currentScorecard.table_name)
                             .insert([auditPayload])
                             .select();
                     });
+                    AuditLogger.endTimer('dbInsert');
                     
                     data = result.data;
                     error = result.error;
                     
                     if (!error) {
-                        console.log('Successfully inserted new audit:', data);
+                        AuditLogger.dbSuccess('INSERT', currentScorecard.table_name, {
+                            auditId: data[0]?.id,
+                            recordsInserted: data?.length || 0
+                        });
                         
                         // If this was from an audit assignment, mark it as completed
                         if (currentAssignmentId) {
@@ -11316,8 +11543,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (error) {
-                    console.error('Error saving to Supabase:', error);
-                    console.error('Error details:', JSON.stringify(error, null, 2));
+                    AuditLogger.dbError('SAVE', currentScorecard.table_name, {
+                        errorCode: error.code,
+                        errorMessage: error.message,
+                        errorDetails: error.details,
+                        errorHint: error.hint,
+                        fullError: error
+                    });
+                    AuditLogger.error('FORM_SUBMISSION', 'Audit submission failed!', {
+                        error: error.message,
+                        table: currentScorecard.table_name,
+                        operation: isEditingExistingAudit ? 'UPDATE' : (isEditingPendingAudit ? 'UPDATE_PENDING' : 'INSERT')
+                    });
                     
                     // Hide loader before showing error dialog
                     const loader = document.getElementById('auditSubmitLoader');
@@ -11327,6 +11564,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Reset submitting flag so user can try again
                     isSubmitting = false;
+                    AuditLogger.groupEnd();
                     
                     // Check if this is a missing column error
                     const isMissingColumnError = error.message && (
@@ -11380,21 +11618,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Store audit ID for redirect (before any variables get cleared)
                 const savedAuditId = data && data[0] ? data[0].id : (currentEditingAuditId || null);
                 
+                AuditLogger.success('FORM_SUBMISSION', '🎉 Audit saved successfully!', {
+                    auditId: savedAuditId,
+                    operation: wasEditingExistingAudit ? 'UPDATE' : 'INSERT',
+                    table: currentScorecard.table_name
+                });
+                
                 // Send email notification to the audited employee
                 if (data && data[0] && (data[0].employee_email || auditPayload.employee_email)) {
+                    AuditLogger.info('NOTIFICATIONS', 'Sending email notification');
                     try {
                         await sendAuditEmailNotification(data[0], currentScorecard);
+                        AuditLogger.success('NOTIFICATIONS', 'Email notification sent successfully');
                     } catch (emailError) {
-                        // Log error but don't fail the audit submission
-                        console.error('Error sending email notification:', emailError);
+                        AuditLogger.error('NOTIFICATIONS', 'Email notification failed (non-blocking)', emailError);
                     }
                     
                     // Send webhook to n8n workflow for email notification
+                    AuditLogger.info('NOTIFICATIONS', 'Sending n8n webhook notification');
                     try {
                         await sendN8nWebhook(data[0], currentScorecard);
+                        AuditLogger.success('NOTIFICATIONS', 'n8n webhook sent successfully');
                     } catch (n8nError) {
-                        // Log error but don't fail the audit submission
-                        console.error('Error sending n8n webhook:', n8nError);
+                        AuditLogger.error('NOTIFICATIONS', 'n8n webhook failed (non-blocking)', n8nError);
                     }
                 }
                 
@@ -11402,13 +11648,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const loader = document.getElementById('auditSubmitLoader');
                 if (loader) {
                     loader.classList.remove('show');
+                    AuditLogger.debug('UI', 'Submission loader hidden');
                 }
                 
                 // Show success message
                 // Clear timer state after successful submission
                 if (window.clearTimerState) {
                     window.clearTimerState();
+                    AuditLogger.debug('TIMER', 'Timer state cleared');
                 }
+                
+                const totalTime = AuditLogger.endTimer('formSubmission');
+                AuditLogger.success('FORM_SUBMISSION', `Total submission time: ${totalTime}ms`);
+                AuditLogger.info('FORM_SUBMISSION', '='.repeat(50));
+                AuditLogger.groupEnd();
                 
                 const message = wasEditingExistingAudit ? 'Audit updated successfully!' : 'Audit submitted successfully!';
                 const confirmed = await window.confirmationDialog.show({
@@ -12062,8 +12315,8 @@ async function loadAssignmentFromURL(assignmentId) {
                     const feedbackValue = normalizedAIData[feedbackKey];
                     
                     if (feedbackValue && fieldValue > 0) {
-                        // feedbackValue can be an array or a single string
-                        const feedbackArray = Array.isArray(feedbackValue) ? feedbackValue : [feedbackValue];
+                        // Convert feedback to array format (handles string, newline-separated, JSON array)
+                        const feedbackArray = convertFeedbackToArray(feedbackValue);
                         if (feedbackArray.length > 0) {
                             // Set feedback values
                             for (let index = 0; index < feedbackArray.length; index++) {
@@ -15214,8 +15467,8 @@ async function loadConversationDataIntoForm(conversationData) {
                     const feedbackValue = aiScorecardData[feedbackKey];
                     
                     if (feedbackValue && fieldValue > 0) {
-                        // feedbackValue can be an array or a single string
-                        const feedbackArray = Array.isArray(feedbackValue) ? feedbackValue : [feedbackValue];
+                        // Convert feedback to array format (handles string, newline-separated, JSON array)
+                        const feedbackArray = convertFeedbackToArray(feedbackValue);
                         if (feedbackArray.length > 0) {
                             // Set feedback values
                             for (let index = 0; index < feedbackArray.length; index++) {
