@@ -11319,6 +11319,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error saving to Supabase:', error);
                     console.error('Error details:', JSON.stringify(error, null, 2));
                     
+                    // Hide loader before showing error dialog
+                    const loader = document.getElementById('auditSubmitLoader');
+                    if (loader) {
+                        loader.classList.remove('show');
+                    }
+                    
+                    // Reset submitting flag so user can try again
+                    isSubmitting = false;
+                    
                     // Check if this is a missing column error
                     const isMissingColumnError = error.message && (
                         error.message.includes('Could not find') && error.message.includes('column') ||
