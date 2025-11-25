@@ -188,10 +188,6 @@ window.generateAuditHeader = function(options = {}) {
                 <p style="font-size: 0.6064rem; font-weight: 700; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${escapeHtml(audit.totalErrorsCount || '0')}</p>
             </div>
             <div style="background: rgba(255,255,255,0.15); border-radius: 0.2425rem; padding: 0.3234rem 0.4852rem; backdrop-filter: blur(0.3516rem);">
-                <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0808rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0122rem; line-height: 1;">Type</p>
-                <p style="font-size: 0.4852rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(audit.auditType || 'N/A')}">${escapeHtml(audit.auditType || 'N/A')}</p>
-            </div>
-            <div style="background: rgba(255,255,255,0.15); border-radius: 0.2425rem; padding: 0.3234rem 0.4852rem; backdrop-filter: blur(0.3516rem);">
                 <p style="font-size: 0.4043rem; color: rgba(255,255,255,0.8); margin: 0 0 0.0808rem 0; font-family: 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: 0.0122rem; line-height: 1;">Date</p>
                 <p style="font-size: 0.4852rem; font-weight: 600; margin: 0; font-family: 'Poppins', sans-serif; line-height: 1.2;">${formatDate(audit.auditTimestamp, true)}</p>
             </div>
