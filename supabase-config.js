@@ -24,12 +24,22 @@ let supabaseClient = null
 // Initialize Supabase when the library is loaded
 function initializeSupabase() {
 if (typeof window.supabase !== 'undefined') {
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  // Initialize Supabase client with explicit auth configuration
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      autoRefreshToken: true,        // Automatically refresh the token before it expires
+      persistSession: true,           // Persist session in localStorage
+      detectSessionInUrl: true,       // Detect OAuth callbacks in URL
+      storage: window.localStorage,   // Use localStorage for session storage
+      storageKey: 'supabase.auth.token', // Key for storing auth token
+      flowType: 'pkce'                // Use PKCE flow for better security
+    }
+  })
   
   // Make it globally available
   window.supabaseClient = supabaseClient
   
-  console.log('Supabase client initialized successfully')
+  console.log('Supabase client initialized successfully with auto-refresh enabled')
   return true
 }
 return false
@@ -135,6 +145,61 @@ onAuthStateChange(callback) {
   }
   
   return supabaseClient.auth.onAuthStateChange(callback)
+},
+
+/**
+ * Get the current session (includes access token)
+ */
+async getSession() {
+  if (!supabaseClient) {
+    return null
+  }
+  
+  const { data: { session }, error } = await supabaseClient.auth.getSession()
+  
+  if (error) {
+    console.error('Get session error:', error)
+    return null
+  }
+  
+  return session
+},
+
+/**
+ * Refresh the current session
+ */
+async refreshSession() {
+  if (!supabaseClient) {
+    return null
+  }
+  
+  const { data: { session }, error } = await supabaseClient.auth.refreshSession()
+  
+  if (error) {
+    console.error('Refresh session error:', error)
+    return null
+  }
+  
+  console.log('Session refreshed successfully')
+  return session
+},
+
+/**
+ * Check if the current session is valid and not expired
+ */
+async isSessionValid() {
+  const session = await this.getSession()
+  
+  if (!session) {
+    return false
+  }
+  
+  // Check if token is expired or about to expire (within 60 seconds)
+  const expiresAt = session.expires_at
+  const now = Math.floor(Date.now() / 1000)
+  const buffer = 60 // 60 second buffer
+  
+  return expiresAt && (expiresAt - now) > buffer
 }
 }
 
