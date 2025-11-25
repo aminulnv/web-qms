@@ -2873,7 +2873,7 @@ async function updateYourStats() {
                     try {
                         const { data, error } = await window.supabaseClient
                             .from(scorecard.table_name)
-                            .select('id, ' + reversalFilterField + ', reversal_requested_at, reversal_status, reversal_resolved_at')
+                            .select('id, ' + reversalFilterField + ', reversal_requested_at, reversal_approved, reversal_responded_at')
                             .not('reversal_requested_at', 'is', null);
                         
                         if (!error && data) {
@@ -2896,8 +2896,11 @@ async function updateYourStats() {
                             
                             // Count active and resolved reversals
                             filteredReversals.forEach(reversal => {
-                                const status = reversal.reversal_status || '';
-                                const isResolved = reversal.reversal_resolved_at !== null && reversal.reversal_resolved_at !== undefined;
+                                // Compute status from existing columns
+                                const status = reversal.reversal_responded_at === null ? 'Pending' :
+                                              reversal.reversal_approved === true ? 'Approved' :
+                                              reversal.reversal_approved === false ? 'Rejected' : 'Pending';
+                                const isResolved = reversal.reversal_responded_at !== null && reversal.reversal_responded_at !== undefined;
                                 
                                 if (isResolved || status.toLowerCase() === 'resolved' || status.toLowerCase() === 'approved' || status.toLowerCase() === 'rejected') {
                                     resolvedReversals++;
@@ -2940,7 +2943,7 @@ async function updateYourStats() {
                     try {
                         const { data: audits, error } = await window.supabaseClient
                             .from(scorecard.table_name)
-                            .select('average_score, averageScore, passing_status, passingStatus, submitted_at, ' + auditFilterField)
+                            .select('average_score, passing_status, submitted_at, ' + auditFilterField)
                             .not('submitted_at', 'is', null);
                         
                         if (!error && audits) {
