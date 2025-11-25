@@ -1306,48 +1306,6 @@
                 <table style="width: 100%; border-collapse: collapse; min-width: fit-content; font-size: 0.6069rem;">
                     <thead style="position: sticky; top: 0; z-index: 10; background: var(--background-white); overflow: visible;">
                         <tr style="background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light);">
-                            <th colspan="12" style="padding: 0.3234rem 0.4852rem; text-align: right; font-weight: normal; border-bottom: 0.0625rem solid var(--border-light);">
-                                <div class="column-tooltip-container" style="display: flex; align-items: center; gap: 0.2425rem; position: relative; justify-content: flex-end;">
-                                    <span style="font-size: 0.4852rem; color: #6b7280; font-weight: 500;">Audit Recommendation Logic</span>
-                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s; width: 0.8086rem; height: 0.8086rem; border-radius: 50%; background: #e5e7eb; color: #6b7280;" onmouseover="this.style.background='#d1d5db'; this.style.color='#374151';" onmouseout="this.style.background='#e5e7eb'; this.style.color='#6b7280';">
-                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.5659rem; height: 0.5659rem;" viewBox="0 -960 960 960" fill="currentColor">
-                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="column-tooltip" style="position: fixed; width: 24rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 24rem;">
-                                        <div style="font-weight: 600; margin-bottom: 0.75rem; font-size: 0.875rem; color: #ffffff;">Audit Recommendation & Priority Logic</div>
-                                        <div style="color: #d1d5db; line-height: 1.6;">
-                                            <div style="margin-bottom: 0.75rem;">
-                                                <div style="font-weight: 600; margin-bottom: 0.375rem; color: #fbbf24; font-size: 0.8125rem;">📊 Sorting Priority (Highest to Lowest):</div>
-                                                <ol style="margin: 0; padding-left: 1.25rem; color: #e5e7eb;">
-                                                    <li style="margin-bottom: 0.25rem;"><strong style="color: #fbbf24;">Error Count</strong> - When AI audit is completed, conversations with highest error count are prioritized first</li>
-                                                    <li style="margin-bottom: 0.25rem;"><strong>Lowest Rating</strong> - Conversations with lower CSAT ratings (1-5 scale) are prioritized</li>
-                                                    <li style="margin-bottom: 0.25rem;"><strong>Lowest CX Score</strong> - Conversations with lower CX Score ratings are prioritized</li>
-                                                    <li><strong>Longest Length</strong> - Longer conversations (more messages) are prioritized</li>
-                                                </ol>
-                                            </div>
-                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
-                                                <div style="font-weight: 600; margin-bottom: 0.375rem; color: #fbbf24; font-size: 0.8125rem;">🎯 Top Recommendations:</div>
-                                                <ul style="margin: 0; padding-left: 1.25rem; color: #e5e7eb;">
-                                                    <li style="margin-bottom: 0.25rem;">The top <strong>3 available conversations</strong> (not already audited) are highlighted in <span style="color: #fbbf24; font-weight: 600;">yellow</span></li>
-                                                    <li style="margin-bottom: 0.25rem;">Already audited conversations are automatically excluded from recommendations</li>
-                                                    <li>If some of the top 3 are already audited, the next available conversations are recommended instead</li>
-                                                </ul>
-                                            </div>
-                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
-                                                <div style="font-weight: 600; margin-bottom: 0.375rem; color: #fbbf24; font-size: 0.8125rem;">💡 Visual Indicators:</div>
-                                                <ul style="margin: 0; padding-left: 1.25rem; color: #e5e7eb;">
-                                                    <li style="margin-bottom: 0.25rem;"><span style="color: #fef3c7; font-weight: 600;">Yellow highlight</span> = Recommended for audit</li>
-                                                    <li style="margin-bottom: 0.25rem;"><span style="color: #f3f4f6; font-weight: 600;">Gray background</span> = Already audited (excluded)</li>
-                                                    <li><span style="color: #f0fdf4; font-weight: 600;">Green border</span> = AI audit completed</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                        </tr>
-                        <tr style="background: var(--background-white); border-bottom: 0.0625rem solid var(--border-light);">
                             <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; width: 3rem;">
                                 <input type="checkbox" id="selectAllPullConversations" style="cursor: pointer;" title="Select all conversations">
                             </th>
@@ -1473,26 +1431,6 @@
                             </th>
                             <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
                                 <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
-                                    <span>AI Status</span>
-                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.5rem; height: 0.5rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
-                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
-                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">AI Audit Status</div>
-                                        <div style="color: #d1d5db; line-height: 1.5;">
-                                            <p style="margin: 0 0 0.5rem 0;">Status of AI audit processing for this conversation. Click to view results or start manual audit.</p>
-                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
-                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Statuses:</div>
-                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #3B82F6;">🔄 Processing</span> (In progress), <span style="color: #10B981;">✅ Completed</span> (Results available), <span style="color: #EF4444;">❌ Failed</span> (Error occurred)</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
-                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
                                     <span>Errors Detected</span>
                                     <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
                                         <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.5rem; height: 0.5rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
@@ -1542,6 +1480,26 @@
                                             <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
                                                 <div style="font-weight: 500; margin-bottom: 0.25rem;">Example:</div>
                                                 <p style="margin: 0; color: #9ca3af;">"Nov 4" (hover to see full date: Nov 4, 2025, 10:30 AM)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="padding: 0.25rem 0.375rem; text-align: center; font-weight: 600; color: #374151; font-size: 0.6069rem; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em; overflow: visible;">
+                                <div class="column-tooltip-container" style="display: flex; align-items: center; justify-content: center; gap: 0.125rem; position: relative;">
+                                    <span>AI Status</span>
+                                    <div class="info-icon" style="display: flex; align-items: center; justify-content: center; cursor: help; transition: opacity 0.2s;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" style="width: 0.5rem; height: 0.5rem; color: #4b5563;" viewBox="0 -960 960 960" fill="currentColor">
+                                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="column-tooltip" style="position: fixed; width: 20rem; background: #1f2937; color: white; font-size: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 9999; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; text-align: left; font-weight: normal; text-transform: none; letter-spacing: normal; white-space: normal; word-wrap: break-word; max-width: 20rem;">
+                                        <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.8125rem;">AI Audit Status</div>
+                                        <div style="color: #d1d5db; line-height: 1.5;">
+                                            <p style="margin: 0 0 0.5rem 0;">Status of AI audit processing for this conversation. Click to view results or start manual audit.</p>
+                                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">
+                                                <div style="font-weight: 500; margin-bottom: 0.25rem;">Statuses:</div>
+                                                <p style="margin: 0; color: #9ca3af;"><span style="color: #3B82F6;">🔄 Processing</span> (In progress), <span style="color: #1A733E;">✅ Completed</span> (Results available), <span style="color: #EF4444;">❌ Failed</span> (Error occurred)</p>
                                             </div>
                                         </div>
                                     </div>
@@ -4777,12 +4735,9 @@ function createIndividualAuditCardHTML(audit, isAgent, isNested) {
                     <span style="font-size: 0.6069rem; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 10rem;">${escapeHtml(audit.scorecards?.name || 'Unknown Scorecard')}</span>
                 </div>
                 
-                <!-- Middle: Crucial Info (Status Chip, Employee, Date) -->
+                <!-- Middle: Crucial Info (Status Chip, Date) -->
                 <div style="display: flex; align-items: center; gap: 0.4852rem; flex: 1; min-width: 0; overflow: hidden;">
                     ${statusBadge}
-                    <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
-                    <span style="font-size: 0.5252rem; color: #374151; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 7rem;">${escapeHtml(employeeName)}</span>
-                    ${adminAlias ? `<span style="font-size: 0.4447rem; color: #1A733E; font-weight: 500; background: #f0fdf4; padding: 0.0404rem 0.1213rem; border-radius: 0.0808rem; border: 0.0202rem solid #86efac; white-space: nowrap; margin: 0 0.1617rem;" title="Intercom Admin Alias">${escapeHtml(adminAlias)}</span>` : ''}
                     <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap; margin: 0 0.1617rem;">•</span>
                     <span style="font-size: 0.5252rem; color: #6b7280; white-space: nowrap;">${dateFormatted}</span>
                 </div>
@@ -8218,9 +8173,9 @@ async function displayPullConversationsList(conversations) {
             row.style.animation = 'pulse 2s ease-in-out infinite';
             row.style.transition = 'all 0.3s ease-in-out';
         } else if (aiStatusType === 'completed') {
-            // AI Audit completed - green background
+            // AI Audit completed - green background with theme color
             row.style.backgroundColor = '#f0fdf4';
-            row.style.borderLeft = '0.25rem solid #10b981';
+            row.style.borderLeft = '0.25rem solid #1A733E';
             row.style.transition = 'all 0.3s ease-in-out';
         } else if (aiStatusType === 'failed') {
             // AI Audit failed - red background
@@ -8349,19 +8304,19 @@ async function displayPullConversationsList(conversations) {
             if (statusType === 'completed') {
                 // Completed badge - larger, clearer
                 const tooltipText = `AI Audit completed ${createdAtTime}${createdByEmail ? ` by ${createdByName}` : ''}${confidenceScore ? `. Confidence: ${confidenceScore}%` : ''}. Click to view results or start manual audit.`;
-                aiStatusBadge = `<span class="ai-status-badge" data-conversation-id="${conversationId}" data-status="completed" style="display: inline-flex; align-items: center; gap: 0.25rem; background: #10b981; color: white; padding: 0.12rem 0.375rem; border-radius: 0.2rem; font-size: 0.5rem; font-weight: 700; white-space: nowrap; margin-left: 0.25rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);" onmouseover="this.style.background='#059669'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 4px rgba(16, 185, 129, 0.4)';" onmouseout="this.style.background='#10b981'; this.style.transform='scale(1)'; this.style.boxShadow='0 1px 2px rgba(16, 185, 129, 0.3)';" title="${tooltipText}">
+                aiStatusBadge = `<span class="ai-status-badge" data-conversation-id="${conversationId}" data-status="completed" style="display: inline-flex; align-items: center; gap: 0.25rem; background: #1A733E; color: white; padding: 0.12rem 0.375rem; border-radius: 0.2rem; font-size: 0.5rem; font-weight: 700; white-space: nowrap; margin-left: 0.25rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(26, 115, 62, 0.3);" onmouseover="this.style.background='#15582E'; this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 4px rgba(26, 115, 62, 0.4)';" onmouseout="this.style.background='#1A733E'; this.style.transform='scale(1)'; this.style.boxShadow='0 1px 2px rgba(26, 115, 62, 0.3)';" title="${tooltipText}">
                     <span>✅</span>
                     <span>AI Audited</span>
                 </span>`;
                 
                 // Status column content
                 aiStatusColumn = `
-                    <div style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center;">
+                    <div class="ai-status-cell" style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center; position: relative;">
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
-                            <span style="color: #10b981; font-weight: 700; font-size: 0.5rem;">Completed</span>
+                            <span style="background: #1A733E; color: white; padding: 0.12rem 0.375rem; border-radius: 0.2rem; font-weight: 700; font-size: 0.5rem; white-space: nowrap;">Completed</span>
                         </div>
-                        <span style="color: #6b7280; font-size: 0.4447rem;">${createdAtTime}</span>
-                        ${confidenceScore ? `<span style="color: #059669; font-size: 0.4rem; font-weight: 600;">${confidenceScore}% confidence</span>` : ''}
+                        <span class="ai-status-time" style="color: #6b7280; font-size: 0.4447rem;">${createdAtTime}</span>
+                        ${confidenceScore ? `<span style="color: #15582E; font-size: 0.4rem; font-weight: 600;">${confidenceScore}% confidence</span>` : ''}
                     </div>
                 `;
             } else if (statusType === 'in_progress') {
@@ -8375,14 +8330,14 @@ async function displayPullConversationsList(conversations) {
                 
                 // Status column content with spinner
                 aiStatusColumn = `
-                    <div style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center;">
+                    <div class="ai-status-cell" style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center; position: relative;">
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
                             <svg class="spinner" style="width: 0.625rem; height: 0.625rem; color: #3b82f6; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                             <span style="color: #3b82f6; font-weight: 700; font-size: 0.5rem;">Processing...</span>
                         </div>
-                        <span style="color: #6b7280; font-size: 0.4447rem;">Started ${createdAtTime}</span>
+                        <span class="ai-status-time" style="color: #6b7280; font-size: 0.4447rem;">Started ${createdAtTime}</span>
                     </div>
                 `;
             } else if (statusType === 'failed') {
@@ -8394,12 +8349,12 @@ async function displayPullConversationsList(conversations) {
                 
                 // Status column content
                 aiStatusColumn = `
-                    <div style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center;">
+                    <div class="ai-status-cell" style="display: flex; flex-direction: column; gap: 0.1rem; align-items: center; position: relative;">
                         <div style="display: flex; align-items: center; gap: 0.25rem;">
                             <span style="color: #ef4444; font-size: 0.75rem;">❌</span>
                             <span style="color: #ef4444; font-weight: 700; font-size: 0.5rem;">Failed</span>
                         </div>
-                        <span style="color: #6b7280; font-size: 0.4447rem;">${createdAtTime}</span>
+                        <span class="ai-status-time" style="color: #6b7280; font-size: 0.4447rem;">${createdAtTime}</span>
                     </div>
                 `;
             }
@@ -8408,7 +8363,7 @@ async function displayPullConversationsList(conversations) {
         // Format AI error count
         let aiErrorCountHtml = '<span style="color: #9ca3af; font-size: 0.5252rem;">-</span>';
         if (aiErrorCount !== null && aiStatusType === 'completed') {
-            const errorColor = aiErrorCount === 0 ? '#10b981' : aiErrorCount <= 2 ? '#f59e0b' : '#ef4444';
+            const errorColor = aiErrorCount === 0 ? '#1A733E' : aiErrorCount <= 2 ? '#f59e0b' : '#ef4444';
             aiErrorCountHtml = `<span style="color: ${errorColor}; font-weight: 600; font-size: 0.6069rem;">${aiErrorCount}</span>`;
         }
         
@@ -8436,10 +8391,10 @@ async function displayPullConversationsList(conversations) {
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${ratingHtml}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${cxScoreHtml}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${lengthDisplay}</td>
-            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${aiStatusColumn}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${aiErrorCountHtml}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; max-width: 8rem;">${tagsHtml}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; font-size: 0.5252rem; color: #6b7280; white-space: nowrap; text-align: center;" title="${createdDate}">${createdDateShort}</td>
+            <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">${aiStatusColumn}</td>
             <td style="padding: 0.25rem 0.375rem; vertical-align: middle; text-align: center;">
                 <div style="display: flex; gap: 0.25rem; justify-content: center; align-items: center; flex-wrap: wrap;">
                     <button 
