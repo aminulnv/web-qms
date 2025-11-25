@@ -627,7 +627,7 @@
             
             <!-- Quick Actions List -->
             <div id="quickActionsList" class="flex-1 overflow-y-auto divide-y divide-gray-200">
-              <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='create-audit.html'">
+              <div id="quickActionCreateAudit" class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='create-audit.html'">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
                     <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -666,7 +666,7 @@
                   </div>
                 </div>
               </div>
-              <div class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='settings.html'">
+              <div id="quickActionSettings" class="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='settings.html'">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
                     <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1830,6 +1830,11 @@ async function initializeDashboard() {
       if (updatesTitle) updatesTitle.textContent = 'Updates to my audits';
       const createAuditBtn = document.getElementById('createAuditBtn');
       if (createAuditBtn) createAuditBtn.style.display = 'none';
+      // Hide Create Audit and Settings from Quick Actions for employees
+      const quickActionCreateAudit = document.getElementById('quickActionCreateAudit');
+      if (quickActionCreateAudit) quickActionCreateAudit.style.display = 'none';
+      const quickActionSettings = document.getElementById('quickActionSettings');
+      if (quickActionSettings) quickActionSettings.style.display = 'none';
       const inProgressCard = document.getElementById('inProgressCard');
       if (inProgressCard) inProgressCard.style.display = 'none';
       const avgDurationCard = document.getElementById('avgDurationCard');
