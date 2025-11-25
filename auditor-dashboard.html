@@ -825,7 +825,7 @@ async function fetchAndCacheTeamStats(period) {
                 await loadScorecards();
             }
             
-            // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
+            // Discover all audit tables using get_audit_tables RPC (matching audit-reports.html)
             let tablesToQuery = [];
             try {
                 const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
@@ -1002,7 +1002,7 @@ async function fetchAndCacheTeamStats(period) {
             await loadScorecards();
         }
         
-        // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
+        // Discover all audit tables using get_audit_tables RPC (matching audit-reports.html)
         let auditorTablesToQuery = [];
         try {
             const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
@@ -1711,7 +1711,7 @@ async function fetchAndCacheStandupView(period) {
                 await loadScorecards();
             }
             
-            // Discover all audit tables using get_audit_tables RPC (matching expert-audits.html)
+            // Discover all audit tables using get_audit_tables RPC (matching audit-reports.html)
             let standupTablesToQuery = [];
             try {
                 const { data: allTables, error: tablesError } = await window.supabaseClient.rpc('get_audit_tables');
@@ -2534,7 +2534,7 @@ function updateWeekDisplay() {
     }
     
     // Always enable week navigation buttons - they can switch to week view when clicked
-    // Matching employee-performance.html and expert-audits.html UX
+    // Matching employee-performance.html and audit-reports.html UX
     if (prevWeekBtn) {
         prevWeekBtn.disabled = false;
         prevWeekBtn.style.opacity = '1';
@@ -2795,7 +2795,7 @@ window.applyQuickDateFilter = function(period) {
 };
 
 // Helper function to normalize passing status (handles both old and new values)
-// Matching expert-audits.html implementation
+// Matching audit-reports.html implementation
 function normalizePassingStatus(status) {
     if (!status) return status;
     

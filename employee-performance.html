@@ -910,13 +910,13 @@ if (typeof ChartDataLabels !== 'undefined') {
 // ============================================================================
 let charts = {};
 let allAssignments = [];
-let allAudits = []; // Will be loaded using EXACT same logic as expert-audits.html
-let filteredAudits = []; // Will be set by filterAudits() - same as expert-audits.html
+let allAudits = []; // Will be loaded using EXACT same logic as audit-reports.html
+let filteredAudits = []; // Will be set by filterAudits() - same as audit-reports.html
 let filteredAssignments = [];
 let allUsers = [];
 let allScorecardParameters = {}; // Map of scorecard_id -> parameters
-let allScorecards = []; // Store all scorecards - loaded same way as expert-audits.html
-let currentScorecard = null; // For compatibility with expert-audits.html logic
+let allScorecards = []; // Store all scorecards - loaded same way as audit-reports.html
+let currentScorecard = null; // For compatibility with audit-reports.html logic
 let dateFilter = { start: null, end: null };
 let currentFilters = { channel: '', status: '', agent: '' }; // Not used for filtering anymore
 
@@ -1166,7 +1166,7 @@ async function loadAllDataFresh(background = false) {
         // Load scorecards first (needed for loadAuditsData)
         await loadScorecardsForPerformance();
 
-        // Load all audits using EXACT same logic as expert-audits.html
+        // Load all audits using EXACT same logic as audit-reports.html
         await loadAuditsData();
 
         // Update cache timestamp
@@ -1196,7 +1196,7 @@ async function loadAllDataFresh(background = false) {
     }
 }
 
-// Load scorecards (EXACT copy from expert-audits.html loadScorecards)
+// Load scorecards (EXACT copy from audit-reports.html loadScorecards)
 async function loadScorecardsForPerformance() {
     try {
         const { data, error } = await window.supabaseClient
@@ -1244,13 +1244,13 @@ async function loadScorecardsForPerformance() {
 }
 
 // ============================================================================
-// EXACT COPY OF DATA LOADING FROM expert-audits.html
+// EXACT COPY OF DATA LOADING FROM audit-reports.html
 // ============================================================================
 
 // Cache for scorecard parameters to avoid repeated queries
 let scorecardParametersCache = {};
 
-// Load scorecard parameters for a scorecard (EXACT copy from expert-audits.html)
+// Load scorecard parameters for a scorecard (EXACT copy from audit-reports.html)
 async function loadScorecardParametersForStats(scorecardId) {
     if (!scorecardId) return [];
     
@@ -1280,7 +1280,7 @@ async function loadScorecardParametersForStats(scorecardId) {
     }
 }
 
-// Calculate critical error count for a single audit (EXACT copy from expert-audits.html)
+// Calculate critical error count for a single audit (EXACT copy from audit-reports.html)
 async function calculateCriticalErrorCount(audit) {
     const scorecardId = audit._scorecard_id;
     if (!scorecardId) return 0;
@@ -1319,7 +1319,7 @@ async function calculateCriticalErrorCount(audit) {
     return criticalErrorCount;
 }
 
-// Normalize passing status (EXACT copy from expert-audits.html)
+// Normalize passing status (EXACT copy from audit-reports.html)
 function normalizePassingStatus(status) {
     if (!status) return status;
     // Convert old values to new ones for consistency
@@ -1328,7 +1328,7 @@ function normalizePassingStatus(status) {
     return status; // Return as-is if already normalized or unknown
 }
 
-// Load audits from Supabase (EXACT copy from expert-audits.html loadAudits function)
+// Load audits from Supabase (EXACT copy from audit-reports.html loadAudits function)
 async function loadAuditsData(forceRefresh = false) {
     try {
         if (!window.supabaseClient) {
@@ -1448,7 +1448,7 @@ async function loadAuditsData(forceRefresh = false) {
                 }
                 
                 if (data && data.length > 0) {
-                    // Filter out incomplete audits (pending/in_progress) - EXACT same as expert-audits.html
+                    // Filter out incomplete audits (pending/in_progress) - EXACT same as audit-reports.html
                     let filteredData = data;
                     filteredData = filteredData.filter(audit => {
                         const auditStatus = audit.audit_status;
@@ -1473,7 +1473,7 @@ async function loadAuditsData(forceRefresh = false) {
             }
         }
         
-        // Sort by submitted_at descending - EXACT same as expert-audits.html
+        // Sort by submitted_at descending - EXACT same as audit-reports.html
         combinedAudits.sort((a, b) => {
             const dateA = toDhakaTime(a.submitted_at);
             const dateB = toDhakaTime(b.submitted_at);
@@ -1482,7 +1482,7 @@ async function loadAuditsData(forceRefresh = false) {
         
         if (combinedAudits.length > 0) {
             // Convert snake_case to camelCase for common fields, but preserve all original data
-            // EXACT same mapping as expert-audits.html
+            // EXACT same mapping as audit-reports.html
             allAudits = combinedAudits.map(audit => {
                 const mapped = {
                     // Keep ALL original fields (including dynamic error columns and scorecard info)
@@ -1567,11 +1567,11 @@ async function loadAuditsData(forceRefresh = false) {
 // Filtering
 // ============================================================================
 // Helper function to get current period dates based on week/date filter
-// Matches EXACT logic from expert-audits.html filterAudits function
+// Matches EXACT logic from audit-reports.html filterAudits function
 function getCurrentPeriodDates() {
-    // Return date filter strings (not Date objects) to match expert-audits.html
+    // Return date filter strings (not Date objects) to match audit-reports.html
     // The actual date filtering will be done in getFilteredAuditsBySubmissionDate()
-    // using the same logic as expert-audits.html filterAudits()
+    // using the same logic as audit-reports.html filterAudits()
     return { 
         start: dateFilter.start || null, 
         end: dateFilter.end || null,
@@ -1581,9 +1581,9 @@ function getCurrentPeriodDates() {
     };
 }
 
-// Filter audits - EXACT same logic as expert-audits.html filterAudits (date filtering only, no type filters)
+// Filter audits - EXACT same logic as audit-reports.html filterAudits (date filtering only, no type filters)
 async function filterAuditsForPerformance() {
-    // Apply week or date filter first - EXACT same as expert-audits.html
+    // Apply week or date filter first - EXACT same as audit-reports.html
     let dateFilteredAudits = [...allAudits];
     
     if (dateFilter.start || dateFilter.end) {
@@ -1618,7 +1618,7 @@ async function filterAuditsForPerformance() {
         });
     }
     
-    // NO type filters applied - just date filtering (same as expert-audits.html when no filters selected)
+    // NO type filters applied - just date filtering (same as audit-reports.html when no filters selected)
     filteredAudits = dateFilteredAudits;
     
     console.log('filterAuditsForPerformance: filteredAudits.length =', filteredAudits.length);
@@ -1640,7 +1640,7 @@ function getFilteredAuditsBySubmissionDate() {
 }
 
 function populateFilters() {
-    // Populate channels from ALL audits (not just assignments), same as expert-audits.html
+    // Populate channels from ALL audits (not just assignments), same as audit-reports.html
     const channels = [...new Set(allAudits.map(a => a.channel).filter(Boolean))].sort();
     const channelSelect = document.getElementById('filterChannel');
     // Clear existing options except "All Channels"
@@ -1652,7 +1652,7 @@ function populateFilters() {
         channelSelect.appendChild(option);
     });
 
-    // Populate agents from ALL audits (not just assignments), same as expert-audits.html
+    // Populate agents from ALL audits (not just assignments), same as audit-reports.html
     const agents = [...new Set(allAudits.map(a => a.employee_email).filter(Boolean))].sort();
     const agentSelect = document.getElementById('filterAgent');
     // Clear existing options except "All Agents"
@@ -1666,14 +1666,14 @@ function populateFilters() {
 }
 
 function applyAllFilters() {
-    // NO type filters applied - only date filters (same as expert-audits.html)
+    // NO type filters applied - only date filters (same as audit-reports.html)
     // Filter audits (which will call updateStatisticsForPerformance and update all views)
     filterAuditsForPerformance();
     // Note: filterAuditsForPerformance() now calls updateAgentPerformance(), updateCharts(), etc.
 }
 
 function applyFilters() {
-    // NO type filters - filters are disabled to match expert-audits.html behavior
+    // NO type filters - filters are disabled to match audit-reports.html behavior
     // Only date filters are applied
     applyAllFilters();
 }
@@ -1727,17 +1727,17 @@ function applyQuickDateFilter(period) {
 }
 
 // ============================================================================
-// Update Statistics - EXACT copy from expert-audits.html updateStatistics
+// Update Statistics - EXACT copy from audit-reports.html updateStatistics
 // ============================================================================
 async function updateStatisticsForPerformance(auditsForStats = null) {
-    // Use provided audits or filteredAudits - EXACT same as expert-audits.html
+    // Use provided audits or filteredAudits - EXACT same as audit-reports.html
     const statsAudits = auditsForStats || filteredAudits;
     
     const total = statsAudits.length;
     const passing = statsAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Passed').length;
     const notPassing = statsAudits.filter(a => normalizePassingStatus(a.passingStatus) === 'Not Passed').length;
     
-    // Calculate Average Quality Score - EXACT same logic as expert-audits.html
+    // Calculate Average Quality Score - EXACT same logic as audit-reports.html
     const auditsWithScores = statsAudits.filter(a => a.averageScore != null && a.averageScore !== '');
     const avgScore = auditsWithScores.length > 0
         ? Math.round(auditsWithScores.reduce((sum, a) => sum + (parseFloat(a.averageScore) || 0), 0) / auditsWithScores.length)
@@ -1820,13 +1820,13 @@ async function updateStatisticsForPerformance(auditsForStats = null) {
 // ============================================================================
 // Update KPIs from statistics (called by updateStatisticsForPerformance)
 function updateKPIsFromStats(stats) {
-    // Update KPI cards with stats from expert-audits.html calculations
+    // Update KPI cards with stats from audit-reports.html calculations
     document.getElementById('kpi0Date').textContent = '';
     document.getElementById('kpi0Value').innerHTML = '<span class="coming-soon-chip">Coming Soon</span>';
     document.getElementById('kpi0Change').textContent = '';
     document.getElementById('kpi0Change').style.display = 'none';
 
-    // Completed Audits = Total Audits (same as expert-audits.html)
+    // Completed Audits = Total Audits (same as audit-reports.html)
     document.getElementById('kpi1Date').textContent = '';
     document.getElementById('kpi1Value').textContent = stats.total.toLocaleString();
     document.getElementById('kpi1Change').textContent = `+100% than previous period`; // TODO: Calculate actual change
@@ -1838,7 +1838,7 @@ function updateKPIsFromStats(stats) {
     document.getElementById('kpi2Change').textContent = `+100% than previous period`; // TODO: Calculate actual change
     document.getElementById('kpi2Change').className = 'kpi-change negative';
 
-    // Avg. Quality Score - EXACT from expert-audits.html
+    // Avg. Quality Score - EXACT from audit-reports.html
     document.getElementById('kpi3Date').textContent = '';
     document.getElementById('kpi3Value').textContent = `${stats.avgScore}%`;
     document.getElementById('kpi3Change').textContent = `Based on ${stats.auditsWithScores} scored audits`;
@@ -2036,7 +2036,7 @@ function findAuditForAssignment(assignment) {
 // Agent Performance Table
 // ============================================================================
 function updateAgentPerformance() {
-    // Use filteredAudits (set by filterAuditsForPerformance) - same as expert-audits.html
+    // Use filteredAudits (set by filterAuditsForPerformance) - same as audit-reports.html
     // Ensure filteredAudits is available
     console.log('updateAgentPerformance: filteredAudits =', filteredAudits ? filteredAudits.length : 'undefined');
     
@@ -2069,7 +2069,7 @@ function updateAgentPerformance() {
         }
         
         // Use Set to ensure we never count the same audit twice
-        // Use _scorecard_id (from expert-audits.html mapping) or fallback to scorecard_id
+        // Use _scorecard_id (from audit-reports.html mapping) or fallback to scorecard_id
         const scorecardId = audit._scorecard_id || audit.scorecard_id || 'unknown';
         const auditKey = `${audit.id}_${scorecardId}`;
         if (!agentAuditIds[agentEmail].has(auditKey)) {
@@ -2079,7 +2079,7 @@ function updateAgentPerformance() {
             agentMap[agentEmail].total++;
             agentMap[agentEmail].completed++; // All submitted audits are completed
             
-            // Match exact logic from expert-audits.html for score filtering - use averageScore (camelCase)
+            // Match exact logic from audit-reports.html for score filtering - use averageScore (camelCase)
             const score = audit.averageScore || audit.average_score;
             if (score != null && score !== '') {
                 agentMap[agentEmail].scores.push(parseFloat(score) || 0);
@@ -2182,7 +2182,7 @@ function getTopErrorParameter(audits) {
     const errorCounts = {};
     
     audits.forEach(audit => {
-        // Use _scorecard_id (from expert-audits.html mapping) or fallback to scorecard_id
+        // Use _scorecard_id (from audit-reports.html mapping) or fallback to scorecard_id
         const scorecardId = audit._scorecard_id || audit.scorecard_id;
         if (!scorecardId) return;
         
@@ -2342,7 +2342,7 @@ function updateChannelChart() {
         }
         channelMap[channel].total++;
         channelMap[channel].completed++;
-        // Match exact logic from expert-audits.html for score filtering
+        // Match exact logic from audit-reports.html for score filtering
         const score = audit.average_score || audit.averageScore;
         if (score != null && score !== '') {
             channelMap[channel].scores.push(parseFloat(score) || 0);
@@ -2433,7 +2433,7 @@ function updateAnalyticsChart() {
     let data = [];
     const today = new Date();
 
-    // Include ALL audits - NO type filters (agent, channel, etc.) - same as expert-audits.html
+    // Include ALL audits - NO type filters (agent, channel, etc.) - same as audit-reports.html
 
     if (period === 'daily') {
         // Last 7 days
@@ -2605,7 +2605,7 @@ function exportToCSV() {
                 agentMap[agentEmail].total++;
                 agentMap[agentEmail].completed++; // All submitted audits are completed
                 
-                // Match exact logic from expert-audits.html for score filtering
+                // Match exact logic from audit-reports.html for score filtering
                 const score = audit.average_score || audit.averageScore;
                 if (score != null && score !== '') {
                     agentMap[agentEmail].scores.push(parseFloat(score) || 0);
@@ -2743,7 +2743,7 @@ function getWeekNumber(date = null) {
 }
 
 function getWeekDates(weekNumber, year) {
-    // Wrapper function - same as expert-audits.html
+    // Wrapper function - same as audit-reports.html
     return getDhakaWeekDates(weekNumber, year);
 }
 

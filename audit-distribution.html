@@ -2475,7 +2475,7 @@ async function loadCompletedAuditsCache() {
                     filteredData.forEach(audit => {
                         const auditStatus = audit.audit_status;
                         // Only include completed audits or audits without audit_status (legacy completed audits)
-                        // Matching expert-audits.html logic exactly
+                        // Matching audit-reports.html logic exactly
                         const isComplete = !auditStatus || auditStatus === 'completed';
                         if (isComplete && audit.employee_email) {
                             const email = (audit.employee_email || '').toLowerCase().trim();

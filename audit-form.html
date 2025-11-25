@@ -681,7 +681,7 @@
         </div>
     </div>
 
-    <!-- Two Column Layout (matching expert-audits.html) -->
+    <!-- Two Column Layout (matching audit-reports.html) -->
     <div id="auditContent" style="display: flex; padding: 0.5rem 0 0.9704rem 0; max-width: 100%; gap: 0; flex-wrap: nowrap; overflow-x: visible; align-items: stretch; flex: 1; min-height: 0;">
         
         <!-- LEFT COLUMN: Interaction Details + Transcript -->
@@ -1563,7 +1563,7 @@ window.viewCompletedAudit = function(auditId, scorecardId, tableName) {
         });
         return;
     }
-    // Use same format as expert-audits.html for consistency
+    // Use same format as audit-reports.html for consistency
     window.location.href = `audit-view.html?id=${auditId}&scorecard=${scorecardId}&table=${tableName}`;
 };
 
@@ -8267,7 +8267,7 @@ function renderErrorParameters() {
             `;
         }
         
-        // Create row matching expert-audits.html exactly (lines 1232-1243)
+        // Create row matching audit-reports.html exactly (lines 1232-1243)
         const rowDiv = document.createElement('div');
         rowDiv.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 3fr; gap: 0.6469rem; align-items: center; padding: 0.3234rem 0; border-bottom: 0.0405rem solid #f3f4f6;';
         
@@ -11459,8 +11459,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (savedAuditId && scorecardId && tableName) {
                         window.location.href = `audit-view.html?id=${savedAuditId}&scorecard=${scorecardId}&table=${tableName}`;
                     } else {
-                        // Fallback to expert-audits if we don't have the required info
-                        window.location.href = 'expert-audits.html';
+                        // Fallback to audit-reports if we don't have the required info
+                        window.location.href = 'audit-reports.html';
                     }
                 } else {
                     // Scroll to top to show pending audits
@@ -14714,7 +14714,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================================
-// Resizable Splitter Functionality (matching expert-audits.html)
+// Resizable Splitter Functionality (matching audit-reports.html)
 // ============================================================================
 document.addEventListener('DOMContentLoaded', function() {
     const splitter = document.getElementById('splitter');

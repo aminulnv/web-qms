@@ -13,7 +13,7 @@ class SidebarLoader {
       employeeReversals: null,
       acknowledgments: null
     }
-    // Cache duration: 5 minutes (same as expert-audits.html)
+    // Cache duration: 5 minutes (same as audit-reports.html)
     this.CACHE_DURATION_MS = 5 * 60 * 1000
     // Update interval: 5 minutes
     this.UPDATE_INTERVAL_MS = 5 * 60 * 1000
