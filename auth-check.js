@@ -33,14 +33,34 @@ class AuthChecker {
     try {
       // First check Supabase authentication
       if (this.initSupabase()) {
+        // Verify session is valid
+        const isValid = await window.SupabaseAuth.isSessionValid()
+        
+        if (!isValid) {
+          console.log('Session invalid or expired, attempting refresh...')
+          const refreshedSession = await window.SupabaseAuth.refreshSession()
+          
+          if (!refreshedSession) {
+            console.warn('Failed to refresh session, user needs to re-authenticate')
+            this.clearInvalidCache()
+            return null
+          }
+        }
+        
         const authUser = await window.SupabaseAuth.getCurrentUser()
         if (authUser) {
           // Get user data from our users table
           const userData = await window.SupabaseUsers.getUserByEmail(authUser.email)
           
           if (userData) {
-            // Update last login
-            await window.SupabaseUsers.updateLastLogin(userData.email)
+            // Update last login (but not too frequently)
+            const lastCheck = localStorage.getItem('lastLoginUpdate')
+            const now = Date.now()
+            // Only update last login if it's been more than 1 hour
+            if (!lastCheck || (now - parseInt(lastCheck)) > 3600000) {
+              await window.SupabaseUsers.updateLastLogin(userData.email)
+              localStorage.setItem('lastLoginUpdate', now.toString())
+            }
             
             // Update avatar URL from Google if available and not already set
             if (authUser.user_metadata?.avatar_url && !userData.avatar_url) {
@@ -218,7 +238,7 @@ class AuthChecker {
     window.SupabaseAuth.onAuthStateChange(async (event, session) => {
       // Only log significant auth state changes
       if (event !== 'INITIAL_SESSION') {
-        console.log('Auth state changed:', event, session)
+        console.log('Auth state changed:', event, session ? 'Session active' : 'No session')
       }
       
       if (event === 'SIGNED_IN' && session) {
@@ -265,11 +285,71 @@ class AuthChecker {
           console.error('Error processing sign-in:', error)
           localStorage.removeItem(this.STORAGE_KEY)
         }
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        // Token was automatically refreshed - update stored session info
+        console.log('✅ Auth token refreshed successfully')
+        
+        try {
+          // Verify user still exists and is active
+          const userData = await window.SupabaseUsers.getUserByEmail(session.user.email)
+          
+          if (userData && userData.is_active) {
+            // Update stored user info with latest data
+            const userInfo = {
+              id: userData.email,
+              email: userData.email,
+              name: userData.name,
+              avatar: userData.avatar_url,
+              role: userData.role,
+              department: userData.department,
+              designation: userData.designation,
+              employee_id: userData.employee_id,
+              permissions: userData.permissions,
+              provider: 'supabase',
+              is_active: userData.is_active
+            }
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userInfo))
+          } else {
+            // User no longer exists or is deactivated
+            console.warn('User no longer active after token refresh')
+            await window.SupabaseAuth.signOut()
+          }
+        } catch (error) {
+          console.error('Error processing token refresh:', error)
+        }
       } else if (event === 'SIGNED_OUT') {
         // User signed out
+        console.log('User signed out, clearing session data')
         localStorage.removeItem(this.STORAGE_KEY)
+        localStorage.removeItem('lastLoginUpdate')
         if (this.shouldProtectPage()) {
           this.redirectToLogin()
+        }
+      } else if (event === 'USER_UPDATED' && session) {
+        // User metadata was updated
+        console.log('User profile updated')
+        
+        try {
+          const userData = await window.SupabaseUsers.getUserByEmail(session.user.email)
+          
+          if (userData) {
+            const userInfo = {
+              id: userData.email,
+              email: userData.email,
+              name: userData.name,
+              avatar: userData.avatar_url,
+              role: userData.role,
+              department: userData.department,
+              designation: userData.designation,
+              employee_id: userData.employee_id,
+              permissions: userData.permissions,
+              provider: 'supabase',
+              is_active: userData.is_active
+            }
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userInfo))
+          }
+        } catch (error) {
+          console.error('Error processing user update:', error)
         }
       }
     })
