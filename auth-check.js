@@ -284,19 +284,61 @@ class AuthChecker {
    */
   async logout() {
     try {
-      // Try Supabase logout first
-      if (this.initSupabase()) {
-        await window.SupabaseAuth.signOut()
-      } else {
-        // Fallback to localStorage cleanup
-        localStorage.removeItem(this.STORAGE_KEY)
+      // Get user info to check authentication provider
+      const userInfoStr = localStorage.getItem(this.STORAGE_KEY)
+      let provider = 'password' // Default to password
+      
+      if (userInfoStr) {
+        try {
+          const userInfo = JSON.parse(userInfoStr)
+          provider = userInfo.provider || 'password'
+        } catch (error) {
+          console.warn('Error parsing user info during logout:', error)
+        }
       }
       
+      console.log('Logging out user with provider:', provider)
+      
+      // Only sign out from Supabase Auth if user logged in via OAuth
+      if (provider === 'google' || provider === 'supabase') {
+        if (this.initSupabase() && window.SupabaseAuth) {
+          try {
+            console.log('Signing out from Supabase Auth...')
+            await window.SupabaseAuth.signOut()
+            console.log('Supabase Auth sign-out successful')
+          } catch (error) {
+            console.warn('Error signing out from Supabase Auth:', error)
+            // Continue with cleanup even if sign-out fails
+          }
+        } else {
+          console.warn('Supabase Auth not available for sign-out')
+        }
+      } else {
+        console.log('Email/password user - skipping Supabase Auth sign-out')
+      }
+      
+      // Clear all authentication-related localStorage items
+      console.log('Clearing localStorage...')
+      localStorage.removeItem(this.STORAGE_KEY)
+      localStorage.removeItem('sessionToken')
+      localStorage.removeItem('lastLoginUpdate')
+      
+      console.log('Logout complete, redirecting to login page...')
       this.redirectToLogin()
+      
     } catch (error) {
       console.error('Error during logout:', error)
-      // Fallback to localStorage cleanup
-      localStorage.removeItem(this.STORAGE_KEY)
+      
+      // Force cleanup on error - clear everything
+      try {
+        localStorage.removeItem(this.STORAGE_KEY)
+        localStorage.removeItem('sessionToken')
+        localStorage.removeItem('lastLoginUpdate')
+      } catch (cleanupError) {
+        console.error('Error during cleanup:', cleanupError)
+      }
+      
+      // Force redirect even if there are errors
       this.redirectToLogin()
     }
   }

@@ -2119,11 +2119,29 @@ async function populatePremiumDashboard() {
 // Removed toggleUserProfile() - Avatar now navigates directly to profile.html
 // Removed populateUserProfile() - No longer needed
 
-// Logout function
-function logout() {
-  localStorage.removeItem('userInfo');
-  localStorage.removeItem('sessionToken');
-  window.location.href = 'login.html';
+// Logout function - uses AuthChecker for proper logout
+async function logout() {
+  try {
+    // Use AuthChecker for proper logout (handles both OAuth and email/password)
+    if (window.AuthChecker) {
+      const authChecker = new window.AuthChecker()
+      await authChecker.logout()
+    } else {
+      // Fallback if AuthChecker not available
+      console.warn('AuthChecker not available, using fallback logout')
+      localStorage.removeItem('userInfo')
+      localStorage.removeItem('sessionToken')
+      localStorage.removeItem('lastLoginUpdate')
+      window.location.href = 'login.html'
+    }
+  } catch (error) {
+    console.error('Error during logout:', error)
+    // Force cleanup and redirect on error
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('sessionToken')
+    localStorage.removeItem('lastLoginUpdate')
+    window.location.href = 'login.html'
+  }
 }
 
 async function loadAllUsers() {

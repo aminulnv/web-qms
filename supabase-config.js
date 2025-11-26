@@ -109,8 +109,12 @@ async signOut() {
     throw error
   }
   
-  // Clear local storage
+  // Clear all authentication-related local storage items
   localStorage.removeItem('userInfo')
+  localStorage.removeItem('sessionToken')
+  localStorage.removeItem('lastLoginUpdate')
+  
+  console.log('Supabase sign-out complete, localStorage cleared')
   
   return true
 },
