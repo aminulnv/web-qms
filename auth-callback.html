@@ -294,33 +294,43 @@
                 
                 messageEl.textContent = 'Retrieving authentication session...';
                 
-                // Wait for Supabase to process the OAuth callback from URL hash
-                // Supabase automatically processes hash fragments and establishes the session
-                const session = await new Promise((resolve, reject) => {
-                    // Set a timeout in case something goes wrong
-                    const timeout = setTimeout(() => {
-                        reject(new Error('Session timeout - authentication took too long'));
-                    }, 10000);
+                // First, check if we already have a session (faster path)
+                let { data: { session: existingSession } } = await window.supabaseClient.auth.getSession();
+                
+                if (existingSession) {
+                    console.log('Session already exists, using it directly');
+                    var session = existingSession;
+                } else {
+                    // Wait for Supabase to process the OAuth callback from URL hash
+                    // Supabase automatically processes hash fragments and establishes the session
+                    session = await new Promise((resolve, reject) => {
+                        // Set a timeout in case something goes wrong (increased to 30 seconds for slower connections)
+                        const timeout = setTimeout(() => {
+                            reject(new Error('Session timeout - authentication took too long. Please check your internet connection and try again.'));
+                        }, 30000);
 
-                    // Listen for auth state change which fires when session is established
-                    const { data: { subscription } } = window.supabaseClient.auth.onAuthStateChange((event, session) => {
-                        console.log('Auth state changed:', event, session);
-                        if (event === 'SIGNED_IN' && session) {
-                            clearTimeout(timeout);
-                            subscription.unsubscribe();
-                            resolve(session);
-                        }
+                        // Listen for auth state change which fires when session is established
+                        const { data: { subscription } } = window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                            console.log('Auth state changed:', event, session);
+                            if (event === 'SIGNED_IN' && session) {
+                                clearTimeout(timeout);
+                                subscription.unsubscribe();
+                                resolve(session);
+                            }
+                        });
+                        
+                        // Poll for session every 500ms as a fallback
+                        const pollInterval = setInterval(async () => {
+                            const { data: { session: polledSession } } = await window.supabaseClient.auth.getSession();
+                            if (polledSession) {
+                                clearTimeout(timeout);
+                                clearInterval(pollInterval);
+                                if (subscription) subscription.unsubscribe();
+                                resolve(polledSession);
+                            }
+                        }, 500);
                     });
-                    
-                    // Also check if session already exists (in case the event already fired)
-                    window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
-                        if (session) {
-                            clearTimeout(timeout);
-                            subscription.unsubscribe();
-                            resolve(session);
-                        }
-                    });
-                });
+                }
                 
                 if (!session) {
                     throw new Error('Authentication session not found. Please try again.');
