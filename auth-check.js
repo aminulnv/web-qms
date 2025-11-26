@@ -31,100 +31,191 @@ class AuthChecker {
    */
   async checkAuthentication() {
     try {
-      // First check Supabase authentication
-      if (this.initSupabase()) {
-        // Verify session is valid
-        const isValid = await window.SupabaseAuth.isSessionValid()
-        
-        if (!isValid) {
-          console.log('Session invalid or expired, attempting refresh...')
-          const refreshedSession = await window.SupabaseAuth.refreshSession()
+      // First check localStorage for user info
+      const userInfoStr = localStorage.getItem(this.STORAGE_KEY)
+      
+      if (userInfoStr) {
+        try {
+          const user = JSON.parse(userInfoStr)
           
-          if (!refreshedSession) {
-            console.warn('Failed to refresh session, user needs to re-authenticate')
-            this.clearInvalidCache()
-            return null
-          }
-        }
-        
-        const authUser = await window.SupabaseAuth.getCurrentUser()
-        if (authUser) {
-          // Get user data from our users table
-          const userData = await window.SupabaseUsers.getUserByEmail(authUser.email)
-          
-          if (userData) {
-            // Update last login (but not too frequently)
-            const lastCheck = localStorage.getItem('lastLoginUpdate')
-            const now = Date.now()
-            // Only update last login if it's been more than 1 hour
-            if (!lastCheck || (now - parseInt(lastCheck)) > 3600000) {
-              await window.SupabaseUsers.updateLastLogin(userData.email)
-              localStorage.setItem('lastLoginUpdate', now.toString())
+          // Validate user data structure
+          if (user && typeof user === "object" && user.email && user.name) {
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (!emailRegex.test(user.email)) {
+              console.warn('Invalid email format in localStorage')
+              this.clearInvalidCache()
+              return null
             }
             
-            // Update avatar URL from Google if available and not already set
-            if (authUser.user_metadata?.avatar_url && !userData.avatar_url) {
+            // Check authentication type
+            const provider = user.provider || 'password'
+            
+            // For password-based login, verify user exists and is active in database
+            if (provider === 'password') {
+              // Initialize Supabase for database access
+              if (!this.initSupabase()) {
+                // Supabase not ready yet, but allow access with cached data
+                return user
+              }
+              
+              // Wait for SupabaseUsers to be available
+              if (!window.SupabaseUsers) {
+                // Not ready yet, allow access with cached data
+                return user
+              }
+              
               try {
-                await window.SupabaseUsers.updateUser(userData.email, {
-                  avatar_url: authUser.user_metadata.avatar_url
-                })
-                userData.avatar_url = authUser.user_metadata.avatar_url
+                // Verify user still exists and is active
+                const userData = await window.SupabaseUsers.getUserByEmail(user.email.toLowerCase().trim())
+                
+                if (!userData) {
+                  console.warn('User no longer exists in database:', user.email)
+                  this.clearInvalidCache()
+                  return null
+                }
+                
+                if (!userData.is_active) {
+                  console.warn('User account is deactivated:', user.email)
+                  this.clearInvalidCache()
+                  return null
+                }
+                
+                // Update cached user info with latest data from database
+                const updatedUserInfo = {
+                  id: userData.email,
+                  email: userData.email,
+                  name: userData.name || user.name,
+                  avatar: userData.avatar_url || user.avatar,
+                  picture: userData.avatar_url || user.picture,
+                  role: userData.role || user.role,
+                  department: userData.department || user.department,
+                  designation: userData.designation || user.designation,
+                  employee_id: userData.employee_id || user.employee_id,
+                  permissions: userData.permissions || user.permissions,
+                  provider: 'password',
+                  is_active: userData.is_active
+                }
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updatedUserInfo))
+                return updatedUserInfo
               } catch (error) {
-                console.warn('Failed to update avatar URL:', error)
+                console.warn('Error verifying password user:', error)
+                // Allow access with cached data if verification fails
+                return user
               }
             }
             
-            // Store user info in localStorage for compatibility
-            const userInfo = {
-              id: userData.email, // Use email as ID since it's the primary key
-              email: userData.email,
-              name: userData.name,
-              avatar: userData.avatar_url,
-              role: userData.role,
-              department: userData.department,
-              designation: userData.designation,
-              employee_id: userData.employee_id,
-              permissions: userData.permissions,
-              provider: 'supabase',
-              is_active: userData.is_active
+            // For Google/Supabase OAuth login, verify session
+            if (provider === 'google' || provider === 'supabase') {
+              if (!this.initSupabase()) {
+                // Supabase not ready, allow cached access
+                return user
+              }
+              
+              if (!window.SupabaseAuth) {
+                // Auth helpers not ready, allow cached access
+                return user
+              }
+              
+              try {
+                // Verify session is valid
+                const isValid = await window.SupabaseAuth.isSessionValid()
+                
+                if (!isValid) {
+                  console.log('OAuth session invalid, attempting refresh...')
+                  const refreshedSession = await window.SupabaseAuth.refreshSession()
+                  
+                  if (!refreshedSession) {
+                    console.warn('Failed to refresh OAuth session, user needs to re-authenticate')
+                    this.clearInvalidCache()
+                    return null
+                  }
+                }
+                
+                // Get current auth user
+                const authUser = await window.SupabaseAuth.getCurrentUser()
+                if (!authUser) {
+                  console.warn('No OAuth session found')
+                  this.clearInvalidCache()
+                  return null
+                }
+                
+                // Verify user in database
+                if (window.SupabaseUsers) {
+                  const userData = await window.SupabaseUsers.getUserByEmail(authUser.email)
+                  
+                  if (!userData) {
+                    console.warn('OAuth user not found in database:', authUser.email)
+                    this.clearInvalidCache()
+                    return null
+                  }
+                  
+                  if (!userData.is_active) {
+                    console.warn('OAuth user account is deactivated:', authUser.email)
+                    this.clearInvalidCache()
+                    return null
+                  }
+                  
+                  // Update last login (but not too frequently)
+                  const lastCheck = localStorage.getItem('lastLoginUpdate')
+                  const now = Date.now()
+                  if (!lastCheck || (now - parseInt(lastCheck)) > 3600000) {
+                    await window.SupabaseUsers.updateLastLogin(userData.email)
+                    localStorage.setItem('lastLoginUpdate', now.toString())
+                  }
+                  
+                  // Update avatar URL from Google if available
+                  if (authUser.user_metadata?.avatar_url && !userData.avatar_url) {
+                    try {
+                      await window.SupabaseUsers.updateUser(userData.email, {
+                        avatar_url: authUser.user_metadata.avatar_url
+                      })
+                      userData.avatar_url = authUser.user_metadata.avatar_url
+                    } catch (error) {
+                      console.warn('Failed to update avatar URL:', error)
+                    }
+                  }
+                  
+                  // Update stored user info
+                  const updatedUserInfo = {
+                    id: userData.email,
+                    email: userData.email,
+                    name: userData.name,
+                    avatar: userData.avatar_url,
+                    picture: userData.avatar_url,
+                    role: userData.role,
+                    department: userData.department,
+                    designation: userData.designation,
+                    employee_id: userData.employee_id,
+                    permissions: userData.permissions,
+                    provider: provider,
+                    is_active: userData.is_active
+                  }
+                  localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updatedUserInfo))
+                  return updatedUserInfo
+                }
+                
+                // Database check not available, return cached user
+                return user
+              } catch (error) {
+                console.warn('Error verifying OAuth user:', error)
+                // Allow cached access if verification fails
+                return user
+              }
             }
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(userInfo))
-            return userInfo
-          } else {
-            // User exists in Supabase Auth but not in our users table
-            console.warn('User authenticated but not found in users table:', authUser.email)
-            return null
+            
+            // Unknown provider, but valid user data
+            return user
           }
+        } catch (error) {
+          console.error('Error parsing user info from localStorage:', error)
+          this.clearInvalidCache()
         }
       }
-
-      // Fallback to localStorage check for backward compatibility
-      const userInfo = localStorage.getItem(this.STORAGE_KEY)
-
-      if (!userInfo) {
-        return null
-      }
-
-      const user = JSON.parse(userInfo)
-
-      // Validate user data structure
-      if (!user || typeof user !== "object") {
-        return null
-      }
-
-      // Check if user has required fields
-      if (!user.email || !user.name) {
-        return null
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(user.email)) {
-        return null
-      }
-
-      // Email domain check removed - all emails allowed
-      return user
+      
+      // No cached user info, return null
+      return null
+      
     } catch (error) {
       console.error('Error checking authentication:', error)
       return null
