@@ -920,7 +920,7 @@
     <div class="loader-content">
         <div class="loader-spinner"></div>
         <p class="loader-text">Submitting Audit...</p>
-        <p class="loader-subtext">Please wait while we process your submission</p>
+        <p class="loader-subtext" style="font-size: 0.4rem; color: rgba(255,255,255,0.7); margin-top: 0.3rem;"></p>
     </div>
 </div>
 
@@ -10570,6 +10570,275 @@ document.addEventListener('DOMContentLoaded', function() {
             updateWeekAndQuarter();
         });
         
+        // ============================================================================
+        // Enhanced Error Handling System with Developer Diagnostics
+        // ============================================================================
+        
+        // Network status monitoring
+        let networkStatusChanges = [];
+        
+        window.addEventListener('online', () => {
+            networkStatusChanges.push({ status: 'online', timestamp: new Date().toISOString() });
+            console.log('🟢 Network came online');
+        });
+        
+        window.addEventListener('offline', () => {
+            networkStatusChanges.push({ status: 'offline', timestamp: new Date().toISOString() });
+            console.warn('🔴 Network went offline');
+            
+            // If form is submitting, show error
+            if (isSubmitting) {
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
+                
+                showDetailedError({
+                    title: 'Connection Lost',
+                    userMessage: 'Network connection was lost during submission. Please check your connection and try again.',
+                    error: new Error('Network offline during submission'),
+                    technicalDetails: {
+                        networkStatusChanges: networkStatusChanges.slice(-5),
+                        connectionType: navigator.connection?.effectiveType || 'unknown'
+                    },
+                    context: {
+                        operation: 'network_loss_during_submit'
+                    }
+                });
+                
+                isSubmitting = false;
+            }
+        });
+        
+        // Helper function to provide contextual developer tips
+        function getDeveloperTip(error, context) {
+            if (!navigator.onLine) {
+                return 'Network is offline. Check internet connection.';
+            }
+            
+            if (error?.message?.includes('timeout') || error?.name === 'AbortError') {
+                return 'Request timed out. Check: 1) Network speed, 2) Server response time, 3) Database query performance. Try increasing timeout in withTimeout() function.';
+            }
+            
+            if (error?.message?.includes('schema cache')) {
+                return 'Supabase schema cache issue. The schema might be updating. Wait 30 seconds and retry, or run NOTIFY pgrst, \'reload schema\' in Supabase SQL editor.';
+            }
+            
+            if (error?.message?.includes('column') && error?.message?.includes('does not exist')) {
+                return 'Database schema mismatch. Run the ALTER TABLE command shown in the error, then refresh the page.';
+            }
+            
+            if (error?.code === 'PGRST116') {
+                return 'PostgreSQL RLS (Row Level Security) is blocking this operation. Check RLS policies in Supabase dashboard.';
+            }
+            
+            if (error?.code === 'PGRST301') {
+                return 'Database connection issue. Check Supabase status page and project health.';
+            }
+            
+            if (error?.message?.includes('JWT') || error?.message?.includes('token')) {
+                return 'Authentication token issue. User session may have expired. Try logging out and back in.';
+            }
+            
+            if (context.operation === 'insert' && error?.code === '23505') {
+                return 'Duplicate key violation. Check unique constraints on the table. Audit ID might already exist.';
+            }
+            
+            if (context.operation === 'insert' && error?.code === '23503') {
+                return 'Foreign key constraint violation. Referenced record doesn\'t exist in related table.';
+            }
+            
+            if (error?.message?.includes('fetch')) {
+                return 'Network fetch failed. Check: 1) CORS settings, 2) Supabase URL is correct, 3) Network firewall/proxy, 4) Browser console for blocked requests.';
+            }
+            
+            return 'Check browser console (F12) for more details. Copy the technical details above and share with the development team.';
+        }
+        
+        // Enhanced error reporting with technical details for developers
+        async function showDetailedError({
+            title = 'Error',
+            userMessage = 'An error occurred',
+            technicalDetails = {},
+            error = null,
+            context = {}
+        }) {
+            // Collect comprehensive diagnostic information
+            const diagnostics = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                online: navigator.onLine,
+                url: window.location.href,
+                screenSize: `${window.screen.width}x${window.screen.height}`,
+                windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                memory: performance.memory ? {
+                    usedJSHeapSize: (performance.memory.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
+                    totalJSHeapSize: (performance.memory.totalJSHeapSize / 1048576).toFixed(2) + ' MB',
+                    limit: (performance.memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB'
+                } : 'Not available',
+                ...technicalDetails
+            };
+            
+            // Add error details if provided
+            if (error) {
+                diagnostics.error = {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    code: error.code,
+                    details: error.details,
+                    hint: error.hint,
+                    retryLog: error._retryLog || null,
+                    ...(error.response && { response: error.response })
+                };
+            }
+            
+            // Add context information
+            if (Object.keys(context).length > 0) {
+                diagnostics.context = context;
+            }
+            
+            // Format diagnostics as readable text
+            const diagnosticsText = JSON.stringify(diagnostics, null, 2);
+            
+            // Create detailed error message with expandable technical details
+            const detailedMessage = `
+                <div style="text-align: left;">
+                    <p style="margin-bottom: 1rem; font-size: 0.6rem;">${userMessage}</p>
+                    
+                    <details style="margin-top: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.25rem; padding: 0.5rem;">
+                        <summary style="cursor: pointer; font-weight: 600; font-size: 0.55rem; color: #374151; user-select: none; padding: 0.25rem;">
+                            🔧 Technical Details (Click to expand)
+                        </summary>
+                        <div style="margin-top: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.45rem; background: #1f2937; color: #10b981; padding: 0.75rem; border-radius: 0.25rem; max-height: 15rem; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">
+${diagnosticsText}
+                        </div>
+                        <button 
+                            onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim()).then(() => { this.textContent = '✓ Copied!'; setTimeout(() => this.textContent = '📋 Copy Details', 2000); })"
+                            style="margin-top: 0.5rem; padding: 0.35rem 0.75rem; background: #3b82f6; color: white; border: none; border-radius: 0.25rem; font-size: 0.5rem; cursor: pointer; font-weight: 500;">
+                            📋 Copy Details
+                        </button>
+                    </details>
+                    
+                    <div style="margin-top: 1rem; padding: 0.75rem; background: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 0.25rem;">
+                        <p style="font-size: 0.5rem; color: #92400e; margin: 0; font-weight: 500;">💡 <strong>For Developers:</strong></p>
+                        <p style="font-size: 0.45rem; color: #92400e; margin: 0.25rem 0 0 0;">
+                            ${getDeveloperTip(error, context)}
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            await window.confirmationDialog.show({
+                title: title,
+                message: detailedMessage,
+                confirmText: 'OK',
+                cancelText: 'Retry',
+                type: 'error'
+            });
+            
+            // Log to console for easy debugging
+            console.group('🔴 Detailed Error Report');
+            console.error('User Message:', userMessage);
+            console.error('Error Object:', error);
+            console.table(diagnostics);
+            console.groupEnd();
+            
+            return diagnostics;
+        }
+        
+        // Enhanced timeout with progress callback
+        async function withTimeout(promise, timeoutMs = 30000, errorMessage = 'Operation timed out', onProgress = null) {
+            const startTime = Date.now();
+            let progressInterval;
+            
+            if (onProgress) {
+                progressInterval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min((elapsed / timeoutMs) * 100, 100);
+                    onProgress(progress, elapsed);
+                }, 500);
+            }
+            
+            try {
+                const result = await Promise.race([
+                    promise,
+                    new Promise((_, reject) => 
+                        setTimeout(() => {
+                            const elapsed = Date.now() - startTime;
+                            reject(new Error(`${errorMessage} (waited ${(elapsed/1000).toFixed(1)}s)`));
+                        }, timeoutMs)
+                    )
+                ]);
+                
+                if (progressInterval) clearInterval(progressInterval);
+                return result;
+            } catch (error) {
+                if (progressInterval) clearInterval(progressInterval);
+                throw error;
+            }
+        }
+        
+        // Enhanced watchdog with status updates
+        function startSubmissionWatchdog(timeoutMs = 60000) {
+            const startTime = Date.now();
+            let warningShown = false;
+            
+            // Show warning at 75% of timeout
+            const warningTimeout = setTimeout(() => {
+                const loaderSubtext = document.querySelector('#auditSubmitLoader .loader-subtext');
+                if (loaderSubtext) {
+                    loaderSubtext.textContent = '⚠️ Taking longer than usual...';
+                    loaderSubtext.style.color = '#fbbf24';
+                }
+                warningShown = true;
+                console.warn('⚠️ Submission taking longer than expected');
+            }, timeoutMs * 0.75);
+            
+            // Trigger error at 100% timeout
+            const errorTimeout = setTimeout(async () => {
+                console.error('❌ Submission watchdog triggered - operation took too long');
+                
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader && loader.classList.contains('show')) {
+                    loader.classList.remove('show');
+                    
+                    const elapsed = Date.now() - startTime;
+                    
+                    await showDetailedError({
+                        title: 'Operation Timeout',
+                        userMessage: 'The submission is taking longer than expected. This could be due to slow network, heavy server load, or database issues.',
+                        error: new Error(`Watchdog timeout after ${(elapsed/1000).toFixed(1)}s`),
+                        technicalDetails: {
+                            watchdogTimeout: timeoutMs + 'ms',
+                            actualElapsed: elapsed + 'ms',
+                            warningShown: warningShown,
+                            timestamp: new Date().toISOString(),
+                            networkStatus: navigator.onLine ? 'online' : 'offline',
+                            connectionType: navigator.connection?.effectiveType || 'unknown',
+                            connectionRtt: navigator.connection?.rtt + 'ms' || 'unknown'
+                        },
+                        context: {
+                            operation: 'submit_audit',
+                            table: currentScorecard?.table_name,
+                            scorecardName: currentScorecard?.name
+                        }
+                    });
+                    
+                    isSubmitting = false;
+                }
+            }, timeoutMs);
+            
+            return { warningTimeout, errorTimeout };
+        }
+        
+        function clearSubmissionWatchdog(watchdogIds) {
+            if (watchdogIds) {
+                clearTimeout(watchdogIds.warningTimeout);
+                clearTimeout(watchdogIds.errorTimeout);
+            }
+        }
+        
         // Handle form submission
         console.log('Setting up form submission handler...');
         
@@ -10611,7 +10880,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 loader.classList.add('show');
             }
             
+            // Start watchdog with detailed monitoring
+            const watchdogIds = startSubmissionWatchdog(60000);
+            
             console.log('===== FORM SUBMISSION STARTED =====');
+            
+            // Check network connectivity before proceeding
+            if (!navigator.onLine) {
+                const loader = document.getElementById('auditSubmitLoader');
+                if (loader) {
+                    loader.classList.remove('show');
+                }
+                
+                await window.confirmationDialog.show({
+                    title: 'No Internet Connection',
+                    message: 'Please check your internet connection and try again.',
+                    confirmText: 'OK',
+                    type: 'error'
+                });
+                clearSubmissionWatchdog(watchdogIds);
+                isSubmitting = false;
+                return;
+            }
             
             // Validate scorecard selection
             if (!currentScorecard || !currentParameters || currentParameters.length === 0) {
@@ -11022,44 +11312,108 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Helper function to retry database operations on schema cache errors
                 async function retryOnSchemaCacheError(operation, maxRetries = 3) {
+                    const retryLog = [];
+                    
                     for (let attempt = 0; attempt < maxRetries; attempt++) {
+                        const attemptStart = Date.now();
+                        
                         if (attempt > 0) {
-                            // Wait longer on each retry (exponential backoff)
-                            console.log(`Retrying database operation (attempt ${attempt + 1}/${maxRetries})...`);
-                            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                            const delay = 1000 * attempt;
+                            
+                            // Update UI with retry info
+                            const loaderText = document.querySelector('#auditSubmitLoader .loader-text');
+                            const loaderSubtext = document.querySelector('#auditSubmitLoader .loader-subtext');
+                            
+                            if (loaderText) {
+                                loaderText.textContent = `Retrying... (Attempt ${attempt + 1}/${maxRetries})`;
+                            }
+                            if (loaderSubtext) {
+                                loaderSubtext.textContent = `Waiting ${delay}ms before retry...`;
+                            }
+                            
+                            console.log(`🔄 Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms delay`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
                         }
                         
-                        const result = await operation();
-                        
-                        // If no error, return success
-                        if (!result.error) {
-                            return result;
+                        try {
+                            const result = await operation();
+                            const attemptDuration = Date.now() - attemptStart;
+                            
+                            retryLog.push({
+                                attempt: attempt + 1,
+                                duration: attemptDuration + 'ms',
+                                success: !result.error,
+                                error: result.error?.message || null
+                            });
+                            
+                            // Reset loader text on success
+                            const loaderText = document.querySelector('#auditSubmitLoader .loader-text');
+                            const loaderSubtext = document.querySelector('#auditSubmitLoader .loader-subtext');
+                            if (loaderText) loaderText.textContent = 'Submitting Audit...';
+                            if (loaderSubtext) loaderSubtext.textContent = '';
+                            
+                            // If no error, return success
+                            if (!result.error) {
+                                console.log('✅ Operation succeeded', { attempts: attempt + 1, retryLog });
+                                return result;
+                            }
+                            
+                            // Check for specific error types
+                            const isMissingColumnError = result.error.message && (
+                                (result.error.message.includes('Could not find') && result.error.message.includes('column')) ||
+                                (result.error.message.includes('column') && result.error.message.includes('does not exist')) ||
+                                result.error.code === 'PGRST204'
+                            );
+                            
+                            if (isMissingColumnError) {
+                                console.error('❌ Missing column error - will not retry (requires manual SQL fix)');
+                                result.error._retryLog = retryLog;
+                                return result;
+                            }
+                            
+                            // Check for schema cache errors
+                            const isSchemaCacheError = result.error.message && result.error.message.includes('schema cache');
+                            
+                            if (!isSchemaCacheError) {
+                                console.error('❌ Non-retryable error detected');
+                                result.error._retryLog = retryLog;
+                                return result;
+                            }
+                            
+                            // If it's the last attempt, return the error with retry log
+                            if (attempt === maxRetries - 1) {
+                                console.error('❌ All retry attempts exhausted');
+                                result.error._retryLog = retryLog;
+                                return result;
+                            }
+                            
+                            console.log(`⚠️ Schema cache error, will retry (attempt ${attempt + 1}/${maxRetries})`);
+                            
+                        } catch (err) {
+                            const attemptDuration = Date.now() - attemptStart;
+                            retryLog.push({
+                                attempt: attempt + 1,
+                                duration: attemptDuration + 'ms',
+                                success: false,
+                                error: err.message,
+                                exception: true
+                            });
+                            
+                            console.error('❌ Exception in retry operation:', err);
+                            
+                            if (attempt === maxRetries - 1) {
+                                err._retryLog = retryLog;
+                                return { data: null, error: err };
+                            }
                         }
-                        
-                        // Don't retry on missing column errors - these require manual SQL fix
-                        const isMissingColumnError = result.error.message && (
-                            (result.error.message.includes('Could not find') && result.error.message.includes('column')) ||
-                            (result.error.message.includes('column') && result.error.message.includes('does not exist')) ||
-                            result.error.code === 'PGRST204'
-                        );
-                        
-                        if (isMissingColumnError) {
-                            console.error('Missing column error detected - will not retry (requires manual SQL fix)');
-                            return result;
-                        }
-                        
-                        // If it's a schema cache error, retry
-                        if (result.error.message && result.error.message.includes('schema cache')) {
-                            console.log(`Schema cache not ready, retrying (attempt ${attempt + 1}/${maxRetries})...`);
-                            continue;
-                        }
-                        
-                        // If it's not a schema cache error, return immediately
-                        return result;
                     }
                     
-                    // Return last result after all retries exhausted
-                    return await operation();
+                    // Final attempt after all retries
+                    const finalResult = await operation();
+                    if (finalResult.error) {
+                        finalResult.error._retryLog = retryLog;
+                    }
+                    return finalResult;
                 }
                 
                 // Check if we're editing an existing audit from audit reports
@@ -11086,24 +11440,70 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Payload:', JSON.stringify(auditPayload, null, 2));
                     console.log('=========================================================');
                     
-                    const result = await retryOnSchemaCacheError(async () => {
-                        return await window.supabaseClient
-                            .from(currentEditingTableName)
-                            .update(auditPayload)
-                            .eq('id', currentEditingAuditId)
-                            .select();
-                    });
-                    
-                    data = result.data;
-                    error = result.error;
-                    
-                    if (!error) {
+                    try {
+                        const loaderSubtext = document.querySelector('#auditSubmitLoader .loader-subtext');
+                        
+                        const result = await withTimeout(
+                            retryOnSchemaCacheError(async () => {
+                                return await window.supabaseClient
+                                    .from(currentEditingTableName)
+                                    .update(auditPayload)
+                                    .eq('id', currentEditingAuditId)
+                                    .select();
+                            }),
+                            45000,
+                            'Database update operation timed out',
+                            (progress, elapsed) => {
+                                if (loaderSubtext) {
+                                    loaderSubtext.textContent = `${(elapsed/1000).toFixed(1)}s elapsed...`;
+                                }
+                            }
+                        );
+                        
+                        data = result.data;
+                        error = result.error;
+                        
+                        if (error) {
+                            throw error;
+                        }
+                        
                         console.log('Successfully updated audit from reports:', data);
                         
                         // Reset editing mode
                         isEditingExistingAudit = false;
                         currentEditingAuditId = null;
                         currentEditingTableName = null;
+                        
+                    } catch (err) {
+                        console.error('Database update operation failed:', err);
+                        
+                        const loader = document.getElementById('auditSubmitLoader');
+                        if (loader) {
+                            loader.classList.remove('show');
+                        }
+                        
+                        await showDetailedError({
+                            title: 'Database Update Failed',
+                            userMessage: 'Failed to update audit in database. Please try again or contact support if the issue persists.',
+                            error: err,
+                            technicalDetails: {
+                                operation: 'UPDATE',
+                                table: currentEditingTableName,
+                                auditId: currentEditingAuditId,
+                                payloadSize: JSON.stringify(auditPayload).length + ' bytes',
+                                supabaseUrl: window.ENV?.SUPABASE_URL || 'Not configured',
+                                timestamp: new Date().toISOString()
+                            },
+                            context: {
+                                operation: 'update',
+                                isEditingExistingAudit: true,
+                                currentEditingAuditId: currentEditingAuditId,
+                                scorecardName: currentScorecard?.name
+                            }
+                        });
+                        
+                        isSubmitting = false;
+                        return;
                     }
                     
                 } else if (isEditingPendingAudit && currentEditingAuditId) {
@@ -11120,16 +11520,65 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Payload:', JSON.stringify(auditPayload, null, 2));
                     console.log('===========================================================');
                     
-                    const result = await retryOnSchemaCacheError(async () => {
-                        return await window.supabaseClient
-                            .from(currentScorecard.table_name)
-                            .update(auditPayload)
-                            .eq('id', currentEditingAuditId)
-                            .select();
-                    });
-                    
-                    data = result.data;
-                    error = result.error;
+                    try {
+                        const loaderSubtext = document.querySelector('#auditSubmitLoader .loader-subtext');
+                        
+                        const result = await withTimeout(
+                            retryOnSchemaCacheError(async () => {
+                                return await window.supabaseClient
+                                    .from(currentScorecard.table_name)
+                                    .update(auditPayload)
+                                    .eq('id', currentEditingAuditId)
+                                    .select();
+                            }),
+                            45000,
+                            'Database update operation timed out',
+                            (progress, elapsed) => {
+                                if (loaderSubtext) {
+                                    loaderSubtext.textContent = `${(elapsed/1000).toFixed(1)}s elapsed...`;
+                                }
+                            }
+                        );
+                        
+                        data = result.data;
+                        error = result.error;
+                        
+                        if (error) {
+                            throw error;
+                        }
+                        
+                        console.log('Successfully updated pending audit:', data);
+                    } catch (err) {
+                        console.error('Database update pending audit failed:', err);
+                        
+                        const loader = document.getElementById('auditSubmitLoader');
+                        if (loader) {
+                            loader.classList.remove('show');
+                        }
+                        
+                        await showDetailedError({
+                            title: 'Database Update Failed',
+                            userMessage: 'Failed to update pending audit in database. Please try again or contact support if the issue persists.',
+                            error: err,
+                            technicalDetails: {
+                                operation: 'UPDATE_PENDING',
+                                table: currentScorecard?.table_name,
+                                auditId: currentEditingAuditId,
+                                payloadSize: JSON.stringify(auditPayload).length + ' bytes',
+                                supabaseUrl: window.ENV?.SUPABASE_URL || 'Not configured',
+                                timestamp: new Date().toISOString()
+                            },
+                            context: {
+                                operation: 'update',
+                                isEditingPendingAudit: true,
+                                currentEditingAuditId: currentEditingAuditId,
+                                scorecardName: currentScorecard?.name
+                            }
+                        });
+                        
+                        isSubmitting = false;
+                        return;
+                    }
                     
                     if (!error) {
                         console.log('Successfully updated pending audit:', data);
@@ -11172,15 +11621,70 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Payload:', JSON.stringify(auditPayload, null, 2));
                     console.log('========================================================');
                     
-                    const result = await retryOnSchemaCacheError(async () => {
-                        return await window.supabaseClient
-                            .from(currentScorecard.table_name)
-                            .insert([auditPayload])
-                            .select();
-                    });
-                    
-                    data = result.data;
-                    error = result.error;
+                    try {
+                        // Show progress in loader
+                        const loaderSubtext = document.querySelector('#auditSubmitLoader .loader-subtext');
+                        
+                        const result = await withTimeout(
+                            retryOnSchemaCacheError(async () => {
+                                return await window.supabaseClient
+                                    .from(currentScorecard.table_name)
+                                    .insert([auditPayload])
+                                    .select();
+                            }),
+                            45000,
+                            'Database insert operation timed out',
+                            (progress, elapsed) => {
+                                if (loaderSubtext) {
+                                    loaderSubtext.textContent = `${(elapsed/1000).toFixed(1)}s elapsed...`;
+                                }
+                            }
+                        );
+                        
+                        data = result.data;
+                        error = result.error;
+                        
+                        if (error) {
+                            throw error; // Will be caught by outer catch
+                        }
+                        
+                        console.log('Successfully inserted new audit:', data);
+                    } catch (err) {
+                        console.error('Database insert operation failed:', err);
+                        
+                        // Hide loader
+                        const loader = document.getElementById('auditSubmitLoader');
+                        if (loader) {
+                            loader.classList.remove('show');
+                        }
+                        
+                        // Show detailed error with diagnostics
+                        await showDetailedError({
+                            title: 'Database Insert Failed',
+                            userMessage: 'Failed to save audit to database. Please try again or contact support if the issue persists.',
+                            error: err,
+                            technicalDetails: {
+                                operation: 'INSERT',
+                                table: currentScorecard?.table_name,
+                                payloadSize: JSON.stringify(auditPayload).length + ' bytes',
+                                parameterCount: currentParameters?.length,
+                                errorCount: auditPayload?.error_count,
+                                supabaseUrl: window.ENV?.SUPABASE_URL || 'Not configured',
+                                timestamp: new Date().toISOString()
+                            },
+                            context: {
+                                operation: 'insert',
+                                isEditingPendingAudit: isEditingPendingAudit,
+                                isEditingExistingAudit: isEditingExistingAudit,
+                                currentEditingAuditId: currentEditingAuditId,
+                                scorecardName: currentScorecard?.name,
+                                employeeEmail: auditPayload?.employee_email
+                            }
+                        });
+                        
+                        isSubmitting = false;
+                        return;
+                    }
                     
                     if (!error) {
                         console.log('Successfully inserted new audit:', data);
@@ -11363,7 +11867,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
             } catch (err) {
-                console.error('Exception saving to Supabase:', err);
+                console.error('❌ Exception in submit handler:', err);
                 console.error('Exception stack:', err.stack);
                 
                 // Hide loader on error
@@ -11372,14 +11876,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     loader.classList.remove('show');
                 }
                 
-                await window.confirmationDialog.show({
-                    title: 'Error Saving Audit',
-                    message: 'An error occurred while saving the audit: ' + err.message,
-                    confirmText: 'OK',
-                    cancelText: 'Close',
-                    type: 'error'
+                // Show detailed error with comprehensive diagnostics
+                await showDetailedError({
+                    title: 'Submission Failed',
+                    userMessage: 'An unexpected error occurred during submission. Please try again or contact support if the issue persists.',
+                    error: err,
+                    technicalDetails: {
+                        handlerLocation: 'submit_handler_top_level',
+                        supabaseInitialized: !!window.supabaseClient,
+                        currentScorecard: currentScorecard?.name,
+                        currentTable: currentScorecard?.table_name,
+                        networkStatusChanges: networkStatusChanges.slice(-3),
+                        supabaseUrl: window.ENV?.SUPABASE_URL || 'Not configured',
+                        timestamp: new Date().toISOString()
+                    },
+                    context: {
+                        operation: 'form_submit',
+                        phase: 'unknown',
+                        isEditingPendingAudit: isEditingPendingAudit,
+                        isEditingExistingAudit: isEditingExistingAudit
+                    }
                 });
             } finally {
+                // Clear watchdog
+                clearSubmissionWatchdog(watchdogIds);
                 // Always reset the submitting flag
                 isSubmitting = false;
             }
